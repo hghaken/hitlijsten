@@ -31,6 +31,7 @@ def maak_app() -> Flask:
     app = Flask(__name__)
     app.config.update(_lees_instellingen())
     # Niet "lijsten" noemen: dat botst met de zoekresultaten die zo heten.
+    app.jinja_env.globals["is_aangemeld"] = is_aangemeld
     app.jinja_env.globals["lijst_namen"] = {
         sleutel: cfg["naam"] for sleutel, cfg in LIJSTEN.items()
     }
@@ -70,6 +71,13 @@ def _lees_instellingen() -> dict:
 
 
 def vereist_aanmelding(functie):
+    """Zonder aanmelding doorsturen naar het aanmeldscherm.
+
+    Twee pagina's dragen dit bewust NIET: het overzicht en het jaaroverzicht.
+    Die zijn vrij toegankelijk. Alles wat gegevens toont die niet voor iedereen
+    zijn (sleutels, logboek, wijzigingen) of wat iets kan veranderen, zit er wel
+    achter.
+    """
     @wraps(functie)
     def omhulsel(*args, **kwargs):
         if not session.get("aangemeld"):
@@ -77,6 +85,10 @@ def vereist_aanmelding(functie):
         return functie(*args, **kwargs)
 
     return omhulsel
+
+
+def is_aangemeld() -> bool:
+    return bool(session.get("aangemeld"))
 
 
 def verbinding() -> sqlite3.Connection:
@@ -134,7 +146,6 @@ def _registreer(app: Flask) -> None:
     # --- overzicht ---------------------------------------------------------
 
     @app.route("/")
-    @vereist_aanmelding
     def overzicht():
         con = verbinding()
         lijsten = list(con.execute(
@@ -159,7 +170,6 @@ def _registreer(app: Flask) -> None:
     # --- jaaroverzicht -----------------------------------------------------
 
     @app.route("/jaar")
-    @vereist_aanmelding
     def jaaroverzicht():
         con = verbinding()
         lijst = request.args.get("lijst") or "top40"

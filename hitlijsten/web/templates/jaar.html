@@ -72,7 +72,7 @@
         {% if nummers and nummers[0].label %}<th>Label</th>{% endif %}
         <th class="getal">Punten</th><th class="getal">Hoogste</th>
         <th class="getal">Weken</th><th class="getal">Eerste</th>
-        <th class="getal">Laatste</th><th></th>
+        <th class="getal">Laatste</th>{% if is_aangemeld() %}<th></th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -88,7 +88,7 @@
         <td class="getal">{{ n.weken }}</td>
         <td class="getal">{{ n.eerste }}</td>
         <td class="getal">{{ n.laatste }}</td>
-        <td><a href="{{ url_for('nummer', sleutel=n.sleutel) }}">bekijk</a></td>
+        {% if is_aangemeld() %}<td><a href="{{ url_for('nummer', sleutel=n.sleutel) }}">bekijk</a></td>{% endif %}
       </tr>
       {% endfor %}
     </tbody>
