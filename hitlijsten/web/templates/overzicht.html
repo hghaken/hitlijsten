@@ -1,0 +1,47 @@
+{% extends "basis.html" %}
+{% block titel %}Overzicht — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>Overzicht</h1>
+
+<div class="kaarten">
+  <div class="kaart"><div class="cijfer">{{ "{:,}".format(cijfers.noteringen).replace(",", ".") }}</div>
+    <div class="naam">noteringen</div></div>
+  <div class="kaart"><div class="cijfer">{{ cijfers.aliassen }}</div>
+    <div class="naam">aliassen</div></div>
+  <div class="kaart"><div class="cijfer">{{ cijfers.uitzonderingen }}</div>
+    <div class="naam">uitzonderingen</div></div>
+  <div class="kaart"><div class="cijfer">{{ cijfers.wijzigingen }}</div>
+    <div class="naam">handmatige wijzigingen</div></div>
+</div>
+
+<h2>De lijsten</h2>
+<table>
+  <tr><th>Lijst</th><th class="getal">Jaargangen</th><th class="getal">Van</th>
+      <th class="getal">Tot</th><th class="getal">Weken</th><th class="getal">Noteringen</th></tr>
+  {% for r in lijsten %}
+  <tr>
+    <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
+    <td class="getal">{{ r['jaren'] }}</td>
+    <td class="getal">{{ r['van'] }}</td>
+    <td class="getal">{{ r['tot'] }}</td>
+    <td class="getal">{{ r['weken'] }}</td>
+    <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Laatst opgehaald</h2>
+<table>
+  <tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Week</th><th>Wanneer</th></tr>
+  {% for r in laatste %}
+  <tr><td>{{ r['lijst'] }}</td><td class="getal">{{ r['jaar'] }}</td>
+      <td class="getal">{{ r['week'] }}</td><td>{{ r['opgehaald_op'].replace('T', ' ') }}</td></tr>
+  {% endfor %}
+</table>
+
+{% if taak and not taak.klaar %}
+<h2>Er loopt iets</h2>
+<p><strong>{{ taak.naam }}</strong> — gestart {{ taak.gestart }}.
+   <a href="{{ url_for('beheer') }}">Bekijk de voortgang</a>.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "basis.html" %}
+{% block titel %}Notering bewerken — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>Notering bewerken</h1>
+<p class="hint">
+  {{ lijst_namen.get(rij['lijst'], rij['lijst']) }} — {{ rij['jaar'] }} week {{ rij['week'] }}
+  (rij {{ rij['id'] }})
+</p>
+
+<div class="melding fout">
+  Dit wijkt af van wat de bron levert. Elke wijziging komt in het logboek, en een
+  volgende ophaalronde van deze week overschrijft hem weer — de week wordt dan
+  namelijk in zijn geheel opnieuw weggeschreven.
+</div>
+
+<form method="post">
+  <table style="max-width: 46rem">
+    {% for veld in velden %}
+    <tr>
+      <th style="width: 12rem">{{ veld.replace('_', ' ') }}</th>
+      <td><input type="text" name="{{ veld }}"
+                 value="{{ rij[veld] if rij[veld] is not none else '' }}"></td>
+    </tr>
+    {% endfor %}
+    <tr>
+      <th>reden <span class="hint">(verplicht)</span></th>
+      <td><input type="text" name="reden" placeholder="waarom wijk je hier af van de bron?"></td>
+    </tr>
+  </table>
+  <p>
+    <button class="hoofd" type="submit">Bewaren</button>
+    <a href="{{ url_for('nummer', sleutel=rij['sleutel']) }}">annuleren</a>
+  </p>
+</form>
+{% endblock %}

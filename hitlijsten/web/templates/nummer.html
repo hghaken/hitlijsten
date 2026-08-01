@@ -1,0 +1,50 @@
+{% extends "basis.html" %}
+{% block titel %}{{ rijen[0]['titel'] }} — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>{{ rijen[-1]['titel'] }} <span class="hint">— {{ rijen[-1]['artiest'] }}</span></h1>
+<p class="sleutel">{{ sleutel }}</p>
+
+{% if aliassen %}
+<h2>Aliassen</h2>
+<table>
+  <tr><th>Van</th><th>Naar</th><th>Onderbouwing</th></tr>
+  {% for a in aliassen %}
+  <tr><td class="sleutel">{{ a['van'] }}</td><td class="sleutel">{{ a['naar'] }}</td>
+      <td class="hint">{{ a['opmerking'] or '' }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<h2>Per jaar en lijst</h2>
+<table>
+  <tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Punten</th>
+      <th class="getal">Weken</th><th class="getal">Hoogste</th></tr>
+  {% for (lijst, jaar), v in samenvatting %}
+  <tr><td>{{ lijst_namen.get(lijst, lijst) }}</td><td class="getal">{{ jaar }}</td>
+      <td class="getal">{{ v.punten }}</td><td class="getal">{{ v.weken }}</td>
+      <td class="getal">{{ v.hoogste }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Alle noteringen ({{ rijen|length }})</h2>
+<table>
+  <tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Week</th>
+      <th class="getal">Positie</th><th class="getal">Vorige</th>
+      <th class="getal">Weken (site)</th><th>Status</th><th>Titel</th>
+      <th>Artiest</th><th></th></tr>
+  {% for r in rijen %}
+  <tr>
+    <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
+    <td class="getal">{{ r['jaar'] }}</td>
+    <td class="getal">{{ r['week'] }}</td>
+    <td class="getal">{{ r['positie'] }}</td>
+    <td class="getal">{{ r['vorige_positie'] if r['vorige_positie'] is not none else '' }}</td>
+    <td class="getal">{{ r['weken_genoteerd'] if r['weken_genoteerd'] is not none else '' }}</td>
+    <td>{{ r['site_status'] }}</td>
+    <td>{{ r['titel'] }}</td>
+    <td>{{ r['artiest'] }}{% if r['label'] %} <span class="hint">[{{ r['label'] }}]</span>{% endif %}</td>
+    <td><a href="{{ url_for('notering_bewerk', id=r['id']) }}">bewerk</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

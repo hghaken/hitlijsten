@@ -1,0 +1,44 @@
+{% extends "basis.html" %}
+{% block titel %}Uitzonderingen — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>Uitzonderingen</h1>
+<p class="hint">
+  Paren die op elkaar lijken en vlak na elkaar noteerden, maar toch losse
+  nummers zijn — een kerstversie, een remix die apart de lijst in kwam. Zonder
+  deze lijst stelt de dubbelingencontrole ze telkens opnieuw voor.
+</p>
+
+<h2>Toevoegen</h2>
+<form method="post" action="{{ url_for('uitzondering_bewaar') }}">
+  <table style="max-width: 60rem">
+    <tr><th style="width: 8rem">sleutel A</th>
+        <td><input type="text" name="sleutel_a" style="width: 100%"></td></tr>
+    <tr><th>sleutel B</th>
+        <td><input type="text" name="sleutel_b" style="width: 100%"></td></tr>
+    <tr><th>reden</th>
+        <td><input type="text" name="reden" style="width: 100%"
+                   placeholder="waarom zijn dit twee nummers?"></td></tr>
+  </table>
+  <p><button class="hoofd" type="submit">Bewaren</button></p>
+</form>
+
+<h2>{{ rijen|length }} uitzonderingen</h2>
+<table>
+  <tr><th>Sleutel A</th><th>Sleutel B</th><th>Reden</th><th></th></tr>
+  {% for r in rijen %}
+  <tr>
+    <td class="sleutel">{{ r['sleutel_a'] }}</td>
+    <td class="sleutel">{{ r['sleutel_b'] }}</td>
+    <td class="hint">{{ r['reden'] or '' }}</td>
+    <td>
+      <form class="inline" method="post" action="{{ url_for('uitzondering_verwijder') }}"
+            onsubmit="return confirm('Deze uitzondering verwijderen?')">
+        <input type="hidden" name="sleutel_a" value="{{ r['sleutel_a'] }}">
+        <input type="hidden" name="sleutel_b" value="{{ r['sleutel_b'] }}">
+        <button class="gevaar" type="submit">verwijder</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

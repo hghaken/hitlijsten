@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Aanmelden — Hitlijsten</title>
+<style>
+  body { font: 15px/1.5 "Segoe UI", system-ui, sans-serif; background: #f6f8fa;
+         display: flex; align-items: center; justify-content: center; height: 100vh;
+         margin: 0; color: #1f2933; }
+  form { background: #fff; padding: 2rem 2.2rem; border: 1px solid #d8dde3;
+         border-radius: 10px; min-width: 20rem; }
+  h1 { font-size: 1.2rem; margin: 0 0 1.2rem; }
+  input { font: inherit; padding: .5rem .6rem; border: 1px solid #d8dde3;
+          border-radius: 5px; width: 100%; }
+  button { font: inherit; margin-top: .9rem; padding: .5rem 1rem; width: 100%;
+           background: #1a5fb4; color: #fff; border: 0; border-radius: 5px;
+           cursor: pointer; }
+  .melding { background: #fde2e1; padding: .5rem .7rem; border-radius: 5px;
+             margin-bottom: .9rem; font-size: .9rem; }
+</style>
+</head>
+<body>
+<form method="post">
+  <h1>Hitlijsten</h1>
+  {% with meldingen = get_flashed_messages() %}
+    {% for tekst in meldingen %}<div class="melding">{{ tekst }}</div>{% endfor %}
+  {% endwith %}
+  <input type="password" name="wachtwoord" placeholder="Wachtwoord" autofocus>
+  <button type="submit">Aanmelden</button>
+</form>
+</body>
+</html>

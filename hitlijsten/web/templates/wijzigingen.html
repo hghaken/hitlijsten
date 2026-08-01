@@ -1,0 +1,29 @@
+{% extends "basis.html" %}
+{% block titel %}Logboek — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>Wijzigingslogboek</h1>
+<p class="hint">
+  Elke handmatige wijziging via deze applicatie. Zonder dit logboek zou een
+  correctie niet te onderscheiden zijn van wat de bron zelf leverde.
+</p>
+
+{% if not rijen %}
+  <p class="hint">Nog niets gewijzigd.</p>
+{% else %}
+<table>
+  <tr><th>Wanneer</th><th>Soort</th><th>Verwijst naar</th><th>Veld</th>
+      <th>Van</th><th>Naar</th><th>Reden</th></tr>
+  {% for r in rijen %}
+  <tr>
+    <td style="white-space: nowrap">{{ r['tijdstip'].replace('T', ' ') }}</td>
+    <td>{{ r['soort'] }}</td>
+    <td class="sleutel">{{ r['verwijst'] or '' }}</td>
+    <td>{{ r['veld'] or '' }}</td>
+    <td class="sleutel">{{ r['oud'] if r['oud'] is not none else '—' }}</td>
+    <td class="sleutel">{{ r['nieuw'] if r['nieuw'] is not none else '—' }}</td>
+    <td class="hint">{{ r['reden'] or '' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

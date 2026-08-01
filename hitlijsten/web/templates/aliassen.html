@@ -1,0 +1,56 @@
+{% extends "basis.html" %}
+{% block titel %}Aliassen — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>Aliassen</h1>
+<p class="hint">
+  Een alias laat twee sleutels samenvallen, zodat een notering die de site
+  onderweg hernoemd heeft één nummer blijft. Na een wijziging moet je
+  <a href="{{ url_for('beheer') }}">Sleutels herberekenen</a> draaien, en daarna
+  de Excel-bestanden opnieuw bouwen.
+</p>
+
+<h2>Toevoegen of wijzigen</h2>
+<form method="post" action="{{ url_for('alias_bewaar') }}">
+  <table style="max-width: 60rem">
+    <tr><th style="width: 8rem">van</th>
+        <td><input type="text" name="van" style="width: 100%" placeholder="artiest|titel"></td></tr>
+    <tr><th>naar</th>
+        <td><input type="text" name="naar" style="width: 100%" placeholder="artiest|titel"></td></tr>
+    <tr><th>onderbouwing</th>
+        <td><input type="text" name="opmerking" style="width: 100%"
+                   placeholder="waarom horen deze bij elkaar?"></td></tr>
+  </table>
+  <p><button class="hoofd" type="submit">Bewaren</button></p>
+</form>
+
+<h2>{{ rijen|length }} aliassen</h2>
+<form method="get" style="margin-bottom: .8rem">
+  <input type="text" name="term" value="{{ term }}" placeholder="zoek in sleutel of onderbouwing">
+  <button type="submit">Zoeken</button>
+  {% if term %}<a href="{{ url_for('aliassen') }}">wis</a>{% endif %}
+</form>
+
+<table>
+  <tr><th>Van</th><th>Naar</th><th>Onderbouwing</th><th></th></tr>
+  {% for r in rijen %}
+  <tr>
+    <td class="sleutel">{{ r['van'] }}</td>
+    <td class="sleutel">{{ r['naar'] }}</td>
+    <td class="hint">{{ r['opmerking'] or '' }}</td>
+    <td style="white-space: nowrap">
+      <form class="inline" method="post" action="{{ url_for('alias_bewaar') }}">
+        <input type="hidden" name="oude_van" value="{{ r['van'] }}">
+        <input type="hidden" name="van" value="{{ r['van'] }}">
+        <input type="hidden" name="naar" value="{{ r['naar'] }}">
+        <input type="hidden" name="opmerking" value="{{ r['opmerking'] or '' }}">
+      </form>
+      <form class="inline" method="post" action="{{ url_for('alias_verwijder') }}"
+            onsubmit="return confirm('Deze alias verwijderen?')">
+        <input type="hidden" name="van" value="{{ r['van'] }}">
+        <button class="gevaar" type="submit">verwijder</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

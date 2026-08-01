@@ -1,0 +1,32 @@
+# De database. Die is 46 MB en verandert elke week; hij hoort in een back-up,
+# niet in de geschiedenis. Het handwerk dat erin zit -- de aliassen en de
+# uitzonderingen -- staat wel in de repo, als export:
+#   aliases-export.csv, niet-samenvoegen-export.csv
+data/
+*.sqlite
+*.sqlite.*
+
+# 2 GB opgehaalde HTML. Volledig opnieuw op te halen, dus geen geschiedenis waard.
+.cache/
+
+# De gebouwde Excel-bestanden. Afgeleid van de database; opnieuw te maken met
+# `python -m hitlijsten excel`.
+19[0-9][0-9]-19[0-9][0-9]/
+20[0-9][0-9]-20[0-9][0-9]/
+*.xlsx
+
+# Wachtwoord en sessiesleutel van de webapplicatie.
+webapp.ini
+mail.ini
+
+# Logboeken en werkbestanden.
+run.log
+*.log
+te-beoordelen.csv
+kruiscontrole-aliases.csv
+
+# Achtergelaten na de verhuizing van CSV naar database.
+*.gemigreerd
+
+__pycache__/
+*.pyc

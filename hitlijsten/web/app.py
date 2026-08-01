@@ -1,0 +1,439 @@
+"""De webapplicatie: routes en schermlogica."""
+from __future__ import annotations
+
+import configparser
+import secrets
+import sqlite3
+from datetime import datetime
+from functools import wraps
+from pathlib import Path
+
+from flask import (
+    Flask, abort, flash, g, redirect, render_template, request, session, url_for,
+)
+
+from .. import db
+from ..config import LIJSTEN, ROOT
+from . import taken
+
+INSTELLINGEN = ROOT / "webapp.ini"
+
+# Vrije query's zijn alleen-lezen. Een typefout in een UPDATE zonder WHERE is
+# onherstelbaar, en daar staat geen enkel gemak tegenover: wijzigen kan via de
+# bewerkschermen, die alles vastleggen in de tabel `wijzigingen`.
+VERBODEN_IN_QUERY = (
+    "insert", "update", "delete", "drop", "alter", "create", "replace",
+    "attach", "detach", "pragma", "vacuum",
+)
+
+
+def maak_app() -> Flask:
+    app = Flask(__name__)
+    app.config.update(_lees_instellingen())
+    # Niet "lijsten" noemen: dat botst met de zoekresultaten die zo heten.
+    app.jinja_env.globals["lijst_namen"] = {
+        sleutel: cfg["naam"] for sleutel, cfg in LIJSTEN.items()
+    }
+    _registreer(app)
+    return app
+
+
+def _lees_instellingen() -> dict:
+    """Wachtwoord en sessiesleutel uit webapp.ini.
+
+    Ontbreekt het bestand, dan wordt er een aangemaakt met een verzonnen
+    wachtwoord dat in het opstartlogboek verschijnt. Beter een wachtwoord dat je
+    een keer moet opzoeken dan een applicatie die per ongeluk open staat.
+    """
+    parser = configparser.ConfigParser()
+    if INSTELLINGEN.exists():
+        parser.read(INSTELLINGEN, encoding="utf-8")
+
+    if not parser.has_section("web"):
+        parser.add_section("web")
+    if not parser.get("web", "wachtwoord", fallback=""):
+        parser.set("web", "wachtwoord", secrets.token_urlsafe(12))
+    if not parser.get("web", "sessiesleutel", fallback=""):
+        parser.set("web", "sessiesleutel", secrets.token_hex(32))
+
+    if not INSTELLINGEN.exists():
+        with INSTELLINGEN.open("w", encoding="utf-8") as fh:
+            fh.write("# Instellingen van de webapplicatie. Niet delen.\n")
+            parser.write(fh)
+        print(f"[web] webapp.ini aangemaakt -- wachtwoord: "
+              f"{parser.get('web', 'wachtwoord')}")
+
+    return {
+        "SECRET_KEY": parser.get("web", "sessiesleutel"),
+        "WACHTWOORD": parser.get("web", "wachtwoord"),
+    }
+
+
+def vereist_aanmelding(functie):
+    @wraps(functie)
+    def omhulsel(*args, **kwargs):
+        if not session.get("aangemeld"):
+            return redirect(url_for("aanmelden", volgende=request.path))
+        return functie(*args, **kwargs)
+
+    return omhulsel
+
+
+def verbinding() -> sqlite3.Connection:
+    """Een verbinding voor dit verzoek.
+
+    Draait het schema mee: zonder dat mist een database die met een oudere
+    versie is gemaakt de nieuwere tabellen, en dat merk je pas als een pagina
+    omvalt.
+    """
+    if "con" not in g:
+        g.con = sqlite3.connect(db.DB_PATH)
+        g.con.row_factory = sqlite3.Row
+        g.con.executescript(db.SCHEMA)
+    return g.con
+
+
+def leg_vast(soort: str, verwijst: str, veld: str, oud, nieuw, reden: str) -> None:
+    con = verbinding()
+    con.execute(
+        "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud, nieuw, reden)"
+        " VALUES (?,?,?,?,?,?,?)",
+        (datetime.now().isoformat(timespec="seconds"), soort, verwijst, veld,
+         None if oud is None else str(oud), None if nieuw is None else str(nieuw),
+         reden or None),
+    )
+    con.commit()
+
+
+def _registreer(app: Flask) -> None:
+
+    @app.teardown_appcontext
+    def sluit(_):
+        con = g.pop("con", None)
+        if con is not None:
+            con.close()
+
+    # --- aanmelden ---------------------------------------------------------
+
+    @app.route("/aanmelden", methods=["GET", "POST"])
+    def aanmelden():
+        if request.method == "POST":
+            if secrets.compare_digest(
+                request.form.get("wachtwoord", ""), app.config["WACHTWOORD"]
+            ):
+                session["aangemeld"] = True
+                return redirect(request.args.get("volgende") or url_for("overzicht"))
+            flash("Onjuist wachtwoord", "fout")
+        return render_template("aanmelden.html")
+
+    @app.route("/afmelden")
+    def afmelden():
+        session.clear()
+        return redirect(url_for("aanmelden"))
+
+    # --- overzicht ---------------------------------------------------------
+
+    @app.route("/")
+    @vereist_aanmelding
+    def overzicht():
+        con = verbinding()
+        lijsten = list(con.execute(
+            "SELECT lijst, MIN(jaar) van, MAX(jaar) tot, COUNT(DISTINCT jaar) jaren,"
+            " COUNT(DISTINCT jaar || '-' || week) weken, COUNT(*) noteringen"
+            " FROM noteringen GROUP BY lijst ORDER BY van"
+        ))
+        cijfers = {
+            "noteringen": con.execute("SELECT COUNT(*) FROM noteringen").fetchone()[0],
+            "aliassen": con.execute("SELECT COUNT(*) FROM aliases").fetchone()[0],
+            "uitzonderingen": con.execute(
+                "SELECT COUNT(*) FROM niet_samenvoegen").fetchone()[0],
+            "wijzigingen": con.execute("SELECT COUNT(*) FROM wijzigingen").fetchone()[0],
+        }
+        laatste = con.execute(
+            "SELECT lijst, jaar, week, opgehaald_op FROM opgehaald"
+            " ORDER BY opgehaald_op DESC LIMIT 5"
+        ).fetchall()
+        return render_template("overzicht.html", lijsten=lijsten, cijfers=cijfers,
+                               laatste=laatste, taak=taken.huidige())
+
+    # --- noteringen zoeken -------------------------------------------------
+
+    @app.route("/zoek")
+    @vereist_aanmelding
+    def zoek():
+        term = (request.args.get("term") or "").strip()
+        lijst = request.args.get("lijst") or ""
+        resultaten = []
+        if term:
+            vraag = (
+                "SELECT sleutel, lijst, MAX(titel) titel, MAX(artiest) artiest,"
+                " MIN(jaar) van, MAX(jaar) tot, COUNT(*) weken, MIN(positie) hoogste"
+                " FROM noteringen WHERE (titel LIKE ? OR artiest LIKE ?)"
+            )
+            waarden = [f"%{term}%", f"%{term}%"]
+            if lijst in LIJSTEN:
+                vraag += " AND lijst=?"
+                waarden.append(lijst)
+            vraag += " GROUP BY sleutel, lijst ORDER BY weken DESC LIMIT 200"
+            resultaten = list(verbinding().execute(vraag, waarden))
+        return render_template("zoek.html", term=term, lijst=lijst,
+                               resultaten=resultaten)
+
+    @app.route("/nummer/<path:sleutel>")
+    @vereist_aanmelding
+    def nummer(sleutel: str):
+        con = verbinding()
+        rijen = list(con.execute(
+            "SELECT * FROM noteringen WHERE sleutel=? ORDER BY jaar, week, positie",
+            (sleutel,),
+        ))
+        if not rijen:
+            abort(404)
+        # Punten per jaar en lijst, met de lijstlengte van die week.
+        lengtes = {
+            (r["lijst"], r["jaar"], r["week"]): r["n"]
+            for r in con.execute(
+                "SELECT lijst, jaar, week, MAX(positie) n FROM noteringen"
+                " GROUP BY lijst, jaar, week"
+            )
+        }
+        samenvatting: dict[tuple[str, int], dict] = {}
+        for r in rijen:
+            vak = samenvatting.setdefault(
+                (r["lijst"], r["jaar"]), {"punten": 0, "weken": 0, "hoogste": 99}
+            )
+            lengte = lengtes[(r["lijst"], r["jaar"], r["week"])]
+            vak["punten"] += lengte - r["positie"] + 1
+            vak["weken"] += 1
+            vak["hoogste"] = min(vak["hoogste"], r["positie"])
+        alias = con.execute(
+            "SELECT van, naar, opmerking FROM aliases WHERE naar=? OR van=?",
+            (sleutel, sleutel),
+        ).fetchall()
+        return render_template("nummer.html", sleutel=sleutel, rijen=rijen,
+                               samenvatting=sorted(samenvatting.items()),
+                               aliassen=alias)
+
+    # --- notering met de hand corrigeren -----------------------------------
+
+    BEWERKBAAR = ("positie", "titel", "artiest", "label", "weken_genoteerd",
+                  "vorige_positie", "site_status")
+
+    @app.route("/notering/<int:id>", methods=["GET", "POST"])
+    @vereist_aanmelding
+    def notering_bewerk(id: int):
+        con = verbinding()
+        rij = con.execute("SELECT * FROM noteringen WHERE id=?", (id,)).fetchone()
+        if rij is None:
+            abort(404)
+
+        if request.method == "POST":
+            reden = (request.form.get("reden") or "").strip()
+            if not reden:
+                flash("Geef een reden op -- die komt in het logboek te staan", "fout")
+                return render_template("notering.html", rij=rij, velden=BEWERKBAAR)
+
+            gewijzigd = []
+            for veld in BEWERKBAAR:
+                nieuw = (request.form.get(veld) or "").strip()
+                oud = rij[veld]
+                if veld in ("positie", "weken_genoteerd", "vorige_positie"):
+                    nieuw = int(nieuw) if nieuw else None
+                else:
+                    nieuw = nieuw or None
+                if nieuw != oud:
+                    con.execute(f"UPDATE noteringen SET {veld}=? WHERE id=?", (nieuw, id))
+                    leg_vast("notering", f"id {id}", veld, oud, nieuw, reden)
+                    gewijzigd.append(veld)
+
+            if gewijzigd and ("titel" in gewijzigd or "artiest" in gewijzigd):
+                # De sleutel volgt uit titel en artiest, dus die moet mee.
+                from ..normalize import sleutel_van
+
+                ververst = con.execute(
+                    "SELECT titel, artiest, sleutel FROM noteringen WHERE id=?", (id,)
+                ).fetchone()
+                nieuwe = sleutel_van(ververst["titel"], ververst["artiest"])
+                if nieuwe != ververst["sleutel"]:
+                    con.execute("UPDATE noteringen SET sleutel=? WHERE id=?", (nieuwe, id))
+                    leg_vast("notering", f"id {id}", "sleutel", ververst["sleutel"],
+                             nieuwe, "volgt uit titel/artiest")
+            con.commit()
+            flash(
+                f"{len(gewijzigd)} veld(en) gewijzigd" if gewijzigd
+                else "Niets gewijzigd", "goed" if gewijzigd else "fout"
+            )
+            return redirect(url_for("nummer", sleutel=rij["sleutel"]))
+
+        return render_template("notering.html", rij=rij, velden=BEWERKBAAR)
+
+    # --- aliassen ----------------------------------------------------------
+
+    @app.route("/aliassen")
+    @vereist_aanmelding
+    def aliassen():
+        term = (request.args.get("term") or "").strip()
+        vraag = "SELECT van, naar, opmerking, aangemaakt FROM aliases"
+        waarden: list = []
+        if term:
+            vraag += " WHERE van LIKE ? OR naar LIKE ? OR opmerking LIKE ?"
+            waarden = [f"%{term}%"] * 3
+        vraag += " ORDER BY van"
+        return render_template("aliassen.html", term=term,
+                               rijen=list(verbinding().execute(vraag, waarden)))
+
+    @app.route("/aliassen/bewaar", methods=["POST"])
+    @vereist_aanmelding
+    def alias_bewaar():
+        van = (request.form.get("van") or "").strip()
+        naar = (request.form.get("naar") or "").strip()
+        opmerking = (request.form.get("opmerking") or "").strip()
+        oude_van = (request.form.get("oude_van") or "").strip()
+
+        if not van or not naar:
+            flash("Beide sleutels zijn verplicht", "fout")
+        elif van == naar:
+            flash("Een sleutel kan niet naar zichzelf verwijzen", "fout")
+        else:
+            con = verbinding()
+            if oude_van and oude_van != van:
+                con.execute("DELETE FROM aliases WHERE van=?", (oude_van,))
+            bestond = con.execute(
+                "SELECT naar FROM aliases WHERE van=?", (van,)).fetchone()
+            con.execute(
+                "INSERT OR REPLACE INTO aliases (van, naar, opmerking, aangemaakt)"
+                " VALUES (?,?,?,?)",
+                (van, naar, opmerking or None,
+                 datetime.now().isoformat(timespec="seconds")),
+            )
+            con.commit()
+            leg_vast("alias", van, "naar", bestond["naar"] if bestond else None,
+                     naar, opmerking)
+            flash(f"Alias bewaard. Draai 'Sleutels herberekenen' om hem te laten "
+                  f"gelden.", "goed")
+        return redirect(url_for("aliassen"))
+
+    @app.route("/aliassen/verwijder", methods=["POST"])
+    @vereist_aanmelding
+    def alias_verwijder():
+        van = (request.form.get("van") or "").strip()
+        con = verbinding()
+        rij = con.execute("SELECT naar FROM aliases WHERE van=?", (van,)).fetchone()
+        if rij:
+            con.execute("DELETE FROM aliases WHERE van=?", (van,))
+            con.commit()
+            leg_vast("alias", van, "naar", rij["naar"], None, "verwijderd")
+            flash("Alias verwijderd. Draai 'Sleutels herberekenen'.", "goed")
+        return redirect(url_for("aliassen"))
+
+    # --- uitzonderingen ----------------------------------------------------
+
+    @app.route("/uitzonderingen")
+    @vereist_aanmelding
+    def uitzonderingen():
+        return render_template("uitzonderingen.html", rijen=list(verbinding().execute(
+            "SELECT sleutel_a, sleutel_b, reden, aangemaakt FROM niet_samenvoegen"
+            " ORDER BY sleutel_a")))
+
+    @app.route("/uitzonderingen/bewaar", methods=["POST"])
+    @vereist_aanmelding
+    def uitzondering_bewaar():
+        a = (request.form.get("sleutel_a") or "").strip()
+        b = (request.form.get("sleutel_b") or "").strip()
+        reden = (request.form.get("reden") or "").strip()
+        if not a or not b:
+            flash("Beide sleutels zijn verplicht", "fout")
+        else:
+            con = verbinding()
+            con.execute(
+                "INSERT OR REPLACE INTO niet_samenvoegen"
+                " (sleutel_a, sleutel_b, reden, aangemaakt) VALUES (?,?,?,?)",
+                (a, b, reden or None, datetime.now().isoformat(timespec="seconds")),
+            )
+            con.commit()
+            leg_vast("niet_samenvoegen", f"{a} <-> {b}", "paar", None, "toegevoegd", reden)
+            flash("Uitzondering bewaard", "goed")
+        return redirect(url_for("uitzonderingen"))
+
+    @app.route("/uitzonderingen/verwijder", methods=["POST"])
+    @vereist_aanmelding
+    def uitzondering_verwijder():
+        a = (request.form.get("sleutel_a") or "").strip()
+        b = (request.form.get("sleutel_b") or "").strip()
+        con = verbinding()
+        con.execute("DELETE FROM niet_samenvoegen WHERE sleutel_a=? AND sleutel_b=?",
+                    (a, b))
+        con.commit()
+        leg_vast("niet_samenvoegen", f"{a} <-> {b}", "paar", "bestond", None,
+                 "verwijderd")
+        flash("Uitzondering verwijderd", "goed")
+        return redirect(url_for("uitzonderingen"))
+
+    # --- vrije query -------------------------------------------------------
+
+    @app.route("/query", methods=["GET", "POST"])
+    @vereist_aanmelding
+    def query():
+        sql = (request.form.get("sql") or request.args.get("sql") or "").strip()
+        kolommen: list[str] = []
+        rijen: list = []
+        fout = None
+        if sql:
+            eerste = sql.lstrip().split(None, 1)[0].lower() if sql.strip() else ""
+            if eerste not in ("select", "with"):
+                fout = ("Alleen SELECT (of WITH) is toegestaan. Wijzigen doe je via "
+                        "de bewerkschermen, dan wordt het ook vastgelegd.")
+            elif any(f" {w} " in f" {sql.lower()} " for w in VERBODEN_IN_QUERY):
+                fout = "Deze query bevat een wijzigend commando en is geweigerd."
+            else:
+                try:
+                    cur = verbinding().execute(sql)
+                    kolommen = [k[0] for k in cur.description or []]
+                    rijen = cur.fetchmany(500)
+                except sqlite3.Error as e:
+                    fout = f"sqlite: {e}"
+        return render_template("query.html", sql=sql, kolommen=kolommen,
+                               rijen=rijen, fout=fout)
+
+    # --- wijzigingslogboek -------------------------------------------------
+
+    @app.route("/wijzigingen")
+    @vereist_aanmelding
+    def wijzigingen():
+        return render_template("wijzigingen.html", rijen=list(verbinding().execute(
+            "SELECT * FROM wijzigingen ORDER BY id DESC LIMIT 300")))
+
+    # --- beheer ------------------------------------------------------------
+
+    @app.route("/beheer")
+    @vereist_aanmelding
+    def beheer():
+        jaren = [r[0] for r in verbinding().execute(
+            "SELECT DISTINCT jaar FROM noteringen ORDER BY jaar DESC")]
+        return render_template("beheer.html", jaren=jaren, taak=taken.huidige())
+
+    @app.route("/beheer/start", methods=["POST"])
+    @vereist_aanmelding
+    def beheer_start():
+        wat = request.form.get("wat")
+        jaar = request.form.get("jaar")
+        from .werk import bouw_werk
+
+        naam, werk = bouw_werk(wat, jaar)
+        if werk is None:
+            flash(naam, "fout")
+        else:
+            gestart, melding = taken.start(naam, werk)
+            flash(melding, "goed" if gestart else "fout")
+        return redirect(url_for("beheer"))
+
+    @app.route("/taak")
+    @vereist_aanmelding
+    def taak_stand():
+        t = taken.huidige()
+        if t is None:
+            return {"bezig": False, "regels": []}
+        return {
+            "bezig": not t.klaar, "naam": t.naam, "gestart": t.gestart,
+            "regels": t.regels[-60:], "gelukt": t.gelukt, "fout": t.fout,
+        }

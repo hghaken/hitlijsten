@@ -1,0 +1,81 @@
+{% extends "basis.html" %}
+{% block titel %}Beheer — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>Beheer</h1>
+<p class="hint">
+  Er draait er één tegelijk. Twee ophaalrondes naast elkaar zouden dezelfde
+  weken dubbel halen, en twee keer Excel bouwen vecht om dezelfde bestanden.
+</p>
+
+<h2>Ophalen</h2>
+<form method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="bijwerken">
+  <button class="hoofd" type="submit">Ontbrekende weken ophalen</button>
+  <span class="hint">— wat de vrijdagtaak ook doet, zonder mail</span>
+</form>
+
+<h2>Excel bouwen</h2>
+<form method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="excel">
+  <select name="jaar">
+    <option value="alle">alle jaargangen</option>
+    {% for j in jaren %}<option value="{{ j }}">{{ j }}</option>{% endfor %}
+  </select>
+  <button class="hoofd" type="submit">Bouwen</button>
+</form>
+
+<h2>Sleutels</h2>
+<form method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="hersleutel">
+  <select name="jaar">
+    <option value="alle">alle jaargangen</option>
+    {% for j in jaren %}<option value="{{ j }}">{{ j }}</option>{% endfor %}
+  </select>
+  <button type="submit">Sleutels herberekenen</button>
+  <span class="hint">— na het wijzigen van aliassen; bouw daarna Excel opnieuw</span>
+</form>
+
+<h2>Controles</h2>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="controle">
+  <button type="submit">Dubbelingen zoeken</button>
+</form>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="kruiscontrole">
+  <select name="jaar">
+    <option value="alle">alle jaargangen</option>
+    {% for j in jaren %}<option value="{{ j }}">{{ j }}</option>{% endfor %}
+  </select>
+  <button type="submit">Kruiscontrole michajans.nl</button>
+</form>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="onderscheidingen">
+  <button type="submit">Alarmschijven en Dancesmashes ophalen</button>
+</form>
+
+<h2>Voortgang</h2>
+<p id="stand" class="hint">niets aan de gang</p>
+<pre id="voortgang"></pre>
+
+<script>
+async function ververs() {
+  try {
+    const r = await fetch("{{ url_for('taak_stand') }}");
+    const t = await r.json();
+    const stand = document.getElementById("stand");
+    const vak = document.getElementById("voortgang");
+    if (!t.naam) { stand.textContent = "niets aan de gang"; vak.style.display = "none"; return; }
+    vak.style.display = "block";
+    vak.textContent = (t.regels || []).join("\n") + (t.fout ? "\n\n" + t.fout : "");
+    vak.scrollTop = vak.scrollHeight;
+    if (t.bezig) {
+      stand.textContent = "bezig: " + t.naam + " (gestart " + t.gestart + ")";
+    } else {
+      stand.textContent = (t.gelukt ? "klaar: " : "MISLUKT: ") + t.naam;
+    }
+  } catch (e) { /* netwerkhik: gewoon opnieuw proberen */ }
+}
+ververs();
+setInterval(ververs, 2000);
+</script>
+{% endblock %}

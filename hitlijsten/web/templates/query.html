@@ -1,0 +1,41 @@
+{% extends "basis.html" %}
+{% block titel %}Query — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>Vrije query</h1>
+<p class="hint">
+  Alleen SELECT. Wijzigen gaat via de bewerkschermen, want die leggen elke
+  wijziging vast in het logboek — een typefout in een UPDATE is onherstelbaar.
+  Er komen maximaal 500 rijen terug.
+</p>
+
+<form method="post">
+  <textarea name="sql" rows="6" placeholder="SELECT ...">{{ sql }}</textarea>
+  <p><button class="hoofd" type="submit">Uitvoeren</button></p>
+</form>
+
+<details style="margin-bottom: 1.2rem">
+  <summary class="hint">Voorbeelden</summary>
+  <ul class="hint">
+    <li><code>SELECT * FROM noteringen WHERE lijst='top40' AND jaar=1975 AND week=1 ORDER BY positie</code></li>
+    <li><code>SELECT artiest, COUNT(DISTINCT sleutel) n FROM noteringen WHERE lijst='top40' GROUP BY artiest ORDER BY n DESC LIMIT 20</code></li>
+    <li><code>SELECT jaar, COUNT(*) FROM noteringen WHERE positie=1 AND lijst='top40' GROUP BY jaar</code></li>
+    <li><code>SELECT * FROM wijzigingen ORDER BY id DESC</code></li>
+  </ul>
+  <p class="hint">Tabellen: noteringen, opgehaald, aliases, niet_samenvoegen,
+     bestaat_niet, onderscheidingen, correcties, wijzigingen.</p>
+</details>
+
+{% if fout %}<div class="melding fout">{{ fout }}</div>{% endif %}
+
+{% if kolommen %}
+<p class="hint">{{ rijen|length }} rijen{% if rijen|length == 500 %} (afgekapt op 500){% endif %}</p>
+<div style="overflow-x: auto">
+<table>
+  <tr>{% for k in kolommen %}<th>{{ k }}</th>{% endfor %}</tr>
+  {% for r in rijen %}
+  <tr>{% for k in kolommen %}<td>{{ r[k] if r[k] is not none else '' }}</td>{% endfor %}</tr>
+  {% endfor %}
+</table>
+</div>
+{% endif %}
+{% endblock %}

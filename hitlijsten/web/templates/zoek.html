@@ -1,0 +1,40 @@
+{% extends "basis.html" %}
+{% block titel %}Zoeken — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>Noteringen zoeken</h1>
+
+<form method="get">
+  <input type="text" name="term" value="{{ term }}" placeholder="titel of artiest" autofocus>
+  <select name="lijst">
+    <option value="">alle lijsten</option>
+    {% for sleutel, naam in lijst_namen.items() %}
+      <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}>{{ naam }}</option>
+    {% endfor %}
+  </select>
+  <button class="hoofd" type="submit">Zoeken</button>
+</form>
+
+{% if term %}
+  <p class="hint">{{ resultaten|length }} resultaten{% if resultaten|length == 200 %}
+    (afgekapt op 200 — maak de zoekterm specifieker){% endif %}</p>
+  <table>
+    <tr><th>Titel</th><th>Artiest</th><th>Lijst</th><th class="getal">Van</th>
+        <th class="getal">Tot</th><th class="getal">Weken</th>
+        <th class="getal">Hoogste</th><th></th></tr>
+    {% for r in resultaten %}
+    <tr>
+      <td>{{ r['titel'] }}</td>
+      <td>{{ r['artiest'] }}</td>
+      <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
+      <td class="getal">{{ r['van'] }}</td>
+      <td class="getal">{{ r['tot'] }}</td>
+      <td class="getal">{{ r['weken'] }}</td>
+      <td class="getal">{{ r['hoogste'] }}</td>
+      <td><a href="{{ url_for('nummer', sleutel=r['sleutel']) }}">bekijk</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+{% else %}
+  <p class="hint">Zoek op een deel van de titel of de artiestnaam.</p>
+{% endif %}
+{% endblock %}
