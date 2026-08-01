@@ -9,11 +9,12 @@ from functools import wraps
 from pathlib import Path
 
 from flask import (
-    Flask, abort, flash, g, redirect, render_template, request, session, url_for,
+    Flask, abort, flash, g, redirect, render_template, request, send_file,
+    session, url_for,
 )
 
 from .. import db
-from ..config import LIJSTEN, ROOT
+from ..config import EXCEL_DIR, LIJSTEN, ROOT, decennium_van
 from . import taken
 
 INSTELLINGEN = ROOT / "webapp.ini"
@@ -232,6 +233,29 @@ def _registreer(app: Flask) -> None:
             "jaar.html", lijst=lijst, jaren=jaren, jaar=jaar,
             nummers=gesorteerd, weken=weken, hoogtepunten=hoogtepunten,
         )
+
+    # --- Excel downloaden --------------------------------------------------
+
+    @app.route("/download/<lijst>/<int:jaar>")
+    def download(lijst: str, jaar: int):
+        """Het gebouwde Excel-bestand van een lijst en jaargang.
+
+        Twee soorten: het werkboek met de weektabs en het puntenklassement, en
+        het jaarbestand met de matrix. De bestanden worden niet hier gemaakt --
+        ze komen uit de wekelijkse run of uit Beheer. Ontbreekt er een, dan is
+        dat een melding en geen stille lege download.
+        """
+        if lijst not in LIJSTEN:
+            abort(404)
+        soort = request.args.get("soort", "weken")
+        naam = LIJSTEN[lijst]["bestand"]
+        bestand = (f"{naam}_Jaar_{jaar}.xlsx" if soort == "matrix"
+                   else f"{naam}_{jaar}.xlsx")
+        pad = EXCEL_DIR / decennium_van(jaar) / str(jaar) / bestand
+        if not pad.exists():
+            flash(f"{bestand} is nog niet gebouwd. Bouw hem via Beheer.", "fout")
+            return redirect(url_for("jaaroverzicht", lijst=lijst, jaar=jaar))
+        return send_file(pad, as_attachment=True, download_name=bestand)
 
     # --- noteringen zoeken -------------------------------------------------
 

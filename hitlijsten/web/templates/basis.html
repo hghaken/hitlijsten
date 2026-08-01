@@ -129,6 +129,20 @@
   button.gevaar { color: var(--waarschuw); }
   form.inline { display: inline; }
 
+  /* Een link die eruitziet als een knop -- voor downloads, waar een <a> hoort
+     omdat de browser er dan zelf een bestand van maakt. */
+  a.knop {
+    display: inline-block; text-decoration: none; font-weight: 550;
+    padding: .45rem 1rem; border-radius: 9px; color: var(--ink);
+    border: 1px solid transparent; background: var(--balk);
+  }
+  a.knop:hover { filter: brightness(1.12); color: var(--ink); }
+  a.knop.zacht {
+    background: var(--glas); border-color: var(--rand);
+    color: var(--gedempt); font-weight: 400;
+  }
+  a.knop.zacht:hover { background: rgba(255,255,255,.11); color: var(--ink); }
+
   .melding {
     padding: .65rem 1rem; border-radius: 11px; margin-bottom: 1.1rem;
     border: 1px solid var(--rand);

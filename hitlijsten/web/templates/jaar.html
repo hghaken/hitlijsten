@@ -18,6 +18,14 @@
     {% endfor %}
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+
+  {% if jaar %}
+  <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar) }}"
+     title="Werkboek met een tab per week en het puntenklassement">⤓ Excel</a>
+  <a class="knop zacht" href="{{ url_for('download', lijst=lijst, jaar=jaar, soort='matrix') }}"
+     title="Werkboek met de matrix nummer x week">⤓ jaarmatrix</a>
+  {% endif %}
+
   <span class="hint" style="margin-left:auto">
     {{ jaren|length }} jaargangen beschikbaar{% if jaren %}
       ({{ jaren[-1] }}–{{ jaren[0] }}){% endif %}
