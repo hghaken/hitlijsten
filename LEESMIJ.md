@@ -248,6 +248,24 @@ binnenkomst en laatste notering, met een ‹ of › als de notering buiten het j
 doorloopt. Werkt voor alle vier de lijsten en alle jaargangen; het bestand wordt
 bij het downloaden gemaakt en kan dus nooit achterlopen.
 
+De bestanden **staan klaar op schijf**, naast de Excel van diezelfde jaargang:
+`Top40_1975.pdf` in `1970-1979/1975/`. De jaargangen tot en met 2025 zijn
+afgesloten, dus die hoeven maar één keer gebouwd te worden:
+
+```bash
+python -m hitlijsten.cli pdf --alle       # alles wat nog ontbreekt
+python -m hitlijsten.cli pdf --jaar 2026  # één jaargang
+python -m hitlijsten.cli pdf --alle --opnieuw   # ook wat al klopte
+```
+
+"Afgesloten" geldt wel voor de **bron**, niet voor onze afgeleide cijfers: een
+nieuwe alias of een correctie verschuift de punten van een oude jaargang alsnog.
+Daarom kijkt de download of het bewaarde bestand jonger is dan de laatste
+ophaalactie én dan de laatste handmatige wijziging; is dat niet zo, dan wordt het
+ter plekke opnieuw gebouwd. Een bewaard bestand levert de download in nul
+seconden, een herbouw kost er een halve. De wekelijkse run vernieuwt de PDF van
+elke jaargang die nieuwe weken kreeg.
+
 **Er zit een lettertype bij** (`lettertypen/DejaVuSans*.ttf`, vrij
 herdistribueerbaar, uit de matplotlib-wheel op PyPI). Dat moest wel: de
 ingebouwde PDF-lettertypen kunnen alleen latin-1, en zesendertig van de
@@ -281,6 +299,7 @@ Excel herbouwen, mailen. Hieronder staat kortweg `python`; lees dat als
 | `python -m hitlijsten historie` | complete oude jaargangen uit het archief |
 | `python -m hitlijsten excel` | Excel opnieuw bouwen uit de database |
 | `python -m hitlijsten decennium` | decenniumklassementen van de Top 40 naar de decenniummappen |
+| `python -m hitlijsten pdf --alle` | jaaroverzichten als PDF naar de jaarmappen |
 | `python -m hitlijsten controle` | verdachte dubbelingen, met oordeel per paar |
 | `python -m hitlijsten kruiscontrole --alle` | onze Top 40 vergelijken met michajans.nl |
 | `python -m hitlijsten onderscheidingen` | Alarmschijven en Dancesmashes ophalen |

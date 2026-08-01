@@ -16,15 +16,20 @@ honderd kilobyte per bestand en dan klopt elke naam.
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from fpdf import FPDF
 
-from .config import LIJSTEN, ROOT
+from .config import LIJSTEN, ROOT, excel_map
 from .db import looptijden
-from .excel import verzamel_lijst
+from .excel import BestandInGebruik, verzamel_lijst
 
-__all__ = ["bouw_jaaroverzicht", "REGELS_PER_PAGINA"]
+__all__ = [
+    "bouw_jaaroverzicht", "schrijf_jaaroverzicht", "pad_van", "is_actueel",
+    "REGELS_PER_PAGINA",
+]
 
 LETTERTYPEN = ROOT / "lettertypen"
 
@@ -180,3 +185,67 @@ def bouw_jaaroverzicht(
             y += REGEL
 
     return bytes(pdf.output())
+
+
+# --- op schijf bewaren ------------------------------------------------------
+#
+# De jaargangen 1965-2025 zijn afgesloten en veranderen niet meer, dus die
+# hoeven maar één keer gebouwd te worden. Maar "veranderen niet meer" geldt voor
+# de BRON, niet voor onze afgeleide cijfers: een nieuwe alias of een correctie
+# verschuift de punten van een oude jaargang alsnog. Daarom bewaart dit deel de
+# bestanden wel, maar controleert het bij elke download of ze nog kloppen.
+
+
+def pad_van(lijst: str, jaar: int, map_: Optional[Path] = None) -> Path:
+    """Waar het jaarbestand landt: naast de Excel van diezelfde jaargang."""
+    bestand = LIJSTEN.get(lijst, {}).get("bestand", lijst)
+    return (Path(map_) if map_ is not None else excel_map(jaar)) / f"{bestand}_{jaar}.pdf"
+
+
+def is_actueel(con: sqlite3.Connection, pad: Path, lijst: str, jaar: int) -> bool:
+    """Is het bewaarde bestand jonger dan de gegevens waar het uit komt?
+
+    Twee dingen kunnen het verouderen: een week die opnieuw is opgehaald, en een
+    handmatige wijziging (alias, uitzondering, correctie). Dat laatste is niet
+    per jaargang bij te houden, dus elke wijziging maakt alle bestanden verdacht.
+    Opnieuw bouwen kost een halve seconde, dus dat mag ruim gerekend worden.
+    """
+    if not pad.exists():
+        return False
+    gemaakt = datetime.fromtimestamp(pad.stat().st_mtime)
+    for vraag, waarden in (
+        ("SELECT MAX(opgehaald_op) FROM opgehaald WHERE lijst=? AND jaar=?",
+         (lijst, jaar)),
+        ("SELECT MAX(tijdstip) FROM wijzigingen", ()),
+    ):
+        try:
+            laatste = con.execute(vraag, waarden).fetchone()[0]
+        except sqlite3.Error:
+            return False
+        if laatste and datetime.fromisoformat(laatste) > gemaakt:
+            return False
+    return True
+
+
+def schrijf_jaaroverzicht(
+    con: sqlite3.Connection, lijst: str, jaar: int,
+    map_: Optional[Path] = None, *, altijd: bool = False,
+) -> Optional[Path]:
+    """Bouw het jaarbestand en zet het op schijf. None als er geen data is.
+
+    Is het bestand er al en nog actueel, dan gebeurt er niets -- tenzij `altijd`.
+    """
+    pad = pad_van(lijst, jaar, map_)
+    if not altijd and is_actueel(con, pad, lijst, jaar):
+        return pad
+    gegevens = bouw_jaaroverzicht(con, lijst, jaar)
+    if gegevens is None:
+        return None
+    pad.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        pad.write_bytes(gegevens)
+    except PermissionError as fout:
+        raise BestandInGebruik(
+            f"Kan {pad} niet opslaan; staat hij nog open in een pdf-lezer?"
+        ) from fout
+    return pad

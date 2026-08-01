@@ -272,6 +272,40 @@ def opdracht_excel(jaar: int) -> list:
     return bestanden
 
 
+def opdracht_pdf(jaar: int | None, *, altijd: bool = False) -> list:
+    """De jaaroverzichten als PDF naar de jaarmappen.
+
+    Zonder jaartal alle jaargangen van alle lijsten. Bestanden die er al staan
+    en nog kloppen worden overgeslagen, tenzij `altijd` -- zo kost een tweede
+    keer draaien vrijwel niets.
+    """
+    from . import pdf as pdfbouwer
+    from .config import LIJSTEN
+    from .db import verbinding
+
+    bestanden, overgeslagen = [], 0
+    with verbinding() as con:
+        for lijst in LIJSTEN:
+            jaren = ([jaar] if jaar is not None else
+                     [r[0] for r in con.execute(
+                         "SELECT DISTINCT jaar FROM noteringen WHERE lijst=?"
+                         " ORDER BY jaar", (lijst,))])
+            for j in jaren:
+                pad = pdfbouwer.pad_van(lijst, j)
+                bestond = pdfbouwer.is_actueel(con, pad, lijst, j)
+                gemaakt = pdfbouwer.schrijf_jaaroverzicht(con, lijst, j, altijd=altijd)
+                if gemaakt is None:
+                    continue
+                if bestond and not altijd:
+                    overgeslagen += 1
+                else:
+                    log(f"geschreven: {gemaakt.name}")
+                    bestanden.append(gemaakt)
+    if overgeslagen:
+        log(f"{overgeslagen} bestanden waren al actueel en zijn overgeslagen")
+    return bestanden
+
+
 def opdracht_decennium(decennium: int | None) -> list:
     """Het decenniumklassement naar de decenniummap.
 
@@ -647,6 +681,9 @@ def opdracht_run(jaar: int, *, stuur_mail: bool = True) -> None:
         bestanden = []
         for bouwjaar in sorted({j for _, j in nieuwe_weken}):
             bestanden += opdracht_excel(bouwjaar)
+            # De PDF van die jaargang klopt nu niet meer; meteen vernieuwen,
+            # anders staat er tot de volgende run een verouderd bestand.
+            bestanden += opdracht_pdf(bouwjaar, altijd=True)
         onderwerp, tekst = _mailtekst(nieuwe_weken, mislukt)
         tekst += "\n\nBestanden:\n" + "\n".join(f"  {p}" for p in bestanden)
         if stuur_mail:
@@ -698,6 +735,12 @@ def main(argv: list[str] | None = None) -> int:
                    help="beperk tot een lijst (standaard alle vier)")
     sub.add_parser("excel", parents=[jaar_ouder],
                    help="Excel-bestanden opnieuw bouwen")
+    pd = sub.add_parser("pdf", parents=[jaar_ouder],
+                        help="de jaaroverzichten als PDF naar de jaarmappen")
+    pd.add_argument("--alle", action="store_true",
+                    help="alle jaargangen, niet alleen het opgegeven jaar")
+    pd.add_argument("--opnieuw", action="store_true",
+                    help="ook bestanden herbouwen die al actueel zijn")
     d = sub.add_parser("decennium",
                        help="het decenniumklassement van de Top 40 als Excel")
     d.add_argument("--decennium", type=int, default=None,
@@ -738,6 +781,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.opdracht == "excel":
         opdracht_excel(jaar)
+    elif args.opdracht == "pdf":
+        opdracht_pdf(None if args.alle else jaar, altijd=args.opnieuw)
     elif args.opdracht == "decennium":
         opdracht_decennium(args.decennium)
     elif args.opdracht == "controle":

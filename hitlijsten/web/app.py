@@ -465,11 +465,22 @@ def _registreer(app: Flask) -> None:
 
         if lijst not in LIJSTEN:
             abort(404)
-        gegevens = pdfbouwer.bouw_jaaroverzicht(verbinding(), lijst, jaar)
+        # De afgesloten jaargangen staan al op schijf; die worden alleen
+        # opnieuw gebouwd als de gegevens sindsdien zijn veranderd.
+        con = verbinding()
+        bestand = f"{LIJSTEN[lijst]['bestand']}_{jaar}.pdf"
+        try:
+            pad = pdfbouwer.schrijf_jaaroverzicht(con, lijst, jaar)
+        except Exception:
+            pad = None      # geen schrijfrechten? dan alsnog uit het geheugen
+        if pad is not None and pad.exists():
+            return send_file(pad, as_attachment=True, download_name=bestand,
+                             mimetype="application/pdf")
+
+        gegevens = pdfbouwer.bouw_jaaroverzicht(con, lijst, jaar)
         if gegevens is None:
             flash(f"Voor {jaar} staat er niets in de database.", "fout")
             return redirect(url_for("jaaroverzicht", lijst=lijst))
-        bestand = f"{LIJSTEN[lijst]['bestand']}_{jaar}.pdf"
         return send_file(io.BytesIO(gegevens), as_attachment=True,
                          download_name=bestand, mimetype="application/pdf")
 
