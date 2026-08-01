@@ -178,11 +178,49 @@
   }
   nav.sprong a:hover { color: var(--ink); background: var(--glas); }
 
-  section.weetje { scroll-margin-top: 4.5rem; }
-  section.weetje .uitleg { margin: -.4rem 0 .7rem; max-width: 58rem; }
+  nav.sprong button.alles {
+    font-size: .86rem; padding: .25rem .8rem; border-radius: 999px;
+    color: var(--gedempt); background: var(--glas2);
+  }
+  nav.sprong button.alles:hover { color: var(--ink); background: var(--glas); }
+
+  /* Elk weetje is een <details>. De kop is de samenvatting: nummer, titel en
+     de nummer 1, zodat de pagina dichtgeklapt ook iets vertelt. */
+  details.weetje {
+    scroll-margin-top: 4.5rem; margin-bottom: .6rem;
+    border: 1px solid var(--rand2); border-radius: 14px;
+    background: var(--glas2);
+  }
+  details.weetje[open] { border-color: var(--rand); background: transparent; }
+  details.weetje > summary {
+    display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+    padding: .7rem 1rem; border-radius: 13px; list-style: none;
+  }
+  details.weetje > summary::-webkit-details-marker { display: none; }
+  details.weetje > summary::before {
+    content: "›"; color: var(--gedempt); font-size: 1.15rem; line-height: 1;
+    transition: transform .15s ease; display: inline-block;
+  }
+  details.weetje[open] > summary::before { transform: rotate(90deg); }
+  details.weetje > summary:hover { background: var(--glas); }
+  details.weetje > summary .nr { color: var(--gedempt); font-variant-numeric: tabular-nums; }
+  details.weetje > summary .wat { font-weight: 600; }
+  /* De winnaar schuift naar rechts en verdwijnt als eerste op een smal scherm. */
+  details.weetje > summary .winnaar {
+    margin-left: auto; color: var(--gedempt); font-size: .89rem;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 34rem;
+  }
+  details.weetje > summary .winnaar b { color: var(--ink); font-weight: 650; }
+  details.weetje .uitleg { margin: 0 1rem .7rem; max-width: 58rem; }
   /* Tien regels passen altijd; geen scrollbalk in het vak. */
-  section.weetje .tabelvak { max-height: none; }
+  details.weetje .tabelvak {
+    max-height: none; margin: 0 -1px -1px; border-radius: 0 0 14px 14px;
+  }
   td.sterk { font-weight: 650; white-space: nowrap; }
+
+  @media (max-width: 700px) {
+    details.weetje > summary .winnaar { display: none; }
+  }
 
   /* --- grafiek van de positie per week ---------------------------------- */
 

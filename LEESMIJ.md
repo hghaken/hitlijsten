@@ -213,6 +213,10 @@ noteringen, meeste nummer 1-hits, meeste weken, meeste punten, langst genoteerd,
 langst op 1, hoogste binnenkomers, grootste sprong in één week, langste weg naar
 de eerste plaats en langste terugkeer.
 
+De tien blokken staan **ingeklapt**; tien tabellen van tien regels onder elkaar
+is een muur. In de kop van elk blok staat wel de nummer 1, zodat de pagina
+dichtgeklapt ook iets vertelt, en één knop klapt ze allemaal open.
+
 Alles komt uit **één doorloop** over de noteringen. Dat is geen zuinigheid maar
 noodzaak: de meeste vragen ("hoe vaak kwam dit terug?", "wat was de grootste
 sprong?") hebben de reeks per nummer op volgorde nodig, en die bouw je maar één

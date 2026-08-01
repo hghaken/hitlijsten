@@ -35,11 +35,21 @@
 
 <nav class="sprong">
   {% for b in blokken %}<a href="#{{ b.sleutel }}">{{ b.titel }}</a>{% endfor %}
+  <button type="button" id="allemaal" class="alles">Alles uitklappen</button>
 </nav>
 
 {% for b in blokken %}
-<section class="weetje" id="{{ b.sleutel }}">
-  <h2>{{ loop.index }}. {{ b.titel }}</h2>
+{# Standaard dicht: tien tabellen van tien regels onder elkaar is een muur.
+   In de samenvatting staat wel de nummer 1, zodat de pagina ook dichtgeklapt
+   iets vertelt. #}
+<details class="weetje" id="{{ b.sleutel }}">
+  <summary>
+    <span class="nr">{{ loop.index }}.</span>
+    <span class="wat">{{ b.titel }}</span>
+    {% if b.rijen %}
+      <span class="winnaar">{{ b.rijen[0].naam }} <b>{{ b.rijen[0].waarde }}</b></span>
+    {% endif %}
+  </summary>
   <p class="hint uitleg">{{ b.uitleg }}</p>
   <div class="tabelvak">
     <table>
@@ -69,7 +79,7 @@
       </tbody>
     </table>
   </div>
-</section>
+</details>
 {% endfor %}
 
 <h2>Hoe je dit moet lezen</h2>
@@ -89,6 +99,43 @@
   <b>Klik op een nummer</b> om naar de jaargang te gaan waarin het de meeste
   punten haalde, met de grafiek van het verloop binnen handbereik.
 </p>
+
+<script>
+/* Twee kleinigheden die het uitklappen bruikbaar maken.
+ *
+ * 1. Een sprong naar #blok opent dat blok. Zonder dit scrolt de browser er wel
+ *    heen, maar blijft het dicht -- en dan lijkt de link kapot.
+ * 2. Eén knop voor alle tien tegelijk, want tien keer klikken om te bladeren is
+ *    geen bladeren.
+ */
+(function () {
+  const blokken = Array.from(document.querySelectorAll("details.weetje"));
+  if (!blokken.length) return;
+
+  function openVolgensAdres() {
+    const naam = decodeURIComponent(location.hash.slice(1));
+    const blok = naam && document.getElementById(naam);
+    if (blok && blok.tagName === "DETAILS") {
+      blok.open = true;
+      blok.scrollIntoView({ block: "start" });
+    }
+  }
+  window.addEventListener("hashchange", openVolgensAdres);
+  openVolgensAdres();
+
+  const knop = document.getElementById("allemaal");
+  knop.addEventListener("click", function () {
+    // Staat er nog eentje dicht, dan openen we alles; anders klappen we in.
+    const openen = blokken.some((b) => !b.open);
+    blokken.forEach((b) => { b.open = openen; });
+    knop.textContent = openen ? "Alles inklappen" : "Alles uitklappen";
+  });
+  blokken.forEach((b) => b.addEventListener("toggle", function () {
+    knop.textContent = blokken.every((x) => x.open)
+      ? "Alles inklappen" : "Alles uitklappen";
+  }));
+})();
+</script>
 
 {% endif %}
 {% endblock %}
