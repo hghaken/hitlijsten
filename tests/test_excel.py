@@ -304,7 +304,7 @@ def test_weektabs_tonen_de_hele_lijst():
     koppen, week1 = _weektabel(wb["Week 01"])
     # top40 heeft heeft_label False -> geen Label-kolom.
     assert koppen == [
-        "Positie", "Vorige positie", "Titel", "Artiest",
+        "Positie", "Vorige positie", "Artiest", "Titel",
         "Aantal weken", "Site-status", "Sleutel",
     ]
     for naam in ("Week 01", "Week 02", "Week 03", "Week 04", "Week 06", "Week 07"):
@@ -380,7 +380,7 @@ def test_totaal_punten_handmatig_nagerekend():
     wb = _boek("Top40_2026.xlsx")
     koppen, rijen = _tabel(wb["Totaal"], 1)
     assert koppen == [
-        "Titel", "Artiest", "Punten", "Hoogste positie", "Aantal weken genoteerd",
+        "Artiest", "Titel", "Punten", "Hoogste positie", "Aantal weken genoteerd",
         "Weken volgens site", "Eerste week", "Laatste week", "Sleutel",
     ]
     per_sleutel = {r["Sleutel"]: r for r in rijen}
@@ -433,7 +433,7 @@ def test_jaarmatrix_met_re_entry_en_gat():
     koppen, rijen = _tabel(ws, 1)
     # Week 5 zit niet in de database en krijgt dus ook geen kolom.
     assert koppen == [
-        "Titel", "Artiest", "1", "2", "3", "4", "6", "7",
+        "Artiest", "Titel", "1", "2", "3", "4", "6", "7",
         "Hoogste positie", "Aantal weken", "Punten", "Sleutel",
     ], koppen
 
@@ -516,14 +516,14 @@ def test_oranje_heeft_label_en_meest_recente_schrijfwijze():
     wb = _boek("OranjeTop30_2026.xlsx")
     koppen, week1 = _weektabel(wb["Week 01"])
     assert koppen == [
-        "Positie", "Vorige positie", "Titel", "Artiest", "Label",
+        "Positie", "Vorige positie", "Artiest", "Titel", "Label",
         "Aantal weken", "Site-status", "Sleutel",
     ]
     assert len(week1) == 30
     assert week1[2]["Label"] == "Berk Music"     # positie 3 in week 1
 
     koppen, totaal = _tabel(wb["Totaal"], 1)
-    assert koppen[:3] == ["Titel", "Artiest", "Label"]
+    assert koppen[:3] == ["Artiest", "Titel", "Label"]
     per_sleutel = {r["Sleutel"]: r for r in totaal}
     oranje = per_sleutel[sleutel_van(*ORANJEHIT)]
     # Label wijzigde in week 4 van "Berk Music" naar "Berk Music BV".
@@ -533,7 +533,7 @@ def test_oranje_heeft_label_en_meest_recente_schrijfwijze():
 
     jaar = load_workbook(gebouwd()["map"] / "OranjeTop30_Jaar_2026.xlsx")["Jaaroverzicht"]
     koppen, rijen = _tabel(jaar, 1)
-    assert koppen[:3] == ["Titel", "Artiest", "Label"]
+    assert koppen[:3] == ["Artiest", "Titel", "Label"]
     assert koppen[3:9] == ["1", "2", "3", "4", "6", "7"]
 
 

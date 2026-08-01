@@ -326,7 +326,7 @@ def _schrijf_tabel(
 
 def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int) -> None:
     """De complete lijst van die week, met de binnenkomers lichtblauw."""
-    kolommen = ["Positie", "Vorige positie", "Titel", "Artiest"]
+    kolommen = ["Positie", "Vorige positie", "Artiest", "Titel"]
     if gegevens.heeft_label:
         kolommen.append("Label")
     kolommen += ["Aantal weken", "Site-status", "Sleutel"]
@@ -340,8 +340,8 @@ def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int) -> None:
         waarden: list[Any] = [
             int(rij["positie"]),
             int(vorige) if vorige is not None else None,
-            rij["titel"],
             rij["artiest"],
+            rij["titel"],
         ]
         if gegevens.heeft_label:
             waarden.append(rij["label"])
@@ -383,7 +383,7 @@ def _totaaltab(wb: Workbook, gegevens: LijstGegevens, jaar: int, con=None) -> No
         except Exception:
             correcties = {}
 
-    kolommen = ["Titel", "Artiest"]
+    kolommen = ["Artiest", "Titel"]
     if gegevens.heeft_label:
         kolommen.append("Label")
     kolommen += [
@@ -421,7 +421,7 @@ def _totaaltab(wb: Workbook, gegevens: LijstGegevens, jaar: int, con=None) -> No
     rijen = []
     for nummer in gesorteerd:
         punten, hoogste, weken, bron = cijfers(nummer)
-        waarden: list[Any] = [nummer.titel, nummer.artiest]
+        waarden: list[Any] = [nummer.artiest, nummer.titel]
         if gegevens.heeft_label:
             waarden.append(nummer.label)
         waarden += [
@@ -445,7 +445,7 @@ def _totaaltab(wb: Workbook, gegevens: LijstGegevens, jaar: int, con=None) -> No
 
 
 def _jaartab(wb: Workbook, gegevens: LijstGegevens) -> None:
-    vaste_koppen = ["Titel", "Artiest"] + (["Label"] if gegevens.heeft_label else [])
+    vaste_koppen = ["Artiest", "Titel"] + (["Label"] if gegevens.heeft_label else [])
     kolommen = list(vaste_koppen)
     kolommen += [str(week) for week in gegevens.weken]
     kolommen += ["Hoogste positie", "Aantal weken", "Punten", "Sleutel"]
@@ -456,7 +456,7 @@ def _jaartab(wb: Workbook, gegevens: LijstGegevens) -> None:
     )
     rijen = []
     for nummer in gesorteerd:
-        waarden: list[Any] = [nummer.titel, nummer.artiest]
+        waarden: list[Any] = [nummer.artiest, nummer.titel]
         if gegevens.heeft_label:
             waarden.append(nummer.label)
         for week in gegevens.weken:
