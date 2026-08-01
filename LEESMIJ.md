@@ -128,6 +128,17 @@ jaaroverzichten — ook waar een jaartotaal van michajans.nl wordt aangehouden
 notering erbuiten door, dan staat er een ◀ of ▶ waarmee je naar dat decennium
 springt, net als bij de jaargangen.
 
+De **⤓ Excel**-knop naast de dropdown levert `Top40_Decennium_1970-1979.xlsx`:
+één tab met hetzelfde klassement. Dat werkboek wordt bij het downloaden ter
+plekke gemaakt en komt dus niet uit de wekelijkse run — het kost een fractie van
+een seconde en kan zo nooit achterlopen op de database. Wil je ze wél op schijf,
+in de decenniummappen naast de jaarmappen:
+
+```bash
+python -m hitlijsten.cli decennium                  # alle decennia
+python -m hitlijsten.cli decennium --decennium 1970 # alleen de jaren zeventig
+```
+
 ## Gebruik
 
 ```bash
@@ -143,6 +154,7 @@ mailen. Losse opdrachten:
 | `python -m hitlijsten backfill` | alle weken van het lopende jaar |
 | `python -m hitlijsten historie` | complete oude jaargangen uit het archief |
 | `python -m hitlijsten excel` | Excel opnieuw bouwen uit de database |
+| `python -m hitlijsten decennium` | decenniumklassementen van de Top 40 naar de decenniummappen |
 | `python -m hitlijsten controle` | verdachte dubbelingen, met oordeel per paar |
 | `python -m hitlijsten kruiscontrole --alle` | onze Top 40 vergelijken met michajans.nl |
 | `python -m hitlijsten onderscheidingen` | Alarmschijven en Dancesmashes ophalen |

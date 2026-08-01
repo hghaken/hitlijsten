@@ -14,6 +14,12 @@
     {% endfor %}
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+
+  {% if nummers %}
+  <a class="knop" href="{{ url_for('download_decennium', decennium=decennium) }}"
+     title="Het puntenklassement van {{ decennium }}–{{ decennium + 9 }} als werkboek">⤓ Excel</a>
+  {% endif %}
+
   <span class="hint" style="margin-left:auto">
     Alleen de Nederlandse Top 40; de andere lijsten staan per jaargang op het
     <a href="{{ url_for('jaaroverzicht') }}">jaaroverzicht</a>.

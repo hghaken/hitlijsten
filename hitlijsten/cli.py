@@ -272,6 +272,31 @@ def opdracht_excel(jaar: int) -> list:
     return bestanden
 
 
+def opdracht_decennium(decennium: int | None) -> list:
+    """Het decenniumklassement naar de decenniummap.
+
+    Zonder opgave alle decennia die in de database zitten. Alleen voor de Top
+    40: die is zijn hele bestaan veertig noteringen lang, dus punten uit
+    verschillende jaargangen zijn zonder voorbehoud op te tellen.
+    """
+    from . import excel
+    from .db import verbinding
+
+    bestanden = []
+    with verbinding() as con:
+        if decennium is None:
+            jaren = [r[0] for r in con.execute(
+                "SELECT DISTINCT jaar FROM noteringen WHERE lijst='top40'")]
+            decennia = sorted({j - j % 10 for j in jaren})
+        else:
+            decennia = [decennium - decennium % 10]
+        for begin in decennia:
+            for pad in excel.bouw_decennium(con, "top40", begin):
+                log(f"geschreven: {pad.name}")
+                bestanden.append(pad)
+    return bestanden
+
+
 def opdracht_historie(
     vanaf: int | None, tot: int, *, bouw_excel: bool = True,
     alleen_lijst: str | None = None,
@@ -673,6 +698,10 @@ def main(argv: list[str] | None = None) -> int:
                    help="beperk tot een lijst (standaard alle vier)")
     sub.add_parser("excel", parents=[jaar_ouder],
                    help="Excel-bestanden opnieuw bouwen")
+    d = sub.add_parser("decennium",
+                       help="het decenniumklassement van de Top 40 als Excel")
+    d.add_argument("--decennium", type=int, default=None,
+                   help="beginjaar (1970); zonder opgave alle decennia")
     c = sub.add_parser("controle", parents=[jaar_ouder],
                        help="rapport van verdachte dubbelingen")
     c.add_argument("--alle", action="store_true",
@@ -709,6 +738,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.opdracht == "excel":
         opdracht_excel(jaar)
+    elif args.opdracht == "decennium":
+        opdracht_decennium(args.decennium)
     elif args.opdracht == "controle":
         opdracht_controle(jaar, alle_jaren=args.alle)
     elif args.opdracht == "kruiscontrole":

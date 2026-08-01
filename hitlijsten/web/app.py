@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import configparser
+import io
 import secrets
 import sqlite3
 from datetime import datetime
@@ -13,7 +14,7 @@ from flask import (
     send_file, session, url_for,
 )
 
-from .. import db
+from .. import db, excel
 from ..config import EXCEL_DIR, LIJSTEN, ROOT, decennium_van
 from ..datums import als_tekst, vrijdag_van
 from ..db import Looptijd, looptijden
@@ -337,6 +338,30 @@ def _registreer(app: Flask) -> None:
             flash(f"{bestand} is nog niet gebouwd. Bouw hem via Beheer.", "fout")
             return redirect(url_for("jaaroverzicht", lijst=lijst, jaar=jaar))
         return send_file(pad, as_attachment=True, download_name=bestand)
+
+    @app.route("/download/decennium/<int:decennium>")
+    def download_decennium(decennium: int):
+        """Het decenniumklassement als Excel.
+
+        Anders dan de jaarbestanden wordt dit werkboek hier ter plekke gemaakt
+        in plaats van uit de wekelijkse run te komen. Het kost een fractie van
+        een seconde en kan zo nooit achterlopen op de database -- een
+        decenniumbestand dat na de vrijdagrun een week oud is zou stilletjes
+        verkeerde totalen laten zien.
+        """
+        wb = excel.bouw_decennium_werkboek(verbinding(), DECENNIUM_LIJST, decennium)
+        if wb is None:
+            flash(f"Voor de {decennium}s staat er niets in de database.", "fout")
+            return redirect(url_for("decennium_overzicht"))
+        naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
+        bestand = f"{naam}_Decennium_{decennium}-{decennium + 9}.xlsx"
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return send_file(
+            buffer, as_attachment=True, download_name=bestand,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
     # --- noteringen zoeken -------------------------------------------------
 

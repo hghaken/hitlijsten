@@ -37,13 +37,17 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from .config import LIJSTEN, excel_map
 from .datums import vrijdag_van
-from .db import Looptijd, looptijden, noteringen_van_jaar, verbinding
+from .db import (
+    Looptijd, decennium_totalen, looptijden, noteringen_van_jaar, verbinding,
+)
 
 __all__ = [
     "BestandInGebruik",
     "Nummer",
     "LijstGegevens",
     "bouw_alles",
+    "bouw_decennium",
+    "bouw_decennium_werkboek",
     "bouw_lijst",
     "verzamel_lijst",
     "bewaar_werkboek",
@@ -511,6 +515,115 @@ def _jaartab(wb: Workbook, gegevens: LijstGegevens) -> None:
             vulling = TOP_KLEUREN.get(cel.value)
             if vulling is not None:
                 cel.fill = vulling
+
+
+GECENTREERD_DECENNIUM = (
+    "Punten", "Hoogste positie", "Aantal weken genoteerd", "Jaargangen",
+    "Binnenkomst", "Laatste notering", "Loopt buiten het decennium",
+)
+
+
+def bouw_decennium_werkboek(
+    con: sqlite3.Connection, lijst: str, decennium: int
+) -> Optional[Workbook]:
+    """Eén tab met het puntenklassement over tien jaargangen.
+
+    Alleen zinvol voor een lijst die al die jaren even lang was -- zie
+    `decennium_totalen` en de LEESMIJ. Geeft None als er geen data is.
+    """
+    nummers = decennium_totalen(con, lijst, decennium)
+    if not nummers:
+        return None
+
+    cfg = LIJSTEN.get(lijst, {})
+    heeft_label = bool(cfg.get("heeft_label"))
+    gecorrigeerd = any(n["gecorrigeerd"] for n in nummers)
+
+    kolommen = ["Artiest", "Titel"]
+    if heeft_label:
+        kolommen.append("Label")
+    kolommen += [
+        "Punten",
+        "Hoogste positie",
+        "Aantal weken genoteerd",
+        "Jaargangen",
+        "Binnenkomst",
+        "Laatste notering",
+        "Loopt buiten het decennium",
+    ]
+    if gecorrigeerd:
+        kolommen.append("Bron")
+    kolommen.append("Sleutel")
+
+    rijen: list[list[Any]] = []
+    for n in nummers:
+        waarden: list[Any] = [n["artiest"], n["titel"]]
+        if heeft_label:
+            waarden.append(n["label"])
+        jaren = n["jaren"]
+        waarden += [
+            n["punten"],
+            n["hoogste"],
+            n["weken"],
+            str(jaren[0]) if len(jaren) == 1 else f"{jaren[0]}-{jaren[-1]}",
+            # De datums blijven binnen het decennium; de kolom ernaast zegt of
+            # de notering erbuiten doorliep.
+            _datum(n["eerste_sorteer"]),
+            _datum(n["laatste_sorteer"]),
+            _buiten_decennium(n),
+        ]
+        if gecorrigeerd:
+            waarden.append("michajans.nl" if n["gecorrigeerd"] else None)
+        waarden.append(n["sleutel"])
+        rijen.append(waarden)
+
+    toelichting = (
+        f"Puntenklassement {decennium}-{decennium + 9} van de "
+        f"{cfg.get('naam', lijst)}. Punten per notering = lijstlengte - positie "
+        "+ 1, per jaargang gerekend en daarna opgeteld: dit klassement is dus de "
+        "som van de jaarbestanden."
+    )
+
+    wb = Workbook()
+    wb.remove(wb.active)
+    ws = wb.create_sheet(tabnaam(f"Klassement {decennium}-{decennium + 9}"))
+    _schrijf_tabel(ws, kolommen, rijen, toelichting=toelichting,
+                   centreer=GECENTREERD_DECENNIUM)
+    return wb
+
+
+def _datum(iso: str) -> date:
+    jaar, maand, dag = (int(deel) for deel in iso.split("-"))
+    return date(jaar, maand, dag)
+
+
+def _buiten_decennium(nummer: dict) -> Optional[str]:
+    if nummer["begon_eerder"] and nummer["loopt_door"]:
+        return "begon eerder en loopt door"
+    if nummer["begon_eerder"]:
+        return "begon vorig decennium"
+    if nummer["loopt_door"]:
+        return "loopt door"
+    return None
+
+
+def bouw_decennium(
+    con: sqlite3.Connection, lijst: str, decennium: int,
+    uitvoer_map: Optional[Path] = None,
+) -> list[Path]:
+    """Schrijf het decenniumbestand naar de decenniummap."""
+    wb = bouw_decennium_werkboek(con, lijst, decennium)
+    if wb is None:
+        print(f"[excel] {lijst}: geen noteringen in {decennium}s - overgeslagen")
+        return []
+
+    bestand = LIJSTEN.get(lijst, {}).get("bestand", lijst)
+    map_ = Path(uitvoer_map) if uitvoer_map is not None else excel_map(decennium).parent
+    map_.mkdir(parents=True, exist_ok=True)
+    pad = bewaar_werkboek(
+        wb, map_ / f"{bestand}_Decennium_{decennium}-{decennium + 9}.xlsx")
+    print(f"[excel] {lijst}: {decennium}s -> {pad.name}")
+    return [pad]
 
 
 def bewaar_werkboek(wb: Workbook, pad: Path) -> Path:
