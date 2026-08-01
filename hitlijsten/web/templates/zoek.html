@@ -18,13 +18,13 @@
   <p class="hint">{{ resultaten|length }} resultaten{% if resultaten|length == 200 %}
     (afgekapt op 200 — maak de zoekterm specifieker){% endif %}</p>
   <div class="tabelvak"><table>
-    <thead><tr><th>Titel</th><th>Artiest</th><th>Lijst</th><th class="getal">Van</th>
+    <thead><tr><th>Artiest</th><th>Titel</th><th>Lijst</th><th class="getal">Van</th>
         <th class="getal">Tot</th><th class="getal">Weken</th>
         <th class="getal">Hoogste</th><th></th></tr></thead><tbody>
     {% for r in resultaten %}
     <tr>
-      <td>{{ r['titel'] }}</td>
       <td>{{ r['artiest'] }}</td>
+      <td>{{ r['titel'] }}</td>
       <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
       <td class="getal">{{ r['van'] }}</td>
       <td class="getal">{{ r['tot'] }}</td>

@@ -30,8 +30,8 @@
 <div class="tabelvak"><table>
   <thead><tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Week</th>
       <th class="getal">Positie</th><th class="getal">Vorige</th>
-      <th class="getal">Weken (site)</th><th>Status</th><th>Titel</th>
-      <th>Artiest</th><th></th></tr></thead><tbody>
+      <th class="getal">Weken (site)</th><th>Status</th><th>Artiest</th>
+      <th>Titel</th><th></th></tr></thead><tbody>
   {% for r in rijen %}
   <tr>
     <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
@@ -41,8 +41,8 @@
     <td class="getal">{{ r['vorige_positie'] if r['vorige_positie'] is not none else '' }}</td>
     <td class="getal">{{ r['weken_genoteerd'] if r['weken_genoteerd'] is not none else '' }}</td>
     <td>{{ r['site_status'] }}</td>
-    <td>{{ r['titel'] }}</td>
     <td>{{ r['artiest'] }}{% if r['label'] %} <span class="hint">[{{ r['label'] }}]</span>{% endif %}</td>
+    <td>{{ r['titel'] }}</td>
     <td><a href="{{ url_for('notering_bewerk', id=r['id']) }}">bewerk</a></td>
   </tr>
   {% endfor %}
