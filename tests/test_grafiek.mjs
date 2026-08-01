@@ -49,6 +49,11 @@ class Knoop {
     (this.luisteraars ??= {})[soort] = afhandelaar;
   }
   get parentElement() { return this.ouder; }
+  get classList() {
+    const klassen = (this.klassen ??= new Set());
+    return { add: (k) => klassen.add(k), has: (k) => klassen.has(k) };
+  }
+  scrollIntoView() { this.inBeeld = true; }
   get textContent() { return this._tekst; }
   set textContent(waarde) { this._tekst = String(waarde); }
   // Alleen wat het script vraagt: closest("td.klikbaar") op een cel.
@@ -56,7 +61,7 @@ class Knoop {
 }
 
 /** De rijen van de matrix; de posities komen tegenwoordig van de server. */
-function maakMatrix(nummers, lijst = "top40", jaar = "2023") {
+function maakMatrix(nummers, lijst = "top40", jaar = "2023", markeer = "") {
   const rijen = nummers.map(function (n) {
     const r = new Knoop("tr");
     r.dataset = {
@@ -71,7 +76,7 @@ function maakMatrix(nummers, lijst = "top40", jaar = "2023") {
     return r;
   });
   const tabel = new Knoop("table");
-  tabel.dataset = { lijst: lijst, jaar: jaar };
+  tabel.dataset = { lijst: lijst, jaar: jaar, markeer: markeer };
   tabel.tBodies = [{ rows: rijen }];
   tabel.contains = (k) => rijen.includes(k.ouder);
   return tabel;
@@ -111,7 +116,11 @@ function draai(tabel, dialoog, payload) {
     document: {
       getElementById: (id) =>
         (id === "matrix" ? tabel : id === "grafiek" ? dialoog : null),
-      querySelectorAll: (kies) => (kies === ".tabelvak table" ? [tabel] : []),
+      querySelectorAll: function (kies) {
+        if (kies === ".tabelvak table") return [tabel];
+        if (kies === ".tabelvak table tr[data-sleutel]") return tabel.tBodies[0].rows;
+        return [];
+      },
       createElementNS: (_ruimte, naam) => new Knoop(naam),
     },
     fetch: function (adres) {
@@ -271,6 +280,24 @@ tests.mislukte_oproep_zegt_dat_eerlijk = async () => {
   const { dialoog } = await grafiek(null);
   gelijk(dialoog.vakken[".samenvatting"].textContent,
          "De reeks kon niet worden opgehaald.");
+};
+
+tests.pijltje_licht_het_nummer_op_de_doelpagina_op = async () => {
+  const tabel = maakMatrix([
+    { sleutel: "a|b", artiest: "A", titel: "B" },
+    { sleutel: "c|d", artiest: "C", titel: "D" },
+  ], "top40", "2023", "c|d");
+  draai(tabel, maakDialoog(), antwoord([1]));
+  const [eerste, tweede] = tabel.tBodies[0].rows;
+  waar(!eerste.classList.has("opgelicht"), "het andere nummer blijft ongemoeid");
+  waar(tweede.classList.has("opgelicht"), "het gevraagde nummer wordt opgelicht");
+  waar(tweede.inBeeld, "en in beeld geschoven");
+};
+
+tests.zonder_markeer_wordt_er_niets_opgelicht = async () => {
+  const tabel = maakMatrix([{ sleutel: "a|b", artiest: "A", titel: "B" }]);
+  draai(tabel, maakDialoog(), antwoord([1]));
+  waar(!tabel.tBodies[0].rows[0].classList.has("opgelicht"), "niets opgelicht");
 };
 
 // --- loper ------------------------------------------------------------------

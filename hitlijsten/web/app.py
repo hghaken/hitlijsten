@@ -182,9 +182,14 @@ def _registreer(app: Flask) -> None:
         jaren = [r[0] for r in con.execute(
             "SELECT DISTINCT jaar FROM noteringen WHERE lijst=? ORDER BY jaar DESC",
             (lijst,))]
+        # Het nummer waar de bezoeker via een jaargrenspijl vandaan komt; dat
+        # wordt op de doelpagina opgelicht zodat hij niet hoeft te zoeken.
+        markeer = request.args.get("markeer") or ""
+
         if not jaren:
             return render_template("jaar.html", lijst=lijst, jaren=[], jaar=None,
-                                   nummers=[], weken=[], hoogtepunten={})
+                                   nummers=[], weken=[], hoogtepunten={},
+                                   markeer=markeer)
 
         gevraagd = request.args.get("jaar")
         jaar = int(gevraagd) if gevraagd and gevraagd.isdigit() and int(gevraagd) in jaren \
@@ -253,6 +258,7 @@ def _registreer(app: Flask) -> None:
         return render_template(
             "jaar.html", lijst=lijst, jaren=jaren, jaar=jaar,
             nummers=gesorteerd, weken=weken, hoogtepunten=hoogtepunten,
+            markeer=markeer,
         )
 
     # --- reeks voor de grafiek ---------------------------------------------
