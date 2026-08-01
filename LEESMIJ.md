@@ -50,7 +50,8 @@ Bijvoorbeeld voor de Top 40:
 **`Top40_2026.xlsx`**
 - `Week 01`, `Week 02`, … — per week de **complete lijst**, waarin de nummers die
   dit jaar nieuw binnenkomen een **lichtblauwe rij** krijgen
-- `Totaal` — per nummer punten, hoogste positie, aantal weken, eerste/laatste week
+- `Totaal` — per nummer punten, hoogste positie, aantal weken, en de datum van
+  binnenkomst en laatste notering
 
 **`Top40_Jaar_2026.xlsx`**
 - `Jaaroverzicht` — matrix: rij = nummer, kolom = week, cel = positie
@@ -68,6 +69,37 @@ er binnenkwam zonder de rest van de lijst kwijt te raken.
 De kolom **Site-status** zegt wat de site er zelf van vindt: `nieuw`, `terug`
 (re-entry), `stijger`, `daler`, `gelijk`. Zo zie je het verschil tussen een echte
 binnenkomer en een nummer dat al liep toen wij begonnen met verzamelen.
+
+### Van weeknummer naar uitzenddatum
+
+De Top 40 werd op **vrijdag** uitgezonden en op zaterdag gepubliceerd. In de
+`Totaal`-tab en op het jaaroverzicht staan daarom echte datums (`dd/mm/yyyy`) in
+plaats van weeknummers, in Excel als datumwaarde zodat je erop kunt sorteren en
+rekenen. De omrekening staat in `hitlijsten/datums.py`.
+
+**De regel**: week N van jaar J is de **N-de zaterdag van dat jaar**; de
+uitzending was de vrijdag ervoor. Die regel is niet bedacht maar gemeten aan 3798
+koppels van (jaar, week) en datum uit michajans.nl, verspreid over vijftien
+jaargangen tussen 1965 en 2025: 99,9% klopt. De voor de hand liggende ISO-week
+haalt op dezelfde koppels maar 65% — in 1965 loopt de nummering een week voor.
+
+**Twee dingen vallen daardoor buiten het jaar, en allebei terecht:**
+
+1. Begint een jaar op zaterdag, dan is de vrijdag van week 1 de **31e december
+   van het jaar ervoor**. Dat gebeurt in negen jaargangen: 1966, 1972, 1977,
+   1983, 1994, 2000, 2005, 2011 en 2022.
+2. Een notering die **over de jaarwisseling doorloopt** begint of eindigt in het
+   buurjaar. Een jaarbestand ziet daar maar de helft van, dus zoekt
+   `db.looptijden()` de rest op in de aangrenzende jaargangen. In de Excel staat
+   dan *begon vorig jaar* of *loopt door* in de kolom **Loopt over jaargrens**;
+   op het jaaroverzicht een ◀ of ▶ bij de datum.
+
+De reeks stapt daarbij naar de vorige of volgende week die **daadwerkelijk is
+uitgezonden**, niet botweg zeven dagen terug. De Top 40 slaat de laatste week van
+december meestal over voor een jaaroverzicht — bij negentien van de tweeënzestig
+jaargangen. Zou de reeks zeven dagen eisen, dan brak hij juist op de jaargrens
+waar het hier om begonnen is. Een gat waarin de lijst wél verscheen maar het
+nummer niet, breekt de reeks wel: dat is een re-entry, geen doorloper.
 
 ### Punten
 

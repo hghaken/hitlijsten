@@ -79,8 +79,8 @@
         <th class="getal">#</th><th class="breed">Artiest</th><th class="breed">Titel</th>
         {% if nummers and nummers[0].label %}<th>Label</th>{% endif %}
         <th class="getal">Punten</th><th class="getal">Hoogste</th>
-        <th class="getal">Weken</th><th class="getal">Eerste</th>
-        <th class="getal">Laatste</th>{% if is_aangemeld() %}<th></th>{% endif %}
+        <th class="getal">Weken</th><th class="getal">Binnenkomst</th>
+        <th class="getal">Laatste notering</th>{% if is_aangemeld() %}<th></th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -94,14 +94,29 @@
         <td class="getal">{{ n.punten }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
         <td class="getal">{{ n.weken }}</td>
-        <td class="getal">{{ n.eerste }}</td>
-        <td class="getal">{{ n.laatste }}</td>
+        {# Een reeks die over de jaarwisseling loopt begint of eindigt buiten
+           dit jaar; het pijltje zegt dat de datum daarom niet in {{ jaar }}
+           valt en dus geen fout is. #}
+        <td class="getal" data-sorteer="{{ n.eerste_sorteer }}">
+          {% if n.begon_eerder %}<span class="hint"
+             title="Stond eind {{ jaar - 1 }} al genoteerd">◀</span> {% endif %}{{ n.eerste }}</td>
+        <td class="getal" data-sorteer="{{ n.laatste_sorteer }}">
+          {{ n.laatste }}{% if n.loopt_door %} <span class="hint"
+             title="Bleef in {{ jaar + 1 }} genoteerd">▶</span>{% endif %}</td>
         {% if is_aangemeld() %}<td><a href="{{ url_for('nummer', sleutel=n.sleutel) }}">bekijk</a></td>{% endif %}
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+<p class="hint" style="margin-top:.5rem">
+  Binnenkomst en laatste notering zijn de vrijdag waarop de lijst werd
+  uitgezonden. <span style="color:var(--ink)">◀</span> betekent dat het nummer
+  eind {{ jaar - 1 }} al genoteerd stond,
+  <span style="color:var(--ink)">▶</span> dat het in {{ jaar + 1 }} bleef staan;
+  de datum valt dan buiten {{ jaar }}.
+</p>
 
 <h2>Positie per week</h2>
 <p class="hint" style="margin-top:-.3rem">

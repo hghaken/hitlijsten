@@ -246,7 +246,14 @@
 
       cel.addEventListener("click", function () {
         const rijen = Array.from(lijf.rows);
-        const waarde = (r) => (r.cells[kolom] ? r.cells[kolom].textContent.trim() : "");
+        // data-sorteer gaat voor de zichtbare tekst. Een datum toont als
+        // dd/mm/yyyy maar sorteert op de ISO-vorm, anders komt 01/12 voor 02/01.
+        const waarde = function (r) {
+          const c = r.cells[kolom];
+          if (!c) return "";
+          const s = c.dataset.sorteer;
+          return (s === undefined ? c.textContent : s).trim();
+        };
         const numeriek = rijen.every((r) => waarde(r) === "" || isGetal(waarde(r)))
                       && rijen.some((r) => waarde(r) !== "");
         // Eerste klik oplopend (pijl omhoog), tweede klik aflopend.

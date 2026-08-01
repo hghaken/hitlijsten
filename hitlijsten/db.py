@@ -7,10 +7,12 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 from typing import Iterable, Iterator
 
 from .config import DATA_DIR, DB_PATH
+from .datums import vrijdag_van
 from .models import Notering
 
 SCHEMA = """
@@ -229,3 +231,82 @@ def noteringen_van_jaar(con: sqlite3.Connection, lijst: str, jaar: int) -> list[
             (lijst, jaar),
         )
     )
+
+
+# Hoever we voor en na het jaar meekijken om een doorlopende notering te volgen.
+# Twee jaar is ruim: de langst genoteerde nummers halen geen honderd aaneen-
+# gesloten weken, en de lus stopt zodra er een week ontbreekt.
+BUURJAREN = 2
+
+
+@dataclass(frozen=True)
+class Looptijd:
+    """De echte begin- en einddatum van een notering rond een jaargrens.
+
+    ``begin`` en ``eind`` zijn de uitzendvrijdagen van de eerste en de laatste
+    week van de aaneengesloten reeks waar dit jaar deel van uitmaakt -- die kan
+    dus in december van het vorige jaar beginnen of in januari van het volgende
+    jaar aflopen. ``begon_eerder`` en ``loopt_door`` zeggen of dat het geval is,
+    zodat een overzicht dat kan tonen.
+    """
+
+    begin: date
+    eind: date
+    begon_eerder: bool
+    loopt_door: bool
+
+
+def looptijden(
+    con: sqlite3.Connection, lijst: str, jaar: int
+) -> dict[str, Looptijd]:
+    """Per sleutel van dit jaar de werkelijke eerste en laatste uitzenddatum.
+
+    Een nummer dat in week 50 binnenkomt en tot week 6 blijft staan, staat in
+    twee jaargangen met een afgekapte reeks. Door de weken van de buurjaren als
+    datums naast elkaar te leggen en van de eigen reeks af terug en vooruit te
+    lopen, komt de hele periode boven water. De lus stopt bij het eerste gat,
+    zodat een re-entry in maart niet aan december wordt geplakt.
+
+    Belangrijk: de stap gaat naar de vorige of volgende week die daadwerkelijk
+    is uitgezonden, niet botweg zeven dagen terug. De Top 40 slaat de laatste
+    week van december meestal over voor een jaaroverzicht -- bij negentien van
+    de tweeenzestig jaargangen. Zou de lus zeven dagen eisen, dan brak hij juist
+    op de jaargrens waar het hier om begonnen is.
+    """
+    per_sleutel: dict[str, set[date]] = {}
+    uitgezonden: set[date] = set()
+    for sleutel, rij_jaar, week in con.execute(
+        "SELECT sleutel, jaar, week FROM noteringen"
+        " WHERE lijst=? AND jaar BETWEEN ? AND ?",
+        (lijst, jaar - BUURJAREN, jaar + BUURJAREN),
+    ):
+        datum = vrijdag_van(rij_jaar, week)
+        per_sleutel.setdefault(sleutel, set()).add(datum)
+        uitgezonden.add(datum)
+
+    eigen: dict[str, set[date]] = {}
+    for sleutel, week in con.execute(
+        "SELECT sleutel, week FROM noteringen WHERE lijst=? AND jaar=?",
+        (lijst, jaar),
+    ):
+        eigen.setdefault(sleutel, set()).add(vrijdag_van(jaar, week))
+
+    kalender = sorted(uitgezonden)
+    volgnummer = {datum: nr for nr, datum in enumerate(kalender)}
+
+    uitkomst: dict[str, Looptijd] = {}
+    for sleutel, dit_jaar in eigen.items():
+        alle = per_sleutel.get(sleutel, dit_jaar)
+        eerste, laatste = min(dit_jaar), max(dit_jaar)
+        vroeg, laat = volgnummer[eerste], volgnummer[laatste]
+        while vroeg > 0 and kalender[vroeg - 1] in alle:
+            vroeg -= 1
+        while laat + 1 < len(kalender) and kalender[laat + 1] in alle:
+            laat += 1
+        uitkomst[sleutel] = Looptijd(
+            begin=kalender[vroeg],
+            eind=kalender[laat],
+            begon_eerder=kalender[vroeg] < eerste,
+            loopt_door=kalender[laat] > laatste,
+        )
+    return uitkomst

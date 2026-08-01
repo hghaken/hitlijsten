@@ -15,6 +15,8 @@ from flask import (
 
 from .. import db
 from ..config import EXCEL_DIR, LIJSTEN, ROOT, decennium_van
+from ..datums import als_tekst, vrijdag_van
+from ..db import Looptijd, looptijden
 from . import taken
 
 INSTELLINGEN = ROOT / "webapp.ini"
@@ -212,14 +214,33 @@ def _registreer(app: Flask) -> None:
                 n["punten"] += lengte[r["week"]] - r["positie"] + 1
             n["titel"], n["artiest"], n["label"] = r["titel"], r["artiest"], r["label"]
 
-        for n in nummers.values():
+        # Binnenkomst en laatste notering als echte uitzenddatum. Een reeks die
+        # over de jaarwisseling loopt begint of eindigt in het buurjaar; de
+        # markering laat zien dat de datum daarom buiten dit jaar valt.
+        looptijd = looptijden(con, lijst, jaar)
+        for sleutel, n in nummers.items():
             n["hoogste"] = min(n["posities"].values())
             n["weken"] = len(n["posities"])
-            n["eerste"] = min(n["posities"])
-            n["laatste"] = max(n["posities"])
+            n["eerste_week"] = min(n["posities"])
+            n["laatste_week"] = max(n["posities"])
+            loop = looptijd.get(sleutel)
+            if loop is None:
+                loop = Looptijd(
+                    begin=vrijdag_van(jaar, n["eerste_week"]),
+                    eind=vrijdag_van(jaar, n["laatste_week"]),
+                    begon_eerder=False, loopt_door=False,
+                )
+            n["eerste"] = als_tekst(loop.begin)
+            n["laatste"] = als_tekst(loop.eind)
+            n["begon_eerder"] = loop.begon_eerder
+            n["loopt_door"] = loop.loopt_door
+            # Sorteerbaar houden: de tabel sorteert op de tekst van de cel, en
+            # dd/mm/yyyy sorteert alfabetisch verkeerd.
+            n["eerste_sorteer"] = loop.begin.isoformat()
+            n["laatste_sorteer"] = loop.eind.isoformat()
 
         gesorteerd = sorted(nummers.values(),
-                            key=lambda n: (-n["punten"], n["hoogste"], n["eerste"]))
+                            key=lambda n: (-n["punten"], n["hoogste"], n["eerste_week"]))
 
         nummer_ees = [n for n in gesorteerd if n["hoogste"] == 1]
         hoogtepunten = {

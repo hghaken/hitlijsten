@@ -32,6 +32,7 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+from datetime import date, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -376,12 +377,18 @@ def test_nieuwe_nummers_zijn_lichtblauw_gemarkeerd():
     assert _gemarkeerde_titels(ws7, koppen, week7) == ["Liedje 41"]
 
 
+def _datum(waarde) -> date:
+    """openpyxl leest een datumcel terug als datetime; wij vergelijken op de dag."""
+    return waarde.date() if isinstance(waarde, datetime) else waarde
+
+
 def test_totaal_punten_handmatig_nagerekend():
     wb = _boek("Top40_2026.xlsx")
     koppen, rijen = _tabel(wb["Totaal"], 1)
     assert koppen == [
         "Artiest", "Titel", "Punten", "Hoogste positie", "Aantal weken genoteerd",
-        "Weken volgens site", "Eerste week", "Laatste week", "Sleutel",
+        "Weken volgens site", "Binnenkomst", "Laatste notering",
+        "Loopt over jaargrens", "Sleutel",
     ]
     per_sleutel = {r["Sleutel"]: r for r in rijen}
 
@@ -395,7 +402,12 @@ def test_totaal_punten_handmatig_nagerekend():
     # Volgens de site noteerde het nummer al 19 weken voor onze eerste week:
     # 19 + 6 = 25. Daarom telt onze eigen kolom 6 en de site-kolom 25.
     assert hit["Weken volgens site"] == 25
-    assert (hit["Eerste week"], hit["Laatste week"]) == (1, 7)
+    # Week 1 van 2026 werd uitgezonden op vrijdag 2 januari (de eerste zaterdag
+    # van 2026 is de 3e), week 7 zes weken later. Er staat niets van 2025 in de
+    # database, dus geen enkele reeks loopt over de jaargrens.
+    assert (_datum(hit["Binnenkomst"]), _datum(hit["Laatste notering"])) == (
+        date(2026, 1, 2), date(2026, 2, 13))
+    assert hit["Loopt over jaargrens"] is None
     assert rijen[0]["Sleutel"] == hit["Sleutel"]  # hoogste puntentotaal bovenaan
 
     # "Terug Van Weggeweest": week 1 #12, week 2 #19, week 3 #31, week 4 er niet
@@ -406,7 +418,8 @@ def test_totaal_punten_handmatig_nagerekend():
     assert blof["Punten"] == 70
     assert blof["Aantal weken genoteerd"] == 5   # zelf geteld, niet van de site
     assert blof["Hoogste positie"] == 12
-    assert (blof["Eerste week"], blof["Laatste week"]) == (1, 7)
+    assert (_datum(blof["Binnenkomst"]), _datum(blof["Laatste notering"])) == (
+        date(2026, 1, 2), date(2026, 2, 13))
 
     # "Zomer In De Stad (Radio Edit)": week 3 #28, week 4 #22, week 6 #15, week 7 #11.
     #   (40-28+1) + (40-22+1) + (40-15+1) + (40-11+1)
@@ -414,7 +427,7 @@ def test_totaal_punten_handmatig_nagerekend():
     antoon = per_sleutel[sleutel_van(*ANTOON_FT)]
     assert antoon["Punten"] == 88
     assert antoon["Aantal weken genoteerd"] == 4
-    assert antoon["Eerste week"] == 3
+    assert _datum(antoon["Binnenkomst"]) == date(2026, 1, 16)   # week 3
     # Schrijfwijze veranderde van "ft." naar "feat." bij gelijke sleutel:
     # het overzicht toont de meest recente schrijfwijze.
     assert sleutel_van(*ANTOON_FT) == sleutel_van(*ANTOON_FEAT)

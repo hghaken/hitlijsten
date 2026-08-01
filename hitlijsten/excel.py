@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import nullcontext
+from datetime import date
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Optional, Sequence
@@ -35,7 +36,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
 from .config import LIJSTEN, excel_map
-from .db import noteringen_van_jaar, verbinding
+from .datums import vrijdag_van
+from .db import Looptijd, looptijden, noteringen_van_jaar, verbinding
 
 __all__ = [
     "BestandInGebruik",
@@ -76,8 +78,8 @@ GECENTREERD_TOTAAL = (
     "Hoogste positie",
     "Aantal weken genoteerd",
     "Weken volgens site",
-    "Eerste week",
-    "Laatste week",
+    "Binnenkomst",
+    "Laatste notering",
     "Alarmschijf",
     "Dancesmash",
 )
@@ -307,6 +309,10 @@ def _schrijf_tabel(
             cel = ws.cell(row=kop_rij + aantal, column=kolom, value=waarde)
             if kolom in te_centreren:
                 cel.alignment = Alignment(horizontal="center")
+            # Als echte datum wegschrijven, niet als tekst: zo kun je er in
+            # Excel op sorteren en filteren en ermee rekenen.
+            if isinstance(waarde, date):
+                cel.number_format = "DD/MM/YYYY"
             # Over alle kolommen, ook de lege: anders houdt de markering
             # halverwege de rij op.
             if gemarkeerd:
@@ -363,6 +369,17 @@ def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int) -> None:
                    centreer=GECENTREERD)
 
 
+def _grensmarkering(loop: Looptijd) -> Optional[str]:
+    """Korte aanduiding waarom een datum buiten dit jaar valt."""
+    if loop.begon_eerder and loop.loopt_door:
+        return "begon eerder en loopt door"
+    if loop.begon_eerder:
+        return "begon vorig jaar"
+    if loop.loopt_door:
+        return "loopt door"
+    return None
+
+
 def _totaaltab(wb: Workbook, gegevens: LijstGegevens, jaar: int, con=None) -> None:
     # Alarmschijven en Dancesmashes komen van michajans.nl en bestaan alleen
     # voor de Top 40. Ontbreken ze in de database, dan blijven de kolommen weg
@@ -391,9 +408,11 @@ def _totaaltab(wb: Workbook, gegevens: LijstGegevens, jaar: int, con=None) -> No
         "Hoogste positie",
         "Aantal weken genoteerd",
         "Weken volgens site",
-        "Eerste week",
-        "Laatste week",
+        "Binnenkomst",
+        "Laatste notering",
+        "Loopt over jaargrens",
     ]
+    looptijd = looptijden(con, gegevens.lijst, jaar) if con is not None else {}
     if onderscheiding:
         kolommen += ["Alarmschijf", "Dancesmash"]
     if correcties:
@@ -429,9 +448,21 @@ def _totaaltab(wb: Workbook, gegevens: LijstGegevens, jaar: int, con=None) -> No
             int(hoogste),
             int(weken),
             int(nummer.weken_volgens_site) if nummer.weken_volgens_site is not None else None,
-            int(nummer.eerste_week),
-            int(nummer.laatste_week),
         ]
+        # De uitzenddatum in plaats van het weeknummer. Twee dingen kunnen dan
+        # buiten dit jaar vallen, en allebei is het de echte datum en geen fout:
+        # bij negen jaargangen ligt de vrijdag van week 1 op 31 december van het
+        # jaar ervoor, en een notering die over de jaarwisseling doorloopt begint
+        # of eindigt gewoon in het buurjaar.
+        loop = looptijd.get(nummer.sleutel)
+        if loop is None:
+            waarden += [
+                vrijdag_van(jaar, nummer.eerste_week),
+                vrijdag_van(jaar, nummer.laatste_week),
+                None,
+            ]
+        else:
+            waarden += [loop.begin, loop.eind, _grensmarkering(loop)]
         if onderscheiding:
             gekregen = onderscheiding.get(nummer.sleutel, {})
             waarden += [gekregen.get("alarmschijf"), gekregen.get("dancesmash")]
