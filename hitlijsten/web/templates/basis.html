@@ -165,6 +165,25 @@
   }
   details summary { cursor: pointer; }
 
+  /* --- wetenswaardigheden ------------------------------------------------ */
+
+  /* Snelkoppelingen naar de blokken; op een telefoon lopen ze netjes door. */
+  nav.sprong {
+    display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 1.6rem;
+  }
+  nav.sprong a {
+    text-decoration: none; color: var(--gedempt); font-size: .86rem;
+    padding: .25rem .7rem; border-radius: 999px;
+    border: 1px solid var(--rand); background: var(--glas2);
+  }
+  nav.sprong a:hover { color: var(--ink); background: var(--glas); }
+
+  section.weetje { scroll-margin-top: 4.5rem; }
+  section.weetje .uitleg { margin: -.4rem 0 .7rem; max-width: 58rem; }
+  /* Tien regels passen altijd; geen scrollbalk in het vak. */
+  section.weetje .tabelvak { max-height: none; }
+  td.sterk { font-weight: 650; white-space: nowrap; }
+
   /* --- grafiek van de positie per week ---------------------------------- */
 
   td.klikbaar { cursor: pointer; }
@@ -248,6 +267,7 @@
       <a href="{{ url_for('jaaroverzicht') }}">Jaaroverzicht</a>
       <a href="{{ url_for('decennium_overzicht') }}">Decennium</a>
       <a href="{{ url_for('totaal_lijst') }}">Totaal lijst</a>
+      <a href="{{ url_for('wetenswaardigheden') }}">Wetenswaardigheden</a>
       {% if is_aangemeld() %}
         <a href="{{ url_for('zoek') }}">Zoeken</a>
         <a href="{{ url_for('aliassen') }}">Aliassen</a>

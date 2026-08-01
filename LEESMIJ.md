@@ -191,6 +191,7 @@ op de NAS, achter de reverse proxy naar `10.10.8.20:8642`.
 | Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel-download |
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
+| Wetenswaardigheden | tien ranglijsten over de hele historie |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
 aliassen, uitzonderingen, vrije SELECT-query's, beheer (opnieuw ophalen, Excel
@@ -204,6 +205,35 @@ daar alvast opgelicht.
 
 Wachtwoord wijzigen: pas `wachtwoord` in `app/webapp.ini` aan en herstart de
 dienst met `sudo systemctl restart hitlijsten-web`.
+
+### Wetenswaardigheden
+
+Tien ranglijsten uit tweeënzestig jaargangen, in `wetenswaardigheden.py`: meeste
+noteringen, meeste nummer 1-hits, meeste weken, meeste punten, langst genoteerd,
+langst op 1, hoogste binnenkomers, grootste sprong in één week, langste weg naar
+de eerste plaats en langste terugkeer.
+
+Alles komt uit **één doorloop** over de noteringen. Dat is geen zuinigheid maar
+noodzaak: de meeste vragen ("hoe vaak kwam dit terug?", "wat was de grootste
+sprong?") hebben de reeks per nummer op volgorde nodig, en die bouw je maar één
+keer op. De uitkomst wordt gecached tot er data bij komt.
+
+Drie dingen die de cijfers kleuren, en die ook op de pagina staan:
+
+- **Een samenwerking telt als een eigen artiest.** "Lady Gaga & Bruno Mars" is
+  hier niet Lady Gaga én Bruno Mars. Uit elkaar trekken lijkt aantrekkelijk,
+  maar dan sneuvelen Simon & Garfunkel en Earth, Wind & Fire ook.
+- **Weken worden langs de kalender geteld**, niet per jaargang; een notering over
+  de jaarwisseling is één periode.
+- **De allereerste week van 1965 telt niet als binnenkomst** — toen was de hele
+  lijst nieuw.
+
+Twee ranglijsten die voor de hand lagen zijn er *niet*, omdat de data ze niet
+draagt: "vaakst teruggekeerd" en "in de meeste jaargangen" lopen allebei dood op
+respectievelijk 2 en 4, want de Nederlandse Top 40 zet klassiekers zelden
+opnieuw op de lijst (Wham's *Last Christmas* stond er alleen in 1984 en 1985).
+Daarvoor in de plaats: **langste terugkeer**, en daar zit wél spreiding in — Kate
+Bush' *Running Up That Hill* kwam na zesendertig jaar terug.
 
 ## Gebruik
 
@@ -366,6 +396,7 @@ cd /volume1/Hitlijsten/app && . ./omgeving.sh
 ./venv/bin/python tests/test_excel.py
 ./venv/bin/python tests/test_datums.py
 ./venv/bin/python tests/test_decennium.py
+./venv/bin/python tests/test_wetenswaardigheden.py
 node tests/test_grafiek.mjs        # node staat niet op de NAS
 ```
 

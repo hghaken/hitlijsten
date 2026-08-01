@@ -1,0 +1,94 @@
+{% extends "basis.html" %}
+{% block titel %}Wetenswaardigheden Top 40 — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Wetenswaardigheden</h1>
+<p class="onder">Tien ranglijsten uit {{ cijfers.tot - cijfers.van + 1 }} jaargangen
+  Nederlandse Top 40.</p>
+
+{% if not blokken %}
+  <div class="melding fout">Er staat nog niets in de database.</div>
+{% else %}
+
+<div class="kaarten">
+  <div class="kaart">
+    <div class="cijfer">{{ '{:,}'.format(cijfers.noteringen).replace(',', '.') }}</div>
+    <div class="naam">noteringen</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ '{:,}'.format(cijfers.nummers).replace(',', '.') }}</div>
+    <div class="naam">unieke nummers</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ '{:,}'.format(cijfers.artiesten).replace(',', '.') }}</div>
+    <div class="naam">artiesten</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ '{:,}'.format(cijfers.weken).replace(',', '.') }}</div>
+    <div class="naam">uitgezonden weken</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ cijfers.van }}–{{ cijfers.tot }}</div>
+    <div class="naam">jaargangen</div>
+  </div>
+</div>
+
+<nav class="sprong">
+  {% for b in blokken %}<a href="#{{ b.sleutel }}">{{ b.titel }}</a>{% endfor %}
+</nav>
+
+{% for b in blokken %}
+<section class="weetje" id="{{ b.sleutel }}">
+  <h2>{{ loop.index }}. {{ b.titel }}</h2>
+  <p class="hint uitleg">{{ b.uitleg }}</p>
+  <div class="tabelvak">
+    <table>
+      <thead>
+        <tr>
+          <th class="getal">#</th>
+          {% for k in b.kolommen %}
+            <th class="{{ 'breed' if loop.first else 'getal' }}">{{ k }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in b.rijen %}
+        <tr>
+          <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
+            {{ loop.index }}</td>
+          <td class="breed">
+            {% if r.sleutel %}
+              <a class="stil" href="{{ url_for('jaaroverzicht', lijst='top40',
+                 jaar=r.jaar, markeer=r.sleutel) }}">{{ r.naam }}</a>
+            {% else %}{{ r.naam }}{% endif %}
+          </td>
+          <td class="getal sterk">{{ r.waarde }}</td>
+          <td class="getal hint">{{ r.bij }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endfor %}
+
+<h2>Hoe je dit moet lezen</h2>
+<p class="hint" style="max-width:62rem">
+  <b>Een samenwerking telt als een eigen artiest.</b> "Lady Gaga &amp; Bruno Mars"
+  is hier niet Lady Gaga én Bruno Mars. Uit elkaar trekken lijkt aantrekkelijk,
+  maar dan sneuvelen Simon &amp; Garfunkel en Earth, Wind &amp; Fire ook — en dat
+  zijn geen samenwerkingen maar namen.
+</p>
+<p class="hint" style="max-width:62rem">
+  <b>Weken worden langs de kalender geteld, niet per jaargang.</b> Een notering
+  die over de jaarwisseling doorloopt is één aaneengesloten periode. De
+  allereerste week van 1965 telt niet als binnenkomst: toen was de hele lijst
+  nieuw.
+</p>
+<p class="hint" style="max-width:62rem">
+  <b>Klik op een nummer</b> om naar de jaargang te gaan waarin het de meeste
+  punten haalde, met de grafiek van het verloop binnen handbereik.
+</p>
+
+{% endif %}
+{% endblock %}

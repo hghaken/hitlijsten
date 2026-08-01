@@ -358,6 +358,34 @@ def _registreer(app: Flask) -> None:
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
+    # --- wetenswaardigheden ------------------------------------------------
+
+    _weetjes_cache: dict = {}
+
+    @app.route("/wetenswaardigheden")
+    def wetenswaardigheden():
+        """Tien ranglijsten over de hele historie van de Top 40.
+
+        Kost een seconde over 127.000 noteringen, dus gecached tot er nieuwe
+        data bij komt -- net als de totaallijst.
+        """
+        from .. import wetenswaardigheden as weetjes
+
+        con = verbinding()
+        stempel = con.execute(
+            "SELECT COUNT(*), MAX(opgehaald_op) FROM noteringen"
+            " JOIN opgehaald USING (lijst, jaar, week) WHERE lijst=?",
+            (DECENNIUM_LIJST,),
+        ).fetchone()
+        if _weetjes_cache.get("stempel") != tuple(stempel):
+            _weetjes_cache["stempel"] = tuple(stempel)
+            _weetjes_cache["blokken"] = weetjes.verzamel(con, DECENNIUM_LIJST)
+            _weetjes_cache["cijfers"] = weetjes.cijfers(con, DECENNIUM_LIJST)
+        return render_template(
+            "wetenswaardigheden.html",
+            blokken=_weetjes_cache["blokken"], cijfers=_weetjes_cache["cijfers"],
+        )
+
     # --- reeks voor de grafiek ---------------------------------------------
 
     @app.route("/reeks")
