@@ -14,11 +14,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Zorg dat `python tests\test_top40nl.py` het pakket vindt zonder installatie.
+# Zorg dat het pakket gevonden wordt zonder installatie.
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-# Windows-console is cp1252; zonder dit klapt een print met "Bløf" eruit.
+# Niet elke console is UTF-8; zonder dit klapt een print met "Bløf" eruit.
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, OSError):  # pragma: no cover

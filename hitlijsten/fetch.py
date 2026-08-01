@@ -20,13 +20,14 @@ from .config import CACHE_DIR, LIJSTEN, ROOT, url_voor
 # Python doet dat niet en faalt met CERTIFICATE_VERIFY_FAILED. certifi lost dit
 # nooit op, hoe je het ook instelt. oranjetop30.nl heeft dit probleem niet.
 #
-# Twee omgevingen, twee oplossingen:
+# Op de NAS -- waar dit draait -- kent geen enkele systeemstore dat certificaat,
+# dus leveren we het zelf mee in certificaten/sectigo-dv-r36.pem en plakken het
+# achter de certifi-bundel.
 #
-# * Windows -- truststore laat Python de Windows-certificaatstore gebruiken, en
-#   daar zit het ontbrekende tussencertificaat wel in.
-# * Linux (de NAS) -- geen systeemstore die het kent, dus leveren we het
-#   ontbrekende certificaat zelf mee in certificaten/sectigo-dv-r36.pem en
-#   plakken dat achter het certifi-bundel.
+# De truststore-tak hieronder is een overblijfsel uit de tijd dat dit op een
+# Windows-pc draaide: daar zit het ontbrekende tussencertificaat wel in de
+# systeemstore. Hij blijft staan omdat hij niets kost en het project daarmee ook
+# op een werkstation te draaien is.
 #
 # In beide gevallen blijft de certificaatcontrole gewoon aan staan.
 EIGEN_BUNDEL: Path | None = None

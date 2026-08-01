@@ -4,7 +4,8 @@ De verwachte waarden komen uit de jaarlijsten van michajans.nl: hij vermeldt bij
 elk nummer de datum van binnenkomst, altijd een zaterdag. Die staan hier vast,
 zodat een toekomstige wijziging aan de regel meteen opvalt.
 
-    C:\\Python313\\python.exe tests\\test_datums.py
+    cd /volume1/Hitlijsten/app && . ./omgeving.sh
+    ./venv/bin/python tests/test_datums.py
 """
 from __future__ import annotations
 

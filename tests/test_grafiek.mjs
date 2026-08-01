@@ -1,6 +1,6 @@
 /* Toets de grafiek van de positie per week uit templates/jaar.html.
  *
- *     node tests\test_grafiek.mjs
+ *     node tests/test_grafiek.mjs        (node staat niet op de NAS)
  *
  * De grafiek draait in de browser, dus staat hier een DOM-stub die precies
  * genoeg kan voor dat ene script: een tabel met rijen, elementen die je

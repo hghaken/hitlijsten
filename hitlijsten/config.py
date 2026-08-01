@@ -102,7 +102,7 @@ def decennium_van(jaar: int) -> str:
 
 
 def excel_map(jaar: int) -> Path:
-    """Waar de Excel-bestanden van een jaargang landen: H:\\...\\2020-2029\\2026\\.
+    """Waar de Excel-bestanden van een jaargang landen: <excel>/2020-2029/2026/.
 
     Per jaar een eigen map, gegroepeerd per decennium. Met zestig jaargangen
     zouden zestig mappen naast elkaar onwerkbaar worden.

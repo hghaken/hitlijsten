@@ -627,7 +627,11 @@ def bouw_decennium(
 
 
 def bewaar_werkboek(wb: Workbook, pad: Path) -> Path:
-    """Sla op en vertaal een Windows-bestandsslot naar een leesbare fout."""
+    """Sla op en vertaal een bestandsslot naar een leesbare fout.
+
+    Komt vooral voor als iemand het werkboek via Samba open heeft staan in
+    Excel: dan houdt Windows het bestand vast en faalt het schrijven.
+    """
     try:
         wb.save(pad)
     except PermissionError as fout:

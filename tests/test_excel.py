@@ -2,10 +2,11 @@
 
 Draaien kan met pytest, maar ook zonder:
 
-    C:\\Python313\\python.exe tests\\test_excel.py
+    cd /volume1/Hitlijsten/app && . ./omgeving.sh
+    ./venv/bin/python tests/test_excel.py
 
 De testdata gaat naar een tijdelijke sqlite-database en een tijdelijke map; de
-echte data\\hitlijsten.sqlite en de echte Excel-bestanden worden niet aangeraakt.
+echte database en de echte Excel-bestanden worden niet aangeraakt.
 
 DE OPZET VAN DE SYNTHETISCHE DATA
 ---------------------------------

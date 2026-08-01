@@ -1,10 +1,10 @@
 """Zelftest voor de Oranje Top 30-parser.
 
-Draait volledig op de HTML in .cache\\oranje -- geen netwerkverkeer. Werkt zowel
-onder pytest als met `python tests\\test_oranje.py`.
+Draait volledig op de HTML in de cache -- geen netwerkverkeer. Werkt zowel onder
+pytest als los:
 
-    cd H:\\HitLijsten_Verzamelen
-    python tests\\test_oranje.py
+    cd /volume1/Hitlijsten/app && . ./omgeving.sh
+    ./venv/bin/python tests/test_oranje.py
 """
 from __future__ import annotations
 

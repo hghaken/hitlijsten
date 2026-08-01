@@ -12,16 +12,37 @@ nieuw binnenkwam.
 
 De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen*.
 
+## Waar het draait
+
+**Alles draait op de NAS** (DS1522+, 10.10.8.20). De Windows-pc speelt geen rol
+meer — geen code, geen database, geen geplande taak.
+
+| | |
+|---|---|
+| Map | `/volume1/Hitlijsten/` — `app/` (code), `data/` (database), `excel/`, `cache/` |
+| Python | 3.14.5, eigen venv in `app/venv/` |
+| Webapplicatie | `https://hitlijsten.hhaken.nl` → reverse proxy → `10.10.8.20:8642` |
+| Dienst | systemd-unit `hitlijsten-web` (enabled, start `app/start-web.sh`) |
+| Wekelijkse run | `app/wekelijkse-run.sh`, vrijdag 17:00 |
+| Logboek | `app/run.log` |
+| Gebruiker | `claude` |
+
+`app/omgeving.sh` zet `HITLIJSTEN_DATA`, `HITLIJSTEN_CACHE` en
+`HITLIJSTEN_EXCEL`. De code staat los van de gegevens, zodat je `app/` kunt
+vervangen zonder de database aan te raken — **source die shell altijd** voordat
+je met de hand een opdracht draait, anders kijkt het script naar een lege
+database naast de code.
+
 ## Stand van zaken
 
-- **2026** t/m week 31 en **heel 2025** staan in de database, plus 75 noteringen
-  uit een testrestje van Sterren NL 2019 (week 40–42).
-- De wekelijkse run staat op **vrijdag 17:00**. Let op: er staat op dit moment
-  **geen** geplande taak klaar -- niet in de DSM-taakplanner en niet in de
-  Windows Taakplanner. `wekelijkse-run.sh` staat wel klaar op de NAS; de taak
-  die hem start moet nog worden aangemaakt.
-- Van de oudere jaargangen is verder nog niets opgehaald;
-  `python -m hitlijsten historie` haalt de rest.
+- **Het hele archief staat in de database**: 255.482 noteringen over 7.541
+  weken. Top 40 1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje
+  Top 30 2008–2026 (19), Sterren NL 2019–2026 (8).
+- 305 Excel-bestanden gebouwd, plus 130 aliassen, 267 vastgelegde
+  niet-bestaande weken en 4.044 onderscheidingen.
+- **De wekelijkse taak moet nog worden aangemaakt.** De run hoort vrijdag om
+  17:00 te draaien; `wekelijkse-run.sh` staat klaar, maar er staat op dit moment
+  geen taak in de DSM-taakplanner die hem start.
 
 ## Wat er uitkomt
 
@@ -29,19 +50,19 @@ Een map per decennium, daarin een map per jaargang, daarin per lijst twee
 bestanden:
 
 ```
-H:\HitLijsten_Verzamelen\
-  2000-2009\
-    2000\ ... 2009\
-  2010-2019\
-    2010\ ... 2019\
-  2020-2029\
-    2025\
-    2026\
+/volume1/Hitlijsten/excel/
+  1960-1969/ ... 2010-2019/
+  2020-2029/
+    Top40_Decennium_2020-2029.xlsx
+    2020/ ... 2025/
+    2026/
       Top40_2026.xlsx          Top40_Jaar_2026.xlsx
       Tipparade_2026.xlsx      Tipparade_Jaar_2026.xlsx
       SterrenNL_2026.xlsx      SterrenNL_Jaar_2026.xlsx
       OranjeTop30_2026.xlsx    OranjeTop30_Jaar_2026.xlsx
 ```
+
+Over Samba te bereiken als `\\10.10.8.20\Hitlijsten\excel`.
 
 Met zestig jaargangen Top 40 zouden zestig mappen naast elkaar onwerkbaar zijn,
 vandaar de tussenlaag.
@@ -140,14 +161,46 @@ python -m hitlijsten.cli decennium                  # alle decennia
 python -m hitlijsten.cli decennium --decennium 1970 # alleen de jaren zeventig
 ```
 
+## De webapplicatie
+
+**https://hitlijsten.hhaken.nl** — dezelfde gegevens als de Excel-bestanden,
+maar doorzoekbaar en zonder download. Draait als systemd-dienst `hitlijsten-web`
+op de NAS, achter de reverse proxy naar `10.10.8.20:8642`.
+
+**Vrij toegankelijk:**
+
+| Pagina | Wat je er ziet |
+|---|---|
+| Overzicht | wat er in de database zit, per lijst |
+| Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel-download |
+| Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
+
+**Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
+aliassen, uitzonderingen, vrije SELECT-query's, beheer (opnieuw ophalen, Excel
+herbouwen) en het logboek van alle wijzigingen.
+
+Klikken op een artiest of titel opent de **grafiek** van de positie per week.
+Die volgt de hele notering, ook als die over de jaarwisseling loopt, met een
+streep waar de jaargang wisselt. De ◀/▶-pijltjes bij de datums springen naar de
+jaargang of het decennium waar de rest van de notering staat, met het nummer
+daar alvast opgelicht.
+
+Wachtwoord wijzigen: pas `wachtwoord` in `app/webapp.ini` aan en herstart de
+dienst met `sudo systemctl restart hitlijsten-web`.
+
 ## Gebruik
 
+Alles draait op de NAS. Inloggen en de omgeving laden:
+
 ```bash
-python -m hitlijsten run
+ssh lom-nas
+cd /volume1/Hitlijsten/app && . ./omgeving.sh
+./venv/bin/python -m hitlijsten run
 ```
 
-Dat is wat de wekelijkse taak doet: ontbrekende weken ophalen, Excel herbouwen,
-mailen. Losse opdrachten:
+Die laatste regel is wat de wekelijkse taak doet: ontbrekende weken ophalen,
+Excel herbouwen, mailen. Hieronder staat kortweg `python`; lees dat als
+`./venv/bin/python` met `omgeving.sh` geladen. Losse opdrachten:
 
 | Opdracht | Wat het doet |
 |---|---|
@@ -159,7 +212,7 @@ mailen. Losse opdrachten:
 | `python -m hitlijsten controle` | verdachte dubbelingen, met oordeel per paar |
 | `python -m hitlijsten kruiscontrole --alle` | onze Top 40 vergelijken met michajans.nl |
 | `python -m hitlijsten onderscheidingen` | Alarmschijven en Dancesmashes ophalen |
-| `python -m hitlijsten hersleutel` | sleutels herberekenen na aliases.csv |
+| `python -m hitlijsten hersleutel` | sleutels herberekenen na een nieuwe alias |
 | `python -m hitlijsten testmail` | proefmail versturen |
 | `python -m hitlijsten run --geen-mail` | run zonder mail, uitvoer op scherm |
 
@@ -167,28 +220,30 @@ mailen. Losse opdrachten:
 
 ### De wekelijkse taak
 
-De run hoort **elke vrijdag om 17:00** te draaien.
+De run hoort **elke vrijdag om 17:00** te draaien: een DSM-taak die
+`/volume1/Hitlijsten/app/wekelijkse-run.sh` start als gebruiker `claude`.
 
-Op de NAS (waar de applicatie sinds juli 2026 draait) is dat een DSM-taak die
-`/volume1/Hitlijsten/app/wekelijkse-run.sh` als gebruiker `claude` start. Die
-taak maak je aan in **Configuratiescherm -> Taakplanner -> Aanmaken ->
-Geplande taak -> Door gebruiker gedefinieerd script**.
+Aanmaken in DSM: **Configuratiescherm → Taakplanner → Aanmaken → Geplande taak
+→ Door gebruiker gedefinieerd script**. Gebruiker `claude`, wekelijks op
+vrijdag om 17:00, en als script één regel:
 
-Op een Windows-pc doet `installeer-taak.ps1` hetzelfde in de Taakplanner:
-taak **"Hitlijsten verzamelen"**, vrijdag 17:00 (`-Verwijder` haalt hem weg,
-`-Tijd 20:00` verzet hem).
+```bash
+sh /volume1/Hitlijsten/app/wekelijkse-run.sh
+```
 
-Stond de pc vrijdag uit, dan draait de taak zodra hij weer aan gaat — niet pas
-de week erna. En de run haalt **elke** ontbrekende week op, niet alleen de
-nieuwste, dus een paar gemiste weken halen zichzelf in. Dat geldt ook over de
-jaarwisseling heen: is de vorige jaargang afgekapt, dan wordt de staart alsnog
-aangevuld.
+Die shell laadt zelf `omgeving.sh` en gebruikt het venv, dus er hoeft verder
+niets ingesteld te worden.
+
+De run haalt **elke** ontbrekende week op, niet alleen de nieuwste, dus een paar
+gemiste weken halen zichzelf in — bijvoorbeeld als de NAS een tijdje uit stond.
+Dat geldt ook over de jaarwisseling heen: is de vorige jaargang afgekapt, dan
+wordt de staart alsnog aangevuld.
 
 Alleen de staart, niet elk gat — een jaargang die pas halverwege begon (Sterren
 NL start in 2019 bij week 40) heeft aan het begin gaten die nooit bestaan hebben.
 Die elke week opnieuw proberen zou de mail voorgoed vervuilen.
 
-Heeft de pc echt lang stilgestaan, gebruik dan `historie --vanaf <jaar>`.
+Heeft de NAS echt lang stilgestaan, gebruik dan `historie --vanaf <jaar>`.
 
 ### Oude jaargangen ophalen
 
@@ -228,36 +283,59 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
 ## Hoe het in elkaar zit
 
 ```
-hitlijsten/
-  config.py     de vier lijsten, paden, URL-opbouw, lengte per jaargang
-  fetch.py      HTML ophalen + schijfcache (.cache/), week- en jaarcontrole
-  parsers/      HTML -> Notering  (top40nl.py, oranje.py)
-  models.py     dataclass Notering + structuurcontrole
-  normalize.py  nummers over weken heen herkennen
-  db.py         sqlite-opslag (data/hitlijsten.sqlite), incl. bestaat_niet
-aliases.csv           samen te voegen sleutels
-niet-samenvoegen.csv  paren die juist gescheiden moeten blijven
-te-beoordelen.csv     voorstellen uit `controle --alle`
-  excel.py      de Excel-bestanden
-  mail.py       melding via de MailPlus-relay
-  cli.py        de opdrachten hierboven
-tests/          zelftests, draaien op de cache dus zonder netwerk
+/volume1/Hitlijsten/app/
+  omgeving.sh          zet HITLIJSTEN_DATA / _CACHE / _EXCEL
+  start-web.sh         wordt door systemd gestart (hitlijsten-web)
+  wekelijkse-run.sh    wordt door de DSM-taakplanner gestart
+  hitlijsten-web.service
+  venv/                Python 3.14.5 met de afhankelijkheden
+  run.log              logboek van alle runs
+  hitlijsten/
+    config.py     de vier lijsten, paden, URL-opbouw, lengte per jaargang
+    fetch.py      HTML ophalen + schijfcache, week- en jaarcontrole
+    parsers/      HTML -> Notering  (top40nl.py, oranje.py)
+    models.py     dataclass Notering + structuurcontrole
+    normalize.py  nummers over weken heen herkennen
+    datums.py     weeknummer -> uitzendvrijdag
+    db.py         sqlite-opslag, incl. bestaat_niet en de decenniumtotalen
+    excel.py      de Excel-bestanden
+    kruiscontrole.py / onderscheidingen.py  michajans.nl
+    mail.py       melding via de MailPlus-relay
+    cli.py        de opdrachten hierboven
+    web/          de Flask-applicatie (app.py, templates/)
+  tests/          zelftests, draaien op de cache dus zonder netwerk
 ```
 
+De gegevens staan er bewust náást, niet in:
+
+```
+/volume1/Hitlijsten/
+  data/hitlijsten.sqlite   de database (46 MB)
+  cache/                   de ruwe HTML van alle opgehaalde pagina's (2 GB)
+  excel/                   de gebouwde werkboeken (36 MB)
+```
+
+Zo kun je `app/` in zijn geheel vervangen zonder de database aan te raken.
+
 **De database is de bron, niet de website.** Alles wat opgehaald is staat in
-`data/hitlijsten.sqlite` en de ruwe HTML in `.cache/`. De Excel-bestanden opnieuw
+`data/hitlijsten.sqlite` en de ruwe HTML in `cache/`. De Excel-bestanden opnieuw
 bouwen kost dus geen enkel verzoek aan de sites, en je kunt ze zonder risico
 weggooien en opnieuw laten maken.
+
+Aliassen, uitzonderingen en correcties zaten vroeger in CSV-bestanden; die staan
+sinds juli 2026 in de database (tabellen `aliases`, `niet_samenvoegen`,
+`correcties`) en zijn te beheren via de webapplicatie.
 
 ### Testen
 
 ```bash
-python tests\test_top40nl.py
-python tests\test_oranje.py
-python tests\test_excel.py
-python tests\test_datums.py
-python tests\test_decennium.py
-node tests\test_grafiek.mjs
+cd /volume1/Hitlijsten/app && . ./omgeving.sh
+./venv/bin/python tests/test_top40nl.py
+./venv/bin/python tests/test_oranje.py
+./venv/bin/python tests/test_excel.py
+./venv/bin/python tests/test_datums.py
+./venv/bin/python tests/test_decennium.py
+node tests/test_grafiek.mjs        # node staat niet op de NAS
 ```
 
 Draaien op de gecachete pagina's en een tijdelijke database, dus zonder netwerk
@@ -307,17 +385,22 @@ twee nummers.
 
 Blijft er een paar terugkomen dat je al hebt afgewezen — een kerst- of
 voetbalversie die vlak na het origineel verscheen en dus binnen de weekgrens
-valt, maar toch een eigen nummer is — zet het dan in **`niet-samenvoegen.csv`**
-als `sleutel_a;sleutel_b`. `controle` slaat die paren daarna over.
+valt, maar toch een eigen nummer is — zet het dan onder **Uitzonderingen** in de
+webapplicatie. `controle` slaat die paren daarna over.
 
 De grens van drie weken (`cli.MAX_GAT_WEKEN`) scheidt een hernoeming van een
 heruitgave. Danzel's "Pump It Up" noteerde in 2004 van week 13 tot 18 en de remix
 pas vanaf week 43 — 24 weken later, dus een eigen notering. Een typefout of een
 toegevoegde gastartiest valt daarentegen altijd binnen een paar weken.
 
-Samenvoegen doe je zelf, in **`aliases.csv`**: `van_sleutel;naar_sleutel`. De
-sleutel staat als kolom in de Excel-bestanden. Ketens mogen: `a;b` plus `b;c`
-laat a, b en c allemaal op c uitkomen.
+Samenvoegen doe je zelf, onder **Aliassen** in de webapplicatie: van welke
+sleutel naar welke. De sleutel staat als kolom in de Excel-bestanden. Ketens
+mogen: `a` → `b` plus `b` → `c` laat a, b en c allemaal op c uitkomen.
+
+Aliassen en uitzonderingen stonden vroeger in `aliases.csv` en
+`niet-samenvoegen.csv`; sinds juli 2026 staan ze in de database (tabellen
+`aliases` en `niet_samenvoegen`) en legt de webapplicatie elke wijziging vast in
+het logboek. De oude CSV's zijn gemigreerd en verwijderd.
 
 ### te-beoordelen.csv
 
@@ -326,9 +409,9 @@ python -m hitlijsten controle --alle
 ```
 
 loopt alle jaargangen na en schrijft de gevallen die het script níét zelf durft
-te beslissen naar **`te-beoordelen.csv`**, als kant-en-klare aliasregels met een
-`#` ervoor. Wil je er een samenvoegen, haal het `#` weg en plak de regel in
-`aliases.csv`.
+te beslissen naar **`te-beoordelen.csv`** (in `app/`), als kant-en-klare
+aliasregels met een `#` ervoor. Wil je er een samenvoegen, neem de twee sleutels
+dan over onder **Aliassen** in de webapplicatie.
 
 Elk geval staat er met de weken erbij, want daar hangt het oordeel van af:
 
@@ -423,7 +506,7 @@ bleken er **4 een echte koppelfout**.
 **Wijzigt een site zijn opmaak**, dan faalt de structuurcontrole (verwacht
 40/30/25 aaneengesloten posities) en komt dat in de mail terecht: in de
 onderwerpregel staat `-- N MISLUKT` en bovenaan het bericht welke weken het
-betreft. Dat is met opzet — de taak draait zonder venster, dus een stille
+betreft. Dat is met opzet — de taak draait onbeheerd op de NAS, dus een stille
 mislukking zou maanden onopgemerkt kunnen blijven. Een lege tab wegschrijven is
 erger dan een luide fout.
 
@@ -432,8 +515,8 @@ gewoon opnieuw probeert. Anders zou één onderhoudspagina zich permanent
 vastzetten. Blijft dezelfde week falen, dan is het geen toeval en moet de parser
 aangepast worden.
 
-Alle details staan in **`run.log`** naast dit bestand. Dat groeit langzaam en
-wordt niet automatisch opgeschoond.
+Alle details staan in **`/volume1/Hitlijsten/app/run.log`**. Dat groeit langzaam
+en wordt niet automatisch opgeschoond.
 
 ## Eigenaardigheden van de bronnen
 
@@ -441,10 +524,15 @@ wordt niet automatisch opgeschoond.
 Sectigo-tussencertificaat mee. Browsers repareren dat zelf door het ontbrekende
 certificaat op te halen; Python doet dat niet en faalt met
 `CERTIFICATE_VERIFY_FAILED`. `certifi` lost het nooit op, hoe je het ook
-instelt. `fetch.py` gebruikt daarom `truststore`, dat Python de
-Windows-certificaatstore laat gebruiken — daar zit het ontbrekende certificaat
-wel in, en certificaatcontrole blijft gewoon aan. Dit is een probleem van
-top40.nl, niet van deze pc; oranjetop30.nl heeft het niet.
+instelt. `fetch.py` levert daarom het ontbrekende certificaat zelf mee in
+`certificaten/sectigo-dv-r36.pem` en plakt dat achter de certifi-bundel.
+Certificaatcontrole blijft gewoon aan staan. Dit is een probleem van top40.nl,
+niet van de NAS; oranjetop30.nl heeft het niet.
+
+`fetch.py` kent daarnaast een tweede weg: is `truststore` geïnstalleerd, dan
+gebruikt Python de systeemcertificaatstore. Dat werkte op de Windows-pc waar dit
+project begon. Op de NAS zit dat pakket er niet en kent de systeemstore het
+certificaat ook niet, dus daar geldt altijd de meegeleverde bundel.
 
 **top40.nl kort lange artiestnamen af** in de zichtbare HTML (op ~46 tekens, met
 `..`). De volledige naam staat alleen in het `aria-label` van de link; de parser
@@ -463,15 +551,16 @@ een label toont.
 2460 noteringen over 2025 en 2026. Dat is een eigenschap van die lijst, geen
 parseerfout.
 
-**Debuggen op deze pc:** de Windows-console is cp1252 en verminkt tekens als `ø`
-en `ë`, wat er precies uitziet als een coderingsfout in de data. Dat is het niet
-— de cache is correct UTF-8. Zet `PYTHONIOENCODING=utf-8` bij eigen scriptjes.
+**Tekens die verminkt lijken:** `omgeving.sh` zet `PYTHONIOENCODING=utf-8`, want
+zonder dat kan een console `ø` en `ë` verminken — wat er precies uitziet als een
+coderingsfout in de data. Dat is het niet; de cache is correct UTF-8. Draai je
+iets met de hand buiten die shell om, zet die variabele dan zelf.
 
 ## Mail
 
 De melding gaat naar `heye@hhaken.nl` via de MailPlus-relay op 10.10.8.20, zonder
-wachtwoord — die relay accepteert post vanaf het thuisnetwerk. Wil je dat
-dichtzetten, vul dan `mail.ini` in naast dit bestand:
+wachtwoord — die relay accepteert post vanaf het thuisnetwerk, en de NAS staat
+daar zelf op. Wil je dat dichtzetten, vul dan `app/mail.ini` in:
 
 ```ini
 [mail]
