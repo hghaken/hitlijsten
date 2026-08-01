@@ -129,7 +129,7 @@
   grafiek van het verloop.
 </p>
 <div class="tabelvak">
-  <table id="matrix">
+  <table id="matrix" data-lijst="{{ lijst }}" data-jaar="{{ jaar }}">
     <thead>
       <tr>
         <th class="breed" style="position:sticky; left:0; z-index:3; background:#131a2b">Artiest — titel</th>
@@ -171,44 +171,35 @@
     <button class="sluit" type="button" aria-label="Sluiten">✕</button>
   </div>
   <div class="samenvatting hint"></div>
+  <div class="jaardeel hint"></div>
   <div class="plaat"></div>
   <p class="hint voet">
-    De verticale schaal loopt van 1 tot de lengte van de lijst, dus hoger in
-    beeld is een hogere notering. Onder elke week staat de positie en het
-    verschil met de week ervoor: groen is gestegen, rood gedaald,
-    <b>N</b> de binnenkomst. Een stippellijn overbrugt een week waarin het
-    nummer niet genoteerd stond.
+    De grafiek volgt de hele notering, ook als die over de jaarwisseling loopt:
+    een nummer dat in november binnenkwam begint hier in het vorige jaar, met
+    een streep waar de jaargang wisselt. De verticale schaal loopt van 1 tot de
+    lengte van de lijst, dus hoger in beeld is een hogere notering. Onder elke
+    week staat de positie en het verschil met de week ervoor: groen is gestegen,
+    rood gedaald, <b>N</b> de binnenkomst. Een stippellijn overbrugt een week
+    waarin het nummer niet genoteerd stond.
   </p>
 </dialog>
 
 <script>
-/* Grafiek van de positie per week, opgebouwd uit de matrix hierboven.
+/* Grafiek van de positie per week.
  *
- * De cijfers staan al in de tabel, dus die worden gelezen in plaats van nog
- * eens meegestuurd: bij 360 nummers scheelt dat een flinke lap JSON die
- * hetzelfde zegt. Klikken kan vanuit beide tabellen; de sleutel op de rij
- * verbindt ze.
+ * De reeks komt van /reeks en niet uit de matrix hierboven, omdat de matrix bij
+ * 1 januari ophoudt en een notering dat niet doet: een nummer dat in november
+ * binnenkwam heeft zijn halve verhaal in de vorige jaargang staan. Klikken kan
+ * vanuit beide tabellen; de sleutel op de rij verbindt ze.
  */
 (function () {
   const matrix = document.getElementById("matrix");
   const dialoog = document.getElementById("grafiek");
   if (!matrix || !dialoog || typeof dialoog.showModal !== "function") return;
 
-  const weken = Array.from(matrix.tHead.rows[0].cells).slice(1)
-    .map((c) => parseInt(c.textContent, 10));
-
-  // De schaal loopt tot de langste lijst van dit jaar, niet tot de laagste
-  // notering van dit ene nummer. Anders lijkt een nummer dat tussen 1 en 3
-  // schommelde net zo grillig als een nummer dat van 1 naar 40 zakte.
+  const LIJST = matrix.dataset.lijst, JAAR = matrix.dataset.jaar;
   const rijen = new Map();
-  let lengte = 1;
-  Array.from(matrix.tBodies[0].rows).forEach(function (r) {
-    rijen.set(r.dataset.sleutel, r);
-    Array.from(r.cells).slice(1).forEach(function (c) {
-      const p = parseInt(c.textContent, 10);
-      if (p > lengte) lengte = p;
-    });
-  });
+  Array.from(matrix.tBodies[0].rows).forEach((r) => rijen.set(r.dataset.sleutel, r));
 
   const vensterbreedte = () =>
     (typeof window === "undefined" ? 1120 : window.innerWidth);
@@ -221,12 +212,13 @@
     return e;
   }
 
-  const RUIM = 62, KRAP = 30, RANDX = 34, RANDBOVEN = 16, HOOG = 156;
+  const RUIM = 62, KRAP = 30, RANDX = 34, RANDBOVEN = 34, HOOG = 156;
+  const Y_JAAR = 15;
   const Y_WEEK = RANDBOVEN + HOOG + 26;
   const Y_POSITIE = Y_WEEK + 19;
   const Y_VERSCHIL = Y_POSITIE + 17;
 
-  function teken(reeks, hoogste) {
+  function teken(reeks, hoogste, lengte) {
     // Een korte notering krijgt de ruime opzet; een nummer dat veertig weken
     // bleef staan zou daarmee ruim 2500 pixels breed worden. De kolom krimpt
     // dus mee tot waar "+11" er nog onder past, en pas daarna gaat het schuiven.
@@ -246,9 +238,29 @@
         x1: RANDX - 16, x2: breedte - RANDX + 16, y1: y(p), y2: y(p),
         stroke: "currentColor", "stroke-opacity": p === 1 ? ".25" : ".12",
       }));
+      svg.appendChild(vorm("text", { x: 4, y: y(p) + 4, class: "as" }, p));
+    });
+
+    // Waar de jaargang wisselt komt een streep, met boven elk stuk het jaartal.
+    // Zonder dat leest week 52 gevolgd door week 1 als een sprong terug in de
+    // tijd. Het jaartal staat midden boven zijn eigen weken.
+    const jaargangen = [];
+    reeks.forEach(function (n, i) {
+      const laatste = jaargangen[jaargangen.length - 1];
+      if (laatste && laatste.jaar === n.jaar) laatste.tot = i;
+      else jaargangen.push({ jaar: n.jaar, van: i, tot: i });
+    });
+    jaargangen.forEach(function (g, nr) {
+      if (nr > 0) {
+        const grens = (x(g.van - 1) + x(g.van)) / 2;
+        svg.appendChild(vorm("line", {
+          x1: grens, x2: grens, y1: Y_JAAR + 5, y2: Y_WEEK + 4,
+          class: "jaargrens",
+        }));
+      }
       svg.appendChild(vorm("text", {
-        x: 4, y: y(p) + 4, class: "as",
-      }, p));
+        x: (x(g.van) + x(g.tot)) / 2, y: Y_JAAR, class: "jaar",
+      }, g.jaar));
     });
 
     // De lijn breekt op een week zonder notering; een stippellijn overbrugt
@@ -293,50 +305,66 @@
 
   function lijn(punten, gestippeld) {
     const d = punten.map((p, i) => (i ? "L" : "M") + p.px + " " + p.py).join(" ");
-    return vorm("path", {
-      d: d, class: gestippeld ? "spoor onderbroken" : "spoor",
+    return vorm("path", { d: d, class: gestippeld ? "spoor onderbroken" : "spoor" });
+  }
+
+  /* Een stijging is een LAGER positienummer, dus vorige - huidige: positief
+     betekent geklommen. Het verschil gaat over de vorige week waarin het nummer
+     noteerde, niet over de vorige kolom: anders zou een re-entry na drie lege
+     weken geen verschil krijgen. */
+  function metVerschillen(reeks) {
+    let vorige = null;
+    return reeks.map(function (n) {
+      const verschil = n.positie !== null && vorige !== null ? vorige - n.positie : null;
+      if (n.positie !== null) vorige = n.positie;
+      return { jaar: n.jaar, week: n.week, positie: n.positie, verschil: verschil };
     });
+  }
+
+  const opgehaald = new Map();
+  function haal(sleutel) {
+    if (!opgehaald.has(sleutel)) {
+      const adres = "/reeks?lijst=" + encodeURIComponent(LIJST) +
+        "&jaar=" + encodeURIComponent(JAAR) +
+        "&sleutel=" + encodeURIComponent(sleutel);
+      opgehaald.set(sleutel, fetch(adres).then(function (antwoord) {
+        if (!antwoord.ok) throw new Error("reeks niet gevonden");
+        return antwoord.json();
+      }));
+    }
+    return opgehaald.get(sleutel);
   }
 
   function toon(sleutel) {
     const rij = rijen.get(sleutel);
     if (!rij) return;
-
-    // Alleen het venster van binnenkomst tot laatste notering; de lege weken
-    // van de rest van het jaar zeggen niets en maken de grafiek onleesbaar.
-    const ruw = Array.from(rij.cells).slice(1)
-      .map((c) => (c.textContent.trim() === "" ? null : parseInt(c.textContent, 10)));
-    const van = ruw.findIndex((p) => p !== null);
-    let tot = ruw.length - 1;
-    while (tot > van && ruw[tot] === null) tot--;
-    if (van < 0) return;
-
-    // Een stijging is een LAGER positienummer, dus vorige - huidige: positief
-    // betekent geklommen. Het verschil gaat over de vorige week waarin het
-    // nummer noteerde, niet over de vorige kolom.
-    const reeks = [];
-    let vorige = null;
-    for (let i = van; i <= tot; i++) {
-      const positie = ruw[i];
-      let verschil = null;
-      if (positie !== null && vorige !== null) verschil = vorige - positie;
-      reeks.push({ week: weken[i], positie: positie, verschil: verschil });
-      if (positie !== null) vorige = positie;
-    }
-
-    const hoogste = parseInt(rij.dataset.hoogste, 10);
+    const plaat = dialoog.querySelector(".plaat");
     dialoog.querySelector(".artiest").textContent = rij.dataset.artiest;
     dialoog.querySelector(".titel").textContent = rij.dataset.titel;
-    dialoog.querySelector(".samenvatting").textContent =
-      "Hoogste positie " + hoogste + " · " + rij.dataset.weken + " weken · " +
-      rij.dataset.punten + " punten · " +
-      (rij.dataset.eerder === "1" ? "◀ " : "") + rij.dataset.eerste + " t/m " +
-      rij.dataset.laatste + (rij.dataset.door === "1" ? " ▶" : "");
-
-    const plaat = dialoog.querySelector(".plaat");
-    plaat.replaceChildren(teken(reeks, hoogste));
+    dialoog.querySelector(".samenvatting").textContent = "Bezig met ophalen…";
+    dialoog.querySelector(".jaardeel").textContent = "";
+    plaat.replaceChildren();
     dialoog.showModal();
-    plaat.scrollLeft = 0;
+
+    return haal(sleutel).then(function (g) {
+      dialoog.querySelector(".samenvatting").textContent =
+        "Hoogste positie " + g.hoogste + " · " + g.weken + " weken · " +
+        g.punten + " punten · " + g.van + " t/m " + g.tot;
+      // De cijfers hierboven gaan over de hele notering. Loopt die over de
+      // jaargrens, dan zijn ze hoger dan wat het klassement van dit jaar toont,
+      // en dat is verwarrend zonder deze regel erbij.
+      const eigen = String(g.reeks.filter((n) => String(n.jaar) === String(JAAR)).length);
+      dialoog.querySelector(".jaardeel").textContent =
+        g.reeks.some((n) => String(n.jaar) !== String(JAAR))
+          ? "Waarvan in " + JAAR + ": " + rij.dataset.weken + " weken · " +
+            rij.dataset.punten + " punten"
+          : "";
+      plaat.replaceChildren(teken(metVerschillen(g.reeks), g.hoogste, g.lengte));
+      plaat.scrollLeft = 0;
+    }).catch(function () {
+      dialoog.querySelector(".samenvatting").textContent =
+        "De reeks kon niet worden opgehaald.";
+    });
   }
 
   // Eén afhandelaar voor beide tabellen: de rij draagt de sleutel.

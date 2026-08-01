@@ -188,7 +188,8 @@
   dialog#grafiek .sluit {
     margin-left: auto; padding: .2rem .6rem; line-height: 1.2; font-size: 1rem;
   }
-  dialog#grafiek .samenvatting { margin: .5rem 0 .2rem; }
+  dialog#grafiek .samenvatting { margin: .5rem 0 0; }
+  dialog#grafiek .jaardeel:not(:empty) { margin: .1rem 0 .2rem; opacity: .75; }
   dialog#grafiek .plaat {
     overflow-x: auto; margin: .4rem -.3rem 0; padding: 0 .3rem;
   }
@@ -204,6 +205,13 @@
   svg.reeks .punt.beste { fill: #ffd166; }
   svg.reeks text { text-anchor: middle; font: 11px "Segoe UI", system-ui, sans-serif; }
   svg.reeks .as { text-anchor: start; fill: var(--gedempt); opacity: .55; }
+  svg.reeks .jaargrens {
+    stroke: currentColor; stroke-opacity: .3; stroke-dasharray: 2 4;
+  }
+  svg.reeks .jaar {
+    fill: var(--gedempt); font-weight: 650; letter-spacing: .6px;
+    text-transform: uppercase; font-size: 10.5px;
+  }
   svg.reeks .week { fill: var(--gedempt); }
   svg.reeks .positie { fill: var(--ink); font-weight: 650; font-size: 12.5px; }
   svg.reeks .positie.beste { fill: #ffd166; }

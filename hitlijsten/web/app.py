@@ -9,8 +9,8 @@ from functools import wraps
 from pathlib import Path
 
 from flask import (
-    Flask, abort, flash, g, redirect, render_template, request, send_file,
-    session, url_for,
+    Flask, abort, flash, g, jsonify, redirect, render_template, request,
+    send_file, session, url_for,
 )
 
 from .. import db
@@ -254,6 +254,27 @@ def _registreer(app: Flask) -> None:
             "jaar.html", lijst=lijst, jaren=jaren, jaar=jaar,
             nummers=gesorteerd, weken=weken, hoogtepunten=hoogtepunten,
         )
+
+    # --- reeks voor de grafiek ---------------------------------------------
+
+    @app.route("/reeks")
+    def reeks():
+        """De volledige notering van een nummer, voor de grafiek.
+
+        Vrij toegankelijk, net als het jaaroverzicht waar hij bij hoort. Apart
+        van de pagina omdat de matrix bij het jaar ophoudt en een notering dat
+        niet doet: een nummer dat in november binnenkwam heeft zijn halve
+        verhaal in de vorige jaargang staan.
+        """
+        lijst = request.args.get("lijst", "")
+        jaar = request.args.get("jaar", "")
+        sleutel = request.args.get("sleutel", "")
+        if lijst not in LIJSTEN or not jaar.isdigit() or not sleutel:
+            abort(404)
+        gegevens = db.reeks_van(verbinding(), lijst, sleutel, int(jaar))
+        if gegevens is None:
+            abort(404)
+        return jsonify(gegevens)
 
     # --- Excel downloaden --------------------------------------------------
 

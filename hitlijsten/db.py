@@ -9,10 +9,10 @@ import sqlite3
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Iterable, Iterator
+from typing import Iterable, Iterator, Optional
 
 from .config import DATA_DIR, DB_PATH
-from .datums import vrijdag_van
+from .datums import als_tekst, vrijdag_van
 from .models import Notering
 
 SCHEMA = """
@@ -254,6 +254,94 @@ class Looptijd:
     eind: date
     begon_eerder: bool
     loopt_door: bool
+
+
+def _kalender(
+    con: sqlite3.Connection, lijst: str, jaar: int
+) -> tuple[list[date], dict[date, tuple[int, int]], dict[date, int]]:
+    """Alle uitgezonden weken rond dit jaar, op datum.
+
+    Geeft drie dingen terug: de datums op volgorde, per datum de (jaar, week)
+    waar hij bij hoort, en per datum de lengte van de lijst die week. Die lengte
+    is het hoogste positienummer dat er die week in staat -- de Tipparade telde
+    ooit twintig noteringen en later dertig.
+    """
+    volgorde: dict[date, tuple[int, int]] = {}
+    lengte: dict[date, int] = {}
+    for rij_jaar, week, hoogste in con.execute(
+        "SELECT jaar, week, MAX(positie) FROM noteringen"
+        " WHERE lijst=? AND jaar BETWEEN ? AND ? GROUP BY jaar, week",
+        (lijst, jaar - BUURJAREN, jaar + BUURJAREN),
+    ):
+        datum = vrijdag_van(rij_jaar, week)
+        volgorde[datum] = (rij_jaar, week)
+        lengte[datum] = hoogste
+    return sorted(volgorde), volgorde, lengte
+
+
+def reeks_van(
+    con: sqlite3.Connection, lijst: str, sleutel: str, jaar: int
+) -> Optional[dict]:
+    """De volledige aaneengesloten notering waar dit jaar deel van uitmaakt.
+
+    Anders dan de jaarmatrix stopt deze niet bij 1 januari: een nummer dat in
+    november binnenkwam en in juni uit de lijst viel, komt hier in zijn geheel
+    uit, met de weken uit beide jaargangen achter elkaar. Weken waarin het
+    nummer tussentijds niet noteerde staan er met ``positie: None`` in, zodat de
+    grafiek het gat op de juiste plek in de tijd kan tonen.
+    """
+    kalender, volgorde, lengtes = _kalender(con, lijst, jaar)
+    if not kalender:
+        return None
+
+    posities: dict[date, int] = {}
+    dit_jaar: list[date] = []
+    for rij_jaar, week, positie in con.execute(
+        "SELECT jaar, week, MIN(positie) FROM noteringen"
+        " WHERE lijst=? AND sleutel=? AND jaar BETWEEN ? AND ?"
+        " GROUP BY jaar, week",
+        (lijst, sleutel, jaar - BUURJAREN, jaar + BUURJAREN),
+    ):
+        datum = vrijdag_van(rij_jaar, week)
+        posities[datum] = positie
+        if rij_jaar == jaar:
+            dit_jaar.append(datum)
+    if not dit_jaar:
+        return None
+
+    volgnummer = {datum: nr for nr, datum in enumerate(kalender)}
+    vroeg, laat = volgnummer[min(dit_jaar)], volgnummer[max(dit_jaar)]
+    while vroeg > 0 and kalender[vroeg - 1] in posities:
+        vroeg -= 1
+    while laat + 1 < len(kalender) and kalender[laat + 1] in posities:
+        laat += 1
+
+    punten = 0
+    weken = 0
+    reeks = []
+    for datum in kalender[vroeg : laat + 1]:
+        rij_jaar, week = volgorde[datum]
+        positie = posities.get(datum)
+        if positie is not None:
+            weken += 1
+            punten += lengtes[datum] - positie + 1
+        reeks.append({
+            "jaar": rij_jaar, "week": week, "datum": als_tekst(datum),
+            "positie": positie,
+        })
+
+    genoteerd = [n["positie"] for n in reeks if n["positie"] is not None]
+    return {
+        "reeks": reeks,
+        # De schaal loopt tot de langste lijst in dit venster, zodat de grafiek
+        # even hoog blijft als de lijst halverwege van lengte veranderde.
+        "lengte": max(lengtes[d] for d in kalender[vroeg : laat + 1]),
+        "hoogste": min(genoteerd),
+        "weken": weken,
+        "punten": punten,
+        "van": reeks[0]["datum"],
+        "tot": reeks[-1]["datum"],
+    }
 
 
 def looptijden(

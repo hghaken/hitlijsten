@@ -20,7 +20,7 @@ if str(ROOT) not in sys.path:
 from hitlijsten.datums import (  # noqa: E402
     eerste_zaterdag, vrijdag_tekst, vrijdag_van, zaterdag_van,
 )
-from hitlijsten.db import looptijden  # noqa: E402
+from hitlijsten.db import looptijden, reeks_van  # noqa: E402
 
 # (jaar, week, zaterdag) -- overgenomen uit michajans.nl.
 GEPUBLICEERD = [
@@ -99,15 +99,21 @@ def test_opmaak():
 
 
 def _proefdatabase(rijen):
-    """Kale database met alleen wat looptijden() leest: lijst, jaar, week, sleutel."""
+    """Kale database met alleen wat deze functies lezen.
+
+    Rijen zijn (jaar, week, sleutel) of (jaar, week, sleutel, positie). Zonder
+    positie krijgt alles positie 1; looptijden() kijkt er niet naar, reeks_van()
+    wel.
+    """
     con = sqlite3.connect(":memory:")
     con.execute(
         "CREATE TABLE noteringen (id INTEGER PRIMARY KEY, lijst TEXT, jaar INT,"
-        " week INT, sleutel TEXT)"
+        " week INT, sleutel TEXT, positie INT)"
     )
     con.executemany(
-        "INSERT INTO noteringen (lijst, jaar, week, sleutel) VALUES ('top40',?,?,?)",
-        rijen,
+        "INSERT INTO noteringen (lijst, jaar, week, sleutel, positie)"
+        " VALUES ('top40',?,?,?,?)",
+        [r if len(r) == 4 else (*r, 1) for r in rijen],
     )
     return con
 
@@ -157,6 +163,53 @@ def test_zonder_buurjaar_blijft_alles_binnen_het_jaar():
     assert lt["a"].begin == vrijdag_van(2019, 1)
     assert lt["a"].eind == vrijdag_van(2019, 3)
     assert not lt["a"].begon_eerder and not lt["a"].loopt_door
+
+
+# --- de reeks achter de grafiek ---------------------------------------------
+
+
+def test_reeks_loopt_door_in_het_vorige_jaar():
+    """De grafiek stopt niet bij 1 januari, anders dan de jaarmatrix."""
+    rijen = [(2022, 51, "a", 13), (2022, 52, "a", 5),
+             (2023, 1, "a", 3), (2023, 2, "a", 2)]
+    r = reeks_van(_proefdatabase(rijen), "top40", "a", 2023)
+    assert [(n["jaar"], n["week"], n["positie"]) for n in r["reeks"]] == [
+        (2022, 51, 13), (2022, 52, 5), (2023, 1, 3), (2023, 2, 2)]
+    assert r["van"] == vrijdag_tekst(2022, 51)
+    assert r["tot"] == vrijdag_tekst(2023, 2)
+    assert r["hoogste"] == 2 and r["weken"] == 4
+
+
+def test_reeks_houdt_gaten_op_hun_plek_in_de_tijd():
+    """Een week zonder notering blijft als lege kolom staan."""
+    rijen = [(2023, 1, "a", 10), (2023, 4, "a", 25)]
+    # De weken 2 en 3 bestaan wel; er stond alleen een ander nummer in.
+    rijen += [(2023, w, "b", 1) for w in (1, 2, 3, 4)]
+    r = reeks_van(_proefdatabase(rijen), "top40", "a", 2023)
+    assert [n["positie"] for n in r["reeks"]] == [10, None, None, 25]
+    assert r["weken"] == 2, "een lege week telt niet mee"
+
+
+def test_reeks_stopt_bij_een_week_die_nooit_is_uitgezonden():
+    """Bestaat een week helemaal niet, dan is er geen gat om te tonen."""
+    rijen = [(2023, 1, "a", 10), (2023, 4, "a", 25)]
+    r = reeks_van(_proefdatabase(rijen), "top40", "a", 2023)
+    assert [n["week"] for n in r["reeks"]] == [1, 4]
+
+
+def test_reeks_neemt_de_lengte_van_de_lijst_over():
+    rijen = [(2023, 1, "a", 3), (2023, 2, "a", 5)]
+    rijen += [(2023, w, "vulling", 40) for w in (1, 2)]
+    r = reeks_van(_proefdatabase(rijen), "top40", "a", 2023)
+    assert r["lengte"] == 40
+    # Punten = lijstlengte - positie + 1, per week gerekend.
+    assert r["punten"] == (40 - 3 + 1) + (40 - 5 + 1)
+
+
+def test_reeks_van_een_onbekend_nummer_is_niets():
+    con = _proefdatabase([(2023, 1, "a", 1)])
+    assert reeks_van(con, "top40", "bestaat|niet", 2023) is None
+    assert reeks_van(con, "top40", "a", 1999) is None
 
 
 def main() -> int:
