@@ -111,6 +111,23 @@ Per week rekenen is geen omslachtigheid: de Tipparade telde in 1968 twintig
 noteringen en in 1969 vijfentwintig. Punten zijn daardoor **niet vergelijkbaar
 tussen lijsten** — #1 in de Top 40 is 40 punten, #1 in Sterren NL 25.
 
+### Het decennium
+
+De webapplicatie heeft naast het jaaroverzicht een tabblad **Decennium**: alle
+nummers uit tien jaargangen, op punten. Dat is er **alleen voor de Top 40**, en
+dat is geen luiheid. De Top 40 is zijn hele bestaan veertig noteringen lang
+(nagemeten: alle 3184 weken sinds 1965), dus een punt uit 1968 en een punt uit
+2024 wegen precies evenveel. Bij de Tipparade zou optellen over tien jaar
+betekenis­loos zijn: daar was #1 het ene jaar twintig punten waard en het andere
+jaar dertig.
+
+De punten worden **per jaargang gerekend en daarna opgeteld**, niet in één keer
+over tien jaar. Zo blijft de decenniumlijst exact de som van de
+jaaroverzichten — ook waar een jaartotaal van michajans.nl wordt aangehouden
+(zie *Wie wint bij een verschil*). Datums blijven binnen het decennium; loopt de
+notering erbuiten door, dan staat er een ◀ of ▶ waarmee je naar dat decennium
+springt, net als bij de jaargangen.
+
 ## Gebruik
 
 ```bash
@@ -217,11 +234,21 @@ weggooien en opnieuw laten maken.
 python tests\test_top40nl.py
 python tests\test_oranje.py
 python tests\test_excel.py
+python tests\test_datums.py
+python tests\test_decennium.py
+node tests\test_grafiek.mjs
 ```
 
 Draaien op de gecachete pagina's en een tijdelijke database, dus zonder netwerk
 en zonder de echte data aan te raken. Handig na elke wijziging aan een parser of
 aan `excel.py`.
+
+`test_grafiek.mjs` is de vreemde eend: die knipt het grafiekscript uit
+`templates/jaar.html` en draait het in node tegen een kleine DOM-stub. Dat is
+geen browser en zegt dus **niets over de opmaak** — wel over de schaal, de
+verschillen per week, de gaten en de streep bij de jaarwisseling. Het script
+wordt uit de template geknipt in plaats van gekopieerd, zodat de test niet
+stilletjes een oude versie blijft goedkeuren.
 
 ## Nummers herkennen over weken heen
 

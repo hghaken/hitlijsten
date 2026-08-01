@@ -261,6 +261,39 @@ def _registreer(app: Flask) -> None:
             markeer=markeer,
         )
 
+    # --- decennium ---------------------------------------------------------
+
+    # Alleen voor de Top 40: die is zijn hele bestaan veertig noteringen lang,
+    # dus punten uit 1968 en 2024 zijn zonder voorbehoud op te tellen. Bij de
+    # Tipparade zou dat niet mogen -- die telde ooit twintig noteringen en later
+    # dertig, waardoor een eerste plaats in het ene jaar meer waard is dan in
+    # het andere.
+    DECENNIUM_LIJST = "top40"
+
+    @app.route("/decennium")
+    def decennium_overzicht():
+        con = verbinding()
+        jaren = [r[0] for r in con.execute(
+            "SELECT DISTINCT jaar FROM noteringen WHERE lijst=? ORDER BY jaar",
+            (DECENNIUM_LIJST,))]
+        # decennium_van() levert de mapnaam ("1970-1979"); hier is het
+        # beginjaar handiger, want daar rekent decennium_totalen() mee.
+        decennia = sorted({j - j % 10 for j in jaren}, reverse=True)
+        if not decennia:
+            return render_template("decennium.html", decennia=[], decennium=None,
+                                   nummers=[], jaren=[], nummer1s=0, markeer="")
+
+        gevraagd = request.args.get("decennium", "")
+        gekozen = (int(gevraagd) if gevraagd.isdigit() and int(gevraagd) in decennia
+                   else decennia[0])
+        nummers = db.decennium_totalen(con, DECENNIUM_LIJST, gekozen)
+        return render_template(
+            "decennium.html", decennia=decennia, decennium=gekozen, nummers=nummers,
+            jaren=[j for j in jaren if gekozen <= j <= gekozen + 9],
+            nummer1s=sum(1 for n in nummers if n["hoogste"] == 1),
+            markeer=request.args.get("markeer") or "",
+        )
+
     # --- reeks voor de grafiek ---------------------------------------------
 
     @app.route("/reeks")

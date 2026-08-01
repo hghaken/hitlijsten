@@ -1,0 +1,130 @@
+{% extends "basis.html" %}
+{% block titel %}{{ decennium }}s Top 40 — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Decennium</h1>
+<p class="onder">Alle nummers uit tien jaargangen Nederlandse Top 40, op punten.</p>
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
+      flex-wrap:wrap; margin-bottom:1.4rem">
+  <select name="decennium" onchange="this.form.submit()">
+    {% for d in decennia %}
+      <option value="{{ d }}" {% if decennium == d %}selected{% endif %}>
+        {{ d }}–{{ d + 9 }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+  <span class="hint" style="margin-left:auto">
+    Alleen de Nederlandse Top 40; de andere lijsten staan per jaargang op het
+    <a href="{{ url_for('jaaroverzicht') }}">jaaroverzicht</a>.
+  </span>
+</form>
+
+{% if not nummers %}
+  <div class="melding fout">Voor dit decennium staat er nog niets in de database.</div>
+{% else %}
+
+<div class="kaarten">
+  <div class="kaart">
+    <div class="cijfer">{{ nummers|length }}</div>
+    <div class="naam">unieke nummers</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ jaren|length }}</div>
+    <div class="naam">jaargangen</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ nummer1s }}</div>
+    <div class="naam">nummers op 1 geweest</div>
+  </div>
+  <div class="kaart" style="min-width:22rem">
+    <div class="naam">koploper van de {{ decennium }}s</div>
+    <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
+      {{ nummers[0].titel }}</div>
+    <div class="hint">{{ nummers[0].artiest }} —
+      {{ nummers[0].punten }} punten over {{ nummers[0].weken }} weken</div>
+  </div>
+</div>
+
+<h2>Puntenklassement {{ decennium }}–{{ decennium + 9 }}</h2>
+<p class="hint" style="margin-top:-.3rem">
+  Punten per notering = 41 − positie, per week gerekend en over alle jaargangen
+  opgeteld; dit klassement is dus precies de som van de jaaroverzichten. Klik op
+  een artiest of titel voor de jaargang waarin het nummer de meeste punten
+  haalde, met de grafiek binnen handbereik.
+  {% if jaren and (jaren[0] != decennium or jaren[-1] != decennium + 9) %}
+    Beschikbaar: {{ jaren[0] }}–{{ jaren[-1] }}.
+  {% endif %}
+</p>
+
+<div class="tabelvak">
+  <table data-markeer="{{ markeer or '' }}">
+    <thead>
+      <tr>
+        <th class="getal">#</th><th class="breed">Artiest</th><th class="breed">Titel</th>
+        <th class="getal">Punten</th><th class="getal">Hoogste</th>
+        <th class="getal">Weken</th><th class="getal">Jaargangen</th>
+        <th class="getal">Binnenkomst</th><th class="getal">Laatste notering</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for n in nummers %}
+      {% set doel = url_for('jaaroverzicht', lijst='top40', jaar=n.beste_jaar,
+                            markeer=n.sleutel) %}
+      <tr data-sleutel="{{ n.sleutel }}">
+        <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
+          {{ loop.index }}</td>
+        <td class="breed"><a class="stil" href="{{ doel }}"
+            title="Naar {{ n.beste_jaar }}">{{ n.artiest }}</a></td>
+        <td class="breed"><a class="stil" href="{{ doel }}"
+            title="Naar {{ n.beste_jaar }}">{{ n.titel }}</a></td>
+        <td class="getal">{{ n.punten }}</td>
+        <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
+        <td class="getal">{{ n.weken }}</td>
+        <td class="getal" data-sorteer="{{ n.jaren[0] }}">
+          {{ n.jaren[0] }}{% if n.jaren|length > 1 %}–{{ n.jaren[-1] }}{% endif %}</td>
+        {# Zelfde pijltjes als op het jaaroverzicht, nu voor het decennium: de
+           notering begon voor 1 januari {{ decennium }} of liep na
+           31 december {{ decennium + 9 }} nog door. #}
+        <td class="getal" data-sorteer="{{ n.eerste_sorteer }}">
+          {% if n.begon_eerder %}<a class="grenspijl" href="{{ url_for(
+               'decennium_overzicht', decennium=decennium - 10, markeer=n.sleutel) }}"
+             title="Stond eind {{ decennium - 1 }} al genoteerd — ga naar de {{ decennium - 10 }}s"
+             >◀</a> {% endif %}{{ n.eerste }}</td>
+        <td class="getal" data-sorteer="{{ n.laatste_sorteer }}">
+          {{ n.laatste }}{% if n.loopt_door %} <a class="grenspijl" href="{{ url_for(
+               'decennium_overzicht', decennium=decennium + 10, markeer=n.sleutel) }}"
+             title="Bleef in {{ decennium + 10 }} genoteerd — ga naar de {{ decennium + 10 }}s"
+             >▶</a>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="hint" style="margin-top:.5rem">
+  Binnenkomst en laatste notering zijn de vrijdag waarop de lijst werd
+  uitgezonden, en blijven binnen dit decennium.
+  <span style="color:var(--ink)">◀</span> betekent dat het nummer eind
+  {{ decennium - 1 }} al genoteerd stond,
+  <span style="color:var(--ink)">▶</span> dat het na
+  {{ decennium + 9 }} bleef staan; klik erop om naar dat decennium te springen.
+</p>
+
+<script>
+/* Kwam de bezoeker via een decenniumpijl, dan wordt het nummer hier opgelicht.
+   Dezelfde afspraak als op het jaaroverzicht. */
+(function () {
+  const tabel = document.querySelector(".tabelvak table");
+  const sleutel = tabel && tabel.dataset.markeer;
+  if (!sleutel) return;
+  const rij = Array.from(tabel.tBodies[0].rows)
+    .find((r) => r.dataset.sleutel === sleutel);
+  if (!rij) return;
+  rij.classList.add("opgelicht");
+  rij.scrollIntoView({ block: "center" });
+})();
+</script>
+
+{% endif %}
+{% endblock %}

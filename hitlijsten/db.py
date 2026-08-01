@@ -344,6 +344,116 @@ def reeks_van(
     }
 
 
+def decennium_totalen(
+    con: sqlite3.Connection, lijst: str, decennium: int
+) -> list[dict]:
+    """Alle nummers uit tien jaargangen, met hun totaal over dat decennium.
+
+    De punten worden per jaargang gerekend en daarna opgeteld, niet in één keer
+    over tien jaar. Dat lijkt omslachtig maar houdt de lijst gelijk aan de som
+    van de jaaroverzichten: waar een jaartotaal van michajans.nl wordt
+    aangehouden (tabel `correcties`), telt hier hetzelfde cijfer mee.
+
+    Punten zijn alleen binnen een lijst vergelijkbaar: de Tipparade telde ooit
+    twintig noteringen en later dertig, dus daar levert een eerste plaats in
+    verschillende jaren een ander aantal punten op.
+    """
+    jaren = range(decennium, decennium + 10)
+    rijen = list(con.execute(
+        "SELECT jaar, week, positie, titel, artiest, label, sleutel FROM noteringen"
+        " WHERE lijst=? AND jaar BETWEEN ? AND ? ORDER BY jaar, week, positie",
+        (lijst, decennium, decennium + 9),
+    ))
+    if not rijen:
+        return []
+
+    lengte: dict[tuple[int, int], int] = {}
+    for r in rijen:
+        sleutel = (r["jaar"], r["week"])
+        lengte[sleutel] = max(lengte.get(sleutel, 0), r["positie"])
+
+    # Per nummer per jaargang de beste notering van elke week; een sleutel hoort
+    # maar een keer per week voor te komen, maar bij gedeelde posities in de
+    # jaren zestig staat hij er soms twee keer.
+    per_jaar: dict[str, dict[int, dict[int, int]]] = {}
+    naam: dict[str, tuple[str, str, Optional[str]]] = {}
+    for r in rijen:
+        weken = per_jaar.setdefault(r["sleutel"], {}).setdefault(r["jaar"], {})
+        beste = weken.get(r["week"])
+        if beste is None or r["positie"] < beste:
+            weken[r["week"]] = r["positie"]
+        # Laatste schrijfwijze wint; de rijen komen op volgorde binnen.
+        naam[r["sleutel"]] = (r["artiest"], r["titel"], r["label"])
+
+    correcties: dict[int, dict[str, dict]] = {}
+    try:
+        from .kruiscontrole import correcties_voor
+
+        for jaar in jaren:
+            correcties[jaar] = correcties_voor(jaar, lijst, con)
+    except Exception:
+        correcties = {jaar: {} for jaar in jaren}
+
+    # Alleen de randjaren kunnen buiten het decennium doorlopen.
+    rand = {
+        decennium: looptijden(con, lijst, decennium),
+        decennium + 9: looptijden(con, lijst, decennium + 9),
+    }
+
+    uitkomst = []
+    for sleutel, jaargangen in per_jaar.items():
+        punten = weken_totaal = 0
+        hoogste = None
+        gecorrigeerd = False
+        for jaar, weken in jaargangen.items():
+            correctie = correcties.get(jaar, {}).get(sleutel)
+            if correctie:
+                gecorrigeerd = True
+                punten += correctie["punten"]
+                weken_totaal += correctie["weken"]
+                jaar_hoogste = correctie["hoogste"]
+            else:
+                punten += sum(lengte[(jaar, w)] - p + 1 for w, p in weken.items())
+                weken_totaal += len(weken)
+                jaar_hoogste = min(weken.values())
+            hoogste = jaar_hoogste if hoogste is None else min(hoogste, jaar_hoogste)
+
+        eerste_jaar, laatste_jaar = min(jaargangen), max(jaargangen)
+        eerste_week = min(jaargangen[eerste_jaar])
+        laatste_week = max(jaargangen[laatste_jaar])
+        begin = vrijdag_van(eerste_jaar, eerste_week)
+        eind = vrijdag_van(laatste_jaar, laatste_week)
+
+        # Loopt de notering buiten het decennium door? Dat kan alleen aan de
+        # randen, en dan weet looptijden() van dat jaar het al.
+        loop_begin = rand.get(eerste_jaar, {}).get(sleutel)
+        loop_eind = rand.get(laatste_jaar, {}).get(sleutel)
+        artiest, titel, label = naam[sleutel]
+
+        # Het jaar waarin het nummer de meeste punten haalde: daar hoort het
+        # thuis als je doorklikt naar een jaaroverzicht.
+        beste_jaar = max(
+            jaargangen,
+            key=lambda j: sum(lengte[(j, w)] - p + 1 for w, p in jaargangen[j].items()),
+        )
+
+        uitkomst.append({
+            "sleutel": sleutel, "artiest": artiest, "titel": titel, "label": label,
+            "punten": punten, "hoogste": hoogste, "weken": weken_totaal,
+            "jaren": sorted(jaargangen), "beste_jaar": beste_jaar,
+            "eerste": als_tekst(begin), "laatste": als_tekst(eind),
+            "eerste_sorteer": begin.isoformat(), "laatste_sorteer": eind.isoformat(),
+            "begon_eerder": bool(loop_begin and loop_begin.begon_eerder
+                                 and eerste_jaar == decennium),
+            "loopt_door": bool(loop_eind and loop_eind.loopt_door
+                               and laatste_jaar == decennium + 9),
+            "gecorrigeerd": gecorrigeerd,
+        })
+
+    uitkomst.sort(key=lambda n: (-n["punten"], n["hoogste"], n["eerste_sorteer"]))
+    return uitkomst
+
+
 def looptijden(
     con: sqlite3.Connection, lijst: str, jaar: int
 ) -> dict[str, Looptijd]:

@@ -181,6 +181,11 @@
   }
   a.grenspijl:hover { color: var(--ink); background: var(--glas); }
 
+  /* Een link die in een tabel niet wil schreeuwen: pas bij aanwijzen zie je
+     dat het er een is. */
+  td a.stil { color: inherit; text-decoration: none; }
+  td a.stil:hover { color: #8ab4ff; text-decoration: underline dotted; }
+
   /* Waar je vandaan kwam toen je op een pijltje klikte. Blijft staan: een
      markering die na twee seconden verdwijnt mis je als de pagina nog laadt. */
   tbody tr.opgelicht td {
@@ -244,6 +249,7 @@
     <nav>
       <a href="{{ url_for('overzicht') }}">Overzicht</a>
       <a href="{{ url_for('jaaroverzicht') }}">Jaaroverzicht</a>
+      <a href="{{ url_for('decennium_overzicht') }}">Decennium</a>
       {% if is_aangemeld() %}
         <a href="{{ url_for('zoek') }}">Zoeken</a>
         <a href="{{ url_for('aliassen') }}">Aliassen</a>
