@@ -167,6 +167,50 @@
     white-space: pre-wrap; display: none;
   }
   details summary { cursor: pointer; }
+
+  /* --- grafiek van de positie per week ---------------------------------- */
+
+  td.klikbaar { cursor: pointer; }
+  td.klikbaar:hover { color: #8ab4ff; text-decoration: underline dotted; }
+
+  dialog#grafiek {
+    border: 1px solid var(--rand); border-radius: 16px; padding: 1.1rem 1.3rem;
+    color: var(--ink); max-width: min(96vw, 1180px);
+    background: linear-gradient(180deg, #141c30, #100a24);
+    box-shadow: 0 24px 70px rgba(0,0,0,.6);
+  }
+  dialog#grafiek::backdrop { background: rgba(4,7,16,.72); backdrop-filter: blur(3px); }
+  dialog#grafiek .kop {
+    display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: .15rem;
+  }
+  dialog#grafiek .artiest { font-weight: 650; font-size: 1.1rem; }
+  dialog#grafiek .titel { color: var(--gedempt); font-size: .98rem; }
+  dialog#grafiek .sluit {
+    margin-left: auto; padding: .2rem .6rem; line-height: 1.2; font-size: 1rem;
+  }
+  dialog#grafiek .samenvatting { margin: .5rem 0 .2rem; }
+  dialog#grafiek .plaat {
+    overflow-x: auto; margin: .4rem -.3rem 0; padding: 0 .3rem;
+  }
+  dialog#grafiek .voet { margin: .9rem 0 0; max-width: 62rem; font-size: .84rem; }
+
+  svg.reeks { display: block; color: var(--ink); }
+  svg.reeks .spoor {
+    fill: none; stroke: var(--accent2); stroke-width: 2;
+    stroke-linejoin: round; stroke-linecap: round;
+  }
+  svg.reeks .spoor.onderbroken { stroke-opacity: .4; stroke-dasharray: 3 4; }
+  svg.reeks .punt { fill: var(--accent2); stroke: #141c30; stroke-width: 1.5; }
+  svg.reeks .punt.beste { fill: #ffd166; }
+  svg.reeks text { text-anchor: middle; font: 11px "Segoe UI", system-ui, sans-serif; }
+  svg.reeks .as { text-anchor: start; fill: var(--gedempt); opacity: .55; }
+  svg.reeks .week { fill: var(--gedempt); }
+  svg.reeks .positie { fill: var(--ink); font-weight: 650; font-size: 12.5px; }
+  svg.reeks .positie.beste { fill: #ffd166; }
+  svg.reeks .verschil.op { fill: var(--accent3); }
+  svg.reeks .verschil.neer { fill: var(--waarschuw); }
+  svg.reeks .verschil.gelijk { fill: var(--gedempt); opacity: .6; }
+  svg.reeks .verschil.nieuw { fill: var(--accent3); font-weight: 650; }
 </style>
 </head>
 <body>

@@ -72,6 +72,9 @@
 </div>
 
 <h2>Puntenklassement</h2>
+<p class="hint" style="margin-top:-.3rem">
+  Klik op een artiest of titel voor de grafiek van de positie per week.
+</p>
 <div class="tabelvak">
   <table>
     <thead>
@@ -85,11 +88,11 @@
     </thead>
     <tbody>
       {% for n in nummers %}
-      <tr>
+      <tr data-sleutel="{{ n.sleutel }}">
         <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
           {{ loop.index }}</td>
-        <td class="breed">{{ n.artiest }}</td>
-        <td class="breed">{{ n.titel }}</td>
+        <td class="breed klikbaar" title="Klik voor de grafiek">{{ n.artiest }}</td>
+        <td class="breed klikbaar" title="Klik voor de grafiek">{{ n.titel }}</td>
         {% if nummers[0].label %}<td class="hint">{{ n.label or '' }}</td>{% endif %}
         <td class="getal">{{ n.punten }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
@@ -121,10 +124,12 @@
 <h2>Positie per week</h2>
 <p class="hint" style="margin-top:-.3rem">
   Dezelfde matrix als in het jaarbestand: een rij per nummer, een kolom per week.
-  Goud is nummer 1. Horizontaal scrollen voor de latere weken.
+  Goud is nummer 1. Horizontaal scrollen voor de latere weken. Klik op een
+  <b>artiest of titel</b> — hier of in het klassement hierboven — voor de
+  grafiek van het verloop.
 </p>
 <div class="tabelvak">
-  <table>
+  <table id="matrix">
     <thead>
       <tr>
         <th class="breed" style="position:sticky; left:0; z-index:3; background:#131a2b">Artiest — titel</th>
@@ -133,8 +138,17 @@
     </thead>
     <tbody>
       {% for n in nummers %}
-      <tr>
-        <td class="breed" style="position:sticky; left:0; background:#0f1626">
+      {# Alles wat de grafiek in de kop toont staat hier, zodat het klassement
+         en de matrix dezelfde bron hebben en er geen tweede kopie in JSON
+         nodig is: de posities leest de grafiek uit de cellen hiernaast. #}
+      <tr data-sleutel="{{ n.sleutel }}" data-artiest="{{ n.artiest }}"
+          data-titel="{{ n.titel }}" data-punten="{{ n.punten }}"
+          data-hoogste="{{ n.hoogste }}" data-weken="{{ n.weken }}"
+          data-eerste="{{ n.eerste }}" data-laatste="{{ n.laatste }}"
+          data-eerder="{{ 1 if n.begon_eerder else 0 }}"
+          data-door="{{ 1 if n.loopt_door else 0 }}">
+        <td class="breed klikbaar" title="Klik voor de grafiek"
+            style="position:sticky; left:0; background:#0f1626">
           {{ n.artiest }} <span class="hint">— {{ n.titel }}</span>
         </td>
         {% for w in weken %}
@@ -147,6 +161,202 @@
     </tbody>
   </table>
 </div>
+
+<dialog id="grafiek">
+  <div class="kop">
+    <div>
+      <div class="artiest"></div>
+      <div class="titel"></div>
+    </div>
+    <button class="sluit" type="button" aria-label="Sluiten">✕</button>
+  </div>
+  <div class="samenvatting hint"></div>
+  <div class="plaat"></div>
+  <p class="hint voet">
+    De verticale schaal loopt van 1 tot de lengte van de lijst, dus hoger in
+    beeld is een hogere notering. Onder elke week staat de positie en het
+    verschil met de week ervoor: groen is gestegen, rood gedaald,
+    <b>N</b> de binnenkomst. Een stippellijn overbrugt een week waarin het
+    nummer niet genoteerd stond.
+  </p>
+</dialog>
+
+<script>
+/* Grafiek van de positie per week, opgebouwd uit de matrix hierboven.
+ *
+ * De cijfers staan al in de tabel, dus die worden gelezen in plaats van nog
+ * eens meegestuurd: bij 360 nummers scheelt dat een flinke lap JSON die
+ * hetzelfde zegt. Klikken kan vanuit beide tabellen; de sleutel op de rij
+ * verbindt ze.
+ */
+(function () {
+  const matrix = document.getElementById("matrix");
+  const dialoog = document.getElementById("grafiek");
+  if (!matrix || !dialoog || typeof dialoog.showModal !== "function") return;
+
+  const weken = Array.from(matrix.tHead.rows[0].cells).slice(1)
+    .map((c) => parseInt(c.textContent, 10));
+
+  // De schaal loopt tot de langste lijst van dit jaar, niet tot de laagste
+  // notering van dit ene nummer. Anders lijkt een nummer dat tussen 1 en 3
+  // schommelde net zo grillig als een nummer dat van 1 naar 40 zakte.
+  const rijen = new Map();
+  let lengte = 1;
+  Array.from(matrix.tBodies[0].rows).forEach(function (r) {
+    rijen.set(r.dataset.sleutel, r);
+    Array.from(r.cells).slice(1).forEach(function (c) {
+      const p = parseInt(c.textContent, 10);
+      if (p > lengte) lengte = p;
+    });
+  });
+
+  const vensterbreedte = () =>
+    (typeof window === "undefined" ? 1120 : window.innerWidth);
+
+  const NS = "http://www.w3.org/2000/svg";
+  function vorm(naam, kenmerken, tekst) {
+    const e = document.createElementNS(NS, naam);
+    for (const k in kenmerken) e.setAttribute(k, kenmerken[k]);
+    if (tekst !== undefined) e.textContent = tekst;
+    return e;
+  }
+
+  const RUIM = 62, KRAP = 30, RANDX = 34, RANDBOVEN = 16, HOOG = 156;
+  const Y_WEEK = RANDBOVEN + HOOG + 26;
+  const Y_POSITIE = Y_WEEK + 19;
+  const Y_VERSCHIL = Y_POSITIE + 17;
+
+  function teken(reeks, hoogste) {
+    // Een korte notering krijgt de ruime opzet; een nummer dat veertig weken
+    // bleef staan zou daarmee ruim 2500 pixels breed worden. De kolom krimpt
+    // dus mee tot waar "+11" er nog onder past, en pas daarna gaat het schuiven.
+    const beschikbaar = Math.min(vensterbreedte() * 0.92, 1120) - RANDX * 2;
+    const STAP = Math.max(KRAP, Math.min(RUIM, beschikbaar / Math.max(1, reeks.length - 1)));
+    const x = (i) => RANDX + i * STAP;
+    const y = (p) => RANDBOVEN + ((p - 1) / Math.max(1, lengte - 1)) * HOOG;
+    const breedte = Math.max(300, RANDX * 2 + Math.max(1, reeks.length - 1) * STAP);
+    const svg = vorm("svg", {
+      viewBox: `0 0 ${breedte} ${Y_VERSCHIL + 12}`,
+      width: breedte, height: Y_VERSCHIL + 12, class: "reeks",
+    });
+
+    // Hulplijnen op positie 1 en op de onderkant van de lijst.
+    [1, lengte].forEach(function (p) {
+      svg.appendChild(vorm("line", {
+        x1: RANDX - 16, x2: breedte - RANDX + 16, y1: y(p), y2: y(p),
+        stroke: "currentColor", "stroke-opacity": p === 1 ? ".25" : ".12",
+      }));
+      svg.appendChild(vorm("text", {
+        x: 4, y: y(p) + 4, class: "as",
+      }, p));
+    });
+
+    // De lijn breekt op een week zonder notering; een stippellijn overbrugt
+    // het gat, zodat een re-entry niet als een normale daling leest.
+    let stuk = [];
+    let vorigePunt = null;
+    reeks.forEach(function (n, i) {
+      if (n.positie === null) return;
+      if (vorigePunt !== null && vorigePunt.i !== i - 1) {
+        if (stuk.length > 1) svg.appendChild(lijn(stuk, false));
+        svg.appendChild(lijn([
+          { px: x(vorigePunt.i), py: y(vorigePunt.positie) },
+          { px: x(i), py: y(n.positie) },
+        ], true));
+        stuk = [];
+      }
+      stuk.push({ px: x(i), py: y(n.positie) });
+      vorigePunt = { i: i, positie: n.positie };
+    });
+    if (stuk.length > 1) svg.appendChild(lijn(stuk, false));
+
+    reeks.forEach(function (n, i) {
+      svg.appendChild(vorm("text", { x: x(i), y: Y_WEEK, class: "week" }, n.week));
+      if (n.positie === null) return;
+      const top = n.positie === hoogste;
+      svg.appendChild(vorm("circle", {
+        cx: x(i), cy: y(n.positie), r: top ? 5 : 3.6,
+        class: top ? "punt beste" : "punt",
+      }));
+      svg.appendChild(vorm("text", {
+        x: x(i), y: Y_POSITIE, class: top ? "positie beste" : "positie",
+      }, n.positie));
+      svg.appendChild(vorm("text", {
+        x: x(i), y: Y_VERSCHIL,
+        class: "verschil " + (n.verschil === null ? "nieuw"
+          : n.verschil > 0 ? "op" : n.verschil < 0 ? "neer" : "gelijk"),
+      }, n.verschil === null ? "N"
+        : n.verschil > 0 ? "+" + n.verschil : String(n.verschil)));
+    });
+    return svg;
+  }
+
+  function lijn(punten, gestippeld) {
+    const d = punten.map((p, i) => (i ? "L" : "M") + p.px + " " + p.py).join(" ");
+    return vorm("path", {
+      d: d, class: gestippeld ? "spoor onderbroken" : "spoor",
+    });
+  }
+
+  function toon(sleutel) {
+    const rij = rijen.get(sleutel);
+    if (!rij) return;
+
+    // Alleen het venster van binnenkomst tot laatste notering; de lege weken
+    // van de rest van het jaar zeggen niets en maken de grafiek onleesbaar.
+    const ruw = Array.from(rij.cells).slice(1)
+      .map((c) => (c.textContent.trim() === "" ? null : parseInt(c.textContent, 10)));
+    const van = ruw.findIndex((p) => p !== null);
+    let tot = ruw.length - 1;
+    while (tot > van && ruw[tot] === null) tot--;
+    if (van < 0) return;
+
+    // Een stijging is een LAGER positienummer, dus vorige - huidige: positief
+    // betekent geklommen. Het verschil gaat over de vorige week waarin het
+    // nummer noteerde, niet over de vorige kolom.
+    const reeks = [];
+    let vorige = null;
+    for (let i = van; i <= tot; i++) {
+      const positie = ruw[i];
+      let verschil = null;
+      if (positie !== null && vorige !== null) verschil = vorige - positie;
+      reeks.push({ week: weken[i], positie: positie, verschil: verschil });
+      if (positie !== null) vorige = positie;
+    }
+
+    const hoogste = parseInt(rij.dataset.hoogste, 10);
+    dialoog.querySelector(".artiest").textContent = rij.dataset.artiest;
+    dialoog.querySelector(".titel").textContent = rij.dataset.titel;
+    dialoog.querySelector(".samenvatting").textContent =
+      "Hoogste positie " + hoogste + " · " + rij.dataset.weken + " weken · " +
+      rij.dataset.punten + " punten · " +
+      (rij.dataset.eerder === "1" ? "◀ " : "") + rij.dataset.eerste + " t/m " +
+      rij.dataset.laatste + (rij.dataset.door === "1" ? " ▶" : "");
+
+    const plaat = dialoog.querySelector(".plaat");
+    plaat.replaceChildren(teken(reeks, hoogste));
+    dialoog.showModal();
+    plaat.scrollLeft = 0;
+  }
+
+  // Eén afhandelaar voor beide tabellen: de rij draagt de sleutel.
+  document.querySelectorAll(".tabelvak table").forEach(function (tabel) {
+    tabel.addEventListener("click", function (gebeurtenis) {
+      const cel = gebeurtenis.target.closest("td.klikbaar");
+      if (!cel || !tabel.contains(cel)) return;
+      const sleutel = cel.parentElement.dataset.sleutel;
+      if (sleutel) toon(sleutel);
+    });
+  });
+
+  dialoog.querySelector(".sluit").addEventListener("click", () => dialoog.close());
+  // Klikken naast de inhoud sluit ook: het venster zelf vult de hele
+  // achtergrond, dus een klik die niet op een kind landt komt van de rand.
+  dialoog.addEventListener("click", function (gebeurtenis) {
+    if (gebeurtenis.target === dialoog) dialoog.close();
+  });
+})();
+</script>
 
 {% endif %}
 {% endblock %}
