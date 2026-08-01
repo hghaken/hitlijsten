@@ -38,7 +38,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 from .config import LIJSTEN, excel_map
 from .datums import vrijdag_van
 from .db import (
-    Looptijd, decennium_totalen, looptijden, noteringen_van_jaar, verbinding,
+    Looptijd, alle_jaren, looptijden, noteringen_van_jaar, totalen_over,
+    verbinding,
 )
 
 __all__ = [
@@ -48,6 +49,7 @@ __all__ = [
     "bouw_alles",
     "bouw_decennium",
     "bouw_decennium_werkboek",
+    "bouw_totalen_werkboek",
     "bouw_lijst",
     "verzamel_lijst",
     "bewaar_werkboek",
@@ -519,25 +521,35 @@ def _jaartab(wb: Workbook, gegevens: LijstGegevens) -> None:
 
 GECENTREERD_DECENNIUM = (
     "Punten", "Hoogste positie", "Aantal weken genoteerd", "Jaargangen",
-    "Binnenkomst", "Laatste notering", "Loopt buiten het decennium",
+    "Binnenkomst", "Laatste notering", "Loopt buiten de periode",
 )
 
 
 def bouw_decennium_werkboek(
     con: sqlite3.Connection, lijst: str, decennium: int
 ) -> Optional[Workbook]:
-    """Eén tab met het puntenklassement over tien jaargangen.
+    """Eén tab met het puntenklassement over tien jaargangen."""
+    return bouw_totalen_werkboek(con, lijst, decennium, decennium + 9)
+
+
+def bouw_totalen_werkboek(
+    con: sqlite3.Connection, lijst: str, van: int, tot: int
+) -> Optional[Workbook]:
+    """Eén tab met het puntenklassement over de jaargangen `van` t/m `tot`.
 
     Alleen zinvol voor een lijst die al die jaren even lang was -- zie
-    `decennium_totalen` en de LEESMIJ. Geeft None als er geen data is.
+    `totalen_over` en de LEESMIJ. Geeft None als er geen data is.
     """
-    nummers = decennium_totalen(con, lijst, decennium)
+    nummers = totalen_over(con, lijst, van, tot)
     if not nummers:
         return None
 
     cfg = LIJSTEN.get(lijst, {})
     heeft_label = bool(cfg.get("heeft_label"))
     gecorrigeerd = any(n["gecorrigeerd"] for n in nummers)
+    # Bij de volledige historie valt er per definitie niets buiten de periode;
+    # een kolom die dan overal leeg is suggereert dat er niets te melden viel.
+    grensgevallen = any(n["begon_eerder"] or n["loopt_door"] for n in nummers)
 
     kolommen = ["Artiest", "Titel"]
     if heeft_label:
@@ -549,8 +561,9 @@ def bouw_decennium_werkboek(
         "Jaargangen",
         "Binnenkomst",
         "Laatste notering",
-        "Loopt buiten het decennium",
     ]
+    if grensgevallen:
+        kolommen.append("Loopt buiten de periode")
     if gecorrigeerd:
         kolommen.append("Bron")
     kolommen.append("Sleutel")
@@ -570,23 +583,23 @@ def bouw_decennium_werkboek(
             # de notering erbuiten doorliep.
             _datum(n["eerste_sorteer"]),
             _datum(n["laatste_sorteer"]),
-            _buiten_decennium(n),
         ]
+        if grensgevallen:
+            waarden.append(_buiten_periode(n))
         if gecorrigeerd:
             waarden.append("michajans.nl" if n["gecorrigeerd"] else None)
         waarden.append(n["sleutel"])
         rijen.append(waarden)
 
     toelichting = (
-        f"Puntenklassement {decennium}-{decennium + 9} van de "
-        f"{cfg.get('naam', lijst)}. Punten per notering = lijstlengte - positie "
-        "+ 1, per jaargang gerekend en daarna opgeteld: dit klassement is dus de "
-        "som van de jaarbestanden."
+        f"Puntenklassement {van}-{tot} van de {cfg.get('naam', lijst)}. "
+        "Punten per notering = lijstlengte - positie + 1, per jaargang gerekend "
+        "en daarna opgeteld: dit klassement is dus de som van de jaarbestanden."
     )
 
     wb = Workbook()
     wb.remove(wb.active)
-    ws = wb.create_sheet(tabnaam(f"Klassement {decennium}-{decennium + 9}"))
+    ws = wb.create_sheet(tabnaam(f"Klassement {van}-{tot}"))
     _schrijf_tabel(ws, kolommen, rijen, toelichting=toelichting,
                    centreer=GECENTREERD_DECENNIUM)
     return wb
@@ -597,11 +610,11 @@ def _datum(iso: str) -> date:
     return date(jaar, maand, dag)
 
 
-def _buiten_decennium(nummer: dict) -> Optional[str]:
+def _buiten_periode(nummer: dict) -> Optional[str]:
     if nummer["begon_eerder"] and nummer["loopt_door"]:
         return "begon eerder en loopt door"
     if nummer["begon_eerder"]:
-        return "begon vorig decennium"
+        return "begon eerder"
     if nummer["loopt_door"]:
         return "loopt door"
     return None

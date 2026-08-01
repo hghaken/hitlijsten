@@ -149,6 +149,21 @@ jaaroverzichten — ook waar een jaartotaal van michajans.nl wordt aangehouden
 notering erbuiten door, dan staat er een ◀ of ▶ waarmee je naar dat decennium
 springt, net als bij de jaargangen.
 
+### De totaallijst
+
+Het tabblad **Totaal lijst** is dezelfde som, maar over alle jaargangen:
+ruim **15.000 nummers** van 1965 tot nu, met Pharrell Williams' *Happy* bovenaan
+(1449 punten over 49 weken in 2013–2014). Nagerekend over alle nummers: punten,
+weken en hoogste positie zijn exact gelijk aan de som van de zeven
+decenniumlijsten.
+
+Die lijst in zijn geheel op één pagina zetten is 11 MB HTML, en dat rendert geen
+enkele browser prettig. Daarom staat er een keuze boven de tabel — top 100, 500,
+1000 (standaard), 2500 of alles — en zit de **volledige** lijst altijd in de
+Excel — die bouwen duurt op de NAS een seconde of tien. De berekening zelf kost
+een halve seconde over 127.000 noteringen en wordt gecached tot er nieuwe data
+bij komt.
+
 De **⤓ Excel**-knop naast de dropdown levert `Top40_Decennium_1970-1979.xlsx`:
 één tab met hetzelfde klassement. Dat werkboek wordt bij het downloaden ter
 plekke gemaakt en komt dus niet uit de wekelijkse run — het kost een fractie van
@@ -159,6 +174,8 @@ in de decenniummappen naast de jaarmappen:
 python -m hitlijsten.cli decennium                  # alle decennia
 python -m hitlijsten.cli decennium --decennium 1970 # alleen de jaren zeventig
 ```
+
+De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
 ## De webapplicatie
 
@@ -173,6 +190,7 @@ op de NAS, achter de reverse proxy naar `10.10.8.20:8642`.
 | Overzicht | wat er in de database zit, per lijst |
 | Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel-download |
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
+| Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
 aliassen, uitzonderingen, vrije SELECT-query's, beheer (opnieuw ophalen, Excel

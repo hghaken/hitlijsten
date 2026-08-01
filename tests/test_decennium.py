@@ -1,4 +1,4 @@
-"""Tests voor het decenniumklassement (db.decennium_totalen).
+"""Tests voor het decennium- en het totaalklassement (db.totalen_over).
 
     cd /volume1/Hitlijsten/app && . ./omgeving.sh
     ./venv/bin/python tests/test_decennium.py
@@ -20,8 +20,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from hitlijsten.datums import vrijdag_tekst, vrijdag_van  # noqa: E402
-from hitlijsten.db import decennium_totalen  # noqa: E402
-from hitlijsten.excel import bouw_decennium_werkboek  # noqa: E402
+from hitlijsten.db import (  # noqa: E402
+    alle_jaren, decennium_totalen, totalen_over,
+)
+from hitlijsten.excel import (  # noqa: E402
+    bouw_decennium_werkboek, bouw_totalen_werkboek,
+)
 
 
 def _database(noteringen, correcties=()):
@@ -196,10 +200,11 @@ def test_werkboek_heeft_een_tab_met_het_klassement():
     rijen += _vullen(2021, [1])
     wb, koppen, uit = _werkblad(_database(rijen))
     assert wb.sheetnames == ["Klassement 2020-2029"]
+    # Geen enkel nummer loopt hier buiten het decennium, dus die kolom blijft
+    # weg: overal leeg suggereert dat er niets te melden viel.
     assert koppen == [
         "Artiest", "Titel", "Punten", "Hoogste positie", "Aantal weken genoteerd",
-        "Jaargangen", "Binnenkomst", "Laatste notering",
-        "Loopt buiten het decennium", "Sleutel",
+        "Jaargangen", "Binnenkomst", "Laatste notering", "Sleutel",
     ]
     assert [r["Punten"] for r in uit] == sorted(
         (r["Punten"] for r in uit), reverse=True)
@@ -225,9 +230,10 @@ def test_werkboek_noemt_een_jaargangbereik():
 def test_werkboek_meldt_wie_buiten_het_decennium_doorloopt():
     rijen = [(2019, 52, 3, "A", "B"), (2020, 1, 2, "A", "B")]
     rijen += _vullen(2019, [52]) + _vullen(2020, [1])
-    _, _, uit = _werkblad(_database(rijen))
+    _, koppen, uit = _werkblad(_database(rijen))
+    assert "Loopt buiten de periode" in koppen
     n = next(r for r in uit if r["Sleutel"] == "a|b")
-    assert n["Loopt buiten het decennium"] == "begon vorig decennium"
+    assert n["Loopt buiten de periode"] == "begon eerder"
 
 
 def test_werkboek_toont_de_bronkolom_alleen_als_er_gecorrigeerd_is():
@@ -244,6 +250,64 @@ def test_werkboek_toont_de_bronkolom_alleen_als_er_gecorrigeerd_is():
 def test_werkboek_van_een_leeg_decennium_is_niets():
     wb, _, _ = _werkblad(_database(_vullen(2021, [1])), decennium=1980)
     assert wb is None
+
+
+# --- de totaallijst over alle jaargangen ------------------------------------
+
+
+def test_totaallijst_is_de_som_van_de_decennia():
+    """De belangrijkste eigenschap: geen aparte telling, maar dezelfde."""
+    rijen = []
+    for jaar, positie in ((1968, 1), (1975, 5), (1975, 8), (2001, 3), (2024, 40)):
+        rijen.append((jaar, 1, positie, "A", "B"))
+        rijen += _vullen(jaar, [1])
+    con = _database(rijen)
+
+    van, tot = alle_jaren(con, "top40")
+    assert (van, tot) == (1968, 2024)
+    totaal = next(n for n in totalen_over(con, "top40", van, tot)
+                  if n["sleutel"] == "a|b")
+
+    uit_decennia = [n for d in range(1960, 2030, 10)
+                    for n in decennium_totalen(con, "top40", d)
+                    if n["sleutel"] == "a|b"]
+    assert sum(n["punten"] for n in uit_decennia) == totaal["punten"]
+    assert sum(n["weken"] for n in uit_decennia) == totaal["weken"]
+    assert min(n["hoogste"] for n in uit_decennia) == totaal["hoogste"]
+    # Vijf noteringen, maar twee daarvan staan in dezelfde week van 1975 (op 5
+    # en op 8): die tellen als één week, met de beste positie.
+    assert totaal["weken"] == 4 and totaal["hoogste"] == 1
+    assert totaal["punten"] == 40 + 36 + 38 + 1
+    assert totaal["jaren"] == [1968, 1975, 2001, 2024]
+
+
+def test_totaallijst_heeft_geen_grensgevallen():
+    """Buiten de volledige historie valt per definitie niets."""
+    rijen = [(1968, 52, 3, "A", "B"), (1969, 1, 2, "A", "B")]
+    rijen += _vullen(1968, [52]) + _vullen(1969, [1])
+    con = _database(rijen)
+    van, tot = alle_jaren(con, "top40")
+    for n in totalen_over(con, "top40", van, tot):
+        assert not n["begon_eerder"] and not n["loopt_door"], n["sleutel"]
+
+
+def test_totaalwerkboek_laat_de_grenskolom_weg():
+    rijen = [(1968, 1, 3, "A", "B"), (2024, 1, 2, "A", "B")]
+    rijen += _vullen(1968, [1]) + _vullen(2024, [1])
+    con = _database(rijen)
+    van, tot = alle_jaren(con, "top40")
+    wb = bouw_totalen_werkboek(con, "top40", van, tot)
+    ws = wb[wb.sheetnames[0]]
+    koppen = [c.value for c in ws[2]]
+    assert wb.sheetnames == ["Klassement 1968-2024"]
+    assert "Loopt buiten de periode" not in koppen
+    n = dict(zip(koppen, next(ws.iter_rows(min_row=3, values_only=True))))
+    assert n["Jaargangen"] == "1968-2024"
+
+
+def test_alle_jaren_van_een_lege_lijst():
+    van, tot = alle_jaren(_database([]), "top40")
+    assert van > tot, "een lege periode, zodat de aanroeper het kan afvangen"
 
 
 def main() -> int:

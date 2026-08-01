@@ -347,22 +347,37 @@ def reeks_van(
 def decennium_totalen(
     con: sqlite3.Connection, lijst: str, decennium: int
 ) -> list[dict]:
-    """Alle nummers uit tien jaargangen, met hun totaal over dat decennium.
+    """Alle nummers uit tien jaargangen, met hun totaal over dat decennium."""
+    return totalen_over(con, lijst, decennium, decennium + 9)
+
+
+def alle_jaren(con: sqlite3.Connection, lijst: str) -> tuple[int, int]:
+    """Eerste en laatste jaargang die van deze lijst in de database staat."""
+    rij = con.execute(
+        "SELECT MIN(jaar), MAX(jaar) FROM noteringen WHERE lijst=?", (lijst,)
+    ).fetchone()
+    return (rij[0], rij[1]) if rij and rij[0] is not None else (0, -1)
+
+
+def totalen_over(
+    con: sqlite3.Connection, lijst: str, van: int, tot: int
+) -> list[dict]:
+    """Alle nummers uit de jaargangen `van` t/m `tot`, met hun totaal.
 
     De punten worden per jaargang gerekend en daarna opgeteld, niet in één keer
-    over tien jaar. Dat lijkt omslachtig maar houdt de lijst gelijk aan de som
-    van de jaaroverzichten: waar een jaartotaal van michajans.nl wordt
+    over de hele periode. Dat lijkt omslachtig maar houdt de lijst gelijk aan de
+    som van de jaaroverzichten: waar een jaartotaal van michajans.nl wordt
     aangehouden (tabel `correcties`), telt hier hetzelfde cijfer mee.
 
-    Punten zijn alleen binnen een lijst vergelijkbaar: de Tipparade telde ooit
-    twintig noteringen en later dertig, dus daar levert een eerste plaats in
-    verschillende jaren een ander aantal punten op.
+    Punten zijn alleen binnen een lijst vergelijkbaar, en binnen een lijst alleen
+    als die al die jaren even lang was. De Top 40 is dat (altijd veertig); de
+    Tipparade telde ooit twintig noteringen en later dertig, dus daar levert een
+    eerste plaats in verschillende jaren een ander aantal punten op.
     """
-    jaren = range(decennium, decennium + 10)
     rijen = list(con.execute(
         "SELECT jaar, week, positie, titel, artiest, label, sleutel FROM noteringen"
         " WHERE lijst=? AND jaar BETWEEN ? AND ? ORDER BY jaar, week, positie",
-        (lijst, decennium, decennium + 9),
+        (lijst, van, tot),
     ))
     if not rijen:
         return []
@@ -389,15 +404,15 @@ def decennium_totalen(
     try:
         from .kruiscontrole import correcties_voor
 
-        for jaar in jaren:
+        for jaar in range(van, tot + 1):
             correcties[jaar] = correcties_voor(jaar, lijst, con)
     except Exception:
-        correcties = {jaar: {} for jaar in jaren}
+        correcties = {}
 
-    # Alleen de randjaren kunnen buiten het decennium doorlopen.
+    # Alleen de randjaren kunnen buiten de periode doorlopen.
     rand = {
-        decennium: looptijden(con, lijst, decennium),
-        decennium + 9: looptijden(con, lijst, decennium + 9),
+        van: looptijden(con, lijst, van),
+        tot: looptijden(con, lijst, tot),
     }
 
     uitkomst = []
@@ -444,9 +459,9 @@ def decennium_totalen(
             "eerste": als_tekst(begin), "laatste": als_tekst(eind),
             "eerste_sorteer": begin.isoformat(), "laatste_sorteer": eind.isoformat(),
             "begon_eerder": bool(loop_begin and loop_begin.begon_eerder
-                                 and eerste_jaar == decennium),
+                                 and eerste_jaar == van),
             "loopt_door": bool(loop_eind and loop_eind.loopt_door
-                               and laatste_jaar == decennium + 9),
+                               and laatste_jaar == tot),
             "gecorrigeerd": gecorrigeerd,
         })
 

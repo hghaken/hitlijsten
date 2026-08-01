@@ -1,0 +1,123 @@
+{% extends "basis.html" %}
+{% block titel %}Totaal lijst Top 40 {{ van }}–{{ tot }} — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Totaal lijst</h1>
+<p class="onder">Alle nummers uit de Nederlandse Top 40 van {{ van }} tot nu, op punten.</p>
+
+{% if not nummers %}
+  <div class="melding fout">Er staat nog niets in de database.</div>
+{% else %}
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
+      flex-wrap:wrap; margin-bottom:1.4rem">
+  <select name="toon" onchange="this.form.submit()">
+    {% for a in aantallen %}
+      <option value="{{ a }}" {% if toon == a %}selected{% endif %}>
+        top {{ a }}</option>
+    {% endfor %}
+    <option value="alles" {% if toon == totaal %}selected{% endif %}>
+      alle {{ '{:,}'.format(totaal).replace(',', '.') }} — traag</option>
+  </select>
+  <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+
+  <a class="knop" href="{{ url_for('download_totaal') }}"
+     title="De volledige lijst van {{ totaal }} nummers als werkboek — bouwen duurt een seconde of tien">⤓ Excel</a>
+
+  <span class="hint" style="margin-left:auto">
+    Alleen de Nederlandse Top 40 · {{ tot - van + 1 }} jaargangen ·
+    per decennium op het <a href="{{ url_for('decennium_overzicht') }}">decenniumoverzicht</a>
+  </span>
+</form>
+
+<div class="kaarten">
+  <div class="kaart">
+    <div class="cijfer">{{ '{:,}'.format(totaal).replace(',', '.') }}</div>
+    <div class="naam">unieke nummers</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ tot - van + 1 }}</div>
+    <div class="naam">jaargangen</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ nummer1s }}</div>
+    <div class="naam">nummers op 1 geweest</div>
+  </div>
+  <div class="kaart" style="min-width:22rem">
+    <div class="naam">koploper aller tijden</div>
+    <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
+      {{ nummers[0].titel }}</div>
+    <div class="hint">{{ nummers[0].artiest }} —
+      {{ nummers[0].punten }} punten over {{ nummers[0].weken }} weken</div>
+  </div>
+</div>
+
+<h2>Puntenklassement {{ van }}–{{ tot }}</h2>
+<p class="hint" style="margin-top:-.3rem">
+  Punten per notering = 41 − positie, per jaargang gerekend en over alle
+  {{ tot - van + 1 }} jaargangen opgeteld; deze lijst is dus precies de som van
+  de decenniumlijsten. Optellen mag hier omdat de Top 40 zijn hele bestaan
+  veertig noteringen lang is. Klik op een artiest of titel voor de jaargang
+  waarin het nummer de meeste punten haalde.
+  {% if toon < totaal %}
+    Hieronder staan de eerste {{ toon }} van {{ totaal }} — de rest zit in de
+    Excel, of kies hierboven een langere lijst.
+  {% endif %}
+</p>
+
+<div class="tabelvak">
+  <table data-markeer="{{ markeer or '' }}">
+    <thead>
+      <tr>
+        <th class="getal">#</th><th class="breed">Artiest</th><th class="breed">Titel</th>
+        <th class="getal">Punten</th><th class="getal">Hoogste</th>
+        <th class="getal">Weken</th><th class="getal">Jaargangen</th>
+        <th class="getal">Binnenkomst</th><th class="getal">Laatste notering</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for n in nummers %}
+      {% set doel = url_for('jaaroverzicht', lijst='top40', jaar=n.beste_jaar,
+                            markeer=n.sleutel) %}
+      <tr data-sleutel="{{ n.sleutel }}">
+        <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
+          {{ loop.index }}</td>
+        <td class="breed"><a class="stil" href="{{ doel }}">{{ n.artiest }}</a></td>
+        <td class="breed"><a class="stil" href="{{ doel }}">{{ n.titel }}</a></td>
+        <td class="getal">{{ n.punten }}</td>
+        <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
+        <td class="getal">{{ n.weken }}</td>
+        <td class="getal" data-sorteer="{{ n.jaren[0] }}">
+          {{ n.jaren[0] }}{% if n.jaren|length > 1 %}–{{ n.jaren[-1] }}{% endif %}</td>
+        <td class="getal" data-sorteer="{{ n.eerste_sorteer }}">{{ n.eerste }}</td>
+        <td class="getal" data-sorteer="{{ n.laatste_sorteer }}">{{ n.laatste }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="hint" style="margin-top:.5rem">
+  Binnenkomst en laatste notering zijn de vrijdag waarop de lijst werd
+  uitgezonden. Een nummer dat jaren later opnieuw noteerde staat hier als één
+  regel, met de hele periode ertussen — kijk naar de kolom Weken om te zien
+  hoeveel weken het er werkelijk stond.
+</p>
+
+<script>
+/* Zelfde afspraak als op het jaar- en decenniumoverzicht: kwam de bezoeker via
+   een verwijzing met `markeer`, dan wordt dat nummer opgelicht. */
+(function () {
+  const tabel = document.querySelector(".tabelvak table");
+  const sleutel = tabel && tabel.dataset.markeer;
+  if (!sleutel) return;
+  const rij = Array.from(tabel.tBodies[0].rows)
+    .find((r) => r.dataset.sleutel === sleutel);
+  if (!rij) return;
+  rij.classList.add("opgelicht");
+  rij.scrollIntoView({ block: "center" });
+})();
+</script>
+
+{% endif %}
+{% endblock %}

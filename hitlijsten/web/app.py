@@ -295,6 +295,69 @@ def _registreer(app: Flask) -> None:
             markeer=request.args.get("markeer") or "",
         )
 
+    # --- totaal lijst (alle jaargangen) ------------------------------------
+
+    # 15.127 nummers in één tabel is 12 MB HTML; dat rendert geen enkele browser
+    # prettig en op een telefoon helemaal niet. Daarom een keuze, met de
+    # volledige lijst als optie en in de Excel altijd alles.
+    AANTALLEN = (100, 500, 1000, 2500)
+
+    # De berekening kost een halve seconde over 127.000 noteringen. Dat is per
+    # bezoek zonde, en de uitkomst verandert alleen als er data bij komt --
+    # vandaar een cache op het aantal noteringen plus het laatste ophaalmoment.
+    _totaal_cache: dict = {}
+
+    def _totaal_lijst(con, lijst: str, van: int, tot: int) -> list:
+        stempel = con.execute(
+            "SELECT COUNT(*), MAX(opgehaald_op) FROM noteringen"
+            " JOIN opgehaald USING (lijst, jaar, week) WHERE lijst=?", (lijst,)
+        ).fetchone()
+        sleutel = (lijst, van, tot, tuple(stempel))
+        if _totaal_cache.get("sleutel") != sleutel:
+            _totaal_cache["sleutel"] = sleutel
+            _totaal_cache["nummers"] = db.totalen_over(con, lijst, van, tot)
+        return _totaal_cache["nummers"]
+
+    @app.route("/totaal")
+    def totaal_lijst():
+        con = verbinding()
+        van, tot = db.alle_jaren(con, DECENNIUM_LIJST)
+        if van > tot:
+            return render_template("totaal.html", nummers=[], van=None, tot=None,
+                                   aantallen=AANTALLEN, toon=0, totaal=0,
+                                   nummer1s=0, markeer="")
+
+        nummers = _totaal_lijst(con, DECENNIUM_LIJST, van, tot)
+        gevraagd = request.args.get("toon", "")
+        toon = (len(nummers) if gevraagd == "alles"
+                else int(gevraagd) if gevraagd.isdigit() and int(gevraagd) in AANTALLEN
+                else AANTALLEN[2])
+        return render_template(
+            "totaal.html", nummers=nummers[:toon], van=van, tot=tot,
+            aantallen=AANTALLEN, toon=toon, totaal=len(nummers),
+            nummer1s=sum(1 for n in nummers if n["hoogste"] == 1),
+            markeer=request.args.get("markeer") or "",
+        )
+
+    @app.route("/download/totaal")
+    def download_totaal():
+        """De volledige lijst als Excel -- daar past hij wél in zijn geheel in."""
+        con = verbinding()
+        van, tot = db.alle_jaren(con, DECENNIUM_LIJST)
+        wb = excel.bouw_totalen_werkboek(con, DECENNIUM_LIJST, van, tot)
+        if wb is None:
+            flash("Er staat nog niets in de database.", "fout")
+            return redirect(url_for("totaal_lijst"))
+        naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
+        bestand = f"{naam}_Totaal_{van}-{tot}.xlsx"
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return send_file(
+            buffer, as_attachment=True, download_name=bestand,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
     # --- reeks voor de grafiek ---------------------------------------------
 
     @app.route("/reeks")
