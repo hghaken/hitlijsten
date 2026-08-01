@@ -5,79 +5,164 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block titel %}Hitlijsten{% endblock %}</title>
 <style>
+  /* Zelfde taal als hhaken.nl en otsradio.hhaken.nl: donkere ondergrond,
+     glasachtige kaarten, een verloop van blauw naar paars als accent. */
   :root {
-    --rand: #d8dde3; --zacht: #f6f8fa; --tekst: #1f2933; --grijs: #5c6b7a;
-    --accent: #1a5fb4; --goed: #d7f0d9; --fout: #fde2e1; --markering: #ddebf7;
+    --bg:        #0b1220;
+    --bg2:       #190a30;
+    --ink:       #f5f2ff;
+    --gedempt:   #a89fc4;
+    --accent:    #3b82f6;
+    --accent2:   #7a5cff;
+    --accent3:   #34e2c4;
+    --waarschuw: #ff5b6e;
+    --glas:      rgba(255,255,255,.06);
+    --glas2:     rgba(255,255,255,.03);
+    --rand:      rgba(255,255,255,.12);
+    --rand2:     rgba(255,255,255,.06);
+    --balk:      linear-gradient(90deg, var(--accent), var(--accent2));
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; font: 15px/1.5 "Segoe UI", system-ui, sans-serif;
-    color: var(--tekst); background: #fff;
+    margin: 0; min-height: 100vh; color: var(--ink);
+    font: 15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1100px 600px at 12% -8%, rgba(122,92,255,.20), transparent 60%),
+      radial-gradient(900px 520px at 92% 4%, rgba(59,130,246,.16), transparent 62%),
+      linear-gradient(170deg, var(--bg) 0%, var(--bg2) 100%);
+    background-attachment: fixed;
   }
+
   header {
-    background: var(--tekst); color: #fff; padding: .6rem 1.2rem;
-    display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(9,12,24,.72); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--rand);
   }
-  header .merk { font-weight: 600; letter-spacing: .3px; }
-  header nav { display: flex; gap: 1rem; flex-wrap: wrap; }
-  header a { color: #cfd8e3; text-decoration: none; }
-  header a:hover, header a.actief { color: #fff; }
-  header .rechts { margin-left: auto; }
-  main { padding: 1.4rem 1.6rem 3rem; max-width: 1500px; }
-  h1 { font-size: 1.4rem; margin: 0 0 1rem; }
-  h2 { font-size: 1.05rem; margin: 1.8rem 0 .6rem; }
-  a { color: var(--accent); }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; }
-  th, td { border-bottom: 1px solid var(--rand); padding: .4rem .6rem; text-align: left; }
-  th { background: var(--zacht); font-weight: 600; position: sticky; top: 0; }
-  td.getal, th.getal { text-align: center; }
-  tr:hover td { background: #fafbfc; }
-  .kaarten { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+  header .binnen {
+    max-width: 1600px; margin: 0 auto; padding: .55rem 1.4rem;
+    display: flex; align-items: center; gap: 1.6rem; flex-wrap: wrap;
+  }
+  .merk { font-weight: 700; letter-spacing: .4px; font-size: 1.02rem; }
+  .merk span {
+    background: var(--balk); -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+  }
+  header nav { display: flex; gap: .3rem; flex-wrap: wrap; }
+  header nav a {
+    color: var(--gedempt); text-decoration: none; padding: .3rem .7rem;
+    border-radius: 7px; font-size: .93rem;
+  }
+  header nav a:hover { color: var(--ink); background: var(--glas); }
+  header nav a.actief { color: var(--ink); background: var(--glas); }
+  .rechts { margin-left: auto; }
+
+  main { max-width: 1600px; margin: 0 auto; padding: 1.6rem 1.4rem 4rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .3rem; font-weight: 650; }
+  h1 + .onder { color: var(--gedempt); margin: 0 0 1.5rem; font-size: .95rem; }
+  h2 {
+    font-size: 1rem; margin: 2rem 0 .7rem; font-weight: 600;
+    color: var(--ink); display: flex; align-items: center; gap: .6rem;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--rand2); }
+  a { color: #8ab4ff; }
+  a:hover { color: var(--ink); }
+
   .kaart {
-    border: 1px solid var(--rand); border-radius: 8px; padding: .8rem 1.1rem;
-    min-width: 150px; background: var(--zacht);
+    background: linear-gradient(180deg, var(--glas), var(--glas2));
+    border: 1px solid var(--rand); border-radius: 14px; padding: 1rem 1.2rem;
   }
-  .kaart .cijfer { font-size: 1.5rem; font-weight: 600; }
-  .kaart .naam { color: var(--grijs); font-size: .85rem; }
-  form.inline { display: inline; }
+  .kaarten { display: flex; gap: .9rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
+  .kaarten .kaart { min-width: 160px; }
+  .kaart .cijfer {
+    font-size: 1.75rem; font-weight: 680; line-height: 1.1;
+    background: var(--balk); -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+  }
+  .kaart .naam {
+    color: var(--gedempt); font-size: .8rem; text-transform: uppercase;
+    letter-spacing: .6px; margin-top: .2rem;
+  }
+
+  .tabelvak {
+    border: 1px solid var(--rand); border-radius: 14px; overflow: auto;
+    background: var(--glas2); max-height: 78vh;
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { padding: .45rem .7rem; text-align: left; white-space: nowrap; }
+  thead th {
+    position: sticky; top: 0; z-index: 2; background: #131a2b;
+    border-bottom: 1px solid var(--rand); font-weight: 600;
+    color: var(--gedempt); text-transform: uppercase; font-size: .72rem;
+    letter-spacing: .5px;
+  }
+  tbody tr { border-bottom: 1px solid var(--rand2); }
+  tbody tr:hover td { background: rgba(255,255,255,.045); }
+  td.getal, th.getal { text-align: center; }
+  td.breed, th.breed { white-space: normal; min-width: 14rem; }
+
+  .top1 { color: #ffd166; font-weight: 650; }
+  .top3 { color: #ffe9a8; }
+  .nieuw td:first-child { box-shadow: inset 3px 0 0 var(--accent3); }
+  .speld {
+    display: inline-block; padding: .08rem .5rem; border-radius: 999px;
+    font-size: .74rem; border: 1px solid var(--rand); color: var(--gedempt);
+  }
+  .speld.nieuw { color: #062; background: var(--accent3); border-color: transparent; }
+  .speld.terug { color: #2b1a00; background: #ffb020; border-color: transparent; }
+
   input[type=text], input[type=password], textarea, select {
-    font: inherit; padding: .4rem .5rem; border: 1px solid var(--rand);
-    border-radius: 5px; background: #fff;
+    font: inherit; padding: .45rem .6rem; border-radius: 9px;
+    border: 1px solid var(--rand); background: rgba(255,255,255,.05);
+    color: var(--ink);
   }
-  input[type=text] { min-width: 18rem; }
+  select option { background: #131a2b; }
+  input::placeholder { color: #6f6890; }
+  input[type=text] { min-width: 17rem; }
   textarea { width: 100%; font-family: Consolas, monospace; font-size: 13px; }
   button {
-    font: inherit; padding: .4rem .9rem; border: 1px solid var(--rand);
-    border-radius: 5px; background: #fff; cursor: pointer;
+    font: inherit; padding: .45rem 1rem; border-radius: 9px; cursor: pointer;
+    border: 1px solid var(--rand); background: var(--glas); color: var(--ink);
   }
-  button:hover { background: var(--zacht); }
-  button.hoofd { background: var(--accent); color: #fff; border-color: var(--accent); }
-  button.gevaar { color: #a02c2c; }
-  .melding { padding: .6rem .9rem; border-radius: 6px; margin-bottom: 1rem; }
-  .melding.goed { background: var(--goed); }
-  .melding.fout { background: var(--fout); }
-  .hint { color: var(--grijs); font-size: .88rem; }
-  code, .sleutel { font-family: Consolas, monospace; font-size: 12.5px; color: #3b4a5a; }
+  button:hover { background: rgba(255,255,255,.11); }
+  button.hoofd { background: var(--balk); border-color: transparent; font-weight: 550; }
+  button.hoofd:hover { filter: brightness(1.12); }
+  button.gevaar { color: var(--waarschuw); }
+  form.inline { display: inline; }
+
+  .melding {
+    padding: .65rem 1rem; border-radius: 11px; margin-bottom: 1.1rem;
+    border: 1px solid var(--rand);
+  }
+  .melding.goed { background: rgba(52,226,196,.12); border-color: rgba(52,226,196,.4); }
+  .melding.fout { background: rgba(255,91,110,.12); border-color: rgba(255,91,110,.4); }
+  .hint { color: var(--gedempt); font-size: .89rem; }
+  code, .sleutel { font-family: Consolas, monospace; font-size: 12px; color: #9db4e0; }
+
   #voortgang {
-    background: #10161d; color: #cfe3ff; font-family: Consolas, monospace;
-    font-size: 12.5px; padding: .8rem; border-radius: 6px; max-height: 22rem;
-    overflow: auto; white-space: pre-wrap; display: none;
+    background: rgba(0,0,0,.4); border: 1px solid var(--rand); color: #b7d5ff;
+    font-family: Consolas, monospace; font-size: 12.5px; padding: .9rem;
+    border-radius: 12px; max-height: 24rem; overflow: auto;
+    white-space: pre-wrap; display: none;
   }
+  details summary { cursor: pointer; }
 </style>
 </head>
 <body>
 <header>
-  <span class="merk">Hitlijsten</span>
-  <nav>
-    <a href="{{ url_for('overzicht') }}">Overzicht</a>
-    <a href="{{ url_for('zoek') }}">Zoeken</a>
-    <a href="{{ url_for('aliassen') }}">Aliassen</a>
-    <a href="{{ url_for('uitzonderingen') }}">Uitzonderingen</a>
-    <a href="{{ url_for('query') }}">Query</a>
-    <a href="{{ url_for('beheer') }}">Beheer</a>
-    <a href="{{ url_for('wijzigingen') }}">Logboek</a>
-  </nav>
-  <span class="rechts"><a href="{{ url_for('afmelden') }}">Afmelden</a></span>
+  <div class="binnen">
+    <span class="merk"><span>Hitlijsten</span></span>
+    <nav>
+      <a href="{{ url_for('overzicht') }}">Overzicht</a>
+      <a href="{{ url_for('jaaroverzicht') }}">Jaaroverzicht</a>
+      <a href="{{ url_for('zoek') }}">Zoeken</a>
+      <a href="{{ url_for('aliassen') }}">Aliassen</a>
+      <a href="{{ url_for('uitzonderingen') }}">Uitzonderingen</a>
+      <a href="{{ url_for('query') }}">Query</a>
+      <a href="{{ url_for('beheer') }}">Beheer</a>
+      <a href="{{ url_for('wijzigingen') }}">Logboek</a>
+    </nav>
+    <span class="rechts"><a href="{{ url_for('afmelden') }}">Afmelden</a></span>
+  </div>
 </header>
 <main>
   {% with meldingen = get_flashed_messages(with_categories=true) %}

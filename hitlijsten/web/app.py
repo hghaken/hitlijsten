@@ -156,6 +156,73 @@ def _registreer(app: Flask) -> None:
         return render_template("overzicht.html", lijsten=lijsten, cijfers=cijfers,
                                laatste=laatste, taak=taken.huidige())
 
+    # --- jaaroverzicht -----------------------------------------------------
+
+    @app.route("/jaar")
+    @vereist_aanmelding
+    def jaaroverzicht():
+        con = verbinding()
+        lijst = request.args.get("lijst") or "top40"
+        if lijst not in LIJSTEN:
+            lijst = "top40"
+
+        jaren = [r[0] for r in con.execute(
+            "SELECT DISTINCT jaar FROM noteringen WHERE lijst=? ORDER BY jaar DESC",
+            (lijst,))]
+        if not jaren:
+            return render_template("jaar.html", lijst=lijst, jaren=[], jaar=None,
+                                   nummers=[], weken=[], hoogtepunten={})
+
+        gevraagd = request.args.get("jaar")
+        jaar = int(gevraagd) if gevraagd and gevraagd.isdigit() and int(gevraagd) in jaren \
+            else jaren[0]
+
+        rijen = list(con.execute(
+            "SELECT week, positie, titel, artiest, label, sleutel FROM noteringen"
+            " WHERE lijst=? AND jaar=? ORDER BY week, positie", (lijst, jaar)))
+
+        # Lengte per week bepaalt de punten: hoogste positienummer van die week.
+        lengte = {}
+        for r in rijen:
+            lengte[r["week"]] = max(lengte.get(r["week"], 0), r["positie"])
+        weken = sorted(lengte)
+
+        nummers: dict[str, dict] = {}
+        for r in rijen:
+            n = nummers.setdefault(r["sleutel"], {
+                "sleutel": r["sleutel"], "posities": {}, "punten": 0,
+            })
+            # Bij een gedeelde positie telt de beste notering van die week.
+            vorige = n["posities"].get(r["week"])
+            if vorige is None or r["positie"] < vorige:
+                if vorige is not None:
+                    n["punten"] -= lengte[r["week"]] - vorige + 1
+                n["posities"][r["week"]] = r["positie"]
+                n["punten"] += lengte[r["week"]] - r["positie"] + 1
+            n["titel"], n["artiest"], n["label"] = r["titel"], r["artiest"], r["label"]
+
+        for n in nummers.values():
+            n["hoogste"] = min(n["posities"].values())
+            n["weken"] = len(n["posities"])
+            n["eerste"] = min(n["posities"])
+            n["laatste"] = max(n["posities"])
+
+        gesorteerd = sorted(nummers.values(),
+                            key=lambda n: (-n["punten"], n["hoogste"], n["eerste"]))
+
+        nummer_ees = [n for n in gesorteerd if n["hoogste"] == 1]
+        hoogtepunten = {
+            "nummers": len(gesorteerd),
+            "weken": len(weken),
+            "koploper": gesorteerd[0] if gesorteerd else None,
+            "nummer1s": len(nummer_ees),
+            "langst": max(gesorteerd, key=lambda n: n["weken"]) if gesorteerd else None,
+        }
+        return render_template(
+            "jaar.html", lijst=lijst, jaren=jaren, jaar=jaar,
+            nummers=gesorteerd, weken=weken, hoogtepunten=hoogtepunten,
+        )
+
     # --- noteringen zoeken -------------------------------------------------
 
     @app.route("/zoek")

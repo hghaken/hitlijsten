@@ -10,9 +10,9 @@
 {% if not rijen %}
   <p class="hint">Nog niets gewijzigd.</p>
 {% else %}
-<table>
-  <tr><th>Wanneer</th><th>Soort</th><th>Verwijst naar</th><th>Veld</th>
-      <th>Van</th><th>Naar</th><th>Reden</th></tr>
+<div class="tabelvak"><table>
+  <thead><tr><th>Wanneer</th><th>Soort</th><th>Verwijst naar</th><th>Veld</th>
+      <th>Van</th><th>Naar</th><th>Reden</th></tr></thead><tbody>
   {% for r in rijen %}
   <tr>
     <td style="white-space: nowrap">{{ r['tijdstip'].replace('T', ' ') }}</td>
@@ -24,6 +24,6 @@
     <td class="hint">{{ r['reden'] or '' }}</td>
   </tr>
   {% endfor %}
-</table>
+</tbody></table></div>
 {% endif %}
 {% endblock %}

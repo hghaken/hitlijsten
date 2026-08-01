@@ -23,8 +23,8 @@
 </form>
 
 <h2>{{ rijen|length }} uitzonderingen</h2>
-<table>
-  <tr><th>Sleutel A</th><th>Sleutel B</th><th>Reden</th><th></th></tr>
+<div class="tabelvak"><table>
+  <thead><tr><th>Sleutel A</th><th>Sleutel B</th><th>Reden</th><th></th></tr></thead><tbody>
   {% for r in rijen %}
   <tr>
     <td class="sleutel">{{ r['sleutel_a'] }}</td>
@@ -40,5 +40,5 @@
     </td>
   </tr>
   {% endfor %}
-</table>
+</tbody></table></div>
 {% endblock %}

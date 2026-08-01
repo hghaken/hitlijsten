@@ -2,26 +2,60 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aanmelden — Hitlijsten</title>
 <style>
-  body { font: 15px/1.5 "Segoe UI", system-ui, sans-serif; background: #f6f8fa;
-         display: flex; align-items: center; justify-content: center; height: 100vh;
-         margin: 0; color: #1f2933; }
-  form { background: #fff; padding: 2rem 2.2rem; border: 1px solid #d8dde3;
-         border-radius: 10px; min-width: 20rem; }
-  h1 { font-size: 1.2rem; margin: 0 0 1.2rem; }
-  input { font: inherit; padding: .5rem .6rem; border: 1px solid #d8dde3;
-          border-radius: 5px; width: 100%; }
-  button { font: inherit; margin-top: .9rem; padding: .5rem 1rem; width: 100%;
-           background: #1a5fb4; color: #fff; border: 0; border-radius: 5px;
-           cursor: pointer; }
-  .melding { background: #fde2e1; padding: .5rem .7rem; border-radius: 5px;
-             margin-bottom: .9rem; font-size: .9rem; }
+  :root {
+    --ink: #f5f2ff; --gedempt: #a89fc4; --accent: #3b82f6; --accent2: #7a5cff;
+    --rand: rgba(255,255,255,.12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; height: 100vh; display: flex; align-items: center;
+    justify-content: center; color: var(--ink);
+    font: 15px/1.55 "Segoe UI", system-ui, sans-serif;
+    background:
+      radial-gradient(900px 520px at 20% -10%, rgba(122,92,255,.25), transparent 60%),
+      radial-gradient(800px 480px at 85% 8%, rgba(59,130,246,.18), transparent 62%),
+      linear-gradient(170deg, #0b1220 0%, #190a30 100%);
+  }
+  form {
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+    border: 1px solid var(--rand); border-radius: 16px;
+    padding: 2.2rem 2.4rem; min-width: 22rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  }
+  h1 { font-size: 1.35rem; margin: 0 0 .3rem; font-weight: 700; letter-spacing: .3px; }
+  h1 span {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .onder { color: var(--gedempt); font-size: .87rem; margin: 0 0 1.4rem; }
+  input {
+    font: inherit; padding: .6rem .7rem; width: 100%; color: var(--ink);
+    border: 1px solid var(--rand); border-radius: 10px;
+    background: rgba(255,255,255,.05);
+  }
+  input::placeholder { color: #6f6890; }
+  input:focus { outline: none; border-color: rgba(122,92,255,.7); }
+  button {
+    font: inherit; font-weight: 550; margin-top: 1rem; padding: .6rem 1rem;
+    width: 100%; color: var(--ink); border: 0; border-radius: 10px;
+    cursor: pointer;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  button:hover { filter: brightness(1.12); }
+  .melding {
+    background: rgba(255,91,110,.13); border: 1px solid rgba(255,91,110,.4);
+    padding: .55rem .8rem; border-radius: 10px; margin-bottom: 1rem;
+    font-size: .9rem;
+  }
 </style>
 </head>
 <body>
 <form method="post">
-  <h1>Hitlijsten</h1>
+  <h1><span>Hitlijsten</span></h1>
+  <p class="onder">Zestig jaar Nederlandse hitlijsten</p>
   {% with meldingen = get_flashed_messages() %}
     {% for tekst in meldingen %}<div class="melding">{{ tekst }}</div>{% endfor %}
   {% endwith %}

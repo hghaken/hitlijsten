@@ -6,32 +6,32 @@
 
 {% if aliassen %}
 <h2>Aliassen</h2>
-<table>
-  <tr><th>Van</th><th>Naar</th><th>Onderbouwing</th></tr>
+<div class="tabelvak"><table>
+  <thead><tr><th>Van</th><th>Naar</th><th>Onderbouwing</th></tr></thead><tbody>
   {% for a in aliassen %}
   <tr><td class="sleutel">{{ a['van'] }}</td><td class="sleutel">{{ a['naar'] }}</td>
       <td class="hint">{{ a['opmerking'] or '' }}</td></tr>
   {% endfor %}
-</table>
+</tbody></table></div>
 {% endif %}
 
 <h2>Per jaar en lijst</h2>
-<table>
-  <tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Punten</th>
-      <th class="getal">Weken</th><th class="getal">Hoogste</th></tr>
+<div class="tabelvak"><table>
+  <thead><tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Punten</th>
+      <th class="getal">Weken</th><th class="getal">Hoogste</th></tr></thead><tbody>
   {% for (lijst, jaar), v in samenvatting %}
   <tr><td>{{ lijst_namen.get(lijst, lijst) }}</td><td class="getal">{{ jaar }}</td>
       <td class="getal">{{ v.punten }}</td><td class="getal">{{ v.weken }}</td>
       <td class="getal">{{ v.hoogste }}</td></tr>
   {% endfor %}
-</table>
+</tbody></table></div>
 
 <h2>Alle noteringen ({{ rijen|length }})</h2>
-<table>
-  <tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Week</th>
+<div class="tabelvak"><table>
+  <thead><tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Week</th>
       <th class="getal">Positie</th><th class="getal">Vorige</th>
       <th class="getal">Weken (site)</th><th>Status</th><th>Titel</th>
-      <th>Artiest</th><th></th></tr>
+      <th>Artiest</th><th></th></tr></thead><tbody>
   {% for r in rijen %}
   <tr>
     <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
@@ -46,5 +46,5 @@
     <td><a href="{{ url_for('notering_bewerk', id=r['id']) }}">bewerk</a></td>
   </tr>
   {% endfor %}
-</table>
+</tbody></table></div>
 {% endblock %}

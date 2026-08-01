@@ -15,9 +15,9 @@
 </div>
 
 <h2>De lijsten</h2>
-<table>
-  <tr><th>Lijst</th><th class="getal">Jaargangen</th><th class="getal">Van</th>
-      <th class="getal">Tot</th><th class="getal">Weken</th><th class="getal">Noteringen</th></tr>
+<div class="tabelvak"><table>
+  <thead><tr><th>Lijst</th><th class="getal">Jaargangen</th><th class="getal">Van</th>
+      <th class="getal">Tot</th><th class="getal">Weken</th><th class="getal">Noteringen</th></tr></thead><tbody>
   {% for r in lijsten %}
   <tr>
     <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
@@ -28,16 +28,16 @@
     <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
   </tr>
   {% endfor %}
-</table>
+</tbody></table></div>
 
 <h2>Laatst opgehaald</h2>
-<table>
-  <tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Week</th><th>Wanneer</th></tr>
+<div class="tabelvak"><table>
+  <thead><tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Week</th><th>Wanneer</th></tr></thead><tbody>
   {% for r in laatste %}
   <tr><td>{{ r['lijst'] }}</td><td class="getal">{{ r['jaar'] }}</td>
       <td class="getal">{{ r['week'] }}</td><td>{{ r['opgehaald_op'].replace('T', ' ') }}</td></tr>
   {% endfor %}
-</table>
+</tbody></table></div>
 
 {% if taak and not taak.klaar %}
 <h2>Er loopt iets</h2>

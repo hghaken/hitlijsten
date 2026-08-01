@@ -29,13 +29,11 @@
 
 {% if kolommen %}
 <p class="hint">{{ rijen|length }} rijen{% if rijen|length == 500 %} (afgekapt op 500){% endif %}</p>
-<div style="overflow-x: auto">
-<table>
-  <tr>{% for k in kolommen %}<th>{{ k }}</th>{% endfor %}</tr>
+<div class="tabelvak"><table>
+  <thead><tr>{% for k in kolommen %}<th>{{ k }}</th>{% endfor %}</tr></thead><tbody>
   {% for r in rijen %}
   <tr>{% for k in kolommen %}<td>{{ r[k] if r[k] is not none else '' }}</td>{% endfor %}</tr>
   {% endfor %}
-</table>
-</div>
+</tbody></table></div>
 {% endif %}
 {% endblock %}

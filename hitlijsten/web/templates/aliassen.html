@@ -30,8 +30,8 @@
   {% if term %}<a href="{{ url_for('aliassen') }}">wis</a>{% endif %}
 </form>
 
-<table>
-  <tr><th>Van</th><th>Naar</th><th>Onderbouwing</th><th></th></tr>
+<div class="tabelvak"><table>
+  <thead><tr><th>Van</th><th>Naar</th><th>Onderbouwing</th><th></th></tr></thead><tbody>
   {% for r in rijen %}
   <tr>
     <td class="sleutel">{{ r['van'] }}</td>
@@ -52,5 +52,5 @@
     </td>
   </tr>
   {% endfor %}
-</table>
+</tbody></table></div>
 {% endblock %}

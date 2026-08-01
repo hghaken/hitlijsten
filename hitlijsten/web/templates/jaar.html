@@ -1,0 +1,129 @@
+{% extends "basis.html" %}
+{% block titel %}{{ jaar or '' }} {{ lijst_namen.get(lijst, lijst) }} — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Jaaroverzicht</h1>
+<p class="onder">Kies een lijst en een jaargang.</p>
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
+      flex-wrap:wrap; margin-bottom:1.4rem">
+  <select name="lijst" onchange="this.form.submit()">
+    {% for sleutel, naam in lijst_namen.items() %}
+      <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}>{{ naam }}</option>
+    {% endfor %}
+  </select>
+  <select name="jaar" onchange="this.form.submit()">
+    {% for j in jaren %}
+      <option value="{{ j }}" {% if jaar == j %}selected{% endif %}>{{ j }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+  <span class="hint" style="margin-left:auto">
+    {{ jaren|length }} jaargangen beschikbaar{% if jaren %}
+      ({{ jaren[-1] }}–{{ jaren[0] }}){% endif %}
+  </span>
+</form>
+
+{% if not jaar %}
+  <div class="melding fout">Voor deze lijst staat er nog niets in de database.</div>
+{% else %}
+
+<div class="kaarten">
+  <div class="kaart">
+    <div class="cijfer">{{ hoogtepunten.nummers }}</div>
+    <div class="naam">unieke nummers</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ hoogtepunten.weken }}</div>
+    <div class="naam">weken</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ hoogtepunten.nummer1s }}</div>
+    <div class="naam">nummer 1-noteringen</div>
+  </div>
+  {% if hoogtepunten.koploper %}
+  <div class="kaart" style="min-width:22rem">
+    <div class="naam">koploper van {{ jaar }}</div>
+    <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
+      {{ hoogtepunten.koploper.titel }}</div>
+    <div class="hint">{{ hoogtepunten.koploper.artiest }} —
+      {{ hoogtepunten.koploper.punten }} punten over
+      {{ hoogtepunten.koploper.weken }} weken</div>
+  </div>
+  {% endif %}
+  {% if hoogtepunten.langst %}
+  <div class="kaart" style="min-width:22rem">
+    <div class="naam">langst genoteerd</div>
+    <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
+      {{ hoogtepunten.langst.titel }}</div>
+    <div class="hint">{{ hoogtepunten.langst.artiest }} —
+      {{ hoogtepunten.langst.weken }} weken, hoogste
+      {{ hoogtepunten.langst.hoogste }}</div>
+  </div>
+  {% endif %}
+</div>
+
+<h2>Puntenklassement</h2>
+<div class="tabelvak">
+  <table>
+    <thead>
+      <tr>
+        <th class="getal">#</th><th class="breed">Titel</th><th class="breed">Artiest</th>
+        {% if nummers and nummers[0].label %}<th>Label</th>{% endif %}
+        <th class="getal">Punten</th><th class="getal">Hoogste</th>
+        <th class="getal">Weken</th><th class="getal">Eerste</th>
+        <th class="getal">Laatste</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for n in nummers %}
+      <tr>
+        <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
+          {{ loop.index }}</td>
+        <td class="breed">{{ n.titel }}</td>
+        <td class="breed">{{ n.artiest }}</td>
+        {% if nummers[0].label %}<td class="hint">{{ n.label or '' }}</td>{% endif %}
+        <td class="getal">{{ n.punten }}</td>
+        <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
+        <td class="getal">{{ n.weken }}</td>
+        <td class="getal">{{ n.eerste }}</td>
+        <td class="getal">{{ n.laatste }}</td>
+        <td><a href="{{ url_for('nummer', sleutel=n.sleutel) }}">bekijk</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Positie per week</h2>
+<p class="hint" style="margin-top:-.3rem">
+  Dezelfde matrix als in het jaarbestand: een rij per nummer, een kolom per week.
+  Goud is nummer 1. Horizontaal scrollen voor de latere weken.
+</p>
+<div class="tabelvak">
+  <table>
+    <thead>
+      <tr>
+        <th class="breed" style="position:sticky; left:0; z-index:3; background:#131a2b">Titel</th>
+        {% for w in weken %}<th class="getal">{{ w }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for n in nummers %}
+      <tr>
+        <td class="breed" style="position:sticky; left:0; background:#0f1626">
+          {{ n.titel }} <span class="hint">— {{ n.artiest }}</span>
+        </td>
+        {% for w in weken %}
+          {% set p = n.posities.get(w) %}
+          <td class="getal {% if p == 1 %}top1{% elif p and p <= 3 %}top3{% endif %}">
+            {{ p if p else '' }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endif %}
+{% endblock %}
