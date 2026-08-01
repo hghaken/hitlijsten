@@ -82,6 +82,8 @@
     color: var(--gedempt); font-size: .8rem; text-transform: uppercase;
     letter-spacing: .6px; margin-top: .2rem;
   }
+  /* Uitzondering op de kapitalen: "1970's" hoort geen 1970'S te worden. */
+  .kaart .naam .letterlijk { text-transform: none; }
 
   .tabelvak {
     border: 1px solid var(--rand); border-radius: 14px; overflow: auto;

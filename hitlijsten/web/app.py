@@ -351,7 +351,7 @@ def _registreer(app: Flask) -> None:
         """
         wb = excel.bouw_decennium_werkboek(verbinding(), DECENNIUM_LIJST, decennium)
         if wb is None:
-            flash(f"Voor de {decennium}s staat er niets in de database.", "fout")
+            flash(f"Voor de {decennium}'s staat er niets in de database.", "fout")
             return redirect(url_for("decennium_overzicht"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
         bestand = f"{naam}_Decennium_{decennium}-{decennium + 9}.xlsx"

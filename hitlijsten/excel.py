@@ -614,7 +614,7 @@ def bouw_decennium(
     """Schrijf het decenniumbestand naar de decenniummap."""
     wb = bouw_decennium_werkboek(con, lijst, decennium)
     if wb is None:
-        print(f"[excel] {lijst}: geen noteringen in {decennium}s - overgeslagen")
+        print(f"[excel] {lijst}: geen noteringen in {decennium}'s - overgeslagen")
         return []
 
     bestand = LIJSTEN.get(lijst, {}).get("bestand", lijst)
@@ -622,7 +622,7 @@ def bouw_decennium(
     map_.mkdir(parents=True, exist_ok=True)
     pad = bewaar_werkboek(
         wb, map_ / f"{bestand}_Decennium_{decennium}-{decennium + 9}.xlsx")
-    print(f"[excel] {lijst}: {decennium}s -> {pad.name}")
+    print(f"[excel] {lijst}: {decennium}'s -> {pad.name}")
     return [pad]
 
 

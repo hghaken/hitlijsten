@@ -1,5 +1,5 @@
 {% extends "basis.html" %}
-{% block titel %}{{ decennium }}s Top 40 — Hitlijsten{% endblock %}
+{% block titel %}{{ decennium }}'s Top 40 — Hitlijsten{% endblock %}
 {% block inhoud %}
 
 <h1>Decennium</h1>
@@ -10,7 +10,7 @@
   <select name="decennium" onchange="this.form.submit()">
     {% for d in decennia %}
       <option value="{{ d }}" {% if decennium == d %}selected{% endif %}>
-        {{ d }}–{{ d + 9 }}</option>
+        {{ d }}'s</option>
     {% endfor %}
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
@@ -44,7 +44,8 @@
     <div class="naam">nummers op 1 geweest</div>
   </div>
   <div class="kaart" style="min-width:22rem">
-    <div class="naam">koploper van de {{ decennium }}s</div>
+    <div class="naam">koploper van de
+      <span class="letterlijk">{{ decennium }}'s</span></div>
     <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
       {{ nummers[0].titel }}</div>
     <div class="hint">{{ nummers[0].artiest }} —
@@ -95,12 +96,12 @@
         <td class="getal" data-sorteer="{{ n.eerste_sorteer }}">
           {% if n.begon_eerder %}<a class="grenspijl" href="{{ url_for(
                'decennium_overzicht', decennium=decennium - 10, markeer=n.sleutel) }}"
-             title="Stond eind {{ decennium - 1 }} al genoteerd — ga naar de {{ decennium - 10 }}s"
+             title="Stond eind {{ decennium - 1 }} al genoteerd — ga naar de {{ decennium - 10 }}'s"
              >◀</a> {% endif %}{{ n.eerste }}</td>
         <td class="getal" data-sorteer="{{ n.laatste_sorteer }}">
           {{ n.laatste }}{% if n.loopt_door %} <a class="grenspijl" href="{{ url_for(
                'decennium_overzicht', decennium=decennium + 10, markeer=n.sleutel) }}"
-             title="Bleef in {{ decennium + 10 }} genoteerd — ga naar de {{ decennium + 10 }}s"
+             title="Bleef in {{ decennium + 10 }} genoteerd — ga naar de {{ decennium + 10 }}'s"
              >▶</a>{% endif %}</td>
       </tr>
       {% endfor %}
