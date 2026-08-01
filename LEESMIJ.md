@@ -1,7 +1,8 @@
 # Hitlijsten verzamelen
 
-Haalt elke week de vier hitlijsten op, schrijft ze naar Excel en mailt wat er
-nieuw binnenkwam.
+Haalt elke week de vier hitlijsten op, schrijft ze naar Excel en PDF, mailt wat
+er nieuw binnenkwam, en zet zestig jaar archief online op
+**[hitlijsten.hhaken.nl](https://hitlijsten.hhaken.nl)**.
 
 | Lijst | Bron | Lengte | Archief vanaf |
 |---|---|---|---|
@@ -26,6 +27,7 @@ meer — geen code, geen database, geen geplande taak.
 | Wekelijkse run | timer `hitlijsten-run.timer` → `app/wekelijkse-run.sh`, vrijdag 22:00 |
 | Logboek | `app/run.log` |
 | Gebruiker | `claude` |
+| Pakketten | requests, beautifulsoup4, lxml, openpyxl, Flask, fpdf2 |
 
 `app/omgeving.sh` zet `HITLIJSTEN_DATA`, `HITLIJSTEN_CACHE` en
 `HITLIJSTEN_EXCEL`. De code staat los van de gegevens, zodat je `app/` kunt
@@ -38,15 +40,15 @@ database naast de code.
 - **Het hele archief staat in de database**: 255.482 noteringen over 7.541
   weken. Top 40 1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje
   Top 30 2008–2026 (19), Sterren NL 2019–2026 (8).
-- 305 Excel-bestanden gebouwd, plus 130 aliassen, 267 vastgelegde
-  niet-bestaande weken en 4.044 onderscheidingen.
+- 305 Excel-bestanden en 149 PDF-jaaroverzichten gebouwd, plus 130 aliassen,
+  267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
   `hitlijsten-run.timer`. Eerstvolgende keer: vrijdag 7 augustus 2026.
 
 ## Wat er uitkomt
 
-Een map per decennium, daarin een map per jaargang, daarin per lijst twee
-bestanden:
+Een map per decennium, daarin een map per jaargang, daarin per lijst drie
+bestanden — twee werkboeken en een PDF:
 
 ```
 /volume1/Hitlijsten/excel/
@@ -55,10 +57,10 @@ bestanden:
     Top40_Decennium_2020-2029.xlsx
     2020/ ... 2025/
     2026/
-      Top40_2026.xlsx          Top40_Jaar_2026.xlsx
-      Tipparade_2026.xlsx      Tipparade_Jaar_2026.xlsx
-      SterrenNL_2026.xlsx      SterrenNL_Jaar_2026.xlsx
-      OranjeTop30_2026.xlsx    OranjeTop30_Jaar_2026.xlsx
+      Top40_2026.xlsx          Top40_Jaar_2026.xlsx        Top40_2026.pdf
+      Tipparade_2026.xlsx      Tipparade_Jaar_2026.xlsx    Tipparade_2026.pdf
+      SterrenNL_2026.xlsx      SterrenNL_Jaar_2026.xlsx    SterrenNL_2026.pdf
+      OranjeTop30_2026.xlsx    OranjeTop30_Jaar_2026.xlsx  OranjeTop30_2026.pdf
 ```
 
 Over Samba te bereiken als `\\10.10.8.20\Hitlijsten\excel`.
@@ -402,12 +404,15 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
     models.py     dataclass Notering + structuurcontrole
     normalize.py  nummers over weken heen herkennen
     datums.py     weeknummer -> uitzendvrijdag
-    db.py         sqlite-opslag, incl. bestaat_niet en de decenniumtotalen
+    db.py         sqlite-opslag, incl. bestaat_niet en de totalen per periode
     excel.py      de Excel-bestanden
+    pdf.py        het jaaroverzicht als PDF
+    wetenswaardigheden.py   de tien ranglijsten
     kruiscontrole.py / onderscheidingen.py  michajans.nl
     mail.py       melding via de MailPlus-relay
     cli.py        de opdrachten hierboven
     web/          de Flask-applicatie (app.py, templates/)
+  lettertypen/    DejaVu Sans, ingesloten in de PDF's (met licentie)
   tests/          zelftests, draaien op de cache dus zonder netwerk
 ```
 
@@ -417,7 +422,7 @@ De gegevens staan er bewust náást, niet in:
 /volume1/Hitlijsten/
   data/hitlijsten.sqlite   de database (46 MB)
   cache/                   de ruwe HTML van alle opgehaalde pagina's (2 GB)
-  excel/                   de gebouwde werkboeken (36 MB)
+  excel/                   de werkboeken en PDF's (46 MB)
 ```
 
 Zo kun je `app/` in zijn geheel vervangen zonder de database aan te raken.
@@ -441,12 +446,13 @@ cd /volume1/Hitlijsten/app && . ./omgeving.sh
 ./venv/bin/python tests/test_datums.py
 ./venv/bin/python tests/test_decennium.py
 ./venv/bin/python tests/test_wetenswaardigheden.py
+./venv/bin/python tests/test_pdf.py
 node tests/test_grafiek.mjs        # node staat niet op de NAS
 ```
 
-Draaien op de gecachete pagina's en een tijdelijke database, dus zonder netwerk
-en zonder de echte data aan te raken. Handig na elke wijziging aan een parser of
-aan `excel.py`.
+Zeven reeksen, ruim vierduizend controles. Ze draaien op de gecachete pagina's
+en een tijdelijke database, dus zonder netwerk en zonder de echte data aan te
+raken. Handig na elke wijziging aan een parser of aan een bouwer.
 
 `test_grafiek.mjs` is de vreemde eend: die knipt het grafiekscript uit
 `templates/jaar.html` en draait het in node tegen een kleine DOM-stub. Dat is
@@ -454,6 +460,11 @@ geen browser en zegt dus **niets over de opmaak** — wel over de schaal, de
 verschillen per week, de gaten en de streep bij de jaarwisseling. Het script
 wordt uit de template geknipt in plaats van gekopieerd, zodat de test niet
 stilletjes een oude versie blijft goedkeuren.
+
+`test_pdf.py` heeft hetzelfde bezwaar: een PDF ziet er in een test altijd goed
+uit, want je kunt hem niet bekijken. Wat daar vastligt is dus niet de opmaak
+maar wat er misgaat als je niet oplet — het aantal regels per pagina, de namen
+die het ingebouwde lettertype niet aankan, en of een bewaard bestand nog klopt.
 
 ## Nummers herkennen over weken heen
 
