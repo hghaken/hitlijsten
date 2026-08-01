@@ -138,6 +138,14 @@
   .hint { color: var(--gedempt); font-size: .89rem; }
   code, .sleutel { font-family: Consolas, monospace; font-size: 12px; color: #9db4e0; }
 
+  thead th.sorteerbaar { cursor: pointer; user-select: none; }
+  thead th.sorteerbaar:hover { color: var(--ink); }
+  thead th.sorteerbaar::after {
+    content: "\2195"; opacity: .25; margin-left: .35rem; font-size: .9em;
+  }
+  thead th.op::after   { content: "\2191"; opacity: 1; color: var(--accent3); }
+  thead th.neer::after { content: "\2193"; opacity: 1; color: var(--accent3); }
+
   #voortgang {
     background: rgba(0,0,0,.4); border: 1px solid var(--rand); color: #b7d5ff;
     font-family: Consolas, monospace; font-size: 12.5px; padding: .9rem;
@@ -172,5 +180,62 @@
   {% endwith %}
   {% block inhoud %}{% endblock %}
 </main>
+
+<script>
+/* Sorteren op kolomkop.
+ *
+ * In de browser en niet op de server: de rijen staan er al, dus opnieuw laden
+ * zou alleen maar trager zijn. Bij 360 nummers of 3000 zoekresultaten is dit
+ * ruim snel genoeg.
+ *
+ * Drie dingen die het anders fout doet:
+ *  - Getallen moeten als getal vergeleken worden, anders komt 100 vóór 20.
+ *    Een kolom geldt als numeriek zodra elke gevulde cel een getal is.
+ *  - Lege cellen (een week waarin een nummer niet noteerde) horen altijd
+ *    onderaan, in beide richtingen. Anders duwt een omgekeerde sortering de
+ *    lege cellen naar boven en lijkt de tabel leeg.
+ *  - Tekst vergelijken met localeCompare, zodat accenten en hoofdletters
+ *    netjes meelopen.
+ */
+(function () {
+  const isGetal = (t) => t !== "" && !isNaN(Number(t.replace(",", ".")));
+
+  document.querySelectorAll(".tabelvak table").forEach(function (tabel) {
+    const kop = tabel.tHead && tabel.tHead.rows[0];
+    const lijf = tabel.tBodies[0];
+    if (!kop || !lijf || lijf.rows.length < 2) return;
+
+    Array.from(kop.cells).forEach(function (cel, kolom) {
+      if (!cel.textContent.trim()) return;      // knoppenkolom: niet sorteren
+      cel.classList.add("sorteerbaar");
+      cel.title = "Klik om te sorteren";
+
+      cel.addEventListener("click", function () {
+        const rijen = Array.from(lijf.rows);
+        const waarde = (r) => (r.cells[kolom] ? r.cells[kolom].textContent.trim() : "");
+        const numeriek = rijen.every((r) => waarde(r) === "" || isGetal(waarde(r)))
+                      && rijen.some((r) => waarde(r) !== "");
+        // Eerste klik oplopend (pijl omhoog), tweede klik aflopend.
+        const oplopend = !cel.classList.contains("op");
+
+        rijen.sort(function (a, b) {
+          const x = waarde(a), y = waarde(b);
+          if (x === "" && y === "") return 0;
+          if (x === "") return 1;               // leeg altijd onderaan
+          if (y === "") return -1;
+          const v = numeriek
+            ? Number(x.replace(",", ".")) - Number(y.replace(",", "."))
+            : x.localeCompare(y, "nl", { sensitivity: "base" });
+          return oplopend ? v : -v;
+        });
+
+        rijen.forEach((r) => lijf.appendChild(r));
+        Array.from(kop.cells).forEach((c) => c.classList.remove("op", "neer"));
+        cel.classList.add(oplopend ? "op" : "neer");
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>
