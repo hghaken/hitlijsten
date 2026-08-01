@@ -16,9 +16,10 @@ De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen
 
 - **2026** t/m week 31 en **heel 2025** staan in de database, plus 75 noteringen
   uit een testrestje van Sterren NL 2019 (week 40–42).
-- De wekelijkse taak **"Hitlijsten verzamelen"** draait elke vrijdag om 09:00 en
-  heeft op 31 juli 2026 zijn eerste echte run gedaan: Tipparade week 31
-  opgehaald, bestanden herbouwd, mail verstuurd.
+- De wekelijkse run staat op **vrijdag 17:00**. Let op: er staat op dit moment
+  **geen** geplande taak klaar -- niet in de DSM-taakplanner en niet in de
+  Windows Taakplanner. `wekelijkse-run.sh` staat wel klaar op de NAS; de taak
+  die hem start moet nog worden aangemaakt.
 - Van de oudere jaargangen is verder nog niets opgehaald;
   `python -m hitlijsten historie` haalt de rest.
 
@@ -166,8 +167,16 @@ mailen. Losse opdrachten:
 
 ### De wekelijkse taak
 
-Taakplanner-taak **"Hitlijsten verzamelen"**, vrijdag 09:00, aangemaakt met
-`installeer-taak.ps1` (`-Verwijder` haalt hem weg, `-Tijd 20:00` verzet hem).
+De run hoort **elke vrijdag om 17:00** te draaien.
+
+Op de NAS (waar de applicatie sinds juli 2026 draait) is dat een DSM-taak die
+`/volume1/Hitlijsten/app/wekelijkse-run.sh` als gebruiker `claude` start. Die
+taak maak je aan in **Configuratiescherm -> Taakplanner -> Aanmaken ->
+Geplande taak -> Door gebruiker gedefinieerd script**.
+
+Op een Windows-pc doet `installeer-taak.ps1` hetzelfde in de Taakplanner:
+taak **"Hitlijsten verzamelen"**, vrijdag 17:00 (`-Verwijder` haalt hem weg,
+`-Tijd 20:00` verzet hem).
 
 Stond de pc vrijdag uit, dan draait de taak zodra hij weer aan gaat — niet pas
 de week erna. En de run haalt **elke** ontbrekende week op, niet alleen de

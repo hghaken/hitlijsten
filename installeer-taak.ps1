@@ -4,7 +4,7 @@
 
 param(
     [switch]$Verwijder,
-    [string]$Tijd = '09:00',
+    [string]$Tijd = '17:00',
     [string]$TaakNaam = 'Hitlijsten verzamelen'
 )
 
