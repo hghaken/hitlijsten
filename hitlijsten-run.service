@@ -1,0 +1,22 @@
+# De wekelijkse run, als losse eenheid zodat de timer hem kan starten.
+#
+# Waarom systemd en niet de DSM-taakplanner: die bewaart taken in een eigen,
+# ongedocumenteerd bestand (/usr/syno/etc/synoschedule.d/root/50.task) waar geen
+# ondersteunde CLI voor bestaat. Met de hand daarin schrijven kan de hele
+# Taakplanner onderuit halen, inclusief de backup- en replicatietaken die er ook
+# in staan. De webapplicatie draait al onder systemd, dus dit past ernaast.
+#
+# Installeren: dit bestand en hitlijsten-run.timer naar /etc/systemd/system/,
+# daarna `systemctl daemon-reload` en `systemctl enable hitlijsten-run.timer`
+# gevolgd door `systemctl start hitlijsten-run.timer` -- op DSM (systemd 219)
+# bestaat `--now` niet.
+[Unit]
+Description=Hitlijsten wekelijkse run
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=claude
+WorkingDirectory=/volume1/Hitlijsten/app
+ExecStart=/volume1/Hitlijsten/app/wekelijkse-run.sh

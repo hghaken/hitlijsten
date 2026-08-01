@@ -23,7 +23,7 @@ meer — geen code, geen database, geen geplande taak.
 | Python | 3.14.5, eigen venv in `app/venv/` |
 | Webapplicatie | `https://hitlijsten.hhaken.nl` → reverse proxy → `10.10.8.20:8642` |
 | Dienst | systemd-unit `hitlijsten-web` (enabled, start `app/start-web.sh`) |
-| Wekelijkse run | `app/wekelijkse-run.sh`, vrijdag 17:00 |
+| Wekelijkse run | timer `hitlijsten-run.timer` → `app/wekelijkse-run.sh`, vrijdag 22:00 |
 | Logboek | `app/run.log` |
 | Gebruiker | `claude` |
 
@@ -40,9 +40,8 @@ database naast de code.
   Top 30 2008–2026 (19), Sterren NL 2019–2026 (8).
 - 305 Excel-bestanden gebouwd, plus 130 aliassen, 267 vastgelegde
   niet-bestaande weken en 4.044 onderscheidingen.
-- **De wekelijkse taak moet nog worden aangemaakt.** De run hoort vrijdag om
-  17:00 te draaien; `wekelijkse-run.sh` staat klaar, maar er staat op dit moment
-  geen taak in de DSM-taakplanner die hem start.
+- De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
+  `hitlijsten-run.timer`. Eerstvolgende keer: vrijdag 7 augustus 2026.
 
 ## Wat er uitkomt
 
@@ -220,19 +219,31 @@ Excel herbouwen, mailen. Hieronder staat kortweg `python`; lees dat als
 
 ### De wekelijkse taak
 
-De run hoort **elke vrijdag om 17:00** te draaien: een DSM-taak die
-`/volume1/Hitlijsten/app/wekelijkse-run.sh` start als gebruiker `claude`.
-
-Aanmaken in DSM: **Configuratiescherm → Taakplanner → Aanmaken → Geplande taak
-→ Door gebruiker gedefinieerd script**. Gebruiker `claude`, wekelijks op
-vrijdag om 17:00, en als script één regel:
+Elke **vrijdag om 22:00** start `hitlijsten-run.timer` het script
+`app/wekelijkse-run.sh` als gebruiker `claude`. Dat script laadt zelf
+`omgeving.sh` en gebruikt het venv.
 
 ```bash
-sh /volume1/Hitlijsten/app/wekelijkse-run.sh
+sudo systemctl list-timers hitlijsten-run.timer   # wanneer gaat hij af?
+sudo systemctl start hitlijsten-run.service       # nu draaien, mét mail
+sudo journalctl -u hitlijsten-run.service         # wat deed hij?
 ```
 
-Die shell laadt zelf `omgeving.sh` en gebruikt het venv, dus er hoeft verder
-niets ingesteld te worden.
+Verzetten naar een ander moment: pas `OnCalendar` in
+`/etc/systemd/system/hitlijsten-run.timer` aan en draai daarna
+`sudo systemctl daemon-reload && sudo systemctl restart hitlijsten-run.timer`.
+De units staan ook in de repo, zodat je ze kunt terugzetten.
+
+**Waarom systemd en niet de DSM-taakplanner.** DSM bewaart geplande taken in een
+eigen, ongedocumenteerd bestand (`/usr/syno/etc/synoschedule.d/root/50.task`)
+waar geen ondersteunde CLI voor bestaat — je kunt er alleen via de UI bij. Daar
+met de hand in schrijven kan de hele Taakplanner onderuit halen, inclusief de
+backup- en replicatietaken die er ook in staan. De webapplicatie draait al onder
+systemd, dus de timer past ernaast. Gevolg: **de taak is niet zichtbaar in de
+DSM-UI**; kijk in `systemctl list-timers`.
+
+`Persistent=true` staat aan: stond de NAS vrijdagavond uit, dan draait de run
+alsnog zodra hij weer aan gaat — niet pas de week erna.
 
 De run haalt **elke** ontbrekende week op, niet alleen de nieuwste, dus een paar
 gemiste weken halen zichzelf in — bijvoorbeeld als de NAS een tijdje uit stond.
@@ -286,8 +297,10 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
 /volume1/Hitlijsten/app/
   omgeving.sh          zet HITLIJSTEN_DATA / _CACHE / _EXCEL
   start-web.sh         wordt door systemd gestart (hitlijsten-web)
-  wekelijkse-run.sh    wordt door de DSM-taakplanner gestart
-  hitlijsten-web.service
+  wekelijkse-run.sh    wordt door hitlijsten-run.timer gestart
+  hitlijsten-web.service      systemd-unit van de webapplicatie
+  hitlijsten-run.service      systemd-unit van de wekelijkse run
+  hitlijsten-run.timer        vrijdag 22:00
   venv/                Python 3.14.5 met de afhankelijkheden
   run.log              logboek van alle runs
   hitlijsten/

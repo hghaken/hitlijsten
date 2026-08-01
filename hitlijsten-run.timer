@@ -1,0 +1,15 @@
+# Elke vrijdag om 22:00 (Europe/Amsterdam, de tijdzone van de NAS).
+#
+# Persistent=true: stond de NAS vrijdagavond uit, dan draait de run alsnog zodra
+# hij weer aan gaat -- niet pas de week erna. Dat sluit aan op wat de run zelf
+# doet, want die haalt ELKE ontbrekende week op en niet alleen de nieuwste.
+[Unit]
+Description=Hitlijsten: elke vrijdag om 22:00
+
+[Timer]
+OnCalendar=Fri *-*-* 22:00:00
+Persistent=true
+Unit=hitlijsten-run.service
+
+[Install]
+WantedBy=timers.target
