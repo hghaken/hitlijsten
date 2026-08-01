@@ -22,7 +22,7 @@
   {% if jaar %}
   <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar) }}"
      title="Werkboek met een tab per week en het puntenklassement">⤓ Excel</a>
-  <a class="knop zacht" href="{{ url_for('download', lijst=lijst, jaar=jaar, soort='matrix') }}"
+  <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, soort='matrix') }}"
      title="Werkboek met de matrix nummer x week">⤓ jaarmatrix</a>
   {% endif %}
 
