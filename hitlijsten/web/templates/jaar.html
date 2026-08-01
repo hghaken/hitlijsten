@@ -24,6 +24,8 @@
      title="Werkboek met een tab per week en het puntenklassement">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, soort='matrix') }}"
      title="Werkboek met de matrix nummer x week">⤓ jaarmatrix</a>
+  <a class="knop" href="{{ url_for('download_pdf', lijst=lijst, jaar=jaar) }}"
+     title="Het puntenklassement als PDF, veertig regels per pagina">⤓ PDF</a>
   {% endif %}
 
   <span class="hint" style="margin-left:auto">

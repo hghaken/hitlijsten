@@ -454,6 +454,25 @@ def _registreer(app: Flask) -> None:
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
+    @app.route("/download/pdf/<lijst>/<int:jaar>")
+    def download_pdf(lijst: str, jaar: int):
+        """Het jaaroverzicht als PDF, ter plekke gemaakt.
+
+        Anders dan de Excel-bestanden komt dit niet uit de wekelijkse run: het
+        kost een halve seconde en kan zo nooit achterlopen op de database.
+        """
+        from .. import pdf as pdfbouwer
+
+        if lijst not in LIJSTEN:
+            abort(404)
+        gegevens = pdfbouwer.bouw_jaaroverzicht(verbinding(), lijst, jaar)
+        if gegevens is None:
+            flash(f"Voor {jaar} staat er niets in de database.", "fout")
+            return redirect(url_for("jaaroverzicht", lijst=lijst))
+        bestand = f"{LIJSTEN[lijst]['bestand']}_{jaar}.pdf"
+        return send_file(io.BytesIO(gegevens), as_attachment=True,
+                         download_name=bestand, mimetype="application/pdf")
+
     # --- noteringen zoeken -------------------------------------------------
 
     @app.route("/zoek")

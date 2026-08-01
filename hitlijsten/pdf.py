@@ -1,0 +1,182 @@
+"""Het jaaroverzicht als PDF: het puntenklassement van één lijst en jaargang.
+
+Zwart op wit, met alleen in de banner en de voetregel een kleur. Veertig regels
+per pagina, zodat er ruimte tussen de regels blijft en je hem kunt meenemen naar
+de studio zonder te turen.
+
+WAAROM EEN EIGEN LETTERTYPE
+---------------------------
+De ingebouwde lettertypen van PDF kunnen alleen latin-1. Dat lijkt genoeg tot je
+"Orchestral Manœuvres In The Dark", "Tone Lōc", "Givēon" of "Şıkıdım" tegenkomt
+-- zesendertig van de vijftienduizend nummers hebben een teken dat er niet in
+past, en dat zijn precies de namen die je niet wilt verminken. Daarom sluit dit
+werkboek DejaVu Sans in (`lettertypen/`, vrij herdistribueerbaar). Dat kost zo'n
+honderd kilobyte per bestand en dan klopt elke naam.
+"""
+from __future__ import annotations
+
+import sqlite3
+from typing import Optional
+
+from fpdf import FPDF
+
+from .config import LIJSTEN, ROOT
+from .db import looptijden
+from .excel import verzamel_lijst
+
+__all__ = ["bouw_jaaroverzicht", "REGELS_PER_PAGINA"]
+
+LETTERTYPEN = ROOT / "lettertypen"
+
+REGELS_PER_PAGINA = 40
+
+ACCENT = (206, 32, 39)          # rood, zoals de officiële jaarlijsten
+ACCENT_DONKER = (150, 20, 26)
+GRIJS = (110, 110, 110)
+LIJN = (214, 214, 214)
+
+BANNER = 24.0                   # hoogte van de gekleurde balk in mm
+KANTLIJN = 12.0
+REGEL = 6.0                     # hoogte van een tabelregel in mm
+
+# (kop, breedte in mm, uitlijning) -- samen 186, precies de bladbreedte tussen
+# de kantlijnen.
+KOLOMMEN = [
+    ("#", 9, "C"),
+    ("Artiest", 43, "L"),
+    ("Titel", 51, "L"),
+    ("Punten", 14, "C"),
+    ("Hoogste", 15, "C"),
+    ("Weken", 13, "C"),
+    ("Binnenkomst", 20.5, "C"),
+    ("Laatste notering", 20.5, "C"),
+]
+BREED = sum(k[1] for k in KOLOMMEN)
+
+
+class _Blad(FPDF):
+    """A4 met de banner bovenaan en de voetregel onderaan."""
+
+    def __init__(self, naam: str, jaar: int, ondertitel: str):
+        super().__init__(orientation="P", unit="mm", format="A4")
+        self.naam, self.jaar, self.ondertitel = naam, jaar, ondertitel
+        self.add_font("dejavu", "", LETTERTYPEN / "DejaVuSans.ttf")
+        self.add_font("dejavu", "B", LETTERTYPEN / "DejaVuSans-Bold.ttf")
+        self.set_auto_page_break(False)
+        self.set_title(f"{naam} {jaar} - jaaroverzicht")
+        self.set_creator("hitlijsten.hhaken.nl")
+
+    def header(self) -> None:
+        # Verloop in dunne strookjes; fpdf2 kent geen echte gradiënt.
+        stappen = 60
+        breedte = 210 / stappen
+        for i in range(stappen):
+            deel = i / (stappen - 1)
+            self.set_fill_color(*(round(a + (b - a) * deel)
+                                  for a, b in zip(ACCENT, ACCENT_DONKER)))
+            self.rect(i * breedte, 0, breedte + 0.3, BANNER, "F")
+
+        self.set_text_color(255, 255, 255)
+        self.set_font("dejavu", "B", 16)
+        self.set_xy(KANTLIJN, BANNER / 2 - 7.5)
+        self.cell(120, 8, self.naam)
+        self.set_font("dejavu", "", 8.5)
+        self.set_xy(KANTLIJN, BANNER / 2 + 1)
+        self.cell(120, 5, self.ondertitel)
+        self.set_font("dejavu", "B", 23)
+        self.set_xy(120, BANNER / 2 - 8)
+        self.cell(210 - 120 - KANTLIJN, 14, str(self.jaar), align="R")
+        self.set_text_color(0, 0, 0)
+
+    def footer(self) -> None:
+        self.set_draw_color(*ACCENT)
+        self.set_line_width(0.6)
+        self.line(KANTLIJN, 284, 210 - KANTLIJN, 284)
+        self.set_line_width(0.2)
+        self.set_text_color(*GRIJS)
+        self.set_font("dejavu", "", 7.5)
+        self.set_xy(KANTLIJN, 286)
+        self.cell(90, 6, "hitlijsten.hhaken.nl")
+        self.set_xy(210 - KANTLIJN - 90, 286)
+        self.cell(90, 6, f"pagina {self.page_no()} van {{nb}}", align="R")
+        self.set_text_color(0, 0, 0)
+
+
+def _kort(pdf: FPDF, tekst: str, breedte: float) -> str:
+    """Kap af op de beschikbare breedte. Liever een puntje dan over de rand."""
+    if not tekst:
+        return ""
+    if pdf.get_string_width(tekst) <= breedte:
+        return tekst
+    while tekst and pdf.get_string_width(tekst + "…") > breedte:
+        tekst = tekst[:-1]
+    return tekst.rstrip() + "…"
+
+
+def _kopregel(pdf: _Blad, y: float) -> float:
+    pdf.set_font("dejavu", "B", 7.5)
+    pdf.set_text_color(*GRIJS)
+    x = KANTLIJN
+    for naam, breedte, uitlijning in KOLOMMEN:
+        pdf.set_xy(x, y)
+        pdf.cell(breedte, 5, naam.upper(), align=uitlijning)
+        x += breedte
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_draw_color(*ACCENT)
+    pdf.set_line_width(0.5)
+    pdf.line(KANTLIJN, y + 5.3, KANTLIJN + BREED, y + 5.3)
+    pdf.set_line_width(0.2)
+    return y + 6.8
+
+
+def bouw_jaaroverzicht(
+    con: sqlite3.Connection, lijst: str, jaar: int
+) -> Optional[bytes]:
+    """Het puntenklassement van één lijst en jaargang. None als er niets is."""
+    gegevens = verzamel_lijst(con, lijst, jaar)
+    if gegevens is None:
+        return None
+    loop = looptijden(con, lijst, jaar)
+
+    nummers = sorted(
+        gegevens.nummers.values(),
+        key=lambda n: (-n.punten, n.hoogste_positie, n.eerste_week, n.titel.lower()),
+    )
+    naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
+    ondertitel = (f"Puntenklassement · {len(nummers)} nummers "
+                  f"over {len(gegevens.weken)} weken")
+
+    pdf = _Blad(naam, jaar, ondertitel)
+    pdf.alias_nb_pages()
+
+    for begin in range(0, len(nummers), REGELS_PER_PAGINA):
+        pdf.add_page()
+        y = _kopregel(pdf, BANNER + 9)
+        for nr, n in enumerate(nummers[begin:begin + REGELS_PER_PAGINA],
+                               start=begin + 1):
+            lt = loop.get(n.sleutel)
+            # Het pijltje zegt dat de notering buiten dit jaar doorloopt, net als
+            # in de Excel en op de website.
+            eerste = lt.begin.strftime("%d/%m/%Y") if lt else ""
+            laatste = lt.eind.strftime("%d/%m/%Y") if lt else ""
+            if lt and lt.begon_eerder:
+                eerste = "‹ " + eerste
+            if lt and lt.loopt_door:
+                laatste += " ›"
+
+            pdf.set_draw_color(*LIJN)
+            pdf.line(KANTLIJN, y + REGEL - 0.6, KANTLIJN + BREED, y + REGEL - 0.6)
+
+            waarden = [str(nr), n.artiest, n.titel, str(n.punten),
+                       str(n.hoogste_positie), str(n.aantal_weken),
+                       eerste, laatste]
+            x = KANTLIJN
+            for (kop, breedte, uitlijning), waarde in zip(KOLOMMEN, waarden):
+                pdf.set_font("dejavu", "B" if kop in ("#", "Punten") else "", 8)
+                pdf.set_xy(x, y)
+                pdf.cell(breedte, REGEL - 0.6,
+                         _kort(pdf, waarde, breedte - 2), align=uitlijning)
+                x += breedte
+            y += REGEL
+
+    return bytes(pdf.output())

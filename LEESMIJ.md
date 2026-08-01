@@ -188,7 +188,7 @@ op de NAS, achter de reverse proxy naar `10.10.8.20:8642`.
 | Pagina | Wat je er ziet |
 |---|---|
 | Overzicht | wat er in de database zit, per lijst |
-| Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel-download |
+| Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel- en PDF-download |
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
 | Wetenswaardigheden | tien ranglijsten over de hele historie |
@@ -238,6 +238,27 @@ respectievelijk 2 en 4, want de Nederlandse Top 40 zet klassiekers zelden
 opnieuw op de lijst (Wham's *Last Christmas* stond er alleen in 1984 en 1985).
 Daarvoor in de plaats: **langste terugkeer**, en daar zit wél spreiding in — Kate
 Bush' *Running Up That Hill* kwam na zesendertig jaar terug.
+
+### Het jaaroverzicht als PDF
+
+De knop **⤓ PDF** op het jaaroverzicht levert het puntenklassement als A4:
+gekleurde banner en voetregel, verder zwart op wit, **veertig regels per
+pagina**. Kolommen: nummer, artiest, titel, punten, hoogste positie, weken,
+binnenkomst en laatste notering, met een ‹ of › als de notering buiten het jaar
+doorloopt. Werkt voor alle vier de lijsten en alle jaargangen; het bestand wordt
+bij het downloaden gemaakt en kan dus nooit achterlopen.
+
+**Er zit een lettertype bij** (`lettertypen/DejaVuSans*.ttf`, vrij
+herdistribueerbaar, uit de matplotlib-wheel op PyPI). Dat moest wel: de
+ingebouwde PDF-lettertypen kunnen alleen latin-1, en zesendertig van de
+vijftienduizend nummers hebben een teken dat daar niet in past — juist de namen
+die je niet wilt verminken, zoals "Orchestral Manœuvres In The Dark", "Tone
+Lōc", "Givēon" en Tarkans "Şıkıdım". Kosten: zo'n honderd kilobyte per bestand.
+
+Het ontwerp volgt de officiële jaarlijsten van top40.nl: zwart op wit met één
+rood accent. **En onze cijfers zijn dezelfde**: de honderd puntentotalen van hun
+Top 100-jaaroverzicht van 2025 zijn stuk voor stuk gelijk aan de onze, in
+dezelfde volgorde.
 
 ## Gebruik
 
