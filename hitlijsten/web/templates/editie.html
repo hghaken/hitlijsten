@@ -62,12 +62,13 @@
   De Top 2000 is één uitzending per jaar, tussen kerst en oud en nieuw, dus geen
   weken en geen punten — alleen de positie. <b>Vorige editie</b> is de plek van
   vorig jaar, <b>edities</b> het aantal jaren waarin het nummer stond, en
-  <b>hoogste</b> de beste positie ooit. Klik op een artiest of titel voor het
-  verloop over alle {{ edities|length }} edities.
+  <b>hoogste</b> de beste positie ooit. Klik op een artiest of titel voor de
+  grafiek van het verloop over alle {{ edities|length }} edities.
 </p>
 
 <div class="tabelvak">
-  <table data-markeer="{{ markeer or '' }}">
+  <table id="editie" data-lijst="{{ lijst }}" data-jaar="{{ jaar }}"
+         data-markeer="{{ markeer or '' }}">
     <thead>
       <tr>
         <th class="getal">#</th><th class="breed">Artiest</th><th class="breed">Titel</th>
@@ -139,33 +140,21 @@
   </table>
 </div>
 
+{% include "_grafiek.html" %}
+
 <script>
-/* Klikken op een nummer opent het verloop over alle edities; springen met
-   `markeer` licht een nummer op. Dezelfde afspraken als op het jaaroverzicht
-   van de weeklijsten, alleen gaat de as hier over jaren in plaats van weken. */
+/* Kwam de bezoeker via een verwijzing met `markeer`, dan wordt dat nummer
+   opgelicht. Klikken op een artiest of titel opent de grafiek; dat regelt
+   _grafiek.html. */
 (function () {
-  const tabel = document.querySelector(".tabelvak table");
-  if (!tabel) return;
-
-  const sleutel = tabel.dataset.markeer;
-  if (sleutel) {
-    const rij = Array.from(tabel.tBodies[0].rows)
-      .find((r) => r.dataset.sleutel === sleutel);
-    if (rij) { rij.classList.add("opgelicht"); rij.scrollIntoView({ block: "center" }); }
-  }
-
-  // De matrix staat er al; klikken schuift die rij in beeld.
-  const matrix = document.querySelectorAll(".tabelvak table")[1];
-  tabel.addEventListener("click", function (gebeurtenis) {
-    const cel = gebeurtenis.target.closest("td.klikbaar");
-    if (!cel || !matrix) return;
-    const nr = cel.parentElement.rowIndex - 1;
-    const doel = matrix.tBodies[0].rows[nr];
-    if (!doel) return;
-    Array.from(matrix.tBodies[0].rows).forEach((r) => r.classList.remove("opgelicht"));
-    doel.classList.add("opgelicht");
-    doel.scrollIntoView({ block: "center" });
-  });
+  const tabel = document.getElementById("editie");
+  const sleutel = tabel && tabel.dataset.markeer;
+  if (!sleutel) return;
+  const rij = Array.from(tabel.tBodies[0].rows)
+    .find((r) => r.dataset.sleutel === sleutel);
+  if (!rij) return;
+  rij.classList.add("opgelicht");
+  rij.scrollIntoView({ block: "center" });
 })();
 </script>
 

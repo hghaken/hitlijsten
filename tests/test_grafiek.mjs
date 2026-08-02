@@ -1,4 +1,4 @@
-/* Toets de grafiek van de positie per week uit templates/jaar.html.
+/* Toets de grafiek uit templates/_grafiek.html.
  *
  *     node tests/test_grafiek.mjs        (node staat niet op de NAS)
  *
@@ -19,12 +19,12 @@ import { dirname, join } from "node:path";
 import vm from "node:vm";
 
 const HIER = dirname(fileURLToPath(import.meta.url));
-const TEMPLATE = join(HIER, "..", "hitlijsten", "web", "templates", "jaar.html");
+const TEMPLATE = join(HIER, "..", "hitlijsten", "web", "templates", "_grafiek.html");
 
 function grafiekscript() {
   const bron = readFileSync(TEMPLATE, "utf8");
   const blokken = [...bron.matchAll(/<script>([\s\S]*?)<\/script>/g)];
-  if (!blokken.length) throw new Error("geen <script> in jaar.html gevonden");
+  if (!blokken.length) throw new Error("geen <script> in _grafiek.html gevonden");
   return blokken[blokken.length - 1][1];
 }
 
@@ -76,6 +76,7 @@ function maakMatrix(nummers, lijst = "top40", jaar = "2023", markeer = "") {
     return r;
   });
   const tabel = new Knoop("table");
+  tabel.id = "matrix";
   tabel.dataset = { lijst: lijst, jaar: jaar, markeer: markeer };
   tabel.tBodies = [{ rows: rijen }];
   tabel.contains = (k) => rijen.includes(k.ouder);
@@ -104,6 +105,7 @@ function antwoord(posities, { jaar = 2023, eersteWeek = 1, lengte = 40 } = {}) {
   });
   const genoteerd = posities.filter((p) => p !== null);
   return {
+    as: "week",
     reeks: reeks, lengte: lengte, hoogste: Math.min(...genoteerd),
     weken: genoteerd.length, punten: 0, van: "01/01", tot: "31/12",
   };
@@ -115,7 +117,7 @@ function draai(tabel, dialoog, payload) {
   const context = {
     document: {
       getElementById: (id) =>
-        (id === "matrix" ? tabel : id === "grafiek" ? dialoog : null),
+        (id === tabel.id ? tabel : id === "grafiek" ? dialoog : null),
       querySelectorAll: function (kies) {
         if (kies === ".tabelvak table") return [tabel];
         if (kies === ".tabelvak table tr[data-sleutel]") return tabel.tBodies[0].rows;
@@ -298,6 +300,57 @@ tests.zonder_markeer_wordt_er_niets_opgelicht = async () => {
   const tabel = maakMatrix([{ sleutel: "a|b", artiest: "A", titel: "B" }]);
   draai(tabel, maakDialoog(), antwoord([1]));
   waar(!tabel.tBodies[0].rows[0].classList.has("opgelicht"), "niets opgelicht");
+};
+
+// --- de editie-as (Top 2000) ------------------------------------------------
+
+tests.editie_as_zet_het_jaartal_onder_elk_punt = async () => {
+  const payload = {
+    as: "editie", lengte: 2000, hoogste: 1, weken: 3, punten: 0,
+    van: "2023", tot: "2025",
+    reeks: [{ jaar: 2023, week: null, positie: 4, datum: "2023" },
+            { jaar: 2024, week: null, positie: 2, datum: "2024" },
+            { jaar: 2025, week: null, positie: 1, datum: "2025" }],
+  };
+  const { svg, dialoog } = await grafiek(payload);
+  // Het label onder de punt is het jaartal, niet een weeknummer.
+  gelijk(teksten(svg, "week"), ["2023", "2024", "2025"]);
+  gelijk(teksten(svg, "positie"), ["4", "2", "1"]);
+  gelijk(teksten(svg, "verschil"), ["N", "+2", "+1"]);
+  // Geen jaargangstrepen: elk punt is al een eigen jaar.
+  gelijk(svg.kinderen.filter(
+    (k) => k.naam === "line" && k.kenmerken.class === "jaargrens").length, 0);
+  gelijk(teksten(svg, "jaar"), []);
+  waar(dialoog.vakken[".samenvatting"].textContent.includes("3 edities"),
+       dialoog.vakken[".samenvatting"].textContent);
+};
+
+tests.editie_as_toont_geen_waarvan_in_dit_jaar = async () => {
+  const payload = {
+    as: "editie", lengte: 2000, hoogste: 1, weken: 2, punten: 0,
+    van: "2024", tot: "2025",
+    reeks: [{ jaar: 2024, week: null, positie: 3, datum: "2024" },
+            { jaar: 2025, week: null, positie: 1, datum: "2025" }],
+  };
+  const { dialoog } = await grafiek(payload, { weken: 1, punten: 0 });
+  gelijk(dialoog.vakken[".jaardeel"].textContent, "",
+         "die regel gaat over een jaargang binnen een weeklijst");
+};
+
+tests.gat_tussen_twee_edities_wordt_gestippeld = async () => {
+  const payload = {
+    as: "editie", lengte: 2000, hoogste: 5, weken: 2, punten: 0,
+    van: "2023", tot: "2025",
+    reeks: [{ jaar: 2023, week: null, positie: 5, datum: "2023" },
+            { jaar: 2024, week: null, positie: null, datum: "2024" },
+            { jaar: 2025, week: null, positie: 9, datum: "2025" }],
+  };
+  const { svg } = await grafiek(payload);
+  const sporen = svg.kinderen.filter((k) => k.naam === "path");
+  gelijk(sporen.length, 1);
+  waar(sporen[0].kenmerken.class.includes("onderbroken"),
+       "een overgeslagen editie hoort gestippeld te zijn");
+  gelijk(teksten(svg, "week"), ["2023", "2024", "2025"]);
 };
 
 // --- loper ------------------------------------------------------------------

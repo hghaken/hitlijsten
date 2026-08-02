@@ -218,7 +218,9 @@ dus "positie per week" zou een tabel van één kolom worden, en punten
 (lijstlengte − positie + 1) zijn niets anders dan de omgekeerde positie. Deze
 lijst krijgt daarom een eigen pagina: de editie met *vorige editie*, *verschil*,
 *aantal edities* en *hoogste ooit*, en daaronder de matrix **nummer × editie**
-— precies de vorm van de bron. Die matrix toont standaard de top 250; 2000 rijen
+— precies de vorm van de bron. Klikken op een artiest of titel opent dezelfde
+grafiek als bij de weeklijsten, maar dan met een punt per editie in plaats van
+per week; de server zegt in het veld `as` welke van de twee het is. Die matrix toont standaard de top 250; 2000 rijen
 maal 27 kolommen maakt de pagina anders 5 MB.
 
 **De sleutel is de brug naar de andere lijsten.** Artiest en titel gaan door

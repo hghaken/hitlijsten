@@ -426,9 +426,15 @@ def _registreer(app: Flask) -> None:
         sleutel = request.args.get("sleutel", "")
         if lijst not in LIJSTEN or not jaar.isdigit() or not sleutel:
             abort(404)
-        gegevens = db.reeks_van(verbinding(), lijst, sleutel, int(jaar))
+        # Een jaarlijkse lijst heeft geen weken: daar loopt de as over de
+        # edities, en dan is het jaartal het label in plaats van het weeknummer.
+        if is_jaarlijks(lijst):
+            gegevens = db.editie_reeks(verbinding(), lijst, sleutel)
+        else:
+            gegevens = db.reeks_van(verbinding(), lijst, sleutel, int(jaar))
         if gegevens is None:
             abort(404)
+        gegevens.setdefault("as", "week")
         return jsonify(gegevens)
 
     # --- Excel downloaden --------------------------------------------------

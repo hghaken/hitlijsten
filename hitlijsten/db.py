@@ -589,3 +589,43 @@ def edities_van(con: sqlite3.Connection, lijst: str) -> list[int]:
     return [r[0] for r in con.execute(
         "SELECT DISTINCT jaar FROM noteringen WHERE lijst=? ORDER BY jaar",
         (lijst,))]
+
+
+def editie_reeks(
+    con: sqlite3.Connection, lijst: str, sleutel: str
+) -> Optional[dict]:
+    """Het verloop van één nummer over alle edities van een jaarlijkse lijst.
+
+    De tegenhanger van `reeks_van()` voor de weeklijsten: daar loopt de as over
+    weken, hier over jaren. Edities waarin het nummer niet stond blijven als
+    lege kolom staan, zodat een gat op de juiste plek in de tijd valt.
+    """
+    edities = edities_van(con, lijst)
+    if not edities:
+        return None
+    eigen = {jaar: positie for jaar, positie in con.execute(
+        "SELECT jaar, MIN(positie) FROM noteringen WHERE lijst=? AND sleutel=?"
+        " GROUP BY jaar", (lijst, sleutel))}
+    if not eigen:
+        return None
+
+    # Alleen het venster van de eerste tot de laatste editie waarin het stond;
+    # de jaren ervoor en erna zeggen niets.
+    van, tot = min(eigen), max(eigen)
+    binnen = [j for j in edities if van <= j <= tot]
+    reeks = [{"jaar": j, "week": None, "datum": str(j),
+              "positie": eigen.get(j)} for j in binnen]
+    genoteerd = list(eigen.values())
+    return {
+        "as": "editie",
+        "reeks": reeks,
+        "lengte": max(
+            (r[0] for r in con.execute(
+                "SELECT MAX(positie) FROM noteringen WHERE lijst=?", (lijst,))),
+            default=max(genoteerd)) or max(genoteerd),
+        "hoogste": min(genoteerd),
+        "weken": len(genoteerd),
+        "punten": 0,
+        "van": str(van),
+        "tot": str(tot),
+    }
