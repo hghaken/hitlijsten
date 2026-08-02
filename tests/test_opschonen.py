@@ -102,6 +102,26 @@ def test_bijzondere_letters_worden_vertaald_niet_weggegooid():
     assert normaliseer("Sigur Rós") == "sigur ros"
 
 
+# --- wat je in het aliasscherm intypt ---------------------------------------
+
+
+def test_aliasscherm_maakt_er_een_echte_sleutel_van():
+    """Je typt wat je op de site ziet; dat moet ook werken.
+
+    Een alias wordt opgezocht met de sleutel. Typ je "ABBA*Teens|Mamma Mia",
+    dan wordt die regel nooit gevonden -- en het vervelendste is dat er geen
+    foutmelding komt, want hij staat er keurig in.
+    """
+    from hitlijsten.web.app import _als_sleutel
+
+    assert _als_sleutel("ABBA*Teens|Mamma Mia") == "abba teens|mamma mia"
+    assert _als_sleutel("The Beatles|Hey Jude") == "beatles|hey jude"
+    # Al goed ingetypt blijft ongemoeid.
+    assert _als_sleutel("a teens|super trouper") == "a teens|super trouper"
+    # En zonder streep valt er niets te normaliseren.
+    assert _als_sleutel("losse tekst") == "losse tekst"
+
+
 # --- de juiste schrijfwijze kiezen ------------------------------------------
 
 

@@ -131,6 +131,28 @@ def leg_vast(soort: str, verwijst: str, veld: str, oud, nieuw, reden: str) -> No
     con.commit()
 
 
+def _als_sleutel(tekst: str | None) -> str:
+    """Maak van wat er is ingetypt een echte sleutel.
+
+    Het aliasscherm vraagt om "artiest|titel" en dan typ je vanzelf op wat je op
+    de site ziet: "ABBA*Teens|Mamma Mia". Een sleutel is echter altijd kleine
+    letters zonder leestekens, dus zo'n alias wordt nooit gevonden -- en het
+    ergste is dat er geen foutmelding komt, want de regel staat er keurig in.
+    Vandaar dat allebei de vormen worden geaccepteerd.
+
+    `sleutel_van` wordt hier bewust niet gebruikt: die volgt aan het eind de
+    aliassen door, en juist bij de "van"-kant wil je de sleutel zoals hij uit de
+    naam volgt en niet waar hij nu al naartoe wijst.
+    """
+    from ..normalize import artiestsleutel, normaliseer
+
+    tekst = (tekst or "").strip()
+    if "|" not in tekst:
+        return tekst
+    artiest, _, titel = tekst.partition("|")
+    return f"{artiestsleutel(artiest)}|{normaliseer(titel, samenwerking=False)}"
+
+
 def leesbare_tijd(stempel: str | None) -> str:
     """2026-08-02T11:17:18 -> 02-08-2026 11:17. Leeg blijft leeg."""
     if not stempel:
@@ -744,10 +766,10 @@ def _registreer(app: Flask) -> None:
     @app.route("/aliassen/bewaar", methods=["POST"])
     @vereist_aanmelding
     def alias_bewaar():
-        van = (request.form.get("van") or "").strip()
-        naar = (request.form.get("naar") or "").strip()
+        van = _als_sleutel(request.form.get("van"))
+        naar = _als_sleutel(request.form.get("naar"))
         opmerking = (request.form.get("opmerking") or "").strip()
-        oude_van = (request.form.get("oude_van") or "").strip()
+        oude_van = _als_sleutel(request.form.get("oude_van"))
 
         if not van or not naar:
             flash("Beide sleutels zijn verplicht", "fout")
@@ -768,8 +790,8 @@ def _registreer(app: Flask) -> None:
             con.commit()
             leg_vast("alias", van, "naar", bestond["naar"] if bestond else None,
                      naar, opmerking)
-            flash(f"Alias bewaard. Draai 'Sleutels herberekenen' om hem te laten "
-                  f"gelden.", "goed")
+            flash(f"Alias bewaard als {van} -> {naar}. Draai 'Sleutels "
+                  f"herberekenen' om hem te laten gelden.", "goed")
         return redirect(url_for("aliassen"))
 
     @app.route("/aliassen/verwijder", methods=["POST"])
