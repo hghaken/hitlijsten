@@ -94,6 +94,26 @@
   <button class="hoofd" type="submit">Opschonen en toepassen</button>
 </form>
 
+<h2>Versies op één plek</h2>
+<p class="hint">
+  In de jaren zestig noteerde een buitenlandse hit vaak samen met zijn
+  Nederlandse cover op één plek: "Nini Rosso / Heinz Schachtner" met
+  "Il Silenzio / Abschiedsmelodie". Dat worden aparte noteringen, elk met de
+  punten van die ene plek. Een hernoemde notering ("Old Town Road / Old Town
+  Road - Remix") blijft met rust — dat is dezelfde act en één doorlopende
+  notering.
+</p>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}"
+      onsubmit="return confirm('Hier komen noteringen bij. Er wordt eerst een momentopname gemaakt. Doorgaan?')">
+  <input type="hidden" name="wat" value="versies">
+  <select name="jaar">
+    {% for sleutel in weeklijsten %}
+      <option value="{{ sleutel }}">{{ lijst_namen.get(sleutel, sleutel) }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Splitsen</button>
+</form>
+
 <h2>Momentopnames</h2>
 <p class="hint">
   Een kopie van de hele database, ongeveer 24 MB. Er wordt er automatisch een

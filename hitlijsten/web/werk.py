@@ -142,6 +142,28 @@ def bouw_werk(wat: str, jaar: str | None,
             taak.meld("klaar -- alleen wat nodig was")
         return "Bijwerken wat veranderd is", werk
 
+    if wat == "versies":
+        def werk(taak: Taak) -> None:
+            from .. import db, momentopnames
+            from ..opschonen import splits_versies, versies_op_een_plek
+
+            doel = jaar if jaar and jaar != "alle" else "top40"
+            with db.verbinding() as con:
+                gevallen = versies_op_een_plek(con, doel)
+            if not gevallen:
+                taak.meld(f"{doel}: geen gedeelde plekken met twee versies")
+                return
+            taak.meld(f"{doel}: {len(gevallen)} noteringen waarin artiesten een "
+                      f"plek delen")
+            taak.meld(f"momentopname vooraf: "
+                      f"{momentopnames.maak('voor-versies').name}")
+            with db.verbinding() as con:
+                verslag = splits_versies(con, doel)
+            taak.meld(f"{verslag['nieuw']} noteringen erbij over "
+                      f"{verslag['nummers']} nummers")
+            taak.meld("druk hierna op 'Bijwerken wat veranderd is'")
+        return "Versies op één plek splitsen", werk
+
     if wat == "volledig":
         # Na een wijziging in de aliassen moet er altijd hetzelfde rijtje
         # gebeuren, in deze volgorde: eerst de sleutels (die laten de alias

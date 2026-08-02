@@ -107,6 +107,11 @@ def main() -> int:
         except AssertionError as fout:
             mislukt += 1
             print(f"MISLUKT  {test.__name__}: {fout}")
+        except Exception as fout:
+            # Een test die omvalt op een kapotte opzet nam vroeger de rest van
+            # de reeks mee, en dan zie je geen eindstand meer.
+            mislukt += 1
+            print(f"KAPOT    {test.__name__}: {type(fout).__name__}: {fout}")
     momentopnames.MAP = origineel
     print(f"\n{len(tests) - mislukt}/{len(tests)} geslaagd")
     return 1 if mislukt else 0

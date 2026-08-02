@@ -47,7 +47,8 @@ __all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
            "uitgave_en_nummer", "splits_kanten", "splits_dubbele_a_kanten",
-           "spatievarianten", "verzeker_aliassen"]
+           "spatievarianten", "verzeker_aliassen", "versies_op_een_plek",
+           "zelfde_act", "splits_versies"]
 
 # Wat er in de bronnen misgaat met leestekens. Bewust kort: elk teken hier is
 # er een waarvan is vastgesteld dat het in de data staat en nooit bedoeld is.
@@ -324,19 +325,28 @@ def _accenten(naam: str) -> int:
     return sum(1 for teken in naam if ord(teken) > 127 and teken.isalpha())
 
 
-def _apostrofs(naam: str) -> int:
-    """Hoeveel apostrofs staan erin?
+def _leestekens(naam: str) -> int:
+    """Hoeveel leestekens staan erin?
 
-    Alleen zinnig bij titels. Een weggelaten apostrof is een slordigheid --
-    "Dont Speak", "Beggin", "Raindrops Keep Fallin On My Head" -- terwijl een
+    Alleen zinnig bij titels. Een weggelaten leesteken is een slordigheid --
+    "Dont Speak", "Beggin", "Hello Goodbye", "Help Me Rhonda" -- terwijl een
     band zich wél bewust zonder kan schrijven: Shakespears Sister en Dexys
-    Midnight Runners hebben er echt geen. Vandaar dat dit bij een artiestnaam
-    niet meetelt en bij een titel wel.
+    Midnight Runners hebben er echt geen apostrof. Vandaar dat dit bij een
+    artiestnaam niet meetelt en bij een titel wel.
+
+    Alleen zinsleestekens: komma, apostrof, vraag- en uitroepteken. "Hello,
+    Goodbye" en "Reach Out, I'll Be There" verloren hun komma eerst van de
+    meerderheid, en dat waren de goede titels.
+
+    Streepjes, haken en punten tellen NIET mee. Die zijn even vaak een
+    bronversiering als een echt onderdeel -- "Paperback-Writer" heet gewoon
+    "Paperback Writer" -- en daar is de meerderheid een beter oordeel dan een
+    telling.
     """
-    return naam.count("'")
+    return sum(naam.count(teken) for teken in ",'?!")
 
 
-def meerderheidsnaam(namen: dict[str, int], *, apostrof: bool = False) -> str:
+def meerderheidsnaam(namen: dict[str, int], *, leestekens: bool = False) -> str:
     """De juiste schrijfwijze kiezen uit varianten van dezelfde naam.
 
     Niet simpelweg de meerderheid, want die heeft twee keer aantoonbaar
@@ -353,12 +363,18 @@ def meerderheidsnaam(namen: dict[str, int], *, apostrof: bool = False) -> str:
     dan telt wél gewoon wie vaker voorkomt. Over een tussenvoegsel valt te
     twisten en dan is de gewoonte van de bronnen zo goed als elk ander oordeel.
     """
+    # Een naam die volledig uit kleine letters bestaat doet niet mee zolang er
+    # een alternatief met hoofdletters is. Anders wint "where are we now?" van
+    # "Where Are We Now" op het vraagteken, en dan ruil je de ene fout voor de
+    # andere.
+    keuzes = {n: a for n, a in namen.items() if n != n.lower()} or namen
+
     def rangschik(paar):
         naam, aantal = paar
-        return (_accenten(naam), _apostrofs(naam) if apostrof else 0,
+        return (_accenten(naam), _leestekens(naam) if leestekens else 0,
                 naam != naam.lower(), aantal)
 
-    return max(namen.items(), key=rangschik)[0]
+    return max(keuzes.items(), key=rangschik)[0]
 
 
 def bewaar_artiestnaam(con: sqlite3.Connection, sleutel: str, naam: str,
@@ -488,6 +504,69 @@ def splits_kanten(artiest: str, titel: str) -> list[tuple[str, str]]:
     return [(a, t) for a, t in zip(artiesten, titels) if t]
 
 
+# De schuine streep doet in deze gegevens twee dingen tegelijk, en ze zien er
+# hetzelfde uit:
+#
+#   "Nini Rosso / Heinz Schachtner" + "Il Silenzio / Abschiedsmelodie"
+#       Twee artiesten, twee versies van hetzelfde nummer, samen op een plek.
+#       Dat was in de jaren zestig gewoon: een buitenlandse hit en de
+#       Nederlandse cover noteerden samen. Dit hoort gesplitst te worden.
+#
+#   "Lil Nas X / Lil Nas X feat. Billy Ray Cyrus" + "Old Town Road / Old Town
+#    Road - Remix"
+#       Een notering die halverwege is hernoemd omdat de remix het overnam.
+#       Een doorlopende notering, en splitsen zou er twee halve van maken.
+#
+# Het verschil: bij een hernoeming gaat het om dezelfde act, en dan delen de
+# twee namen woorden. Insluiting ("zit de een in de ander") is niet genoeg --
+# top40.nl kapt lange namen af, en "Alderliefste met Ramses Shaff.." bevat
+# "Ramses Shaffy" dus niet.
+_ONBEDUIDEND = {"the", "de", "het", "een", "en", "met", "and", "with", "&",
+                "ft", "feat", "van", "der", "los", "las", "les"}
+
+
+def _woorden(naam: str) -> set:
+    from .normalize import normaliseer
+
+    return {w for w in normaliseer(naam).split() if w not in _ONBEDUIDEND}
+
+
+def zelfde_act(delen: list[str]) -> bool:
+    """Gaat het om dezelfde artiest, anders geschreven?
+
+    Zo ja, dan is de schuine streep een hernoeming en geen tweede versie.
+    """
+    woordsets = [_woorden(d) for d in delen]
+    for i, eerste in enumerate(woordsets):
+        for tweede in woordsets[i + 1:]:
+            if eerste & tweede:
+                return True
+    return False
+
+
+def versies_op_een_plek(con: sqlite3.Connection,
+                        lijst: str = "top40") -> list[dict]:
+    """Noteringen waarin twee artiesten met twee titels een plek delen.
+
+    Alleen als artiest en titel evenveel delen hebben -- anders is niet te
+    zeggen welke titel bij welke artiest hoort -- en alleen als het echt
+    verschillende acts zijn.
+    """
+    uit = []
+    for r in con.execute(
+            "SELECT id, lijst, jaar, week, positie, artiest, titel, sleutel,"
+            " label, weken_genoteerd, vorige_positie, site_status, uitjaar"
+            " FROM noteringen WHERE lijst=? AND titel LIKE ? AND artiest LIKE ?",
+            (lijst, "% / %", "% / %")):
+        artiesten = [a.strip() for a in r["artiest"].split(" / ")]
+        titels = [t.strip() for t in r["titel"].split(" / ")]
+        if len(artiesten) != len(titels) or zelfde_act(artiesten):
+            continue
+        uit.append({"rij": dict(r),
+                    "kanten": [(a, t) for a, t in zip(artiesten, titels)]})
+    return uit
+
+
 def dubbele_a_kanten(con: sqlite3.Connection) -> list[dict]:
     """Alle noteringen die uit twee nummers bestaan."""
     uit = []
@@ -499,6 +578,54 @@ def dubbele_a_kanten(con: sqlite3.Connection) -> list[dict]:
         if len(kanten) > 1:
             uit.append({"rij": dict(r), "kanten": kanten})
     return uit
+
+
+def splits_versies(con: sqlite3.Connection, lijst: str = "top40") -> dict:
+    """Maak van elke gedeelde plek net zo veel noteringen als er versies zijn.
+
+    Zelfde afspraak als bij de dubbele A-kant: de positie telt een keer, dus
+    elke versie krijgt de punten van die ene plek en daarmee hetzelfde totaal.
+
+    Dit zit met opzet NIET in het schrijfpad. De vorm komt na 1972 niet meer
+    voor als twee versies, maar wel als hernoemde notering ("Old Town Road /
+    Old Town Road - Remix"), en die mag juist nooit gesplitst worden. Een regel
+    die bij het ophalen meedraait zou dat vroeg of laat fout doen.
+    """
+    from .normalize import sleutel_van
+
+    gevallen = versies_op_een_plek(con, lijst)
+    verslag = {"noteringen": 0, "nieuw": 0, "nummers": set()}
+    for geval in gevallen:
+        rij, kanten = geval["rij"], geval["kanten"]
+        verslag["nummers"].add(rij["sleutel"])
+        db.markeer_te_bouwen(con, lijst=rij["lijst"], jaar=rij["jaar"],
+                             reden="versies op een plek")
+        eerste, rest = kanten[0], kanten[1:]
+        con.execute(
+            "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE id=?",
+            (eerste[0], eerste[1], sleutel_van(*eerste), rij["id"]))
+        verslag["noteringen"] += 1
+        for artiest, titel in rest:
+            con.execute(
+                "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
+                " artiest, label, weken_genoteerd, vorige_positie, site_status,"
+                " sleutel, uitjaar) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                (rij["lijst"], rij["jaar"], rij["week"], rij["positie"], titel,
+                 artiest, rij["label"], rij["weken_genoteerd"],
+                 rij["vorige_positie"], rij["site_status"],
+                 sleutel_van(artiest, titel), rij["uitjaar"]))
+            verslag["nieuw"] += 1
+        con.execute(
+            "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud,"
+            " nieuw, reden) VALUES (?,?,?,?,?,?,?)",
+            (datetime.now().isoformat(timespec="seconds"), "versies",
+             f"{rij['lijst']} {rij['jaar']} wk {rij['week']} #{rij['positie']}",
+             "artiest+titel", f"{rij['artiest']} - {rij['titel']}",
+             " + ".join(f"{a} - {t}" for a, t in kanten),
+             "twee of meer versies op een plek, elk als eigen notering"))
+    con.commit()
+    verslag["nummers"] = len(verslag["nummers"])
+    return verslag
 
 
 def splits_dubbele_a_kanten(con: sqlite3.Connection) -> dict:

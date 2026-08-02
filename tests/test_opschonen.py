@@ -241,7 +241,7 @@ def _schone_database():
     con.executescript(dbmod.SCHEMA)
     con.executemany(
         "INSERT INTO noteringen (lijst, jaar, week, positie, artiest, titel,"
-        " sleutel) VALUES (?,?,1,1,'A','B',?)",
+        " site_status, sleutel) VALUES (?,?,1,1,'A','B','nieuw',?)",
         [("top40", 1999, "a teens|mamma mia"),
          ("top40", 2000, "a teens|mamma mia"),
          ("tipparade", 2001, "a teens|mamma mia"),
@@ -287,6 +287,12 @@ def main() -> int:
         except AssertionError as fout:
             mislukt += 1
             print(f"MISLUKT  {test.__name__}: {fout}")
+        except Exception as fout:
+            # Niet alleen AssertionError: een test die omvalt op een kapotte
+            # opzet nam vroeger de rest van de reeks mee, en dan zie je geen
+            # eindstand meer.
+            mislukt += 1
+            print(f"KAPOT    {test.__name__}: {type(fout).__name__}: {fout}")
     print(f"\n{len(tests) - mislukt}/{len(tests)} geslaagd")
     return 1 if mislukt else 0
 

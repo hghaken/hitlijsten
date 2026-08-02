@@ -272,6 +272,11 @@ def main() -> int:
             mislukt += 1
             print(f"MISLUKT  {test.__name__}: {fout}")
         except Exception as fout:
+            # Een test die omvalt op een kapotte opzet nam vroeger de rest van
+            # de reeks mee, en dan zie je geen eindstand meer.
+            mislukt += 1
+            print(f"KAPOT    {test.__name__}: {type(fout).__name__}: {fout}")
+        except Exception as fout:
             # Een onverwachte fout mag de rest van de reeks niet meeslepen.
             mislukt += 1
             print(f"FOUT     {test.__name__}: {type(fout).__name__}: {fout}")

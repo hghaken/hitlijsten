@@ -620,7 +620,7 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
         # daardoor in de bak "echt anders"; dat was een verschil zonder gevolg.
         for sleutel, varianten in titels["tekens"] + titels["anders"]:
             bewaar_titel(con, sleutel,
-                         meerderheidsnaam(varianten, apostrof=True),
+                         meerderheidsnaam(varianten, leestekens=True),
                          "meerderheid")
         con.commit()
         verslag = pas_titels_toe(con)
