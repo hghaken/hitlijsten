@@ -505,7 +505,8 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
     from .opschonen import (bewaar_artiestnaam, bewaar_titel,
                             geleende_hoofdletters, herstel_tekst,
                             meerderheidsnaam, naamvarianten, pas_namen_toe,
-                            pas_titels_toe, tekstfouten, titelvarianten)
+                            pas_titels_toe, tekstfouten, titelvarianten,
+                            uitgave_en_nummer)
 
     with db.verbinding() as con:
         fouten = tekstfouten(con)
@@ -520,6 +521,10 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
             f"hoofdletters of accenten")
         log(f"{len(bakken['lidwoord'])} met en zonder lidwoord, "
             f"{len(bakken['anders'])} met een echt andere schrijfwijze")
+
+        uitgaven = uitgave_en_nummer(con)
+        log(f"{len(uitgaven)} titels met de uitgave ervoor "
+            f"(\"Live! : Roll Over Lay Down\")")
 
         titels = titelvarianten(con)
         log(f"{len(titels['tekens'])} nummers met meer dan een titel die "
@@ -555,6 +560,36 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
         verslag = pas_titels_toe(con)
         log(f"{verslag['noteringen']} noteringen kregen de vastgestelde titel "
             f"({verslag['nummers']} schrijfwijzen)")
+
+        # De uitgave eraf, en een alias zodat de notering samenvalt met dezelfde
+        # titel in de andere lijsten. Zonder die alias verandert alleen wat je
+        # ziet en blijft het nummer in tweeen liggen.
+        from .normalize import sleutel_van, vergeet_aliases
+
+        for sleutel, oude_titel, nummer in uitgaven:
+            artiest = con.execute(
+                "SELECT artiest FROM noteringen WHERE sleutel=? LIMIT 1",
+                (sleutel,)).fetchone()[0]
+            doel = sleutel_van(artiest, nummer)
+            if doel != sleutel:
+                con.execute(
+                    "INSERT OR REPLACE INTO aliases (van, naar, opmerking,"
+                    " aangemaakt) VALUES (?,?,?,?)",
+                    (sleutel, doel, "top40.nl zet de uitgave voor het nummer",
+                     datetime.now().isoformat(timespec="seconds")))
+            con.execute(
+                "UPDATE noteringen SET titel=?, sleutel=? WHERE sleutel=?",
+                (nummer, doel, sleutel))
+            con.execute(
+                "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud,"
+                " nieuw, reden) VALUES (?,?,?,?,?,?,?)",
+                (datetime.now().isoformat(timespec="seconds"), "titel", doel,
+                 "titel", oude_titel, nummer,
+                 "de uitgave stond voor het nummer"))
+        if uitgaven:
+            con.commit()
+            vergeet_aliases()
+            log(f"{len(uitgaven)} titels ontdaan van hun uitgave")
 
         for sleutel, oud, goed in geleende_hoofdletters(con):
             bewaar_titel(con, sleutel, goed, "hoofdletters van elders")

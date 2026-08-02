@@ -351,6 +351,16 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Typefouten in namen en titels | 31 artiesten, 86 nummers | MusicBrainz + Wikipedia |
 | Onmogelijke uitgavejaren | 47 nummers | de Top 40 zelf |
 | Titels met twee schrijfwijzen | 1.544 nummers, 13.905 noteringen | een regel |
+| Uitgave voor het nummer | 24 titels | een regel |
+
+**Een conventie van top40.nl** die de andere lijsten niet kennen: bij een EP of
+album met een leadtrack schrijven ze de uitgave ervoor, met een
+spatie-dubbelepunt-spatie ertussen. `">Abort, Retry, Fail?_ : Your Woman"`,
+`"Ballad Of The Streets EP : Belfast Child"`, `"Live! : Roll Over Lay Down"`.
+Dat splitst een nummer: *Your Woman* van White Town stond tien keer onder de
+lange titel en twee keer onder de korte, met een eigen sleutel en verdeelde
+punten. De uitgave gaat eraf en er komt een alias bij, zodat de notering
+samenvalt met dezelfde titel in de andere lijsten.
 
 **Het uitgavejaar heeft een ijkpunt dat beter is dan een catalogus: de eigen
 Top 40.** Een nummer kan niet uitkomen nadat het genoteerd stond. Over de 6.004

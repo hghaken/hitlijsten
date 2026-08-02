@@ -43,7 +43,8 @@ from typing import Callable, Iterable, Optional
 __all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
-           "titelvarianten", "pas_titels_toe", "geleende_hoofdletters"]
+           "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
+           "uitgave_en_nummer"]
 
 # Wat er in de bronnen misgaat met leestekens. Bewust kort: elk teken hier is
 # er een waarvan is vastgesteld dat het in de data staat en nooit bedoeld is.
@@ -384,6 +385,32 @@ def titelvarianten(con: sqlite3.Connection) -> dict[str, list]:
         bakken[soort].append((sleutel, dict(
             sorted(titels.items(), key=lambda p: -p[1]))))
     return bakken
+
+
+# top40.nl schrijft bij een EP of album met een leadtrack de uitgave voor het
+# nummer, met een spatie-dubbelepunt-spatie ertussen:
+#     ">Abort, Retry, Fail?_ : Your Woman"       (White Town, 1997)
+#     "Ballad Of The Streets EP : Belfast Child" (Simple Minds, 1989)
+#     "Live! : Roll Over Lay Down"               (Status Quo, 1975)
+# De andere lijsten schrijven gewoon het nummer, en dan valt zo'n notering in
+# tweeen: Your Woman stond tien keer onder de lange titel en twee keer onder de
+# korte, met een aparte sleutel en verdeelde punten.
+_UITGAVE = re.compile(r"^.+? : (?=.)")
+
+
+def uitgave_en_nummer(con: sqlite3.Connection) -> list[tuple[str, str, str]]:
+    """Titels van de vorm "uitgave : nummer". Geeft (sleutel, oud, nummer).
+
+    De dubbelepunt moet spaties om zich heen hebben; zonder die eis sneuvelt
+    "Titel: ondertitel" en dat is een andere vorm.
+    """
+    uit = []
+    for r in con.execute("SELECT DISTINCT sleutel, titel FROM noteringen"
+                         " WHERE titel LIKE '% : %'"):
+        kort = _UITGAVE.sub("", r["titel"], count=1)
+        if kort and kort != r["titel"]:
+            uit.append((r["sleutel"], r["titel"], kort))
+    return uit
 
 
 def geleende_hoofdletters(con: sqlite3.Connection) -> list[tuple[str, str, str]]:
