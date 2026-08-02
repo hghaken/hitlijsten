@@ -1,6 +1,6 @@
 # hitlijsten
 
-Verzamelt wekelijks de vier Nederlandse hitlijsten en houdt zes
+Verzamelt wekelijks de vier Nederlandse hitlijsten en houdt zeven
 jaarlijkse lijsten bij, bewaart ze in sqlite en
 maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 **[hitlijsten.hhaken.nl](https://hitlijsten.hhaken.nl)**.
@@ -17,8 +17,9 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 | Q Top 1500 (Qmusic) | datastats.nl | vanaf 2005 |
 | Evergreen Top 1000 (NPO Radio 5) | datastats.nl | vanaf 2008 |
 | Rock Top 500 (Arrow) | datastats.nl | vanaf 2000 |
+| Kink Top 1500 | datastats.nl | vanaf 2019 |
 
-471.482 noteringen: 7.541 weken en 136 jaaredities. Draait op een Synology NAS: een
+481.982 noteringen: 7.541 weken en 143 jaaredities. Draait op een Synology NAS: een
 Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
 om 22:00 de nieuwe week ophaalt.
 

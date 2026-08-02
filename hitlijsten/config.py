@@ -148,6 +148,19 @@ LIJSTEN = {
         "jaarlijks": True,
         "editie_week": 52,
     },
+    # De enige jaarlijkse lijst waarvan de zender al in de naam zit; die staat
+    # er dus niet nog eens tussen haakjes achter.
+    "kink": {
+        "naam": "Kink Top 1500",
+        "site": None,
+        "slug": None,
+        "lengte": 1500,
+        "bestand": "KinkTop1500",
+        "heeft_label": False,
+        "vanaf_jaar": 2019,
+        "jaarlijks": True,
+        "editie_week": 52,
+    },
     "arrow": {
         "naam": "Rock Top 500 (Arrow)",
         "site": None,
