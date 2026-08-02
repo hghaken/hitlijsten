@@ -42,7 +42,7 @@ from typing import Callable, Iterable, Optional
 
 from . import db
 
-__all__ = ["schoon_tekst", "eenduidige_credit", "tekstfouten", "herstel_tekst", "Voorstel",
+__all__ = ["schoon_tekst", "eenduidige_credit", "gast_uit_titel", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
@@ -104,6 +104,37 @@ def eenduidige_credit(artiest: str) -> str:
     if not artiest:
         return artiest
     return _MEERVOUDIGE_SPATIE.sub(" ", _CREDIT.sub(" & ", artiest)).strip()
+
+
+# Soms staat de gastartiest in de titel in plaats van bij de artiest:
+#   "Andrea Bocelli"  +  "Vivere (feat. Gerardina Trovato)"
+# Dan hoort Gerardina Trovato in de artiestkolom en niet in de titel.
+#
+# Uitsluitend tussen haken, en uitsluitend feat/ft/featuring. Zonder die
+# beperking sneuvelt de halve Top 40: "With Or Without You", "Killing Me
+# Softly With His Song", "Stuck In The Middle With You" -- 292 titels waarin
+# "with" gewoon een woord is en geen scheidingsteken.
+_GAST_IN_TITEL = re.compile(r"\s*\((?:feat|ft|featuring)\b\.?\s*([^)]+)\)")
+
+
+def gast_uit_titel(artiest: str, titel: str) -> tuple:
+    """Haal een gastartiest uit de titel en zet hem bij de artiest.
+
+    Geeft (artiest, titel) terug; zonder gast blijft alles zoals het was.
+    Staat de gast al bij de artiest, dan wordt hij er niet nog eens bij
+    gezet -- alleen uit de titel gehaald.
+    """
+    if not titel:
+        return artiest, titel
+    treffer = _GAST_IN_TITEL.search(titel)
+    if not treffer:
+        return artiest, titel
+    gast = treffer.group(1).strip()
+    kale_titel = _MEERVOUDIGE_SPATIE.sub(
+        " ", _GAST_IN_TITEL.sub("", titel)).strip()
+    if _kaal(gast) in _kaal(artiest or ""):
+        return artiest, kale_titel
+    return f"{artiest} & {gast}".strip(" &"), kale_titel
 
 
 # --- 1. tekens -------------------------------------------------------------

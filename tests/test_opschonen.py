@@ -99,6 +99,31 @@ def test_feat_en_ampersand_leveren_dezelfde_sleutel():
     assert artiestsleutel("Calvin Harris feat. Rihanna") ==         artiestsleutel("Calvin Harris & Rihanna")
 
 
+def test_gastartiest_verhuist_van_de_titel_naar_de_artiest():
+    from hitlijsten.opschonen import gast_uit_titel
+
+    assert gast_uit_titel("Andrea Bocelli", "Vivere (feat. Gerardina Trovato)")         == ("Andrea Bocelli & Gerardina Trovato", "Vivere")
+    assert gast_uit_titel("Dr. Dre", "Still D.R.E. (feat. Snoop Dogg)")         == ("Dr. Dre & Snoop Dogg", "Still D.R.E.")
+
+
+def test_with_in_een_titel_is_gewoon_een_woord():
+    """Zonder deze grens sneuvelt de halve Top 40."""
+    from hitlijsten.opschonen import gast_uit_titel
+
+    for artiest, titel in [("U2", "With Or Without You"),
+                           ("Roberta Flack", "Killing Me Softly With His Song"),
+                           ("Stealers Wheel", "Stuck In The Middle With You"),
+                           ("Whitney Houston",
+                            "I Wanna Dance With Somebody (Who Loves Me)")]:
+        assert gast_uit_titel(artiest, titel) == (artiest, titel), titel
+
+
+def test_gast_die_al_bij_de_artiest_staat_wordt_niet_verdubbeld():
+    from hitlijsten.opschonen import gast_uit_titel
+
+    assert gast_uit_titel("Eminem & Rihanna", "Love The Way You Lie (feat. Rihanna)")         == ("Eminem & Rihanna", "Love The Way You Lie")
+
+
 # --- de sleutelregels -------------------------------------------------------
 
 

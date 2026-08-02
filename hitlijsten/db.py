@@ -239,22 +239,24 @@ def bewaar_week(
 ) -> int:
     """Schrijf één week weg; vervangt wat er al stond voor die week."""
     from .normalize import sleutel_van
-    from .opschonen import eenduidige_credit, schoon_tekst, splits_kanten
+    from .opschonen import (eenduidige_credit, gast_uit_titel,
+                            schoon_tekst, splits_kanten)
 
     # Leestekens hier rechtzetten en niet in de parsers: dan geldt het voor elke
     # bron, ook voor een bron die er later bij komt. Hetzelfde geldt voor de
     # dubbele A-kant: top40.nl levert "No Reply ; Rock And Roll Music" als een
     # regel, en dat worden hier twee noteringen op dezelfde positie.
-    rijen = [
-        (
-            n.lijst, n.jaar, n.week, n.positie, schoon_tekst(titel),
-            eenduidige_credit(schoon_tekst(artiest)), n.label,
-            n.weken_genoteerd, n.vorige_positie, n.site_status,
-            sleutel_van(artiest, titel),
-        )
-        for n in noteringen
-        for artiest, titel in splits_kanten(n.artiest, n.titel)
-    ]
+    rijen = []
+    for n in noteringen:
+        for ruwe_artiest, ruwe_titel in splits_kanten(n.artiest, n.titel):
+            artiest, titel = gast_uit_titel(schoon_tekst(ruwe_artiest),
+                                            schoon_tekst(ruwe_titel))
+            artiest = eenduidige_credit(artiest)
+            rijen.append((
+                n.lijst, n.jaar, n.week, n.positie, titel, artiest, n.label,
+                n.weken_genoteerd, n.vorige_positie, n.site_status,
+                sleutel_van(artiest, titel),
+            ))
     # Alles of niets: gaat er halverwege iets mis, dan mag er geen halve week
     # blijven staan. Die zou daarna als "al opgehaald" gelden en stil verkeerde
     # punten opleveren.
