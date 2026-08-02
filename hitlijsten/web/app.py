@@ -607,10 +607,16 @@ def _registreer(app: Flask) -> None:
         lijst = request.args.get("lijst") or ""
         resultaten = []
         if term:
+            # `piekjaar` is de jaargang waarin het nummer zijn hoogste plek
+            # haalde, en bij gelijke hoogte de eerste. Daar springt de link
+            # naartoe: dat is de jaargang die naast het resultaat staat, dus je
+            # komt uit waar je op klikte.
             vraag = (
                 "SELECT sleutel, lijst, MAX(titel) titel, MAX(artiest) artiest,"
-                " MIN(jaar) van, MAX(jaar) tot, COUNT(*) weken, MIN(positie) hoogste"
-                " FROM noteringen WHERE (titel LIKE ? OR artiest LIKE ?)"
+                " MIN(jaar) van, MAX(jaar) tot, COUNT(*) weken, MIN(positie) hoogste,"
+                " (SELECT x.jaar FROM noteringen x WHERE x.sleutel=n.sleutel"
+                "  AND x.lijst=n.lijst ORDER BY x.positie, x.jaar LIMIT 1) piekjaar"
+                " FROM noteringen n WHERE (titel LIKE ? OR artiest LIKE ?)"
             )
             waarden = [f"%{term}%", f"%{term}%"]
             if lijst in LIJSTEN:
