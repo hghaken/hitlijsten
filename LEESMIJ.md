@@ -15,6 +15,7 @@ er nieuw binnenkwam, en zet zestig jaar archief online op
 | Top 4000 (Radio 10) | CSV (Music Datastats) | 4000 | 2005 |
 | Top 1000 (Veronica) | CSV (Music Datastats) | 1000–3000 | 2003 |
 | Q Top 1500 (Qmusic) | CSV (Music Datastats) | 1000–1500 | 2005 |
+| Rock Top 500 (Arrow) | CSV (Music Datastats) | 500 | 2000 |
 
 De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen*.
 Waar elke lijst begint, met de nummer 1 van de oudste week die we hebben:
@@ -51,11 +52,11 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 458.482 noteringen. Top 40
+- **Het hele archief staat in de database**: 471.482 noteringen. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
-  2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21)
-  en Evergreen Top 1000 2008–2025 (18).
+  2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
+  Evergreen Top 1000 2008–2025 (18) en Rock Top 500 2000–2025 (26).
 - 305 Excel-bestanden en 149 PDF-jaaroverzichten gebouwd, plus 130 aliassen,
   267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
@@ -197,8 +198,9 @@ De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
 ### De jaarlijkse lijsten
 
-De vier weeklijsten komen van een website. De vijf jaarlijkse lijsten — Top 2000,
-Top 4000, Veronica Top 1000, Q Top 1500 en Evergreen Top 1000 — zijn één
+De vier weeklijsten komen van een website. De zes jaarlijkse lijsten — Top 2000,
+Top 4000, Veronica Top 1000, Q Top 1500, Evergreen Top 1000 en Rock Top 500 —
+zijn één
 uitzending per jaar en komen binnen als CSV van Music
 Datastats ([datastats.nl](https://www.datastats.nl/)) — een matrix met een regel
 per nummer en een kolom per editie.

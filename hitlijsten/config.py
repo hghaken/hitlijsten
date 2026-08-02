@@ -148,6 +148,17 @@ LIJSTEN = {
         "jaarlijks": True,
         "editie_week": 52,
     },
+    "arrow": {
+        "naam": "Rock Top 500 (Arrow)",
+        "site": None,
+        "slug": None,
+        "lengte": 500,
+        "bestand": "RockTop500",
+        "heeft_label": False,
+        "vanaf_jaar": 2000,
+        "jaarlijks": True,
+        "editie_week": 52,
+    },
 }
 
 
