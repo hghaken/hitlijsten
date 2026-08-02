@@ -1,6 +1,6 @@
-"""Wetenswaardigheden: tien ranglijsten uit tweeënzestig jaargangen Top 40.
+"""Wetenswaardigheden: tien ranglijsten over één hitlijst.
 
-Alles komt uit één doorloop over de noteringen van één lijst. Dat is bewust:
+Alles komt uit één doorloop over de noteringen van die lijst. Dat is bewust:
 de meeste vragen ("hoe vaak kwam dit nummer terug?", "wat was de grootste sprong
 in een week?") hebben de reeks per nummer op volgorde nodig, en die bouw je maar
 één keer op.
@@ -17,6 +17,15 @@ DRIE DINGEN OM TE WETEN BIJ HET LEZEN
    telt december en januari als één aaneengesloten periode.
 3. **De allereerste week telt niet als binnenkomst.** In week 1 van 1965 was de
    hele lijst nieuw; dat zegt niets over hoe hoog een nummer binnenkwam.
+
+WEKEN OF EDITIES
+----------------
+Dezelfde tien vragen gelden voor de jaarlijkse lijsten, alleen is de eenheid
+daar geen week maar een editie: de Top 2000 van 2024 is één meting. De telling
+verandert niet -- een editie ligt gewoon als één punt op de kalender -- maar de
+woorden wel. "Langst genoteerd, 26 weken" zou bij de Rock Top 500 onzin zijn;
+daar is het "vaakst in de lijst, 26 edities". `_TAAL` houdt die twee woordenlijsten
+uit elkaar, zodat de berekeningen eronder er niets van hoeven te weten.
 """
 from __future__ import annotations
 
@@ -25,11 +34,68 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Optional
 
+from .config import is_jaarlijks
 from .datums import als_tekst, vrijdag_van
 
 __all__ = ["Blok", "verzamel"]
 
 TOP = 10   # hoeveel regels per ranglijst
+
+
+@dataclass(frozen=True)
+class _Taal:
+    """De woorden die per soort lijst verschillen."""
+
+    meer: str                  # "weken" / "edities"
+    tijdvak: str               # "Periode" / "Edities"
+    wanneer: str               # kolomkop voor een los moment
+    in_de_lijst: str           # titel van blok 3
+    langst: str                # titel van blok 5
+    op_een: str                # titel van blok 6
+    op_een_kolom: str
+    nummer1s: str              # titel van blok 2
+    nummer1s_kolom: str
+    nummer1s_uitleg: str
+    nummer1s_veld: str         # welke telling blok 2 gebruikt
+    sprong: str                # titel van blok 8
+    afwezig: str               # titel van blok 10
+    duur: str                  # uitleg-fragment bij blok 3
+
+
+_TAAL = {
+    False: _Taal(
+        meer="weken", tijdvak="Periode", wanneer="Datum",
+        in_de_lijst="Meeste weken in de lijst",
+        langst="Langst genoteerd",
+        op_een="Langst op nummer 1", op_een_kolom="Weken op 1",
+        sprong="Grootste sprong in één week",
+        afwezig="Langste terugkeer",
+        nummer1s="Meeste nummer 1-hits", nummer1s_kolom="Nummer 1-hits",
+        nummer1s_uitleg="Verschillende nummers die de eerste plaats haalden — "
+                        "hoe lang ze daar stonden telt hier niet mee.",
+        nummer1s_veld="nummer1s",
+        duur="Een artiest met drie lange hits staat hier hoger dan een met "
+             "tien eendagsvliegen.",
+    ),
+    True: _Taal(
+        meer="edities", tijdvak="Edities", wanneer="Editie",
+        in_de_lijst="Meeste noteringen over alle edities",
+        langst="Vaakst in de lijst",
+        op_een="Vaakst op nummer 1", op_een_kolom="Keer op 1",
+        sprong="Grootste sprong in één jaar",
+        afwezig="Langste afwezigheid",
+        # Verschillende nummers op 1 levert hier geen ranglijst op: in 27
+        # edities Top 2000 stonden er zes nummers op 1, allemaal een keer. Het
+        # aantal edities op 1 zegt wel iets -- Queen 22 keer.
+        nummer1s="Meeste edities op nummer 1", nummer1s_kolom="Edities op 1",
+        nummer1s_uitleg="Hoe vaak een artiest de eerste plaats bezette. Een "
+                        "nummer dat er twintig jaar op stond telt dus twintig "
+                        "keer.",
+        nummer1s_veld="op_een",
+        duur="Een artiest die er elk jaar met drie nummers in staat, komt hier "
+             "hoger dan een die er ooit tien had.",
+    ),
+}
 
 
 @dataclass
@@ -130,6 +196,16 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
     kalender, nummers = _lees(con, lijst)
     if not nummers:
         return []
+    jaarlijks = is_jaarlijks(lijst)
+    taal = _TAAL[jaarlijks]
+
+    def moment(nr: int) -> str:
+        """Een punt op de kalender. Bij een jaarlijkse lijst is de dag ruis:
+        de Top 2000 van 2024 is "2024", niet "27/12/2024"."""
+        return str(kalender[nr].year) if jaarlijks else als_tekst(kalender[nr])
+
+    def aantal(n: int) -> str:
+        return f"{n} {taal.meer}"
 
     # --- per artiest optellen ----------------------------------------------
     # De sleutel is `artiest|titel` en al genormaliseerd, dus het deel voor de
@@ -139,21 +215,29 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
     for n in nummers.values():
         code = n.sleutel.split("|", 1)[0]
         a = per_artiest.setdefault(code, {
-            "naam": n.artiest, "nummers": 0, "nummer1s": 0, "weken": 0,
-            "punten": 0, "jaren": set(),
+            "naam": n.artiest, "nummers": 0, "nummer1s": 0, "op_een": 0,
+            "weken": 0, "punten": 0, "jaren": set(),
         })
         a["naam"] = n.artiest          # laatste schrijfwijze
         a["nummers"] += 1
         a["weken"] += len(n.posities)
         a["punten"] += n.punten
         a["jaren"] |= n.jaren
-        if min(n.posities.values()) == 1:
+        op_een = sum(1 for p in n.posities.values() if p == 1)
+        a["op_een"] += op_een
+        if op_een:
             a["nummer1s"] += 1
 
-    def van_artiest(sorteer, kolom: str, opmaak=str) -> list[dict]:
-        besten = sorted(per_artiest.values(), key=sorteer, reverse=True)[:TOP]
+    def van_artiest(sorteer, kolom: str, opmaak=str,
+                    alleen_positief: bool = False) -> list[dict]:
+        # Bij de nummer 1-lijst zijn nullen geen ranglijst maar opvulling: de
+        # Kink Top 1500 heeft twee artiesten die ooit op 1 stonden, en dan
+        # horen er twee regels te staan, geen tien.
+        besten = sorted(per_artiest.values(), key=sorteer, reverse=True)
+        if alleen_positief:
+            besten = [a for a in besten if a[kolom]]
         return [{"naam": a["naam"], "waarde": opmaak(a[kolom]),
-                 "bij": _bij_artiest(a)} for a in besten]
+                 "bij": _bij_artiest(a)} for a in besten[:TOP]]
 
     def _bij_artiest(a: dict) -> str:
         jaren = sorted(a["jaren"])
@@ -171,8 +255,8 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
 
     def periode(n: _Nummer) -> str:
         weken = sorted(n.posities)
-        return (f"{als_tekst(kalender[weken[0]])} – "
-                f"{als_tekst(kalender[weken[-1]])}")
+        eerste, laatste = moment(weken[0]), moment(weken[-1])
+        return eerste if eerste == laatste else f"{eerste} – {laatste}"
 
     blokken: list[Blok] = []
 
@@ -186,19 +270,18 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
         van_artiest(lambda a: (a["nummers"], a["punten"]), "nummers"),
     ))
 
+    veld = taal.nummer1s_veld
     blokken.append(Blok(
-        "nummer1s", "Meeste nummer 1-hits",
-        "Verschillende nummers die de eerste plaats haalden — hoe lang ze daar "
-        "stonden telt hier niet mee.",
-        ["Artiest", "Nummer 1-hits", ""],
-        van_artiest(lambda a: (a["nummer1s"], a["punten"]), "nummer1s"),
+        "nummer1s", taal.nummer1s, taal.nummer1s_uitleg,
+        ["Artiest", taal.nummer1s_kolom, ""],
+        van_artiest(lambda a: (a[veld], a["punten"]), veld,
+                    alleen_positief=True),
     ))
 
     blokken.append(Blok(
-        "weken", "Meeste weken in de lijst",
-        "Alle weken van alle nummers bij elkaar opgeteld. Een artiest met drie "
-        "lange hits staat hier hoger dan een met tien eendagsvliegen.",
-        ["Artiest", "Weken", ""],
+        "weken", taal.in_de_lijst,
+        f"Alle {taal.meer} van alle nummers bij elkaar opgeteld. {taal.duur}",
+        ["Artiest", taal.meer.capitalize(), ""],
         van_artiest(lambda a: (a["weken"], a["punten"]), "weken"),
     ))
 
@@ -215,12 +298,14 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
 
     langst = sorted(nummers.values(), key=lambda n: len(n.posities), reverse=True)
     blokken.append(Blok(
-        "langst", "Langst genoteerd",
-        "Het aantal weken dat een nummer in de lijst stond, over de jaargrens "
-        "heen doorgeteld en re-entries meegerekend.",
-        ["Nummer", "Weken", "Periode"],
+        "langst", taal.langst,
+        ("Het aantal edities waarin een nummer stond, ook als het er tussendoor "
+         "een paar jaar uit lag." if jaarlijks else
+         "Het aantal weken dat een nummer in de lijst stond, over de jaargrens "
+         "heen doorgeteld en re-entries meegerekend."),
+        ["Nummer", taal.meer.capitalize(), taal.tijdvak],
         van_nummer([(n, None) for n in langst],
-                   lambda n, _: f"{len(n.posities)} weken",
+                   lambda n, _: aantal(len(n.posities)),
                    lambda n, _: periode(n)),
     ))
 
@@ -229,11 +314,12 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
                for n in nummers.values()) if som]
     op_een.sort(key=lambda paar: paar[1], reverse=True)
     blokken.append(Blok(
-        "op-een", "Langst op nummer 1",
-        "Het aantal weken op de eerste plaats. Niet aaneengesloten geteld: een "
-        "nummer dat de koppositie heroverde telt die weken gewoon mee.",
-        ["Nummer", "Weken op 1", "Periode"],
-        van_nummer(op_een, lambda n, w: f"{w} weken", lambda n, _: periode(n)),
+        "op-een", taal.op_een,
+        f"Het aantal {taal.meer} op de eerste plaats. Niet aaneengesloten "
+        f"geteld: een nummer dat de koppositie heroverde telt die {taal.meer} "
+        "gewoon mee.",
+        ["Nummer", taal.op_een_kolom, taal.tijdvak],
+        van_nummer(op_een, lambda n, w: aantal(w), lambda n, _: periode(n)),
     ))
 
     # --- 7 en 8: de uitschieters -------------------------------------------
@@ -249,12 +335,14 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
     binnenkomers.sort(key=lambda paar: (paar[0].posities[paar[1]], paar[1]))
     blokken.append(Blok(
         "binnenkomers", "Hoogste binnenkomers",
-        "De positie waarop een nummer de lijst binnenkwam — de eerste week van "
-        "een periode, dus ook een terugkeer telt.",
-        ["Nummer", "Binnen op", "Datum"],
+        ("De positie waarop een nummer de lijst binnenkwam — de eerste editie "
+         "van een periode, dus ook een terugkeer telt." if jaarlijks else
+         "De positie waarop een nummer de lijst binnenkwam — de eerste week van "
+         "een periode, dus ook een terugkeer telt."),
+        ["Nummer", "Binnen op", taal.wanneer],
         van_nummer(binnenkomers,
                    lambda n, nr: f"#{n.posities[nr]}",
-                   lambda n, nr: als_tekst(kalender[nr])),
+                   lambda n, nr: moment(nr)),
     ))
 
     sprongen = []
@@ -267,13 +355,13 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
             sprongen.append((n, beste))
     sprongen.sort(key=lambda paar: paar[1][0], reverse=True)
     blokken.append(Blok(
-        "sprongen", "Grootste sprong in één week",
-        "Van welke positie naar welke, in twee opeenvolgende weken. Een "
+        "sprongen", taal.sprong,
+        f"Van welke positie naar welke, in twee opeenvolgende {taal.meer}. Een "
         "terugkeer uit het niets telt niet mee: dat is geen stijging.",
-        ["Nummer", "Sprong", "Wanneer"],
+        ["Nummer", "Sprong", taal.wanneer],
         van_nummer(sprongen,
                    lambda n, s: f"#{n.posities[s[1]]} → #{n.posities[s[2]]} (+{s[0]})",
-                   lambda n, s: als_tekst(kalender[s[2]])),
+                   lambda n, s: moment(s[2])),
     ))
 
     # --- 9 en 10: de late bloeiers -----------------------------------------
@@ -294,13 +382,13 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
     onderweg.sort(key=lambda paar: -paar[1][0])
     blokken.append(Blok(
         "onderweg", "Langste weg naar de eerste plaats",
-        "Het aantal weken tussen binnenkomst en de eerste keer op 1. Nummers "
-        "die meteen op 1 binnenkwamen staan hier niet bij — die vind je "
+        f"Het aantal {taal.meer} tussen binnenkomst en de eerste keer op 1. "
+        "Nummers die meteen op 1 binnenkwamen staan hier niet bij — die vind je "
         "hierboven.",
-        ["Nummer", "Weken onderweg", "Binnen op"],
+        ["Nummer", f"{taal.meer.capitalize()} onderweg", "Binnen op"],
         van_nummer(onderweg,
-                   lambda n, o: f"{o[0]} weken",
-                   lambda n, o: f"#{n.posities[o[1]]} op {als_tekst(kalender[o[1]])}"),
+                   lambda n, o: aantal(o[0]),
+                   lambda n, o: f"#{n.posities[o[1]]} in {moment(o[1])}"),
     ))
 
     # De Top 40 zet klassiekers zelden opnieuw op de lijst -- vandaar niet "hoe
@@ -315,14 +403,17 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
             terugkeer.append((n, gat))
     terugkeer.sort(key=lambda paar: -paar[1][0])
     blokken.append(Blok(
-        "terugkeer", "Langste terugkeer",
-        "Nummers die uit de lijst verdwenen en er jaren later weer in stonden. "
-        "Gemeten in weken tussen de laatste notering en de terugkeer.",
+        "terugkeer", taal.afwezig,
+        ("Nummers die een of meer edities werden overgeslagen en later "
+         "terugkwamen. Gemeten in edities tussen de laatste notering en de "
+         "terugkeer." if jaarlijks else
+         "Nummers die uit de lijst verdwenen en er jaren later weer in stonden. "
+         "Gemeten in weken tussen de laatste notering en de terugkeer."),
         ["Nummer", "Weg geweest", "Van – tot"],
         van_nummer(terugkeer,
-                   lambda n, g: _jaren_en_weken(g[0]),
-                   lambda n, g: (f"{als_tekst(kalender[g[1]])} → "
-                                 f"{als_tekst(kalender[g[2]])}")),
+                   lambda n, g: (aantal(g[0]) if jaarlijks
+                                 else _jaren_en_weken(g[0])),
+                   lambda n, g: f"{moment(g[1])} → {moment(g[2])}"),
     ))
 
     return blokken

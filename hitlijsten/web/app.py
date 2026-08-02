@@ -458,30 +458,40 @@ def _registreer(app: Flask) -> None:
 
     # --- wetenswaardigheden ------------------------------------------------
 
-    _weetjes_cache: dict = {}
+    # Per lijst een eigen ingang: tien lijsten x drie regels is niets, en zo
+    # hoeft er niet opnieuw geteld te worden als je heen en weer klikt.
+    _weetjes_cache: dict[str, dict] = {}
 
     @app.route("/wetenswaardigheden")
     def wetenswaardigheden():
-        """Tien ranglijsten over de hele historie van de Top 40.
+        """Tien ranglijsten over de hele historie van een lijst.
 
         Kost een seconde over 127.000 noteringen, dus gecached tot er nieuwe
         data bij komt -- net als de totaallijst.
+
+        Elke lijst kan hier doorheen, ook de jaarlijkse: een editie ligt als
+        een punt op dezelfde kalender. Alleen de woorden verschillen, en die
+        kiest `wetenswaardigheden.py` zelf.
         """
         from .. import wetenswaardigheden as weetjes
 
+        lijst = request.args.get("lijst") or DECENNIUM_LIJST
+        if lijst not in LIJSTEN:
+            lijst = DECENNIUM_LIJST
         con = verbinding()
-        stempel = con.execute(
+        stempel = tuple(con.execute(
             "SELECT COUNT(*), MAX(opgehaald_op) FROM noteringen"
             " JOIN opgehaald USING (lijst, jaar, week) WHERE lijst=?",
-            (DECENNIUM_LIJST,),
-        ).fetchone()
-        if _weetjes_cache.get("stempel") != tuple(stempel):
-            _weetjes_cache["stempel"] = tuple(stempel)
-            _weetjes_cache["blokken"] = weetjes.verzamel(con, DECENNIUM_LIJST)
-            _weetjes_cache["cijfers"] = weetjes.cijfers(con, DECENNIUM_LIJST)
+            (lijst,),
+        ).fetchone())
+        kaart = _weetjes_cache.setdefault(lijst, {})
+        if kaart.get("stempel") != stempel:
+            kaart["stempel"] = stempel
+            kaart["blokken"] = weetjes.verzamel(con, lijst)
+            kaart["cijfers"] = weetjes.cijfers(con, lijst)
         return render_template(
-            "wetenswaardigheden.html",
-            blokken=_weetjes_cache["blokken"], cijfers=_weetjes_cache["cijfers"],
+            "wetenswaardigheden.html", lijst=lijst,
+            blokken=kaart["blokken"], cijfers=kaart["cijfers"],
         )
 
     # --- reeks voor de grafiek ---------------------------------------------

@@ -306,7 +306,7 @@ op de NAS, achter een reverse proxy.
 | Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel- en PDF-download |
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
-| Wetenswaardigheden | tien ranglijsten over de hele historie |
+| Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
@@ -340,19 +340,34 @@ toegangslog bij.
 
 ### Wetenswaardigheden
 
-Tien ranglijsten uit tweeënzestig jaargangen, in `wetenswaardigheden.py`: meeste
+Tien ranglijsten per lijst, in `wetenswaardigheden.py`: meeste
 noteringen, meeste nummer 1-hits, meeste weken, meeste punten, langst genoteerd,
 langst op 1, hoogste binnenkomers, grootste sprong in één week, langste weg naar
-de eerste plaats en langste terugkeer.
+de eerste plaats en langste terugkeer. Met een keuzelijst bovenaan; **elke lijst
+kan erdoorheen**, ook de jaarlijkse.
 
 De tien blokken staan **ingeklapt**; tien tabellen van tien regels onder elkaar
 is een muur. In de kop van elk blok staat wel de nummer 1, zodat de pagina
 dichtgeklapt ook iets vertelt, en één knop klapt ze allemaal open.
 
+**Weken of edities.** Een jaarlijkse lijst rekent hetzelfde — een editie ligt
+gewoon als één punt op dezelfde kalender — maar praat anders. "Langst genoteerd,
+26 weken" is bij de Rock Top 500 geen afrondingsfout maar onzin; daar staat
+"vaakst in de lijst, 26 edities". De woordenlijst `_TAAL` houdt die twee uit
+elkaar, zodat de berekeningen eronder er niets van hoeven te weten, en de datums
+worden jaartallen: de Top 2000 van 2024 is "2024" en niet "27/12/2024".
+
+Eén blok is inhoudelijk anders, niet alleen in woorden. *Meeste nummer 1-hits*
+telt verschillende nummers die de top haalden — bij de Top 40 een ranglijst met
+De Beatles op 13, bij de Top 2000 zes artiesten met allemaal precies één. Voor
+de jaarlijkse lijsten telt dat blok daarom **edities op 1**: Queen 22, Eagles 2.
+Regels met een nul vallen weg, anders staat de Kink Top 1500 vol artiesten die
+er nooit een hadden.
+
 Alles komt uit **één doorloop** over de noteringen. Dat is geen zuinigheid maar
 noodzaak: de meeste vragen ("hoe vaak kwam dit terug?", "wat was de grootste
 sprong?") hebben de reeks per nummer op volgorde nodig, en die bouw je maar één
-keer op. De uitkomst wordt gecached tot er data bij komt.
+keer op. De uitkomst wordt per lijst gecached tot er data bij komt.
 
 Drie dingen die de cijfers kleuren, en die ook op de pagina staan:
 

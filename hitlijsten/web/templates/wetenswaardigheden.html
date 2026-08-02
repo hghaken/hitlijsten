@@ -1,10 +1,34 @@
 {% extends "basis.html" %}
-{% block titel %}Wetenswaardigheden Top 40 — Hitlijsten{% endblock %}
+{% block titel %}Wetenswaardigheden {{ lijst_namen.get(lijst, lijst) }} —
+  Hitlijsten{% endblock %}
 {% block inhoud %}
+{% set jaarlijks = is_jaarlijks(lijst) %}
 
 <h1>Wetenswaardigheden</h1>
-<p class="onder">Tien ranglijsten uit {{ cijfers.tot - cijfers.van + 1 }} jaargangen
-  Nederlandse Top 40.</p>
+<p class="onder">Tien ranglijsten uit
+  {% if jaarlijks %}{{ cijfers.weken }} edities{% else %}{{ cijfers.tot - cijfers.van + 1 }}
+  jaargangen{% endif %} {{ lijst_namen.get(lijst, lijst) }}.</p>
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
+      flex-wrap:wrap; margin-bottom:1.4rem">
+  {# Dezelfde tien vragen, andere lijst. De groepen uit elkaar houden, want een
+     week en een editie laten zich niet vergelijken. #}
+  <select name="lijst" onchange="this.form.submit()">
+    <optgroup label="Weeklijsten">
+      {% for sleutel in weeklijsten %}
+        <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}
+          >{{ lijst_namen.get(sleutel, sleutel) }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Jaarlijkse lijsten">
+      {% for sleutel in jaarlijkse_lijsten %}
+        <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}
+          >{{ lijst_namen.get(sleutel, sleutel) }}</option>
+      {% endfor %}
+    </optgroup>
+  </select>
+  <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+</form>
 
 {% if not blokken %}
   <div class="melding fout">Er staat nog niets in de database.</div>
@@ -25,7 +49,7 @@
   </div>
   <div class="kaart">
     <div class="cijfer">{{ '{:,}'.format(cijfers.weken).replace(',', '.') }}</div>
-    <div class="naam">uitgezonden weken</div>
+    <div class="naam">{{ 'edities' if jaarlijks else 'uitgezonden weken' }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ cijfers.van }}–{{ cijfers.tot }}</div>
@@ -68,7 +92,7 @@
             {{ loop.index }}</td>
           <td class="breed">
             {% if r.sleutel %}
-              <a class="stil" href="{{ url_for('jaaroverzicht', lijst='top40',
+              <a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst,
                  jaar=r.jaar, markeer=r.sleutel) }}">{{ r.naam }}</a>
             {% else %}{{ r.naam }}{% endif %}
           </td>
@@ -89,15 +113,25 @@
   maar dan sneuvelen Simon &amp; Garfunkel en Earth, Wind &amp; Fire ook — en dat
   zijn geen samenwerkingen maar namen.
 </p>
+{% if jaarlijks %}
+<p class="hint" style="max-width:62rem">
+  <b>De eenheid is hier een editie, geen week.</b> Deze lijst wordt één keer per
+  jaar uitgezonden, dus "langst genoteerd" betekent: in de meeste edities
+  gestaan. De allereerste editie ({{ cijfers.van }}) telt niet als binnenkomst —
+  toen was alles nieuw.
+</p>
+{% else %}
 <p class="hint" style="max-width:62rem">
   <b>Weken worden langs de kalender geteld, niet per jaargang.</b> Een notering
   die over de jaarwisseling doorloopt is één aaneengesloten periode. De
-  allereerste week van 1965 telt niet als binnenkomst: toen was de hele lijst
-  nieuw.
+  allereerste week van {{ cijfers.van }} telt niet als binnenkomst: toen was de
+  hele lijst nieuw.
 </p>
+{% endif %}
 <p class="hint" style="max-width:62rem">
-  <b>Klik op een nummer</b> om naar de jaargang te gaan waarin het de meeste
-  punten haalde, met de grafiek van het verloop binnen handbereik.
+  <b>Klik op een nummer</b> om naar de {{ 'editie' if jaarlijks else 'jaargang' }}
+  te gaan waarin het de meeste punten haalde, met de grafiek van het verloop
+  binnen handbereik.
 </p>
 
 <script>

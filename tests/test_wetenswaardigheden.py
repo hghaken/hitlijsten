@@ -174,6 +174,61 @@ def test_cijfers_tellen_de_hele_lijst():
     assert (c["van"], c["tot"], c["weken"]) == (2020, 2020, 2)
 
 
+# --- de jaarlijkse lijsten --------------------------------------------------
+#
+# Dezelfde tien vragen, andere eenheid: een editie in plaats van een week. De
+# berekening verandert niet, de woorden wel -- en juist daar zit het risico,
+# want "26 weken" bij een lijst die een keer per jaar wordt uitgezonden is geen
+# afrondingsfout maar onzin.
+
+
+def _jaarlijkse_database(noteringen, lijst="arrow"):
+    """Zelfde vorm, maar alles in week 52 -- zo staat een editie in de database."""
+    con = _database([])
+    con.executemany(
+        "INSERT INTO noteringen (lijst, jaar, week, positie, titel, artiest,"
+        " sleutel) VALUES (?,?,52,?,?,?,?)",
+        [(lijst, j, p, titel, artiest, f"{artiest.lower()}|{titel.lower()}")
+         for j, p, artiest, titel in noteringen],
+    )
+    return con
+
+
+def test_jaarlijkse_lijst_telt_edities_en_zegt_dat_ook():
+    rijen = [(j, 1, "Pearl Jam", "Black") for j in range(2019, 2026)]
+    rijen += [(j, 2, "Vul", "Lied") for j in range(2019, 2026)]
+    blok = next(b for b in verzamel(_jaarlijkse_database(rijen), "arrow")
+                if b.sleutel == "langst")
+    assert blok.titel == "Vaakst in de lijst", blok.titel
+    assert blok.kolommen == ["Nummer", "Edities", "Edities"], blok.kolommen
+    assert blok.rijen[0]["waarde"] == "7 edities", blok.rijen[0]["waarde"]
+    # Geen datum maar een jaartal: 26/12/2019 suggereert een precisie die er
+    # niet is.
+    assert blok.rijen[0]["bij"] == "2019 – 2025", blok.rijen[0]["bij"]
+
+
+def test_afwezigheid_bij_een_jaarlijkse_lijst_telt_edities_geen_weken():
+    # Twee edities weg (2021 en 2022) en dan terug. Als de weekregel meeliep
+    # zou hier "2 weken" staan; het zijn twee edities, oftewel twee jaar.
+    rijen = [(j, 1, "Terug", "Van Weggeweest") for j in (2019, 2020, 2023)]
+    rijen += [(j, 2, "Vul", "Lied") for j in range(2019, 2024)]
+    blok = next(b for b in verzamel(_jaarlijkse_database(rijen), "arrow")
+                if b.sleutel == "terugkeer")
+    assert blok.titel == "Langste afwezigheid", blok.titel
+    regel = blok.rijen[0]
+    assert regel["waarde"] == "3 edities", regel["waarde"]
+    assert regel["bij"] == "2020 → 2023", regel["bij"]
+
+
+def test_weeklijst_houdt_zijn_eigen_woorden():
+    """De omschakeling mag de Top 40 niet raken."""
+    rijen = [(2020, w, 1, "A", "B") for w in range(1, 4)]
+    blok = _blok(_database(rijen + _vullen(2020, range(1, 4))), "langst")
+    assert blok.titel == "Langst genoteerd"
+    assert blok.kolommen == ["Nummer", "Weken", "Periode"], blok.kolommen
+    assert blok.rijen[0]["waarde"].endswith("weken")
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     mislukt = 0
