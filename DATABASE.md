@@ -55,9 +55,12 @@ Wat de normalisatie doet, in volgorde:
    overleeft de ø de accentverwijdering en wordt hij daarna als rommel
    geschrapt: "Bløf" werd "bl f" en stond los van "Blof".
 3. **Accenten weghalen** — "Beyoncé" wordt "beyonce".
-4. **Samenwerkingstekens gelijktrekken** — `feat.`, `ft`, `featuring` en `with`
-   worden allemaal ` ft `; `&`, `+`, `x` en `vs` worden `&`. **Alleen bij de
-   artiest**: in een titel is de x van "Malcolm X" gewoon een letter.
+4. **Samenwerkingstekens gelijktrekken** — `feat.`, `ft`, `featuring`, `with`,
+   `&`, `+`, `x` en `vs` worden allemaal ` & `. **Alleen bij de artiest**: in
+   een titel is de x van "Malcolm X" gewoon een letter. Dat `feat.` en `&`
+   hetzelfde opleveren is bewust: het gaat om dezelfde twee mensen op dezelfde
+   plaat, en anders staan "Calvin Harris feat. Rihanna" en "Calvin Harris &
+   Rihanna" als twee artiesten in de database.
 5. **Het lidwoord vooraan de artiest weghalen** — `the`, `de`, `het`. De bronnen
    zijn het er niet over eens: top40.nl schrijft "The Beatles", Music Datastats
    schrijft "Beatles". **Alleen bij de artiest**: "The Wall" is niet "Wall".

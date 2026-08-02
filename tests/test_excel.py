@@ -14,9 +14,10 @@ Weken 1, 2, 3, 4, 6 en 7 -- week 5 ontbreekt met opzet (gat in de reeks).
 top40 (40 noteringen per week, geen label):
   "Nummer Eén" / De Kampioenen ....... alle zes de weken op #1
   "Terug Van Weggeweest" / Bløf ...... week 1,2,3, weg in week 4, terug in week 6
-  "Zomer In De Stad (Radio Edit)" .... binnenkomer in week 3; artiest heet eerst
-                                       "Antoon ft. Sef", vanaf week 6
-                                       "Antoon feat. Sef" (zelfde sleutel)
+  "Zomer In De Stad (Radio Edit)" .... binnenkomer in week 3; de bron schrijft
+                                       eerst "Antoon ft. Sef" en vanaf week 6
+                                       "Antoon feat. Sef" -- allebei komen ze
+                                       binnen als "Antoon & Sef"
   vulling "Liedje 01".."Liedje 41" ... een paar komen en gaan
 
 tipparade: wisselende lengte per week (8, 10, 10, 12, 9, 11)
@@ -356,7 +357,9 @@ def test_nieuwe_nummers_zijn_lichtblauw_gemarkeerd():
     koppen, week3 = _weektabel(ws3)
     assert _gemarkeerde_titels(ws3, koppen, week3) == [ANTOON_TITEL]
     antoon = next(r for r in week3 if r["Titel"] == ANTOON_TITEL)
-    assert (antoon["Positie"], antoon["Artiest"]) == (28, "Antoon ft. Sef")
+    # De bron schreef hier "Antoon ft. Sef"; bij het opslaan wordt daar een
+    # eenduidige credit van gemaakt.
+    assert (antoon["Positie"], antoon["Artiest"]) == (28, "Antoon & Sef")
     assert antoon["Site-status"] == "nieuw"        # ook volgens de site binnenkomer
     assert antoon["Sleutel"] == sleutel_van(*ANTOON_FT)
 
@@ -428,10 +431,10 @@ def test_totaal_punten_handmatig_nagerekend():
     assert antoon["Punten"] == 88
     assert antoon["Aantal weken genoteerd"] == 4
     assert _datum(antoon["Binnenkomst"]) == date(2026, 1, 16)   # week 3
-    # Schrijfwijze veranderde van "ft." naar "feat." bij gelijke sleutel:
-    # het overzicht toont de meest recente schrijfwijze.
+    # De bron wisselde halverwege van "ft." naar "feat."; allebei komen ze
+    # binnen als "&", dus in het overzicht is er niets meer te kiezen.
     assert sleutel_van(*ANTOON_FT) == sleutel_van(*ANTOON_FEAT)
-    assert antoon["Artiest"] == "Antoon feat. Sef"
+    assert antoon["Artiest"] == "Antoon & Sef"
 
     # Aflopend op punten gesorteerd.
     punten = [r["Punten"] for r in rijen]

@@ -239,7 +239,7 @@ def bewaar_week(
 ) -> int:
     """Schrijf één week weg; vervangt wat er al stond voor die week."""
     from .normalize import sleutel_van
-    from .opschonen import schoon_tekst, splits_kanten
+    from .opschonen import eenduidige_credit, schoon_tekst, splits_kanten
 
     # Leestekens hier rechtzetten en niet in de parsers: dan geldt het voor elke
     # bron, ook voor een bron die er later bij komt. Hetzelfde geldt voor de
@@ -248,7 +248,7 @@ def bewaar_week(
     rijen = [
         (
             n.lijst, n.jaar, n.week, n.positie, schoon_tekst(titel),
-            schoon_tekst(artiest), n.label,
+            eenduidige_credit(schoon_tekst(artiest)), n.label,
             n.weken_genoteerd, n.vorige_positie, n.site_status,
             sleutel_van(artiest, titel),
         )

@@ -42,7 +42,7 @@ from typing import Callable, Iterable, Optional
 
 from . import db
 
-__all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
+__all__ = ["schoon_tekst", "eenduidige_credit", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
@@ -84,6 +84,26 @@ def schoon_tekst(tekst: str) -> str:
         tekst = tekst.replace(van, naar)
     tekst = _DUBBELE_HAKEN.sub(lambda m: f"({m.group(1)})", tekst)
     return _MEERVOUDIGE_SPATIE.sub(" ", tekst).strip()
+
+
+# Eén aanduiding voor een samenwerking. De bronnen gebruiken feat., feat,
+# ft., ft en featuring door elkaar -- vijf vormen voor hetzelfde -- en dat
+# leest niet alleen rommelig, het splitst ook artiesten.
+#
+# Alleen bij de ARTIEST. In een titel kan zo'n woord bij de naam horen die
+# op het label staat, en daar is het geen scheidingsteken maar tekst.
+#
+# "featuring" staat vooraan in de opsomming en dat is geen smaak: een regexp
+# neemt de eerste tak die past, dus met "feat" ervoor werd "featuring" gelezen
+# als "feat" plus een overgebleven "uring".
+_CREDIT = re.compile(r"\s*\b(?:featuring|feat\b\.?|ft\b\.?)\s*", re.I)
+
+
+def eenduidige_credit(artiest: str) -> str:
+    """feat. / feat / ft. / ft / featuring -> &"""
+    if not artiest:
+        return artiest
+    return _MEERVOUDIGE_SPATIE.sub(" ", _CREDIT.sub(" & ", artiest)).strip()
 
 
 # --- 1. tekens -------------------------------------------------------------

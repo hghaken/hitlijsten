@@ -77,6 +77,28 @@ def test_enkele_haken_blijven_met_rust():
     assert schoon_tekst("Sweet Dreams (Are Made Of This)") ==         "Sweet Dreams (Are Made Of This)"
 
 
+def test_een_aanduiding_voor_een_samenwerking():
+    """feat. / feat / ft. / ft / featuring worden allemaal &."""
+    from hitlijsten.opschonen import eenduidige_credit
+
+    assert eenduidige_credit("Calvin Harris feat. Rihanna") ==         "Calvin Harris & Rihanna"
+    assert eenduidige_credit("Ali B ft. Diggy Dex") == "Ali B & Diggy Dex"
+    assert eenduidige_credit("DJ Fresh Featuring Sian Evans") ==         "DJ Fresh & Sian Evans"
+
+
+def test_die_woorden_binnen_een_naam_blijven_staan():
+    """Blue Feather is geen samenwerking en Fat Boys ook niet."""
+    from hitlijsten.opschonen import eenduidige_credit
+
+    for naam in ("Blue Feather", "Fat Boys", "Kraftwerk", "Ftisk"):
+        assert eenduidige_credit(naam) == naam, naam
+
+
+def test_feat_en_ampersand_leveren_dezelfde_sleutel():
+    """Anders zijn "A feat. B" en "A & B" twee artiesten, en dat is onzin."""
+    assert artiestsleutel("Calvin Harris feat. Rihanna") ==         artiestsleutel("Calvin Harris & Rihanna")
+
+
 # --- de sleutelregels -------------------------------------------------------
 
 

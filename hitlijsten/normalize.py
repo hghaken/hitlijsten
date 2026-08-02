@@ -20,7 +20,12 @@ from typing import Iterable
 
 from .config import ALIASES_PATH, NIET_SAMENVOEGEN_PATH
 
-# "feat.", "ft", "featuring" enz. worden allemaal " ft ".
+# "feat.", "ft", "featuring", "with" en "&" worden allemaal " & ".
+#
+# Vroeger werd "feat." een eigen teken (" ft ") en "&" een ander, en dan
+# zijn "Calvin Harris feat. Rihanna" en "Calvin Harris & Rihanna" twee
+# artiesten. Dat is een verschil zonder betekenis: het gaat om dezelfde twee
+# mensen op dezelfde plaat. 162 samenwerkingen stonden er los van elkaar door.
 _FEAT = re.compile(r"\s*(?:\bfeat\b\.?|\bft\b\.?|\bfeaturing\b|\bwith\b)\s*", re.I)
 # Samenwerkingstekens gelijktrekken: "x", "&", "+", "vs" -> "&".
 _EN = re.compile(r"\s*(?:&|\+|\bx\b|\bvs\b\.?|\bversus\b)\s*", re.I)
@@ -73,7 +78,7 @@ def normaliseer(tekst: str, *, samenwerking: bool = True) -> str:
     tekst = "".join(c for c in tekst if not unicodedata.combining(c))
     tekst = tekst.lower()
     if samenwerking:
-        tekst = _FEAT.sub(" ft ", tekst)
+        tekst = _FEAT.sub(" & ", tekst)
         tekst = _EN.sub(" & ", tekst)
     tekst = _ROMMEL.sub(" ", tekst)
     return _WITRUIMTE.sub(" ", tekst).strip()
