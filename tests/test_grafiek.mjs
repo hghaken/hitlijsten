@@ -366,24 +366,38 @@ tests.korte_lijst_krijgt_een_lineaire_schaal = async () => {
   waar(stap > 0.02 && stap < 0.04, `positie 2 op ${(stap * 100).toFixed(1)}% is niet lineair`);
 };
 
-tests.lange_lijst_krijgt_een_logaritmische_schaal = async () => {
-  // Top 4000: lineair zou 4 tot 252 minder dan een tiende van de hoogte zijn.
-  const { svg } = await grafiek(antwoord([4, 252, 4000], { lengte: 4000 }));
-  gelijk(teksten(svg, "as"), ["1", "10", "100", "1000", "4000"],
-         "hulplijnen op elke macht van tien");
+tests.lange_lijst_schaalt_op_het_bereik_van_het_nummer = async () => {
+  // Top 4000, een nummer dat tussen 4 en 252 beweegt. Op een schaal van 1 tot
+  // 4000 zou dat een streep bovenin zijn; nu vult het de hele hoogte.
+  const { svg } = await grafiek(antwoord([4, 30, 252], { lengte: 4000 }));
+  gelijk(teksten(svg, "as"), ["4", "10", "100", "252"],
+         "de randen van het bereik, met de machten van tien ertussen");
   const p = svg.kinderen.filter((k) => k.naam === "circle").map((k) => Number(k.kenmerken.cy));
-  const hoogte = p[2] - p[0];
-  const spreiding = (p[1] - p[0]) / hoogte;
-  waar(spreiding > 0.4, `4 tot 252 beslaat maar ${(spreiding * 100).toFixed(1)}% van de hoogte`);
+  waar(Math.abs(p[0] - p[2]) > 100,
+       `4 en 252 staan maar ${Math.abs(p[0] - p[2]).toFixed(0)} punten uit elkaar`);
+  // De beste positie staat bovenaan, de slechtste onderaan.
+  waar(p[0] < p[1] && p[1] < p[2], "de volgorde klopt niet");
 };
 
-tests.positie_staat_altijd_op_dezelfde_hoogte = async () => {
-  // Vergelijkbaar blijven tussen nummers: de schaal hangt aan de lijst, niet
-  // aan het nummer.
-  const een = await grafiek(antwoord([4, 5], { lengte: 4000 }));
-  const twee = await grafiek(antwoord([4, 3000], { lengte: 4000 }));
-  const y = (r) => Number(r.svg.kinderen.find((k) => k.naam === "circle").kenmerken.cy);
-  gelijk(y(een), y(twee), "positie 4 hoort even hoog te staan in beide grafieken");
+tests.gelijkblijvend_nummer_krijgt_toch_een_bereik = async () => {
+  // Elke editie op dezelfde plek: zonder bereik zou er door nul gedeeld worden.
+  const { svg } = await grafiek(antwoord([500, 500, 500], { lengte: 4000 }));
+  const p = svg.kinderen.filter((k) => k.naam === "circle").map((k) => Number(k.kenmerken.cy));
+  waar(p.every((y) => Number.isFinite(y)), "een vlakke reeks levert geen getal op");
+  gelijk(new Set(p).size, 1, "drie keer dezelfde positie hoort een rechte lijn te zijn");
+};
+
+tests.korte_lijst_blijft_wel_vergelijkbaar = async () => {
+  // Bij de weeklijsten hangt de schaal aan de LIJST, niet aan het nummer: een
+  // nummer dat tussen 1 en 3 schommelde hoort niet net zo grillig te ogen als
+  // een dat van 1 naar 40 zakte. Bij de lange lijsten is dat losgelaten om de
+  // hoogte te kunnen gebruiken.
+  const een = await grafiek(antwoord([1, 3], { lengte: 40 }));
+  const twee = await grafiek(antwoord([1, 40], { lengte: 40 }));
+  const y = (r) => Number(r.svg.kinderen.filter((k) => k.naam === "circle")[1].kenmerken.cy);
+  waar(y(een) < y(twee), "positie 3 hoort hoger te staan dan positie 40");
+  gelijk(teksten(een.svg, "as"), ["1", "40"]);
+  gelijk(teksten(twee.svg, "as"), ["1", "40"]);
 };
 
 // --- loper ------------------------------------------------------------------

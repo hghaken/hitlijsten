@@ -228,14 +228,25 @@ lijst krijgt daarom een eigen pagina: de editie met *vorige editie*, *verschil*,
 grafiek als bij de weeklijsten, maar dan met een punt per editie in plaats van
 per week; de server zegt in het veld `as` welke van de twee het is.
 
-**De verticale schaal hangt af van de lengte van de lijst.** Bij een Top 40 is
-lineair het eerlijkst: elke plek is een stap, en 1 en 2 horen dicht bij elkaar
-te staan. Bij een lijst van vierduizend werkt dat niet — een nummer dat tussen 4
-en 252 beweegt beslaat dan nog geen tiende van de hoogte en is dus een vlakke
-streep. Boven de honderd wordt de schaal daarom **logaritmisch**: diezelfde
-reeks beslaat dan de halve grafiek, met hulplijnen op 1, 10, 100 en 1000. Wat
-blijft: positie 4 staat voor élk nummer op dezelfde hoogte, dus twee grafieken
-naast elkaar leggen mag nog steeds.
+**De verticale schaal hangt af van de lengte van de lijst.**
+
+Bij een **weeklijst** loopt hij van 1 tot de lengte van de lijst, lineair. Elke
+plek is een stap, 1 en 2 staan dicht bij elkaar, en de schaal hangt aan de lijst
+en niet aan het nummer — zo oogt een nummer dat tussen 1 en 3 schommelde niet
+net zo grillig als een dat van 1 naar 40 zakte.
+
+Bij een **lange lijst** houdt dat geen stand. Een nummer dat tussen 22 en 970
+beweegt beslaat op een schaal van 1 tot 4000 een twintigste van de hoogte: een
+vlakke streep bovenin met driekwart van de grafiek leeg. Boven de honderd loopt
+de schaal daarom **logaritmisch van de beste tot de slechtste positie van dat
+nummer zelf**. De hulplijnen dragen de echte positienummers — de randen van het
+bereik plus de machten van tien die ertussen vallen — dus je kunt nog steeds
+aflezen waar je naar kijkt.
+
+De prijs is dat twee van die grafieken niet meer zonder meer naast elkaar te
+leggen zijn: elk nummer heeft zijn eigen bereik. Bij lijsten van duizenden
+noteringen weegt het kunnen zien van het verloop zwaarder dan die
+vergelijkbaarheid; bij de weeklijsten is het andersom.
 
 **Een overgeslagen editie is een eigen geval.** Van de 4927 nummers hebben er
 1358 een gat in hun reeks — "Dolce Vita" van Ryan Paris miste er twintig. Dat

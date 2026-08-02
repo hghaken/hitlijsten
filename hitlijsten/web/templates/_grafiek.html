@@ -10,10 +10,12 @@
   <div class="jaardeel hint"></div>
   <div class="plaat"></div>
   <p class="hint voet">
-    De verticale schaal loopt van 1 tot de lengte van de lijst, dus hoger in
-    beeld is een hogere notering. Bij de lange lijsten is die schaal
-    <b>logaritmisch</b> — anders zou een nummer dat tussen 4 en 252 beweegt een
-    vlakke streep bovenin zijn. De hulplijnen staan op 1, 10, 100 en 1000. Onder elk punt staat de positie en het
+    Hoger in beeld is een hogere notering; de hulplijnen links dragen de echte
+    positienummers. Bij de <b>weeklijsten</b> loopt de schaal van 1 tot de
+    lengte van de lijst. Bij de <b>lange lijsten</b> loopt hij logaritmisch van
+    de beste tot de slechtste positie van dít nummer — anders zou een reeks die
+    tussen 22 en 970 schommelt een vlakke streep bovenin zijn, met driekwart van
+    de grafiek leeg. Onder elk punt staat de positie en het
     verschil met de vorige keer: groen is gestegen, rood gedaald, <b>N</b> de
     binnenkomst. Een stippellijn overbrugt een keer dat het nummer er niet in
     stond.
@@ -76,24 +78,41 @@
     const STAP = Math.max(KRAP, Math.min(RUIM, beschikbaar / Math.max(1, reeks.length - 1)));
     const x = (i) => RANDX + i * STAP;
 
-    // De verdeling hangt af van hoe lang de lijst is.
+    // De verdeling hangt af van hoe lang de lijst is EN van waar dit nummer
+    // zich ophoudt.
     //
-    // Bij een Top 40 is lineair het eerlijkst: elke plek is een stap, en 1 en 2
-    // horen dicht bij elkaar te staan. Bij een lijst van vierduizend werkt dat
-    // niet -- een nummer dat tussen 4 en 252 beweegt is dan een vlakke lijn
-    // bovenin, want dat is nog geen tiende van de hoogte. Logaritmisch geeft de
-    // kop de ruimte die hij verdient: diezelfde reeks beslaat dan de halve
-    // grafiek, terwijl positie 4 nog steeds op dezelfde hoogte staat voor elk
-    // nummer -- de schaal blijft dus vergelijkbaar tussen nummers onderling.
+    // Bij een Top 40 loopt de schaal gewoon van 1 tot 40, lineair: elke plek is
+    // een stap, en 1 en 2 horen dicht bij elkaar te staan.
+    //
+    // Bij een lijst van vierduizend werkt dat niet. Een nummer dat tussen 22 en
+    // 970 schommelt zou een streep bovenin worden, met driekwart van de grafiek
+    // leeg. Daarom loopt de schaal daar van de BESTE tot de SLECHTSTE positie
+    // van dit nummer, logaritmisch, zodat de hele hoogte gebruikt wordt. De
+    // hulplijnen dragen de echte positienummers, dus je kunt nog steeds aflezen
+    // waar je naar kijkt -- alleen zijn twee grafieken dan niet meer zomaar
+    // naast elkaar te leggen, want elk nummer heeft zijn eigen bereik.
+    const genoteerd = reeks.map((n) => n.positie).filter((p) => p !== null);
     const LOGARITMISCH = lengte > 100;
+    let boven = 1, onder = lengte;
+    if (LOGARITMISCH && genoteerd.length) {
+      boven = Math.min(...genoteerd);
+      onder = Math.max(...genoteerd);
+      // Een nummer dat elke editie op dezelfde plek stond heeft geen bereik;
+      // geef het er een, anders wordt er door nul gedeeld.
+      if (boven === onder) {
+        boven = Math.max(1, Math.floor(boven * 0.8));
+        onder = Math.min(lengte, Math.ceil(onder * 1.25) || 2);
+      }
+    }
     const y = LOGARITMISCH
-      ? (p) => RANDBOVEN + (Math.log(p) / Math.log(lengte)) * HOOG
+      ? (p) => RANDBOVEN + (Math.log(p / boven) / Math.log(onder / boven)) * HOOG
       : (p) => RANDBOVEN + ((p - 1) / Math.max(1, lengte - 1)) * HOOG;
 
-    // Hulplijnen: bij een lineaire schaal boven en onder, bij een logaritmische
-    // op elke macht van tien, zodat je kunt zien hoe de schaal loopt.
+    // Hulplijnen: de randen van het bereik, plus de machten van tien die er
+    // tussen vallen, zodat je kunt zien hoe de schaal loopt.
     const hulplijnen = LOGARITMISCH
-      ? [1, 10, 100, 1000, 10000].filter((p) => p < lengte).concat([lengte])
+      ? [boven].concat([10, 100, 1000].filter((p) => p > boven && p < onder))
+               .concat([onder])
       : [1, lengte];
     const breedte = Math.max(300, RANDX * 2 + Math.max(1, reeks.length - 1) * STAP);
     const svg = vorm("svg", {
