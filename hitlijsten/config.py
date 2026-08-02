@@ -94,8 +94,20 @@ LIJSTEN = {
         "heeft_label": False,
         "vanaf_jaar": 1999,
         "jaarlijks": True,
-        # De uitzending loopt van 25 t/m 31 december; week 52 is de plek in het
-        # schema waar die editie hoort. Er is maar een notering per jaargang.
+        # Week 52 is de PLEK IN HET SCHEMA waar de editie hoort, geen bewering
+        # over de uitzenddatum: er is maar een notering per jaargang, en de
+        # editiepagina toont jaartallen in plaats van weken.
+        "editie_week": 52,
+    },
+    "evergreen": {
+        "naam": "Evergreen Top 1000 (NPO Radio 5)",
+        "site": None,
+        "slug": None,
+        "lengte": 1000,
+        "bestand": "EvergreenTop1000",
+        "heeft_label": False,
+        "vanaf_jaar": 2008,
+        "jaarlijks": True,
         "editie_week": 52,
     },
 }

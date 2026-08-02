@@ -310,24 +310,26 @@ def opdracht_pdf(jaar: int | None, *, altijd: bool = False) -> list:
     return bestanden
 
 
-def opdracht_top2000(pad: str, jaar: int | None = None) -> dict:
-    """Lees de Top 2000 uit de CSV van Music Datastats."""
-    from .top2000 import importeer
+def opdracht_jaarlijks(lijst: str, pad: str, jaar: int | None = None) -> dict:
+    """Lees een jaarlijkse lijst uit een CSV van Music Datastats."""
+    from .jaarlijks import importeer
 
     with db.verbinding() as con:
-        uitkomst = importeer(con, pad, alleen_jaar=jaar)
+        uitkomst = importeer(con, lijst, pad, alleen_jaar=jaar)
 
+    naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
     edities = uitkomst["edities"]
-    log(f"{uitkomst['nummers']} nummers over {len(edities)} edities "
+    log(f"{naam}: {uitkomst['nummers']} nummers over {len(edities)} edities "
         f"({edities[0]}-{edities[-1]})")
+    for waarschuwing in uitkomst["waarschuwingen"]:
+        log(f"  let op: {waarschuwing}")
     for editiejaar, aantal in sorted(uitkomst["geschreven"].items()):
         log(f"  {editiejaar}: {aantal} noteringen")
     kruis = uitkomst["kruisverwijzing"]
     log(f"{kruis['raak']} van de {uitkomst['nummers']} nummers staan ook in een "
         f"andere lijst:")
-    for lijst, aantal in sorted(kruis["per_lijst"].items(),
-                                key=lambda p: -p[1]):
-        log(f"  {LIJSTEN.get(lijst, {}).get('naam', lijst)}: {aantal}")
+    for andere, aantal in sorted(kruis["per_lijst"].items(), key=lambda p: -p[1]):
+        log(f"  {LIJSTEN.get(andere, {}).get('naam', andere)}: {aantal}")
     return uitkomst
 
 
@@ -762,9 +764,11 @@ def main(argv: list[str] | None = None) -> int:
                    help="beperk tot een lijst (standaard alle vier)")
     sub.add_parser("excel", parents=[jaar_ouder],
                    help="Excel-bestanden opnieuw bouwen")
-    t2 = sub.add_parser("top2000", parents=[jaar_ouder],
-                        help="de Top 2000 inlezen uit de CSV van Music Datastats")
-    t2.add_argument("--bestand", required=True, help="pad naar de CSV")
+    jl = sub.add_parser("jaarlijks", parents=[jaar_ouder],
+                        help="een jaarlijkse lijst inlezen uit een CSV")
+    jl.add_argument("--lijst", required=True,
+                    help="welke lijst, bv. top2000 of evergreen")
+    jl.add_argument("--bestand", required=True, help="pad naar de CSV")
     pd = sub.add_parser("pdf", parents=[jaar_ouder],
                         help="de jaaroverzichten als PDF naar de jaarmappen")
     pd.add_argument("--alle", action="store_true",
@@ -811,8 +815,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.opdracht == "excel":
         opdracht_excel(jaar)
-    elif args.opdracht == "top2000":
-        opdracht_top2000(args.bestand, args.jaar)
+    elif args.opdracht == "jaarlijks":
+        opdracht_jaarlijks(args.lijst, args.bestand, args.jaar)
     elif args.opdracht == "pdf":
         opdracht_pdf(None if args.alle else jaar, altijd=args.opnieuw)
     elif args.opdracht == "decennium":

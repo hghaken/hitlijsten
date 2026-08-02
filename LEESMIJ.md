@@ -10,7 +10,8 @@ er nieuw binnenkwam, en zet zestig jaar archief online op
 | Tipparade | top40.nl/tipparade | 30 | 1967 (± week 28) |
 | Sterren NL Top 25 | top40.nl/sterren-nl-top25 | 25 | 2019 (week 40) |
 | Oranje Top 30 | oranjetop30.nl | 30 | 2008 |
-| Top 2000 | CSV (Music Datastats) | 2000 | 1999 |
+| Top 2000 (NPO Radio 2) | CSV (Music Datastats) | 2000 | 1999 |
+| Evergreen Top 1000 (NPO Radio 5) | CSV (Music Datastats) | 1000 | 2008 |
 
 De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen*.
 
@@ -55,9 +56,10 @@ database naast de code.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 309.482 noteringen. Top 40
+- **Het hele archief staat in de database**: 327.482 noteringen. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
-  (19), Sterren NL 2019–2026 (8) en de Top 2000 1999–2025 (27 edities).
+  (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities) en de
+  Evergreen Top 1000 2008–2025 (18 edities).
 - 305 Excel-bestanden en 149 PDF-jaaroverzichten gebouwd, plus 130 aliassen,
   267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
@@ -197,16 +199,22 @@ python -m hitlijsten.cli decennium --decennium 1970 # alleen de jaren zeventig
 
 De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
-### De Top 2000, de vreemde eend
+### De jaarlijkse lijsten
 
-De andere vier lijsten komen wekelijks van een website. De **Top 2000** is een
-jaarlijkse uitzending tussen kerst en oud en nieuw, met tweeduizend noteringen
-in één keer, en komt binnen als CSV van Music Datastats — een matrix met een
-regel per nummer en een kolom per editie.
+De vier weeklijsten komen van een website. De **Top 2000** en de **Evergreen
+Top 1000** zijn één uitzending per jaar en komen binnen als CSV van Music
+Datastats — een matrix met een regel per nummer en een kolom per editie.
 
 ```bash
-python -m hitlijsten.cli top2000 --bestand /volume1/Hitlijsten/data/top2000.csv
+python -m hitlijsten.cli jaarlijks --lijst top2000  --bestand .../top2000.csv
+python -m hitlijsten.cli jaarlijks --lijst evergreen --bestand .../evergreen.csv
 ```
+
+Alle lijsten met `jaarlijks` in hun definitie lopen door hetzelfde bestand
+(`hitlijsten/jaarlijks.py`), dus **een lijst toevoegen is een regel in
+`config.LIJSTEN` en één keer importeren** — geen nieuwe code. In dezelfde map
+staan nog vier van deze CSV's klaar: Q Top 1500, Radio 10 Top 4000, Rock Top 500
+en de Veronica Top 1000.
 
 Elke editie wordt weggeschreven als jaargang met **week 52**, de week van de
 uitzending. Daardoor werken de sleutels, het jaaroverzicht en de database
@@ -236,11 +244,20 @@ wordt op drie plekken getoond:
 maal 27 kolommen maakt de pagina anders 5 MB.
 
 **De sleutel is de brug naar de andere lijsten.** Artiest en titel gaan door
-dezelfde `sleutel_van()`, dus "Golden Earring — Radar Love" krijgt in de
-Top 2000 exact dezelfde sleutel als in de Top 40. Van de 4927 nummers delen er
-**3043 een sleutel** met onze bestaande lijsten: 2865 met de Tipparade, 2734 met
-de Top 40, 80 met de Oranje Top 30 en 37 met Sterren NL. De overige 1884 zijn
-grotendeels albumnummers die nooit als single noteerden.
+dezelfde `sleutel_van()`, dus "Golden Earring — Radar Love" krijgt overal
+dezelfde sleutel. Van de 4927 Top 2000-nummers delen er **3043** een sleutel met
+de andere lijsten (2865 Tipparade, 2734 Top 40, 80 Oranje, 37 Sterren NL); van
+de 2620 Evergreen-nummers **1812** (1555 Top 2000, 963 Top 40, 902 Tipparade).
+De rest zijn grotendeels albumnummers die nooit als single noteerden.
+
+**Niet alles wat scheef staat is kapot.** De controle scheidt fouten van
+waarschuwingen: een fout betekent dat de bron van vorm veranderd is en er niets
+geïmporteerd moet worden, een waarschuwing is een schoonheidsfoutje in verder
+goede data. In de Evergreen van 2013 staan twee nummers op 279 en ontbreekt 278
+— een typefout bij de bron. Dat wordt gemeld en verder genegeerd; achttien
+jaargangen laten vallen om één verkeerd cijfer zou onzin zijn. Meer dan een
+procent scheef is wél een fout. De lengte komt per editie uit de data zelf, want
+de Q Top 1500 begon als 1000 en de Veronica Top 1000 was ooit 3000 lang.
 
 Nog niet gedaan: Excel en PDF voor deze lijst. Die bouwers gaan uit van weken en
 punten, dus die hebben een eigen vorm nodig.
@@ -368,7 +385,7 @@ Excel herbouwen, mailen. Hieronder staat kortweg `python`; lees dat als
 | `python -m hitlijsten excel` | Excel opnieuw bouwen uit de database |
 | `python -m hitlijsten decennium` | decenniumklassementen van de Top 40 naar de decenniummappen |
 | `python -m hitlijsten pdf --alle` | jaaroverzichten als PDF naar de jaarmappen |
-| `python -m hitlijsten top2000 --bestand <csv>` | de Top 2000 inlezen uit de CSV |
+| `python -m hitlijsten jaarlijks --lijst <x> --bestand <csv>` | een jaarlijkse lijst inlezen |
 | `python -m hitlijsten controle` | verdachte dubbelingen, met oordeel per paar |
 | `python -m hitlijsten kruiscontrole --alle` | onze Top 40 vergelijken met michajans.nl |
 | `python -m hitlijsten onderscheidingen` | Alarmschijven en Dancesmashes ophalen |
@@ -475,6 +492,7 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
     excel.py      de Excel-bestanden
     pdf.py        het jaaroverzicht als PDF
     wetenswaardigheden.py   de tien ranglijsten
+    jaarlijks.py  de CSV-lijsten (Top 2000, Evergreen)
     kruiscontrole.py / onderscheidingen.py  michajans.nl
     mail.py       melding via de MailPlus-relay
     cli.py        de opdrachten hierboven
@@ -514,7 +532,7 @@ cd /volume1/Hitlijsten/app && . ./omgeving.sh
 ./venv/bin/python tests/test_decennium.py
 ./venv/bin/python tests/test_wetenswaardigheden.py
 ./venv/bin/python tests/test_pdf.py
-./venv/bin/python tests/test_top2000.py
+./venv/bin/python tests/test_jaarlijks.py
 node tests/test_grafiek.mjs        # node staat niet op de NAS
 ```
 
