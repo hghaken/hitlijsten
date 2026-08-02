@@ -307,6 +307,7 @@ op de NAS, achter een reverse proxy.
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
 | Zoeken | klik op de artiest of titel springt naar de jaargang van de hoogste notering |
+| Beheer | alles wat de opdrachtregel kan, ook als knop: ophalen, Excel, PDF, decennia, sleutels, opschonen, momentopnames, controles |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
 
@@ -350,6 +351,10 @@ nodig.
 `momentopnames.py` maakt dat bestand, met `VACUUM INTO` en niet met `cp` — dat
 werkt binnen één transactie en kan dus terwijl de webapplicatie erin leest. Door
 gzip komt 91 MB op 24 MB uit, in vijf seconden.
+
+Alles hieronder kan ook **zonder opdrachtregel**, via de knoppen op de
+beheerpagina — inclusief terugzetten, met een keuzelijst van wat er bewaard is
+en een bevestiging die zegt wat je kwijtraakt.
 
 ```
 python -m hitlijsten momentopname            # er een maken

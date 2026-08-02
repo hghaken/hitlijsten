@@ -889,18 +889,24 @@ def _registreer(app: Flask) -> None:
     @app.route("/beheer")
     @vereist_aanmelding
     def beheer():
+        from .. import momentopnames
+
         jaren = [r[0] for r in verbinding().execute(
             "SELECT DISTINCT jaar FROM noteringen ORDER BY jaar DESC")]
-        return render_template("beheer.html", jaren=jaren, taak=taken.huidige())
+        opnames = [(p.name, p.stat().st_size / 1024 / 1024)
+                   for p in momentopnames.lijst()]
+        return render_template("beheer.html", jaren=jaren, taak=taken.huidige(),
+                               opnames=opnames)
 
     @app.route("/beheer/start", methods=["POST"])
     @vereist_aanmelding
     def beheer_start():
         wat = request.form.get("wat")
         jaar = request.form.get("jaar")
+        bestand = request.form.get("bestand")
         from .werk import bouw_werk
 
-        naam, werk = bouw_werk(wat, jaar)
+        naam, werk = bouw_werk(wat, jaar, bestand)
         if werk is None:
             flash(naam, "fout")
         else:

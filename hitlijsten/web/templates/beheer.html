@@ -35,6 +35,60 @@
   <span class="hint">— na het wijzigen van aliassen; bouw daarna Excel opnieuw</span>
 </form>
 
+<h2>PDF en decennia</h2>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="pdf">
+  <select name="jaar">
+    <option value="alle">alle jaargangen</option>
+    {% for j in jaren %}<option value="{{ j }}">{{ j }}</option>{% endfor %}
+  </select>
+  <button type="submit">PDF-jaaroverzichten bouwen</button>
+</form>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="decennium">
+  <button type="submit">Decenniumlijsten bouwen</button>
+  <span class="hint">— lopen niet mee met "Excel bouwen"</span>
+</form>
+
+<h2>Opschonen</h2>
+<p class="hint">
+  Leestekens rechtzetten, één schrijfwijze per artiest en per titel, dubbele
+  A-kanten splitsen. Kijk eerst na wat er zou gebeuren; toepassen maakt vooraf
+  zelf een momentopname.
+</p>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="opschonen">
+  <button type="submit">Nakijken</button>
+</form>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}"
+      onsubmit="return confirm('De database wordt aangepast. Er wordt eerst een momentopname gemaakt. Doorgaan?')">
+  <input type="hidden" name="wat" value="opschonen-toepassen">
+  <button class="hoofd" type="submit">Opschonen en toepassen</button>
+</form>
+
+<h2>Momentopnames</h2>
+<p class="hint">
+  Een kopie van de hele database, ongeveer 24 MB. Er wordt er automatisch een
+  gemaakt vóór de vrijdagrun en vóór het opschonen. Bewaard blijven de laatste
+  twaalf plus van elke dag de oudste, tot dertig dagen terug.
+</p>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="momentopname">
+  <button type="submit">Momentopname maken</button>
+</form>
+{% if opnames %}
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}"
+      onsubmit="return confirm('Alles wat na deze momentopname is gebeurd gaat verloren. De huidige database wordt eerst zelf bewaard. Zeker weten?')">
+  <input type="hidden" name="wat" value="terugzetten">
+  <select name="bestand">
+    {% for naam, mb in opnames %}
+      <option value="{{ naam }}">{{ naam }} — {{ '%.0f'|format(mb) }} MB</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Terugzetten</button>
+</form>
+{% endif %}
+
 <h2>Controles</h2>
 <form class="inline" method="post" action="{{ url_for('beheer_start') }}">
   <input type="hidden" name="wat" value="controle">
