@@ -16,11 +16,17 @@
   {% endif %}
 </div>
 
-<h2>De lijsten</h2>
+{# Twee soorten lijst, dus twee tabellen. De kolom "Weken" telt bij een
+   jaarlijkse lijst edities, en dat is wat anders -- vandaar een eigen kop. #}
+<h2>Weeklijsten</h2>
+<p class="hint" style="margin-top:-.3rem">
+  Elke week een nieuwe lijst, opgehaald van de site. Deze vier houdt de
+  wekelijkse run bij.
+</p>
 <div class="tabelvak"><table>
   <thead><tr><th>Lijst</th><th class="getal">Jaargangen</th><th class="getal">Van</th>
       <th class="getal">Tot</th><th class="getal">Weken</th><th class="getal">Noteringen</th></tr></thead><tbody>
-  {% for r in lijsten %}
+  {% for r in week_rijen %}
   <tr>
     <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
     <td class="getal">{{ r['jaren'] }}</td>
@@ -31,6 +37,28 @@
   </tr>
   {% endfor %}
 </tbody></table></div>
+
+{% if jaar_rijen %}
+<h2>Jaarlijkse lijsten</h2>
+<p class="hint" style="margin-top:-.3rem">
+  Eén uitzending per jaar, ingelezen uit een CSV. Geen weken maar edities, en
+  honderden tot duizenden noteringen per keer.
+</p>
+<div class="tabelvak"><table>
+  <thead><tr><th>Lijst</th><th class="getal">Edities</th><th class="getal">Van</th>
+      <th class="getal">Tot</th><th class="getal">Per editie</th><th class="getal">Noteringen</th></tr></thead><tbody>
+  {% for r in jaar_rijen %}
+  <tr>
+    <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
+    <td class="getal">{{ r['jaren'] }}</td>
+    <td class="getal">{{ r['van'] }}</td>
+    <td class="getal">{{ r['tot'] }}</td>
+    <td class="getal">{{ (r['noteringen'] // r['jaren']) if r['jaren'] else '' }}</td>
+    <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+{% endif %}
 
 {% if is_aangemeld() %}
 <h2>Laatst opgehaald</h2>

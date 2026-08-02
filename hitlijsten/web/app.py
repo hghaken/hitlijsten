@@ -39,6 +39,15 @@ def maak_app() -> Flask:
     app.jinja_env.globals["lijst_namen"] = {
         sleutel: cfg["naam"] for sleutel, cfg in LIJSTEN.items()
     }
+    # De weeklijsten en de jaarlijkse lijsten zijn twee soorten: een week tegen
+    # een editie, dertig noteringen tegen tweeduizend. Ze door elkaar tonen
+    # nodigt uit tot vergelijkingen die nergens op slaan, dus de sjablonen
+    # groeperen ze -- vandaar deze twee hulpjes.
+    app.jinja_env.globals["is_jaarlijks"] = is_jaarlijks
+    app.jinja_env.globals["weeklijsten"] = [
+        s for s in LIJSTEN if not is_jaarlijks(s)]
+    app.jinja_env.globals["jaarlijkse_lijsten"] = [
+        s for s in LIJSTEN if is_jaarlijks(s)]
     _registreer(app)
     return app
 
@@ -168,8 +177,14 @@ def _registreer(app: Flask) -> None:
             "SELECT lijst, jaar, week, opgehaald_op FROM opgehaald"
             " ORDER BY opgehaald_op DESC LIMIT 5"
         ).fetchall()
-        return render_template("overzicht.html", lijsten=lijsten, cijfers=cijfers,
-                               laatste=laatste, taak=taken.huidige())
+        # Groeperen gebeurt hier en niet in het sjabloon: een sqlite3.Row kent
+        # geen attributen, dus selectattr() vindt er niets in.
+        return render_template(
+            "overzicht.html", cijfers=cijfers, laatste=laatste,
+            taak=taken.huidige(),
+            week_rijen=[r for r in lijsten if not is_jaarlijks(r["lijst"])],
+            jaar_rijen=[r for r in lijsten if is_jaarlijks(r["lijst"])],
+        )
 
     # --- jaaroverzicht -----------------------------------------------------
 

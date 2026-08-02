@@ -8,9 +8,19 @@
 <form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
       flex-wrap:wrap; margin-bottom:1.4rem">
   <select name="lijst" onchange="this.form.submit()">
-    {% for sleutel, naam in lijst_namen.items() %}
-      <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}>{{ naam }}</option>
-    {% endfor %}
+    {# Twee soorten lijst uit elkaar houden: een week is geen editie. #}
+    <optgroup label="Weeklijsten">
+      {% for sleutel in weeklijsten %}
+        <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}
+          >{{ lijst_namen.get(sleutel, sleutel) }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Jaarlijkse lijsten">
+      {% for sleutel in jaarlijkse_lijsten %}
+        <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}
+          >{{ lijst_namen.get(sleutel, sleutel) }}</option>
+      {% endfor %}
+    </optgroup>
   </select>
   <select name="jaar" onchange="this.form.submit()">
     {% for j in jaren %}

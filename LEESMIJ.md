@@ -210,6 +210,11 @@ python -m hitlijsten.cli jaarlijks --lijst top2000  --bestand .../top2000.csv
 python -m hitlijsten.cli jaarlijks --lijst evergreen --bestand .../evergreen.csv
 ```
 
+Op het **overzicht** staan ze in een eigen tabel, en in de keuzelijst van het
+jaaroverzicht in een eigen groep. Dat is niet alleen netjes: de kolom die bij
+een weeklijst "weken" heet telt hier edities, en een lijst van tweeduizend naast
+een van dertig nodigt uit tot vergelijkingen die nergens op slaan.
+
 Alle lijsten met `jaarlijks` in hun definitie lopen door hetzelfde bestand
 (`hitlijsten/jaarlijks.py`), dus **een lijst toevoegen is een regel in
 `config.LIJSTEN` en één keer importeren** — geen nieuwe code. In dezelfde map
@@ -272,7 +277,7 @@ op de NAS, achter de reverse proxy naar `10.10.8.20:8642`.
 
 | Pagina | Wat je er ziet |
 |---|---|
-| Overzicht | wat er in de database zit, per lijst |
+| Overzicht | wat er in de database zit, in twee tabellen: weeklijsten en jaarlijkse lijsten |
 | Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel- en PDF-download |
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
