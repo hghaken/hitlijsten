@@ -3,9 +3,26 @@
 {% block inhoud %}
 <h1>Beheer</h1>
 <p class="hint">
-  Er draait er één tegelijk. Twee ophaalrondes naast elkaar zouden dezelfde
-  weken dubbel halen, en twee keer Excel bouwen vecht om dezelfde bestanden.
+  Er draait er één tegelijk — druk je een tweede knop in terwijl er iets loopt,
+  dan krijg je "Er loopt al iets" en gebeurt er niets. Twee ophaalrondes naast
+  elkaar zouden dezelfde weken dubbel halen, en twee keer Excel bouwen vecht om
+  dezelfde bestanden. Onderaan bij <b>Voortgang</b> zie je waar hij is.
 </p>
+
+<h2>Na een wijziging</h2>
+<p class="hint">
+  Heb je een alias toegevoegd of iets met de hand rechtgezet, dan moet er
+  altijd hetzelfde rijtje gebeuren: sleutels herberekenen, namen gelijktrekken,
+  en dan Excel, decennia en PDF opnieuw bouwen — in die volgorde, want de
+  bestanden horen bij de toestand van dat moment. Er draait er één tegelijk, dus
+  vijf knoppen achter elkaar indrukken werkt niet. Deze doet ze alle vijf.
+</p>
+<form method="post" action="{{ url_for('beheer_start') }}"
+      onsubmit="return confirm('Dit duurt ongeveer een half uur. Je kunt de voortgang onderaan volgen. Beginnen?')">
+  <input type="hidden" name="wat" value="volledig">
+  <button class="hoofd" type="submit">Alles bijwerken</button>
+  <span class="hint">— duurt ongeveer een half uur</span>
+</form>
 
 <h2>Ophalen</h2>
 <form method="post" action="{{ url_for('beheer_start') }}">

@@ -102,6 +102,40 @@ def bouw_werk(wat: str, jaar: str | None,
                 _met_uitvoer(taak, cli.opdracht_kruiscontrole, None, alle_jaren=True)
         return "Kruiscontrole michajans.nl", werk
 
+    if wat == "volledig":
+        # Na een wijziging in de aliassen moet er altijd hetzelfde rijtje
+        # gebeuren, in deze volgorde: eerst de sleutels (die laten de alias
+        # gelden), dan de namen (die kiezen de juiste schrijfwijze), en pas
+        # daarna de bestanden -- die horen bij de toestand van dat moment.
+        # Als knop, want er draait er maar een tegelijk: vijf knoppen achter
+        # elkaar indrukken gaat niet, de tweede wordt geweigerd.
+        def werk(taak: Taak) -> None:
+            from ..normalize import vergeet_aliases
+
+            stappen = 5
+            taak.meld(f"stap 1/{stappen}: sleutels herberekenen")
+            vergeet_aliases()
+            for j in cli._jaren_in_database():
+                _met_uitvoer(taak, cli.opdracht_hersleutel, j)
+
+            taak.meld(f"stap 2/{stappen}: opschonen en toepassen")
+            _met_uitvoer(taak, cli.opdracht_opschonen, toepassen=True)
+
+            taak.meld(f"stap 3/{stappen}: Excel bouwen")
+            totaal = 0
+            for j in cli._jaren_in_database():
+                totaal += len(_met_uitvoer(taak, cli.opdracht_excel, j))
+            taak.meld(f"{totaal} Excel-bestanden")
+
+            taak.meld(f"stap 4/{stappen}: decenniumlijsten")
+            _met_uitvoer(taak, cli.opdracht_decennium, None)
+
+            taak.meld(f"stap 5/{stappen}: PDF-jaaroverzichten")
+            paden = _met_uitvoer(taak, cli.opdracht_pdf, None, altijd=True)
+            taak.meld(f"{len(paden)} PDF-bestanden")
+            taak.meld("klaar -- alles staat weer gelijk")
+        return "Alles bijwerken", werk
+
     if wat == "pdf":
         def werk(taak: Taak) -> None:
             taak.meld("PDF-jaaroverzichten bouwen"
