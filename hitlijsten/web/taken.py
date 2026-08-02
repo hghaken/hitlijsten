@@ -120,7 +120,7 @@ def huidige() -> Optional[Taak]:
         with db.verbinding() as con:
             rij = con.execute(
                 "SELECT naam, gestart, klaar, gelukt, fout, regels, proces,"
-                " stap, stappen, stap_naam, deel, deel_van"
+                " stap, stappen, stap_naam, deel, deel_van, bijgewerkt"
                 " FROM taak WHERE id=1").fetchone()
     except Exception:
         return None
@@ -130,6 +130,18 @@ def huidige() -> Optional[Taak]:
     klaar = bool(rij["klaar"])
     # Staat hij op "bezig" terwijl het proces weg is, dan is hij afgebroken.
     afgebroken = not klaar and not _leeft(rij["proces"])
+    # Een taak die voorbij is blijft nog even zichtbaar -- je wilt de uitkomst
+    # kunnen lezen -- maar niet eeuwig. Zonder deze grens bleef een afgebroken
+    # taak van uren geleden als MISLUKT op de pagina staan, herstart na
+    # herstart, tot er toevallig een nieuwe taak overheen kwam.
+    if klaar or afgebroken:
+        try:
+            oud = (datetime.now()
+                   - datetime.fromisoformat(rij["bijgewerkt"])).total_seconds()
+        except (TypeError, ValueError):
+            oud = 0
+        if oud > 15 * 60:
+            return None
     taak = Taak(naam=rij["naam"], gestart=rij["gestart"],
                 regels=(rij["regels"] or "").splitlines(),
                 klaar=klaar or afgebroken,

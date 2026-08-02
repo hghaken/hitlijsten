@@ -157,6 +157,10 @@
 
 <h2>Voortgang</h2>
 <p id="stand" class="hint">niets aan de gang</p>
+<form id="opruimen" method="post" action="{{ url_for('taak_opruimen') }}"
+      style="display:none">
+  <button type="submit">Melding opruimen</button>
+</form>
 
 <div id="balken" style="display:none; max-width:52rem; margin:.6rem 0 1rem">
   <div style="display:flex; justify-content:space-between; font-size:.86rem">
@@ -182,11 +186,14 @@ async function ververs() {
     const stand = document.getElementById("stand");
     const vak = document.getElementById("voortgang");
     const balken = document.getElementById("balken");
+    const opruim = document.getElementById("opruimen");
     if (!t.naam) {
       stand.textContent = "niets aan de gang";
-      vak.style.display = balken.style.display = "none";
+      vak.style.display = balken.style.display = opruim.style.display = "none";
       return;
     }
+    /* Het opruimknopje alleen bij een taak die voorbij is. */
+    opruim.style.display = t.bezig ? "none" : "block";
     vak.style.display = "block";
 
     /* De balken. `stappen` is nul bij een taak die geen fasen meldt -- dan

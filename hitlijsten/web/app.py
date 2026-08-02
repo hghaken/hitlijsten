@@ -970,6 +970,22 @@ def _registreer(app: Flask) -> None:
             flash(melding, "goed" if gestart else "fout")
         return redirect(url_for("beheer"))
 
+    @app.route("/taak/opruimen", methods=["POST"])
+    @vereist_aanmelding
+    def taak_opruimen():
+        """Een afgeronde of afgebroken taak van de pagina halen.
+
+        Alleen als hij niet meer loopt: een lopende taak wegklikken zou
+        suggereren dat het werk weg is terwijl het gewoon doorgaat.
+        """
+        t = taken.huidige()
+        if t is not None and not t.klaar:
+            flash("Er loopt nog iets; dat kan niet worden opgeruimd", "fout")
+        else:
+            verbinding().execute("DELETE FROM taak WHERE id=1")
+            verbinding().commit()
+        return redirect(url_for("beheer"))
+
     @app.route("/taak")
     @vereist_aanmelding
     def taak_stand():
