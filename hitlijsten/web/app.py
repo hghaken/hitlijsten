@@ -188,11 +188,21 @@ def _registreer(app: Flask) -> None:
             "SELECT lijst, jaar, week, opgehaald_op FROM opgehaald"
             " ORDER BY opgehaald_op DESC LIMIT 5"
         ).fetchall()
-        # Wanneer is er voor het laatst iets binnengehaald? Bij de weeklijsten
-        # is dat de laatste vrijdagrun, bij de jaarlijkse de laatste import.
+        # Wanneer is er voor het laatst iets binnengehaald? Alleen de
+        # weeklijsten tonen dit: bij een jaarlijkse lijst is het niet meer dan
+        # het moment van de handmatige import.
         laatst_op = {
             r[0]: r[1] for r in con.execute(
                 "SELECT lijst, MAX(opgehaald_op) FROM opgehaald GROUP BY lijst")
+        }
+        # En tot welke week loopt die lijst? De laatste week van het laatste
+        # jaar -- uit `noteringen`, net als het jaartal ernaast, want een
+        # opgehaalde week zonder noteringen (kerst) is geen "tot".
+        laatste_week = {
+            r[0]: r[1] for r in con.execute(
+                "SELECT lijst, MAX(week) FROM noteringen n WHERE jaar ="
+                " (SELECT MAX(jaar) FROM noteringen WHERE lijst=n.lijst)"
+                " GROUP BY lijst")
         }
 
         # Hoe lang is een editie? Het gemiddelde (noteringen / edities) is
@@ -215,6 +225,7 @@ def _registreer(app: Flask) -> None:
             week_rijen=[r for r in lijsten if not is_jaarlijks(r["lijst"])],
             jaar_rijen=[r for r in lijsten if is_jaarlijks(r["lijst"])],
             editielengtes=editielengtes, laatst_op=laatst_op,
+            laatste_week=laatste_week,
         )
 
     @app.route("/disclaimer")

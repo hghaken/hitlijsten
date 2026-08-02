@@ -33,7 +33,8 @@
     <td class="getal">{{ r['van'] }}</td>
     <td class="getal">{{ r['tot'] }}
       <span class="hint" style="margin-left:.5rem; font-size:.82rem"
-        >{{ laatst_op.get(r['lijst']) | tijd }}</span></td>
+        >wk {{ laatste_week.get(r['lijst']) }} ·
+        {{ laatst_op.get(r['lijst']) | tijd }}</span></td>
     <td class="getal">{{ r['weken'] }}</td>
     <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
   </tr>
