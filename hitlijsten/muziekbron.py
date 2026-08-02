@@ -34,7 +34,8 @@ import requests
 
 from .config import ROOT
 
-__all__ = ["zoek_artiest", "canonieke_artiest", "zoek_opname", "wikipedia_bestaat"]
+__all__ = ["zoek_artiest", "canonieke_artiest", "zoek_opname",
+           "wikipedia_bestaat", "zoek_uitgave"]
 
 CACHE = ROOT / ".cache" / "muziekbron"
 BASIS = "https://musicbrainz.org/ws/2"
@@ -161,6 +162,64 @@ def canonieke_titel(artiest: str, titels: list[str],
                 break
     return gevonden.get(titels[0]) if len(gevonden) == 1 and titels[0] in gevonden \
         else (list(gevonden.values())[0] if len(gevonden) == 1 else None)
+
+
+# --- Discogs ---------------------------------------------------------------
+#
+# Waar MusicBrainz een catalogus van nummers is, is Discogs een catalogus van
+# PLATEN. Dat verschil is hier precies het punt: een hitlijst noteert niet hoe
+# een nummer heet maar wat er in de winkel lag, en dat kan per land verschillen.
+# Georgie Fame stond in Nederland als "Yeah, Yeh, Yeh" op het label terwijl het
+# nummer "Yeh, Yeh" heet. Discogs kent het land van uitgave; MusicBrainz geeft
+# dat niet zo makkelijk prijs.
+#
+# Bijkomend voordeel: klein Nederlands repertoire uit de jaren zestig en
+# zeventig staat er wél in. Gaby Dirne presents: The Valentino's, de Buddy's,
+# Marijke Mulder -- alle drie onvindbaar bij MusicBrainz en gewoon aanwezig op
+# Discogs, met hoes en al.
+#
+# De zoek-API werkt zonder sleutel zolang je je aan de rem houdt: 25 verzoeken
+# per minuut voor wie zich niet aanmeldt, vandaar de ruime pauze hieronder.
+DISCOGS = "https://api.discogs.com/database/search"
+DISCOGS_PAUZE = 2.6
+
+
+def zoek_uitgave(artiest: str, titel: str, land: str = "Netherlands",
+                 limiet: int = 25) -> list[dict]:
+    """Platen van deze artiest met deze titel. Nederlandse persingen eerst.
+
+    Geeft per uitgave de credit zoals die op de plaat staat, het jaar en het
+    land -- genoeg om te zien onder welke naam iets hier is uitgebracht.
+    """
+    global _laatste
+    parameters = {"artist": artiest, "track": titel, "type": "release",
+                  "per_page": str(limiet)}
+    adres = f"{DISCOGS}?{urllib.parse.urlencode(parameters)}"
+    naam = "discogs-" + hashlib.sha1(adres.encode("utf-8")).hexdigest()[:16]
+    bestand = CACHE / f"{naam}.json"
+    if bestand.exists():
+        antwoord = json.loads(bestand.read_text(encoding="utf-8"))
+    else:
+        rust = DISCOGS_PAUZE - (time.monotonic() - _laatste)
+        if rust > 0:
+            time.sleep(rust)
+        _laatste = time.monotonic()
+        antwoord = _vraag(adres)
+        if antwoord:
+            CACHE.mkdir(parents=True, exist_ok=True)
+            bestand.write_text(json.dumps(antwoord, ensure_ascii=False),
+                               encoding="utf-8")
+
+    uit = []
+    for r in antwoord.get("results", []):
+        heel = r.get("title") or ""          # Discogs levert "Artiest - Titel"
+        credit, _, plaattitel = heel.partition(" - ")
+        uit.append({"artiest": credit.strip(), "titel": plaattitel.strip(),
+                    "jaar": r.get("year"), "land": r.get("country"),
+                    "label": (r.get("label") or [None])[0]})
+    # Nederlandse persingen eerst: die noteerden hier.
+    uit.sort(key=lambda r: (r["land"] != land, r["jaar"] or "9999"))
+    return uit
 
 
 def wikipedia_bestaat(naam: str, taal: str = "nl") -> Optional[str]:

@@ -477,6 +477,25 @@ Denemarken, Duitsland, Zwitserland en Zuid-Afrika, allemaal gebaseerd op de
 Britse demoplaat. *Yeah, Yeah* was de foute eerste Britse persing. Voor een
 Nederlandse hitlijst telt de Nederlandse uitgavetitel.
 
+**Twee catalogi, twee vragen.** MusicBrainz is een catalogus van *nummers*,
+Discogs een van *platen* — en dat verschil beslist welke je nodig hebt:
+
+- **Een titel** is wat er op het Nederlandse label stond. Georgie Fame's
+  *Yeh, Yeh* verscheen hier als *Yeah, Yeh, Yeh*, en Albert Hammonds
+  *Air Disaster* heette op de Benelux-persing *I Don't Wanna Die In An Air
+  Disaster* terwijl de VS en Japan de korte titel gebruikten. Discogs kent het
+  land van uitgave; daar win je het.
+- **Een artiest** is een identiteit, want daarop herkennen we hem over de
+  lijsten heen. Dan telt de act zoals de catalogus hem kent en niet de credit
+  op één persing. Discogs zet een sterretje achter zo'n afwijkende credit:
+  `The Source*`, `Nicole McCloud*`, `M.A.*`, `Future's World Orchestra*` — vier
+  gevallen die daarmee in één keer opgelost waren. Dat *The Course* de goede was
+  bleek meteen: die verenigt zeven noteringen over 1996–1998.
+
+Klein Nederlands repertoire staat bovendien wél in Discogs en niet in
+MusicBrainz. Gaby Dirne presents: The Valentino's, de Buddy's, Harm Duimstra —
+compleet met hoes.
+
 **Waarom een externe bron.** Bij "Dexys Midnight Runners" tegen "Dexy's Midnight
 Runners" helpt tellen niet: je moet weten hoe de band heet.
 [MusicBrainz](https://musicbrainz.org/) is een catalogus met precies dat veld,
