@@ -777,6 +777,11 @@ def corrigeer_nummer(con: sqlite3.Connection, sleutel: str, *,
         "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE sleutel=?",
         (nieuwe_artiest, nieuwe_titel, nieuwe_sleutel, sleutel)).rowcount
 
+    # De naamregels van de OUDE sleutel moeten weg. Laat je ze staan, dan
+    # stempelt `pas_titels_toe` bij het eerstvolgende opschonen de oude naam
+    # er weer overheen -- zo is een splitsing van 3JS een keer stilletjes
+    # teruggedraaid door de eigen huishouding.
+    con.execute("DELETE FROM titelnamen WHERE sleutel=?", (sleutel,))
     if nieuwe_sleutel != sleutel:
         con.execute(
             "INSERT OR REPLACE INTO aliases (van, naar, opmerking, aangemaakt)"
@@ -823,6 +828,8 @@ def splits_nummer(con: sqlite3.Connection, sleutel: str,
         raise LookupError(f"geen noteringen met sleutel {sleutel!r}")
 
     db.markeer_te_bouwen(con, sleutels=[sleutel], reden="splitsing")
+    con.execute("DELETE FROM titelnamen WHERE sleutel=?", (sleutel,))
+    con.execute("DELETE FROM aliases WHERE naar=?", (sleutel,))
     eerste, rest = kanten[0], kanten[1:]
     nieuw_aantal = 0
     for rij in rijen:
@@ -867,6 +874,7 @@ def splits_versies(con: sqlite3.Connection, lijst: str = "top40") -> dict:
     for geval in gevallen:
         rij, kanten = geval["rij"], geval["kanten"]
         verslag["nummers"].add(rij["sleutel"])
+        con.execute("DELETE FROM titelnamen WHERE sleutel=?", (rij["sleutel"],))
         db.markeer_te_bouwen(con, lijst=rij["lijst"], jaar=rij["jaar"],
                              reden="versies op een plek")
         eerste, rest = kanten[0], kanten[1:]
