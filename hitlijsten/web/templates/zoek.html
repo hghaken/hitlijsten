@@ -4,7 +4,13 @@
 <h1>Noteringen zoeken</h1>
 
 <form method="get">
-  <input type="text" name="term" value="{{ term }}" placeholder="titel of artiest" autofocus>
+  <input type="text" name="term" value="{{ term }}"
+         placeholder="zoekterm, * als jokerteken" autofocus>
+  <select name="waar">
+    <option value="beide" {% if waar == 'beide' %}selected{% endif %}>artiest en titel</option>
+    <option value="artiest" {% if waar == 'artiest' %}selected{% endif %}>alleen artiest</option>
+    <option value="titel" {% if waar == 'titel' %}selected{% endif %}>alleen titel</option>
+  </select>
   <select name="lijst">
     <option value="">alle lijsten</option>
     {% for sleutel, naam in lijst_namen.items() %}
@@ -43,6 +49,11 @@
     {% endfor %}
   </tbody></table></div>
 {% else %}
-  <p class="hint">Zoek op een deel van de titel of de artiestnaam.</p>
+  <p class="hint">
+    Zoek op een deel van de titel of de artiestnaam. Zonder jokerteken zoekt hij
+    <b>bevat</b>: <code>beatles</code> vindt ook "The Beatles". Met een sterretje
+    bepaal je zelf waar het woord staat — <code>beatles*</code> begint ermee,
+    <code>*beatles</code> eindigt erop, <code>*beat*</code> is weer bevat.
+  </p>
 {% endif %}
 {% endblock %}

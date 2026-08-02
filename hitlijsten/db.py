@@ -182,11 +182,40 @@ def _voeg_uitjaar_toe(con: sqlite3.Connection) -> None:
         con.commit()
 
 
+def _stel_in(con: sqlite3.Connection) -> None:
+    """De instellingen die gelijktijdig gebruik mogelijk maken.
+
+    Dit ging een keer mis en het foutbeeld was raadselachtig: een taak die
+    zeven jaargangen lang sleutels bijwerkte viel om met "database is locked",
+    terwijl er alleen maar iemand door de website klikte.
+
+    Twee oorzaken, allebei hier opgelost:
+
+    * **Journaalmodus.** In de standaardmodus (`delete`) blokkeert een lezer een
+      schrijver: zolang iemand een pagina opvraagt kan de achtergrondtaak niet
+      wegschrijven. Met **WAL** gaan lezers en schrijvers langs elkaar heen.
+      Het staat in het bestand zelf, dus één keer instellen is genoeg -- maar
+      het staat hier zodat een verse database het meteen goed heeft.
+    * **Geduld.** Standaard wacht sqlite vijf seconden op een slot en geeft het
+      dan op. Bij het bouwen van een jaargang is dat aan de krappe kant; dertig
+      seconden kost niets en scheelt een afgebroken taak.
+
+    `synchronous=NORMAL` hoort bij WAL: bij een stroomstoring kan de laatste
+    transactie verloren gaan, maar de database raakt niet beschadigd. Voor een
+    hitlijstenarchief is dat de goede afweging -- en er staat een momentopname
+    naast.
+    """
+    con.execute("PRAGMA journal_mode=WAL")
+    con.execute("PRAGMA busy_timeout=30000")
+    con.execute("PRAGMA synchronous=NORMAL")
+
+
 @contextmanager
 def verbinding() -> Iterator[sqlite3.Connection]:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(DB_PATH)
     con.row_factory = sqlite3.Row
+    _stel_in(con)
     try:
         con.executescript(SCHEMA)
         _migreer_primaire_sleutel(con)

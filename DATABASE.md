@@ -334,6 +334,34 @@ leverde, en dat is precies wat je later wilt kunnen nazoeken.
 
 ---
 
+## Gelijktijdig gebruik
+
+De database staat in **WAL-modus** met een **wachttijd van dertig seconden**.
+Dat is geen voorkeur maar een reparatie.
+
+In de standaardmodus (`delete`) blokkeert een lezer een schrijver. De
+webapplicatie voerde bovendien bij *elk* paginaverzoek het schema opnieuw uit —
+`CREATE TABLE IF NOT EXISTS` doet niets, maar het is wél een schrijfactie. Wie
+door de zoekresultaten klikte terwijl er een achtergrondtaak liep, legde die
+taak dus stil: na vijf seconden wachten geeft sqlite het op met
+`database is locked`, en dan valt hij om halverwege het bijwerken van de
+sleutels.
+
+Drie dingen veranderd:
+
+- **WAL** — lezers en schrijvers gaan langs elkaar heen. Staat in het bestand
+  zelf, dus eenmalig, maar `db._stel_in()` zet hem bij elke verbinding zodat een
+  verse database het meteen goed heeft.
+- **`busy_timeout=30000`** — dertig seconden wachten in plaats van vijf.
+- **Het schema draait nog één keer per proces**, niet per verzoek.
+
+`synchronous=NORMAL` hoort bij WAL: bij een stroomstoring kan de laatste
+transactie verloren gaan, maar de database raakt niet beschadigd. Voor een
+hitlijstenarchief is dat de goede afweging — en er staat een momentopname naast.
+
+Naast `hitlijsten.sqlite` staan nu `-wal` en `-shm`. Die horen erbij; een kopie
+maak je met `VACUUM INTO` (wat `momentopnames.py` doet) en niet met `cp`.
+
 ## Conventies
 
 **Tijdstempels** zijn ISO-8601 met een `T` en in **lokale tijd**

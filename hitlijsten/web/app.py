@@ -105,6 +105,9 @@ def is_aangemeld() -> bool:
     return bool(session.get("aangemeld"))
 
 
+_schema_gedraaid = False
+
+
 def verbinding() -> sqlite3.Connection:
     """Een verbinding voor dit verzoek.
 
@@ -115,7 +118,16 @@ def verbinding() -> sqlite3.Connection:
     if "con" not in g:
         g.con = sqlite3.connect(db.DB_PATH)
         g.con.row_factory = sqlite3.Row
-        g.con.executescript(db.SCHEMA)
+        db._stel_in(g.con)
+        # Het schema wordt één keer per proces gedraaid en niet per verzoek.
+        # `CREATE TABLE IF NOT EXISTS` doet weliswaar niets, maar het is wél een
+        # schrijfactie -- en dan botst elke paginaweergave met een lopende
+        # achtergrondtaak. Precies zo viel er een om met "database is locked"
+        # terwijl er alleen maar iemand door de zoekresultaten klikte.
+        global _schema_gedraaid
+        if not _schema_gedraaid:
+            g.con.executescript(db.SCHEMA)
+            _schema_gedraaid = True
     return g.con
 
 
@@ -129,6 +141,31 @@ def leg_vast(soort: str, verwijst: str, veld: str, oud, nieuw, reden: str) -> No
          reden or None),
     )
     con.commit()
+
+
+def zoekpatroon(term: str) -> str:
+    """Maak van wat er is ingetypt een patroon voor LIKE.
+
+    Een sterretje is het jokerteken, want dat is wat mensen typen; SQL wil er
+    een procentteken. Zonder sterretje zoeken we "bevat", want dat is bij een
+    hitlijst bijna altijd de bedoeling -- wie "beatles" intypt wil ook "The
+    Beatles" vinden.
+
+        beatles      bevat        ->  %beatles%
+        beatles*     begint met   ->  beatles%
+        *beatles     eindigt op   ->  %beatles
+        *beatles*    bevat        ->  %beatles%
+
+    De procent- en onderstrepingstekens die iemand zélf intypt worden ontsnapt,
+    anders is "50%" ineens een joker en vindt hij alles.
+    """
+    term = (term or "").strip()
+    if not term:
+        return ""
+    veilig = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    if "*" in veilig:
+        return veilig.replace("*", "%")
+    return f"%{veilig}%"
 
 
 def _als_sleutel(tekst: str | None) -> str:
@@ -638,8 +675,12 @@ def _registreer(app: Flask) -> None:
     def zoek():
         term = (request.args.get("term") or "").strip()
         lijst = request.args.get("lijst") or ""
+        waar = request.args.get("waar") or "beide"
+        if waar not in ("beide", "artiest", "titel"):
+            waar = "beide"
         resultaten = []
         if term:
+            patroon = zoekpatroon(term)
             # `piekjaar` is de jaargang waarin het nummer zijn hoogste plek
             # haalde, en bij gelijke hoogte de eerste. Daar springt de link
             # naartoe: dat is de jaargang die naast het resultaat staat, dus je
@@ -649,15 +690,25 @@ def _registreer(app: Flask) -> None:
                 " MIN(jaar) van, MAX(jaar) tot, COUNT(*) weken, MIN(positie) hoogste,"
                 " (SELECT x.jaar FROM noteringen x WHERE x.sleutel=n.sleutel"
                 "  AND x.lijst=n.lijst ORDER BY x.positie, x.jaar LIMIT 1) piekjaar"
-                " FROM noteringen n WHERE (titel LIKE ? OR artiest LIKE ?)"
+                " FROM noteringen n WHERE "
             )
-            waarden = [f"%{term}%", f"%{term}%"]
+            # ESCAPE erbij, anders blijft een ingetypt procentteken een joker.
+            if waar == "artiest":
+                vraag += "artiest LIKE ? ESCAPE '\\'"
+                waarden = [patroon]
+            elif waar == "titel":
+                vraag += "titel LIKE ? ESCAPE '\\'"
+                waarden = [patroon]
+            else:
+                vraag += ("(titel LIKE ? ESCAPE '\\'"
+                          " OR artiest LIKE ? ESCAPE '\\')")
+                waarden = [patroon, patroon]
             if lijst in LIJSTEN:
                 vraag += " AND lijst=?"
                 waarden.append(lijst)
             vraag += " GROUP BY sleutel, lijst ORDER BY weken DESC LIMIT 200"
             resultaten = list(verbinding().execute(vraag, waarden))
-        return render_template("zoek.html", term=term, lijst=lijst,
+        return render_template("zoek.html", term=term, lijst=lijst, waar=waar,
                                resultaten=resultaten)
 
     @app.route("/nummer/<path:sleutel>")

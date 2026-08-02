@@ -160,6 +160,30 @@ def test_de_komma_in_een_bandnaam_blijft_staan():
         assert komma_is_samenwerking(naam) == naam, naam
 
 
+def test_zoeken_zonder_jokerteken_is_bevat():
+    """Wie "beatles" intypt wil ook "The Beatles" vinden."""
+    from hitlijsten.web.app import zoekpatroon
+
+    assert zoekpatroon("beatles") == "%beatles%"
+
+
+def test_het_sterretje_bepaalt_waar_het_woord_staat():
+    from hitlijsten.web.app import zoekpatroon
+
+    assert zoekpatroon("beatles*") == "beatles%"      # begint ermee
+    assert zoekpatroon("*beatles") == "%beatles"      # eindigt erop
+    assert zoekpatroon("*beatles*") == "%beatles%"    # bevat
+    assert zoekpatroon("rock*music") == "rock%music"  # ertussen
+
+
+def test_een_ingetypt_procentteken_is_geen_joker():
+    """Anders vindt "50%" ineens alles."""
+    from hitlijsten.web.app import zoekpatroon
+
+    assert zoekpatroon("50%") == "%50\%%"
+    assert zoekpatroon("a_b") == "%a\_b%"
+
+
 # --- de sleutelregels -------------------------------------------------------
 
 
