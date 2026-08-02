@@ -349,6 +349,16 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Lidwoord ("The Beatles" / "Beatles") | 349 artiesten, 21.833 sleutels | MusicBrainz |
 | Spatiëring ("ACDC" / "AC/DC") | 61 artiesten | MusicBrainz |
 | Typefouten in namen en titels | 31 artiesten, 86 nummers | MusicBrainz + Wikipedia |
+| Onmogelijke uitgavejaren | 47 nummers | de Top 40 zelf |
+
+**Het uitgavejaar heeft een ijkpunt dat beter is dan een catalogus: de eigen
+Top 40.** Een nummer kan niet uitkomen nadat het genoteerd stond. Over de 6.004
+nummers die zowel een uitjaar van Music Datastats als een Top 40-notering
+hebben, staat het uitjaar in **94,7%** van de gevallen precies gelijk aan het
+jaar van de eerste notering, en in 98,3% gelijk of eerder — het enige bereik dat
+kan. De 33 die er *na* lagen zijn teruggezet op het jaar van hun eerste Top
+40-notering. Daar zaten grove gevallen bij: *Space Oddity* van David Bowie stond
+volgens de bron uit 1975 terwijl het in 1969 al in de Top 40 stond.
 
 **De sleutel is waar het pijn doet.** Een verkeerd leesteken is lelijk maar
 onschuldig: de sleutel gooit leestekens toch al weg. Erger is wat de sleutel
