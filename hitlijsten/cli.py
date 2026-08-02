@@ -21,7 +21,7 @@ import traceback
 from datetime import datetime
 
 from . import db, fetch, mail, parsers
-from .config import JAAR, LIJSTEN, LOG_PATH, ROOT, verwachte_lengte
+from .config import JAAR, LIJSTEN, wordt_opgehaald, LOG_PATH, ROOT, verwachte_lengte
 
 TE_BEOORDELEN = ROOT / "te-beoordelen.csv"
 from .models import ParseFout, controleer_lijst
@@ -109,6 +109,8 @@ def nieuwe_nummers(con: sqlite3.Connection, lijst: str, jaar: int, week: int) ->
 def opdracht_backfill(jaar: int, vanaf: int, tot: int | None) -> None:
     with db.verbinding() as con:
         for lijst in LIJSTEN:
+            if not wordt_opgehaald(lijst):
+                continue        # de Top 2000 komt uit een CSV, niet van een site
             laatste = tot
             if laatste is None:
                 _, laatste = fetch.laatst_gepubliceerd(lijst)
@@ -140,6 +142,8 @@ def opdracht_bijwerken(
 
     with db.verbinding() as con:
         for lijst in LIJSTEN:
+            if not wordt_opgehaald(lijst):
+                continue        # de Top 2000 komt uit een CSV, niet van een site
             site_jaar, laatste = fetch.laatst_gepubliceerd(lijst)
             if jaar is not None and site_jaar != jaar:
                 log(
@@ -306,6 +310,27 @@ def opdracht_pdf(jaar: int | None, *, altijd: bool = False) -> list:
     return bestanden
 
 
+def opdracht_top2000(pad: str, jaar: int | None = None) -> dict:
+    """Lees de Top 2000 uit de CSV van Music Datastats."""
+    from .top2000 import importeer
+
+    with db.verbinding() as con:
+        uitkomst = importeer(con, pad, alleen_jaar=jaar)
+
+    edities = uitkomst["edities"]
+    log(f"{uitkomst['nummers']} nummers over {len(edities)} edities "
+        f"({edities[0]}-{edities[-1]})")
+    for editiejaar, aantal in sorted(uitkomst["geschreven"].items()):
+        log(f"  {editiejaar}: {aantal} noteringen")
+    kruis = uitkomst["kruisverwijzing"]
+    log(f"{kruis['raak']} van de {uitkomst['nummers']} nummers staan ook in een "
+        f"andere lijst:")
+    for lijst, aantal in sorted(kruis["per_lijst"].items(),
+                                key=lambda p: -p[1]):
+        log(f"  {LIJSTEN.get(lijst, {}).get('naam', lijst)}: {aantal}")
+    return uitkomst
+
+
 def opdracht_decennium(decennium: int | None) -> list:
     """Het decenniumklassement naar de decenniummap.
 
@@ -346,6 +371,8 @@ def opdracht_historie(
         for lijst, cfg in LIJSTEN.items():
             if alleen_lijst and lijst != alleen_lijst:
                 continue
+            if not wordt_opgehaald(lijst):
+                continue        # de Top 2000 komt uit een CSV, niet van een site
             start = max(vanaf or cfg.get("vanaf_jaar", 1965), cfg.get("vanaf_jaar", 1965))
             log("=" * 60)
             log(f"{cfg['naam']}: jaargangen {start} t/m {tot}")
@@ -735,6 +762,9 @@ def main(argv: list[str] | None = None) -> int:
                    help="beperk tot een lijst (standaard alle vier)")
     sub.add_parser("excel", parents=[jaar_ouder],
                    help="Excel-bestanden opnieuw bouwen")
+    t2 = sub.add_parser("top2000", parents=[jaar_ouder],
+                        help="de Top 2000 inlezen uit de CSV van Music Datastats")
+    t2.add_argument("--bestand", required=True, help="pad naar de CSV")
     pd = sub.add_parser("pdf", parents=[jaar_ouder],
                         help="de jaaroverzichten als PDF naar de jaarmappen")
     pd.add_argument("--alle", action="store_true",
@@ -781,6 +811,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.opdracht == "excel":
         opdracht_excel(jaar)
+    elif args.opdracht == "top2000":
+        opdracht_top2000(args.bestand, args.jaar)
     elif args.opdracht == "pdf":
         opdracht_pdf(None if args.alle else jaar, altijd=args.opnieuw)
     elif args.opdracht == "decennium":

@@ -10,6 +10,7 @@ er nieuw binnenkwam, en zet zestig jaar archief online op
 | Tipparade | top40.nl/tipparade | 30 | 1967 (± week 28) |
 | Sterren NL Top 25 | top40.nl/sterren-nl-top25 | 25 | 2019 (week 40) |
 | Oranje Top 30 | oranjetop30.nl | 30 | 2008 |
+| Top 2000 | CSV (Music Datastats) | 2000 | 1999 |
 
 De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen*.
 
@@ -37,9 +38,9 @@ database naast de code.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 255.482 noteringen over 7.541
-  weken. Top 40 1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje
-  Top 30 2008–2026 (19), Sterren NL 2019–2026 (8).
+- **Het hele archief staat in de database**: 309.482 noteringen. Top 40
+  1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
+  (19), Sterren NL 2019–2026 (8) en de Top 2000 1999–2025 (27 edities).
 - 305 Excel-bestanden en 149 PDF-jaaroverzichten gebouwd, plus 130 aliassen,
   267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
@@ -179,6 +180,40 @@ python -m hitlijsten.cli decennium --decennium 1970 # alleen de jaren zeventig
 
 De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
+### De Top 2000, de vreemde eend
+
+De andere vier lijsten komen wekelijks van een website. De **Top 2000** is een
+jaarlijkse uitzending tussen kerst en oud en nieuw, met tweeduizend noteringen
+in één keer, en komt binnen als CSV van Music Datastats — een matrix met een
+regel per nummer en een kolom per editie.
+
+```bash
+python -m hitlijsten.cli top2000 --bestand /volume1/Hitlijsten/data/top2000.csv
+```
+
+Elke editie wordt weggeschreven als jaargang met **week 52**, de week van de
+uitzending. Daardoor werken de sleutels, het jaaroverzicht en de database
+zonder uitzondering mee. In de lijstdefinitie staat `site: None`; daaraan
+herkent de wekelijkse run dat hij deze lijst met rust moet laten.
+
+**Wat er niet in past is de weekmatrix.** Binnen een jaargang is er één meting,
+dus "positie per week" zou een tabel van één kolom worden, en punten
+(lijstlengte − positie + 1) zijn niets anders dan de omgekeerde positie. Deze
+lijst krijgt daarom een eigen pagina: de editie met *vorige editie*, *verschil*,
+*aantal edities* en *hoogste ooit*, en daaronder de matrix **nummer × editie**
+— precies de vorm van de bron. Die matrix toont standaard de top 250; 2000 rijen
+maal 27 kolommen maakt de pagina anders 5 MB.
+
+**De sleutel is de brug naar de andere lijsten.** Artiest en titel gaan door
+dezelfde `sleutel_van()`, dus "Golden Earring — Radar Love" krijgt in de
+Top 2000 exact dezelfde sleutel als in de Top 40. Van de 4927 nummers delen er
+**3043 een sleutel** met onze bestaande lijsten: 2865 met de Tipparade, 2734 met
+de Top 40, 80 met de Oranje Top 30 en 37 met Sterren NL. De overige 1884 zijn
+grotendeels albumnummers die nooit als single noteerden.
+
+Nog niet gedaan: Excel en PDF voor deze lijst. Die bouwers gaan uit van weken en
+punten, dus die hebben een eigen vorm nodig.
+
 ## De webapplicatie
 
 **https://hitlijsten.hhaken.nl** — dezelfde gegevens als de Excel-bestanden,
@@ -302,6 +337,7 @@ Excel herbouwen, mailen. Hieronder staat kortweg `python`; lees dat als
 | `python -m hitlijsten excel` | Excel opnieuw bouwen uit de database |
 | `python -m hitlijsten decennium` | decenniumklassementen van de Top 40 naar de decenniummappen |
 | `python -m hitlijsten pdf --alle` | jaaroverzichten als PDF naar de jaarmappen |
+| `python -m hitlijsten top2000 --bestand <csv>` | de Top 2000 inlezen uit de CSV |
 | `python -m hitlijsten controle` | verdachte dubbelingen, met oordeel per paar |
 | `python -m hitlijsten kruiscontrole --alle` | onze Top 40 vergelijken met michajans.nl |
 | `python -m hitlijsten onderscheidingen` | Alarmschijven en Dancesmashes ophalen |
@@ -447,10 +483,11 @@ cd /volume1/Hitlijsten/app && . ./omgeving.sh
 ./venv/bin/python tests/test_decennium.py
 ./venv/bin/python tests/test_wetenswaardigheden.py
 ./venv/bin/python tests/test_pdf.py
+./venv/bin/python tests/test_top2000.py
 node tests/test_grafiek.mjs        # node staat niet op de NAS
 ```
 
-Zeven reeksen, ruim vierduizend controles. Ze draaien op de gecachete pagina's
+Acht reeksen, ruim vierduizend controles. Ze draaien op de gecachete pagina's
 en een tijdelijke database, dus zonder netwerk en zonder de echte data aan te
 raken. Handig na elke wijziging aan een parser of aan een bouwer.
 

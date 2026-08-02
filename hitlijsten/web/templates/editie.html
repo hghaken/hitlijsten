@@ -1,0 +1,173 @@
+{% extends "basis.html" %}
+{% block titel %}{{ lijst_namen.get(lijst, lijst) }} {{ jaar }} — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Jaaroverzicht</h1>
+<p class="onder">Kies een lijst en een editie.</p>
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
+      flex-wrap:wrap; margin-bottom:1.4rem">
+  <select name="lijst" onchange="this.form.submit()">
+    {% for sleutel, naam in lijst_namen.items() %}
+      <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}>{{ naam }}</option>
+    {% endfor %}
+  </select>
+  <select name="jaar" onchange="this.form.submit()">
+    {% for j in jaren %}
+      <option value="{{ j }}" {% if jaar == j %}selected{% endif %}>{{ j }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+
+  {# Geen Excel- of PDF-knop: die bouwers gaan uit van weken en punten, en die
+     zeggen bij een jaarlijkse lijst niets. Die krijgen een eigen vorm. #}
+
+  <span class="hint" style="margin-left:auto">
+    {{ jaren|length }} edities beschikbaar{% if jaren %}
+      ({{ jaren[-1] }}–{{ jaren[0] }}){% endif %}
+  </span>
+</form>
+
+{% if not nummers %}
+  <div class="melding fout">Voor deze editie staat er nog niets in de database.</div>
+{% else %}
+
+{% set nieuw = nummers | selectattr('edities', 'equalto', 1) | list %}
+{% set altijd = nummers | selectattr('edities', 'equalto', edities|length) | list %}
+
+<div class="kaarten">
+  <div class="kaart">
+    <div class="cijfer">{{ nummers|length }}</div>
+    <div class="naam">noteringen</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ edities|length }}</div>
+    <div class="naam">edities in de database</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ altijd|length }}</div>
+    <div class="naam">elk jaar genoteerd</div>
+  </div>
+  <div class="kaart" style="min-width:20rem">
+    <div class="naam">nummer 1 van {{ jaar }}</div>
+    <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
+      {{ nummers[0].titel }}</div>
+    <div class="hint">{{ nummers[0].artiest }}{% if nummers[0].uitjaar %}
+      — uit {{ nummers[0].uitjaar }}{% endif %}</div>
+  </div>
+</div>
+
+<h2>De editie van {{ jaar }}</h2>
+<p class="hint" style="margin-top:-.3rem">
+  De Top 2000 is één uitzending per jaar, tussen kerst en oud en nieuw, dus geen
+  weken en geen punten — alleen de positie. <b>Vorige editie</b> is de plek van
+  vorig jaar, <b>edities</b> het aantal jaren waarin het nummer stond, en
+  <b>hoogste</b> de beste positie ooit. Klik op een artiest of titel voor het
+  verloop over alle {{ edities|length }} edities.
+</p>
+
+<div class="tabelvak">
+  <table data-markeer="{{ markeer or '' }}">
+    <thead>
+      <tr>
+        <th class="getal">#</th><th class="breed">Artiest</th><th class="breed">Titel</th>
+        <th class="getal">Uit</th><th class="getal">Vorige editie</th>
+        <th class="getal">Verschil</th><th class="getal">Edities</th>
+        <th class="getal">Hoogste</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for n in nummers %}
+      <tr data-sleutel="{{ n.sleutel }}">
+        <td class="getal {% if n.positie == 1 %}top1{% elif n.positie <= 3 %}top3{% endif %}">
+          {{ n.positie }}</td>
+        <td class="breed klikbaar" title="Klik voor het verloop">{{ n.artiest }}</td>
+        <td class="breed klikbaar" title="Klik voor het verloop">{{ n.titel }}</td>
+        <td class="getal hint">{{ n.uitjaar or '' }}</td>
+        <td class="getal">{{ n.vorige or '' }}</td>
+        {# Een lagere positie is beter, dus vorige - nu: positief = gestegen. #}
+        <td class="getal" data-sorteer="{{ (n.vorige - n.positie) if n.vorige else -9999 }}">
+          {% if n.vorige %}
+            {% set verschil = n.vorige - n.positie %}
+            <span class="{% if verschil > 0 %}op{% elif verschil < 0 %}neer{% endif %}"
+              >{{ '+' ~ verschil if verschil > 0 else verschil }}</span>
+          {% else %}<span class="speld nieuw">nieuw</span>{% endif %}
+        </td>
+        <td class="getal">{{ n.edities }}</td>
+        <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Positie per editie</h2>
+<p class="hint" style="margin-top:-.3rem">
+  Een rij per nummer uit deze editie, een kolom per jaargang. Goud is nummer 1.
+  Een lege cel betekent dat het nummer dat jaar niet in de lijst stond.
+  Horizontaal scrollen voor de oudere edities.
+  Hieronder staat de top {{ matrix_tot }}; tweeduizend rijen maal
+  {{ edities|length }} kolommen maakt de pagina anders onwerkbaar zwaar.
+  <span style="white-space:nowrap">Toon
+    {% for k in matrix_keuzes %}<a href="{{ url_for('jaaroverzicht', lijst=lijst,
+       jaar=jaar, matrix=k) }}">{{ k }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+    · <a href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar, matrix='alles') }}">alle
+    {{ nummers|length }}</a>.</span>
+</p>
+<div class="tabelvak">
+  <table>
+    <thead>
+      <tr>
+        <th class="breed" style="position:sticky; left:0; z-index:3; background:#131a2b">Artiest — titel</th>
+        {% for e in edities %}<th class="getal">{{ e }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for n in matrix %}
+      <tr>
+        <td class="breed" style="position:sticky; left:0; background:#0f1626">
+          {{ n.artiest }} <span class="hint">— {{ n.titel }}</span>
+        </td>
+        {% for e in edities %}
+          {% set p = n.posities.get(e) %}
+          <td class="getal {% if p == 1 %}top1{% elif p and p <= 10 %}top3{% endif %}">
+            {{ p if p else '' }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+/* Klikken op een nummer opent het verloop over alle edities; springen met
+   `markeer` licht een nummer op. Dezelfde afspraken als op het jaaroverzicht
+   van de weeklijsten, alleen gaat de as hier over jaren in plaats van weken. */
+(function () {
+  const tabel = document.querySelector(".tabelvak table");
+  if (!tabel) return;
+
+  const sleutel = tabel.dataset.markeer;
+  if (sleutel) {
+    const rij = Array.from(tabel.tBodies[0].rows)
+      .find((r) => r.dataset.sleutel === sleutel);
+    if (rij) { rij.classList.add("opgelicht"); rij.scrollIntoView({ block: "center" }); }
+  }
+
+  // De matrix staat er al; klikken schuift die rij in beeld.
+  const matrix = document.querySelectorAll(".tabelvak table")[1];
+  tabel.addEventListener("click", function (gebeurtenis) {
+    const cel = gebeurtenis.target.closest("td.klikbaar");
+    if (!cel || !matrix) return;
+    const nr = cel.parentElement.rowIndex - 1;
+    const doel = matrix.tBodies[0].rows[nr];
+    if (!doel) return;
+    Array.from(matrix.tBodies[0].rows).forEach((r) => r.classList.remove("opgelicht"));
+    doel.classList.add("opgelicht");
+    doel.scrollIntoView({ block: "center" });
+  });
+})();
+</script>
+
+{% endif %}
+{% endblock %}

@@ -15,7 +15,7 @@ from flask import (
 )
 
 from .. import db, excel
-from ..config import EXCEL_DIR, LIJSTEN, ROOT, decennium_van
+from ..config import EXCEL_DIR, LIJSTEN, ROOT, decennium_van, is_jaarlijks
 from ..datums import als_tekst, vrijdag_van
 from ..db import Looptijd, looptijden
 from . import taken
@@ -196,6 +196,27 @@ def _registreer(app: Flask) -> None:
         jaar = int(gevraagd) if gevraagd and gevraagd.isdigit() and int(gevraagd) in jaren \
             else jaren[0]
 
+        # De Top 2000 is geen weeklijst maar een editie per jaar. "Positie per
+        # week" levert daar een tabel van een kolom en punten zijn niets anders
+        # dan de omgekeerde positie; die jaargang krijgt dus een eigen opzet,
+        # met de matrix over de edities heen.
+        if is_jaarlijks(lijst):
+            nummers = db.editie_klassement(con, lijst, jaar)
+            # De matrix is 2000 rijen x 27 edities; volledig getoond verdubbelt
+            # dat de pagina naar ruim 5 MB. De editie zelf blijft compleet, de
+            # matrix wordt begrensd -- met een keuze om hem toch uit te klappen.
+            gevraagd = request.args.get("matrix", "")
+            matrix_tot = (len(nummers) if gevraagd == "alles"
+                          else int(gevraagd) if gevraagd.isdigit()
+                          and int(gevraagd) in MATRIX_KEUZES else MATRIX_KEUZES[0])
+            return render_template(
+                "editie.html", lijst=lijst, jaren=jaren, jaar=jaar,
+                nummers=nummers, edities=db.edities_van(con, lijst),
+                matrix=nummers[:matrix_tot], matrix_tot=matrix_tot,
+                matrix_keuzes=MATRIX_KEUZES,
+                markeer=request.args.get("markeer") or "",
+            )
+
         rijen = list(con.execute(
             "SELECT week, positie, titel, artiest, label, sleutel FROM noteringen"
             " WHERE lijst=? AND jaar=? ORDER BY week, positie", (lijst, jaar)))
@@ -270,6 +291,9 @@ def _registreer(app: Flask) -> None:
     # dertig, waardoor een eerste plaats in het ene jaar meer waard is dan in
     # het andere.
     DECENNIUM_LIJST = "top40"
+
+    # Hoeveel rijen de matrix van een jaarlijkse lijst standaard toont.
+    MATRIX_KEUZES = (250, 500, 1000)
 
     @app.route("/decennium")
     def decennium_overzicht():

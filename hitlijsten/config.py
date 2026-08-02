@@ -79,7 +79,36 @@ LIJSTEN = {
         "heeft_label": True,
         "vanaf_jaar": 2008,
     },
+    # De vreemde eend. De Top 2000 is geen weeklijst maar een jaarlijkse
+    # uitzending tussen kerst en oud en nieuw, met tweeduizend noteringen in
+    # een keer. Er is geen site die wij uitlezen: de gegevens komen uit een
+    # CSV (Music Datastats) en worden met de hand geimporteerd, zodra de
+    # nieuwe editie er is. Vandaar site=None -- daar herkent de wekelijkse run
+    # aan dat hij deze lijst met rust moet laten.
+    "top2000": {
+        "naam": "Top 2000",
+        "site": None,
+        "slug": None,
+        "lengte": 2000,
+        "bestand": "Top2000",
+        "heeft_label": False,
+        "vanaf_jaar": 1999,
+        "jaarlijks": True,
+        # De uitzending loopt van 25 t/m 31 december; week 52 is de plek in het
+        # schema waar die editie hoort. Er is maar een notering per jaargang.
+        "editie_week": 52,
+    },
 }
+
+
+def is_jaarlijks(lijst: str) -> bool:
+    """Een lijst met een editie per jaar in plaats van een notering per week."""
+    return bool(LIJSTEN.get(lijst, {}).get("jaarlijks"))
+
+
+def wordt_opgehaald(lijst: str) -> bool:
+    """Haalt de wekelijkse run deze lijst van een site? Zo niet: met rust laten."""
+    return bool(LIJSTEN.get(lijst, {}).get("site"))
 
 
 def verwachte_lengte(lijst: str, jaar: int) -> int | None:

@@ -39,7 +39,10 @@ CREATE TABLE IF NOT EXISTS noteringen (
     weken_genoteerd  INTEGER,
     vorige_positie   INTEGER,
     site_status      TEXT    NOT NULL,
-    sleutel          TEXT    NOT NULL
+    sleutel          TEXT    NOT NULL,
+    -- Alleen de Top 2000 vult dit: het jaar waarin het nummer uitkwam. De
+    -- weeklijsten kennen dat gegeven niet en laten het leeg.
+    uitjaar          INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_noteringen_sleutel
@@ -138,6 +141,14 @@ def _migreer_primaire_sleutel(con: sqlite3.Connection) -> None:
     con.commit()
 
 
+def _voeg_uitjaar_toe(con: sqlite3.Connection) -> None:
+    """Voeg de kolom `uitjaar` toe aan een database die hem nog niet heeft."""
+    kolommen = {r[1] for r in con.execute("PRAGMA table_info(noteringen)")}
+    if kolommen and "uitjaar" not in kolommen:
+        con.execute("ALTER TABLE noteringen ADD COLUMN uitjaar INTEGER")
+        con.commit()
+
+
 @contextmanager
 def verbinding() -> Iterator[sqlite3.Connection]:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -146,6 +157,7 @@ def verbinding() -> Iterator[sqlite3.Connection]:
     try:
         con.executescript(SCHEMA)
         _migreer_primaire_sleutel(con)
+        _voeg_uitjaar_toe(con)
         yield con
         con.commit()
     finally:
@@ -523,3 +535,57 @@ def looptijden(
             loopt_door=kalender[laat] > laatste,
         )
     return uitkomst
+
+
+# --- jaarlijkse lijsten (de Top 2000) --------------------------------------
+#
+# Een lijst met een editie per jaar past wel in het schema, maar niet in de
+# presentatie van de weeklijsten: binnen een jaargang is er maar een meting, dus
+# "positie per week" levert een tabel van een kolom. De zinvolle matrix is hier
+# nummer x editie, en dat is precies wat deze twee functies opleveren.
+
+
+def editie_klassement(
+    con: sqlite3.Connection, lijst: str, jaar: int
+) -> list[dict]:
+    """De noteringen van een editie, op positie, met de historie erbij.
+
+    Per nummer: de positie van dit jaar, die van de vorige editie, in hoeveel
+    edities het stond en wat de beste positie ooit was. Dat laatste kost een
+    tweede query over alle jaargangen, maar zonder die cijfers is een editie
+    alleen een lijst namen.
+    """
+    dit_jaar = list(con.execute(
+        "SELECT positie, artiest, titel, sleutel, uitjaar FROM noteringen"
+        " WHERE lijst=? AND jaar=? ORDER BY positie", (lijst, jaar)))
+    if not dit_jaar:
+        return []
+
+    historie: dict[str, dict[int, int]] = {}
+    for sleutel, rij_jaar, positie in con.execute(
+            "SELECT sleutel, jaar, MIN(positie) FROM noteringen WHERE lijst=?"
+            " GROUP BY sleutel, jaar", (lijst,)):
+        historie.setdefault(sleutel, {})[rij_jaar] = positie
+
+    uit = []
+    for rij in dit_jaar:
+        alles = historie.get(rij["sleutel"], {})
+        uit.append({
+            "positie": rij["positie"],
+            "artiest": rij["artiest"],
+            "titel": rij["titel"],
+            "sleutel": rij["sleutel"],
+            "uitjaar": rij["uitjaar"],
+            "vorige": alles.get(jaar - 1),
+            "edities": len(alles),
+            "hoogste": min(alles.values()) if alles else rij["positie"],
+            "posities": alles,
+        })
+    return uit
+
+
+def edities_van(con: sqlite3.Connection, lijst: str) -> list[int]:
+    """Alle jaargangen waarvan we een editie hebben, oplopend."""
+    return [r[0] for r in con.execute(
+        "SELECT DISTINCT jaar FROM noteringen WHERE lijst=? ORDER BY jaar",
+        (lijst,))]
