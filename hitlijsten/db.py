@@ -190,18 +190,21 @@ def bewaar_week(
 ) -> int:
     """Schrijf één week weg; vervangt wat er al stond voor die week."""
     from .normalize import sleutel_van
-    from .opschonen import schoon_tekst
+    from .opschonen import schoon_tekst, splits_kanten
 
     # Leestekens hier rechtzetten en niet in de parsers: dan geldt het voor elke
-    # bron, ook voor een bron die er later bij komt.
+    # bron, ook voor een bron die er later bij komt. Hetzelfde geldt voor de
+    # dubbele A-kant: top40.nl levert "No Reply ; Rock And Roll Music" als een
+    # regel, en dat worden hier twee noteringen op dezelfde positie.
     rijen = [
         (
-            n.lijst, n.jaar, n.week, n.positie, schoon_tekst(n.titel),
-            schoon_tekst(n.artiest), n.label,
+            n.lijst, n.jaar, n.week, n.positie, schoon_tekst(titel),
+            schoon_tekst(artiest), n.label,
             n.weken_genoteerd, n.vorige_positie, n.site_status,
-            sleutel_van(n.artiest, n.titel),
+            sleutel_van(artiest, titel),
         )
         for n in noteringen
+        for artiest, titel in splits_kanten(n.artiest, n.titel)
     ]
     # Alles of niets: gaat er halverwege iets mis, dan mag er geen halve week
     # blijven staan. Die zou daarna als "al opgehaald" gelden en stil verkeerde

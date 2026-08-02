@@ -505,8 +505,9 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
     from .opschonen import (bewaar_artiestnaam, bewaar_titel,
                             geleende_hoofdletters, herstel_tekst,
                             meerderheidsnaam, naamvarianten, pas_namen_toe,
-                            pas_titels_toe, tekstfouten, titelvarianten,
-                            uitgave_en_nummer)
+                            pas_titels_toe, splits_dubbele_a_kanten,
+                            tekstfouten, titelvarianten, uitgave_en_nummer,
+                            dubbele_a_kanten, spatievarianten)
 
     with db.verbinding() as con:
         fouten = tekstfouten(con)
@@ -521,6 +522,10 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
             f"hoofdletters of accenten")
         log(f"{len(bakken['lidwoord'])} met en zonder lidwoord, "
             f"{len(bakken['anders'])} met een echt andere schrijfwijze")
+
+        dubbel = dubbele_a_kanten(con)
+        log(f"{len(dubbel)} noteringen met twee nummers op een positie "
+            f"(dubbele A-kant)")
 
         uitgaven = uitgave_en_nummer(con)
         log(f"{len(uitgaven)} titels met de uitgave ervoor "
@@ -561,6 +566,11 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
         log(f"{verslag['noteringen']} noteringen kregen de vastgestelde titel "
             f"({verslag['nummers']} schrijfwijzen)")
 
+        if dubbel:
+            verslag = splits_dubbele_a_kanten(con)
+            log(f"{verslag['nieuw']} noteringen erbij: elke kant van een "
+                f"dubbele A-kant staat nu op zijn eigen regel")
+
         # De uitgave eraf, en een alias zodat de notering samenvalt met dezelfde
         # titel in de andere lijsten. Zonder die alias verandert alleen wat je
         # ziet en blijft het nummer in tweeen liggen.
@@ -590,6 +600,30 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
             con.commit()
             vergeet_aliases()
             log(f"{len(uitgaven)} titels ontdaan van hun uitgave")
+
+        # Twee schrijfwijzen die alleen in spaties verschillen zijn een nummer.
+        spaties = spatievarianten(con)
+        for doel, andere, goede_titel in spaties:
+            for bron in andere:
+                con.execute(
+                    "INSERT OR REPLACE INTO aliases (van, naar, opmerking,"
+                    " aangemaakt) VALUES (?,?,?,?)",
+                    (bron, doel, "zelfde nummer, andere spatiëring",
+                     datetime.now().isoformat(timespec="seconds")))
+                con.execute(
+                    "UPDATE noteringen SET titel=?, sleutel=? WHERE sleutel=?",
+                    (goede_titel, doel, bron))
+                con.execute(
+                    "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld,"
+                    " oud, nieuw, reden) VALUES (?,?,?,?,?,?,?)",
+                    (datetime.now().isoformat(timespec="seconds"), "titel",
+                     doel, "titel", bron, goede_titel,
+                     "zelfde nummer, andere spatiëring"))
+        if spaties:
+            con.commit()
+            vergeet_aliases()
+            log(f"{len(spaties)} nummers samengevoegd die alleen in spaties "
+                f"verschilden")
 
         for sleutel, oud, goed in geleende_hoofdletters(con):
             bewaar_titel(con, sleutel, goed, "hoofdletters van elders")

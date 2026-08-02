@@ -352,6 +352,30 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Onmogelijke uitgavejaren | 47 nummers | de Top 40 zelf |
 | Titels met twee schrijfwijzen | 1.544 nummers, 13.905 noteringen | een regel |
 | Uitgave voor het nummer | 24 titels | een regel |
+| Dubbele A-kanten | 210 nummers, 1.817 noteringen | een regel |
+
+**De dubbele A-kant.** In de jaren zestig en zeventig kwamen er singles uit met
+twee kanten die allebei gedraaid werden en allebei de lijst haalden. top40.nl
+zet die in één regel met een puntkomma: `"No Reply ; Rock And Roll Music"`. Voor
+een DJ zijn dat twee nummers, en zo staan ze nu ook in de database — twee
+noteringen op dezelfde positie:
+
+```
+1965 wk 18   #9  The Beatles - Eight Days A Week
+1965 wk 18   #9  The Beatles - Baby's In Black
+```
+
+Het schema kon dit al aan: twee noteringen op één positie bestonden al bij de
+Tipparade, die echte gedeelde posities kent. **De positie telt één keer**: beide
+nummers krijgen de punten van die ene plek en dus hetzelfde totaal, precies wat
+de officiële jaarlijst de single toekent. In het jaaroverzicht staan ze naast
+elkaar als gelijkspel. De verificatie tegen de officiële jaarlijst blijft
+overeind, want sinds 2020 komt er geen dubbele A-kant meer voor.
+
+Staat er ook in de artiest een puntkomma en zijn het er evenveel, dan horen ze
+bij elkaar: "De Dijk ; The Scene" levert De Dijk bij de eerste titel en The
+Scene bij de tweede. Klopt het aantal niet, dan krijgen beide kanten de hele
+naam — dat is vaker een samenwerking dan een tweede uitvoerende.
 
 **Een conventie van top40.nl** die de andere lijsten niet kennen: bij een EP of
 album met een leadtrack schrijven ze de uitgave ervoor, met een

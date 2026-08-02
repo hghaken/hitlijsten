@@ -44,7 +44,8 @@ __all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
-           "uitgave_en_nummer"]
+           "uitgave_en_nummer", "splits_kanten", "splits_dubbele_a_kanten",
+           "spatievarianten"]
 
 # Wat er in de bronnen misgaat met leestekens. Bewust kort: elk teken hier is
 # er een waarvan is vastgesteld dat het in de data staat en nooit bedoeld is.
@@ -411,6 +412,123 @@ def uitgave_en_nummer(con: sqlite3.Connection) -> list[tuple[str, str, str]]:
         if kort and kort != r["titel"]:
             uit.append((r["sleutel"], r["titel"], kort))
     return uit
+
+
+def spatievarianten(con: sqlite3.Connection) -> list[tuple[str, list, str]]:
+    """Nummers die identiek zijn zodra je de spaties weglaat.
+
+    "Rock And Rollmusic" (top40.nl) tegen "Rock And Roll Music" (de andere
+    lijsten), "Toofunky" tegen "Too Funky", "Itsnogood" tegen "It's No Good".
+    Dat zijn geen twee nummers maar twee schrijfwijzen, met twee sleutels en dus
+    verdeelde punten.
+
+    Hier wint niet de meerderheid maar **de variant met de meeste spaties**. Een
+    spatie raakt weg bij het overtypen; er komt er zelden een bij. Geeft
+    (doelsleutel, [andere sleutels], titel).
+    """
+    aantal: dict[str, int] = {}
+    titel: dict[str, str] = {}
+    for r in con.execute("SELECT sleutel, titel, COUNT(*) n FROM noteringen"
+                         " GROUP BY sleutel"):
+        aantal[r["sleutel"]] = r["n"]
+        titel[r["sleutel"]] = r["titel"]
+
+    zonder: dict[str, list[str]] = {}
+    for sleutel in aantal:
+        zonder.setdefault(sleutel.replace(" ", ""), []).append(sleutel)
+
+    uit = []
+    for leden in zonder.values():
+        if len(leden) < 2:
+            continue
+        doel = max(leden, key=lambda s: (titel[s].count(" "), aantal[s]))
+        uit.append((doel, [s for s in leden if s != doel], titel[doel]))
+    return uit
+
+
+# --- 4. dubbele A-kanten ---------------------------------------------------
+
+_KANT = " ; "
+
+
+def splits_kanten(artiest: str, titel: str) -> list[tuple[str, str]]:
+    """Een dubbele A-kant uit elkaar halen. Geen puntkomma -> één paar terug.
+
+    top40.nl zet de twee kanten van één single in één regel, gescheiden door een
+    puntkomma: "No Reply ; Rock And Roll Music". Het zijn twee nummers die
+    allebei gedraaid werden en allebei de lijst haalden, en voor een DJ zijn het
+    dus ook twee nummers.
+
+    Staat er ook in de artiest een puntkomma en zijn het er evenveel, dan horen
+    ze bij elkaar: "De Dijk ; The Scene" met "Iedereen Is Van De Wereld ; Nieuwe
+    Laarzen" levert De Dijk bij het eerste en The Scene bij het tweede. Klopt
+    het aantal niet, dan krijgen beide kanten de hele artiestnaam -- dat is
+    vaker een samenwerking dan een tweede uitvoerende.
+    """
+    if _KANT not in (titel or ""):
+        return [(artiest, titel)]
+    titels = [t.strip() for t in titel.split(_KANT)]
+    artiesten = [a.strip() for a in (artiest or "").split(_KANT)]
+    if len(artiesten) != len(titels):
+        artiesten = [artiest] * len(titels)
+    return [(a, t) for a, t in zip(artiesten, titels) if t]
+
+
+def dubbele_a_kanten(con: sqlite3.Connection) -> list[dict]:
+    """Alle noteringen die uit twee nummers bestaan."""
+    uit = []
+    for r in con.execute(
+            "SELECT id, lijst, jaar, week, positie, artiest, titel, sleutel,"
+            " label, weken_genoteerd, vorige_positie, site_status, uitjaar"
+            " FROM noteringen WHERE titel LIKE ?", (f"%{_KANT}%",)):
+        kanten = splits_kanten(r["artiest"], r["titel"])
+        if len(kanten) > 1:
+            uit.append({"rij": dict(r), "kanten": kanten})
+    return uit
+
+
+def splits_dubbele_a_kanten(con: sqlite3.Connection) -> dict:
+    """Maak van elke dubbele A-kant twee noteringen op dezelfde positie.
+
+    De positie telt één keer: beide nummers krijgen de punten van die ene plek,
+    en dus allebei hetzelfde totaal. Dat is precies wat de officiële jaarlijst
+    de single toekent -- er staat er bij ons alleen twee keer een, op dezelfde
+    hoogte, in plaats van één regel met een puntkomma.
+
+    Het schema kan dit al aan: twee noteringen op dezelfde positie in dezelfde
+    week bestonden al bij de Tipparade, die echte gedeelde posities kent.
+    """
+    from .normalize import sleutel_van
+
+    gevallen = dubbele_a_kanten(con)
+    verslag = {"noteringen": 0, "nieuw": 0}
+    for geval in gevallen:
+        rij, kanten = geval["rij"], geval["kanten"]
+        eerste, rest = kanten[0], kanten[1:]
+        con.execute(
+            "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE id=?",
+            (eerste[0], eerste[1], sleutel_van(*eerste), rij["id"]))
+        verslag["noteringen"] += 1
+        for artiest, titel in rest:
+            con.execute(
+                "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
+                " artiest, label, weken_genoteerd, vorige_positie, site_status,"
+                " sleutel, uitjaar) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                (rij["lijst"], rij["jaar"], rij["week"], rij["positie"], titel,
+                 artiest, rij["label"], rij["weken_genoteerd"],
+                 rij["vorige_positie"], rij["site_status"],
+                 sleutel_van(artiest, titel), rij["uitjaar"]))
+            verslag["nieuw"] += 1
+        con.execute(
+            "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud,"
+            " nieuw, reden) VALUES (?,?,?,?,?,?,?)",
+            (datetime.now().isoformat(timespec="seconds"), "dubbele a-kant",
+             f"{rij['lijst']} {rij['jaar']} wk {rij['week']} #{rij['positie']}",
+             "titel", f"{rij['artiest']} - {rij['titel']}",
+             " + ".join(f"{a} - {t}" for a, t in kanten),
+             "twee nummers op een positie, elk als eigen notering"))
+    con.commit()
+    return verslag
 
 
 def geleende_hoofdletters(con: sqlite3.Connection) -> list[tuple[str, str, str]]:

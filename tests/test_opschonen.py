@@ -18,8 +18,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from hitlijsten.normalize import normaliseer, artiestsleutel   # noqa: E402
-from hitlijsten.opschonen import (_kaal, meerderheidsnaam,     # noqa: E402
-                                  naamvarianten, schoon_tekst)
+from hitlijsten.opschonen import (_kaal, _UITGAVE,              # noqa: E402
+                                  meerderheidsnaam, naamvarianten,
+                                  schoon_tekst, splits_kanten)
 
 
 def _database(noteringen):
@@ -132,6 +133,45 @@ def test_varianten_worden_naar_soort_gescheiden():
 def test_een_artiest_met_een_schrijfwijze_valt_nergens_in():
     con = _database([("top40", "Doe Maar", "Is Dit Alles", "doe maar|is dit")])
     assert all(not groepen for groepen in naamvarianten(con).values())
+
+
+# --- dubbele A-kanten -------------------------------------------------------
+
+
+def test_dubbele_a_kant_wordt_twee_nummers():
+    assert splits_kanten("The Beatles", "No Reply ; Rock And Roll Music") == [
+        ("The Beatles", "No Reply"), ("The Beatles", "Rock And Roll Music")]
+
+
+def test_twee_artiesten_horen_bij_twee_kanten():
+    assert splits_kanten("De Dijk ; The Scene",
+                         "Iedereen Is Van De Wereld ; Nieuwe Laarzen") == [
+        ("De Dijk", "Iedereen Is Van De Wereld"),
+        ("The Scene", "Nieuwe Laarzen")]
+
+
+def test_ongelijk_aantal_geeft_beide_kanten_de_hele_naam():
+    """Drie artiesten bij twee titels is een samenwerking, geen tweede kant."""
+    assert splits_kanten("A ; B ; C", "X ; Y") == [("A ; B ; C", "X"),
+                                                   ("A ; B ; C", "Y")]
+
+
+def test_zonder_puntkomma_verandert_er_niets():
+    assert splits_kanten("Simon & Garfunkel", "The Boxer") == [
+        ("Simon & Garfunkel", "The Boxer")]
+
+
+# --- de uitgave voor het nummer ---------------------------------------------
+
+
+def test_uitgave_gaat_van_de_titel_af():
+    assert _UITGAVE.sub("", ">Abort, Retry, Fail?_ : Your Woman", count=1) ==         "Your Woman"
+    assert _UITGAVE.sub("", "Live! : Roll Over Lay Down", count=1) ==         "Roll Over Lay Down"
+
+
+def test_dubbelepunt_zonder_spaties_blijft_staan():
+    """"Titel: ondertitel" is een andere vorm en geen uitgave."""
+    assert _UITGAVE.sub("", "Titel: ondertitel", count=1) == "Titel: ondertitel"
 
 
 def main() -> int:
