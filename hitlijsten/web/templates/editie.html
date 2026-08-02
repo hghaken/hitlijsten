@@ -27,6 +27,16 @@
       <option value="{{ j }}" {% if jaar == j %}selected{% endif %}>{{ j }}</option>
     {% endfor %}
   </select>
+  {% if totaal > drempel %}
+    {# Alleen bij een editie die langer is dan de drempel; anders staat er een
+       keuzelijst met een enkele mogelijkheid. #}
+    <select name="toon" onchange="this.form.submit()">
+      <option value="{{ drempel }}" {% if toon <= drempel %}selected{% endif %}
+        >top {{ drempel }}</option>
+      <option value="alles" {% if toon > drempel %}selected{% endif %}
+        >alle {{ totaal }}</option>
+    </select>
+  {% endif %}
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
   {# Geen Excel- of PDF-knop: die bouwers gaan uit van weken en punten, en die
@@ -83,13 +93,9 @@
   vorig jaar, <b>edities</b> het aantal jaren waarin het nummer stond, en
   <b>hoogste</b> de beste positie ooit.
   {% if toon < totaal %}
-    Hieronder staan de eerste {{ toon }} van {{ totaal }}; vierduizend regels
-    maken de pagina anders onwerkbaar zwaar.
-    <span style="white-space:nowrap">Toon
-      {% for k in editie_keuzes %}<a href="{{ url_for('jaaroverzicht', lijst=lijst,
-         jaar=jaar, toon=k) }}">{{ k }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
-      · <a href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar, toon='alles') }}">alle
-      {{ totaal }}</a>.</span>
+    Hieronder staan de eerste {{ toon }} van {{ totaal }}; alles tegelijk maakt
+    de pagina onwerkbaar zwaar. Kies hierboven <b>alle {{ totaal }}</b> om de
+    hele editie te zien.
   {% endif %}
   <b>Terug sinds</b> betekent dat het nummer vorig jaar niet in de lijst stond
   maar daarvoor wél — wijs het aan om te zien hoeveel edities het miste.

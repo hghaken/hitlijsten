@@ -225,10 +225,8 @@ def _registreer(app: Flask) -> None:
             # Een editie van vierduizend regels is 2,9 MB HTML. Korte lijsten
             # blijven compleet; pas boven de grens wordt er afgetopt, met een
             # keuze om alsnog alles te tonen.
-            gevraagd_toon = request.args.get("toon", "")
-            toon = (len(alle_nummers) if gevraagd_toon == "alles"
-                    else int(gevraagd_toon) if gevraagd_toon.isdigit()
-                    and int(gevraagd_toon) in EDITIE_KEUZES
+            toon = (len(alle_nummers)
+                    if request.args.get("toon") == "alles"
                     else min(EDITIE_DREMPEL, len(alle_nummers)))
             nummers = alle_nummers[:toon]
             # De matrix is 2000 rijen x 27 edities; volledig getoond verdubbelt
@@ -244,7 +242,7 @@ def _registreer(app: Flask) -> None:
                 edities=db.edities_van(con, lijst),
                 matrix=nummers[:matrix_tot], matrix_tot=matrix_tot,
                 matrix_keuzes=MATRIX_KEUZES, toon=toon,
-                editie_keuzes=[k for k in EDITIE_KEUZES if k < len(alle_nummers)],
+                drempel=EDITIE_DREMPEL,
                 markeer=request.args.get("markeer") or "",
             )
 
@@ -325,9 +323,9 @@ def _registreer(app: Flask) -> None:
 
     # Hoeveel rijen de matrix van een jaarlijkse lijst standaard toont.
     MATRIX_KEUZES = (250, 500, 1000)
-    # Boven dit aantal wordt de editietabel afgetopt.
+    # Boven dit aantal wordt de editietabel afgetopt. Alles tot en met dit
+    # aantal is compleet te tonen -- de Top 2000 dus in zijn geheel.
     EDITIE_DREMPEL = 2000
-    EDITIE_KEUZES = (500, 1000, 2000, 4000)
 
     @app.route("/decennium")
     def decennium_overzicht():
