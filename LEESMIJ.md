@@ -370,7 +370,9 @@ laatste twaalf plus van elke dag de oudste, tot dertig dagen terug.
 
 **Dit is geen back-up.** Het staat op dezelfde schijf. Tegen een verkeerde
 opdracht helpt het, tegen een kapot volume niet — daarvoor is er het
-snapshotschema van de NAS en Hyper Backup.
+snapshotschema van de NAS, dat sinds 2 augustus 2026 ook op deze share staat.
+De twee vullen elkaar aan: een snapshot bewaart de hele share en overleeft een
+verwijderde map, deze kopieën zitten er juist in en gaan met één knop terug.
 
 ### Opschonen
 

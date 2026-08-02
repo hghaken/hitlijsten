@@ -29,7 +29,9 @@ DIT IS GEEN BACK-UP
 -------------------
 Het staat op dezelfde schijf als het origineel. Tegen een verkeerde opdracht
 helpt het, tegen een kapot volume niet. Daarvoor is er het snapshotschema van de
-NAS zelf (dat deze share nog niet heeft) en Hyper Backup.
+NAS (sinds 2 augustus 2026 ook op deze share) en Hyper Backup. Die twee vullen
+elkaar aan: een snapshot bewaart de hele share en overleeft een verwijderde map,
+deze kopieën zitten er juist in en zijn met een knop terug te zetten.
 """
 from __future__ import annotations
 
