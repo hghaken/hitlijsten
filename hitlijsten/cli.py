@@ -507,7 +507,8 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
                             meerderheidsnaam, naamvarianten, pas_namen_toe,
                             pas_titels_toe, splits_dubbele_a_kanten,
                             tekstfouten, titelvarianten, uitgave_en_nummer,
-                            dubbele_a_kanten, spatievarianten)
+                            dubbele_a_kanten, spatievarianten,
+                            verzeker_aliassen)
 
     with db.verbinding() as con:
         fouten = tekstfouten(con)
@@ -624,6 +625,15 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
             vergeet_aliases()
             log(f"{len(spaties)} nummers samengevoegd die alleen in spaties "
                 f"verschilden")
+
+        # Een hernoemde artiest levert een andere berekende sleutel op; zonder
+        # alias trekt de eerstvolgende herberekening hem weer uit elkaar.
+        verslag = verzeker_aliassen(con)
+        if verslag["aliassen"] or verslag["hersteld"]:
+            vergeet_aliases()
+            log(f"{verslag['aliassen']} aliassen gelegd tussen een vastgestelde "
+                f"naam en zijn sleutel; {verslag['hersteld']} noteringen "
+                f"teruggezet")
 
         for sleutel, oud, goed in geleende_hoofdletters(con):
             bewaar_titel(con, sleutel, goed, "hoofdletters van elders")

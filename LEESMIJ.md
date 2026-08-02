@@ -444,6 +444,20 @@ theorie:
   maken is. Die blijven met rust; ze staan in `opschonen --toepassen` netjes
   geteld.
 
+**De sleutel volgt de naam.** Een valkuil die pas opvalt als je hem al hebt
+getrapt: de sleutel wordt uit de naam berekend, en `artiestnamen` verandert die
+naam. "ACDC" werd "AC/DC", en de sleutel die je daaruit berekent is "ac dc" en
+niet "acdc" — dus de eerstvolgende herberekening trok de zojuist samengevoegde
+artiest weer uit elkaar. `verzeker_aliassen()` legt daarom een alias van de oude
+sleutel naar de sleutel die uit de vastgestelde naam volgt, en verplaatst de
+noteringen mee. Daarna is `hersleutel` onschadelijk: drie rondes achter elkaar
+verandert er niets meer.
+
+De richting doet ertoe. Andersom aliassen — de naam volgt de sleutel — lijkt ook
+te werken tot er een verouderde naamregel blijkt te staan. Er stond er een op
+`bl f`, de kapotte sleutel van vóór de letterregel, en die trok Bløf daar zo
+weer naartoe.
+
 **Elke correctie staat in `wijzigingen`**, met de oude waarde, de nieuwe en de
 reden. Zonder dat logboek is een correctie niet te onderscheiden van wat de bron
 zelf leverde, en dat is precies wat je later wilt kunnen nazoeken.

@@ -174,6 +174,27 @@ def test_dubbelepunt_zonder_spaties_blijft_staan():
     assert _UITGAVE.sub("", "Titel: ondertitel", count=1) == "Titel: ondertitel"
 
 
+# --- de sleutel volgt de naam -----------------------------------------------
+
+
+def test_hernoemen_mag_een_samenvoeging_niet_ongedaan_maken():
+    """De valkuil waar dit een keer in is gelopen.
+
+    De sleutel wordt uit de naam berekend. Stel je "ACDC" bij naar "AC/DC", dan
+    levert die naam ineens de sleutel "ac dc" op in plaats van "acdc" -- en trok
+    de eerstvolgende herberekening de zojuist samengevoegde artiest weer uit
+    elkaar. Sinds `verzeker_aliassen` volgt de sleutel de naam, en dan is een
+    herberekening onschadelijk hoe vaak je hem ook draait.
+    """
+    from hitlijsten.normalize import artiestsleutel
+
+    assert artiestsleutel("ACDC") == "acdc"
+    assert artiestsleutel("AC/DC") == "ac dc"
+    # De twee zijn dus niet vanzelf gelijk: er moet een alias tussen, en die
+    # wijst naar de sleutel die uit de vastgestelde naam volgt.
+    assert artiestsleutel("AC/DC") != artiestsleutel("ACDC")
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     mislukt = 0

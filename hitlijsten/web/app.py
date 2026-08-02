@@ -270,6 +270,18 @@ def _registreer(app: Flask) -> None:
             toon = (len(alle_nummers)
                     if request.args.get("toon") == "alles"
                     else min(EDITIE_DREMPEL, len(alle_nummers)))
+            # Komt de bezoeker binnen via een verwijzing naar een bepaald
+            # nummer, dan is aftoppen juist verkeerd: bij een editie van
+            # vierduizend staat plek 3033 niet op de eerste tweeduizend, en dan
+            # land je op een pagina waar je nummer niet op staat. Klik je van
+            # een zoekresultaat naar "Paul De Leeuw ; Bob De Rooy - Annie" in de
+            # Top 4000 van 2005, dan hoort die regel er gewoon te zijn.
+            markeer = request.args.get("markeer") or ""
+            if markeer:
+                plek = next((i for i, n in enumerate(alle_nummers, 1)
+                             if n["sleutel"] == markeer), 0)
+                if plek > toon:
+                    toon = len(alle_nummers)
             nummers = alle_nummers[:toon]
             # De matrix is 2000 rijen x 27 edities; volledig getoond verdubbelt
             # dat de pagina naar ruim 5 MB. De editie zelf blijft compleet, de
@@ -284,8 +296,7 @@ def _registreer(app: Flask) -> None:
                 edities=db.edities_van(con, lijst),
                 matrix=nummers[:matrix_tot], matrix_tot=matrix_tot,
                 matrix_keuzes=MATRIX_KEUZES, toon=toon,
-                drempel=EDITIE_DREMPEL,
-                markeer=request.args.get("markeer") or "",
+                drempel=EDITIE_DREMPEL, markeer=markeer,
             )
 
         rijen = list(con.execute(

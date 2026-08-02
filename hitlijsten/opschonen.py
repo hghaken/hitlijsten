@@ -45,7 +45,7 @@ __all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
            "uitgave_en_nummer", "splits_kanten", "splits_dubbele_a_kanten",
-           "spatievarianten"]
+           "spatievarianten", "verzeker_aliassen"]
 
 # Wat er in de bronnen misgaat met leestekens. Bewust kort: elk teken hier is
 # er een waarvan is vastgesteld dat het in de data staat en nooit bedoeld is.
@@ -586,6 +586,57 @@ def pas_titels_toe(con: sqlite3.Connection) -> dict:
             (datetime.now().isoformat(timespec="seconds"), "titelnaam",
              r["sleutel"], "titel", r["titel"], goed,
              f"eenduidige schrijfwijze ({cursor.rowcount} noteringen)"))
+    con.commit()
+    return verslag
+
+
+def verzeker_aliassen(con: sqlite3.Connection) -> dict:
+    """Zorg dat een hernoemde artiest zijn sleutel niet kwijtraakt.
+
+    Hier zit een valkuil die pas opvalt als je hem al hebt getrapt. De sleutel
+    wordt uit de naam berekend, en `artiestnamen` verandert die naam. "ACDC"
+    werd "AC/DC", en de sleutel die je daaruit berekent is "ac dc" en niet
+    "acdc" -- dus de eerstvolgende herberekening trok de zojuist samengevoegde
+    artiest weer uit elkaar.
+
+    De oplossing is een alias van de nieuwe berekende sleutel naar de
+    vastgestelde. Daarmee is een herberekening onschadelijk: hij komt altijd op
+    dezelfde sleutel uit, hoe vaak je hem ook draait.
+    """
+    from .normalize import artiestsleutel
+
+    verslag = {"aliassen": 0, "hersteld": 0}
+    for r in list(con.execute("SELECT sleutel, naam FROM artiestnamen")):
+        doel = artiestsleutel(r["naam"])
+        if doel == r["sleutel"]:
+            continue
+        # De sleutel volgt de naam, niet omgekeerd. De andere richting lijkt
+        # ook te werken tot er een verouderde naamregel blijkt te staan: er
+        # stond er een op "bl f", de kapotte sleutel van voor de letterregel,
+        # en die trok Bløf daar zo weer naartoe.
+        for (oud,) in list(con.execute(
+                "SELECT DISTINCT sleutel FROM noteringen WHERE sleutel LIKE ?",
+                (f"{r['sleutel']}|%",))):
+            con.execute(
+                "INSERT OR REPLACE INTO aliases (van, naar, opmerking,"
+                " aangemaakt) VALUES (?,?,?,?)",
+                (oud, f"{doel}|{oud.split('|', 1)[1]}",
+                 "vastgestelde schrijfwijze levert een andere sleutel op",
+                 datetime.now().isoformat(timespec="seconds")))
+            verslag["aliassen"] += 1
+        cursor = con.execute(
+            "UPDATE noteringen SET sleutel = ? || substr(sleutel, ?)"
+            " WHERE sleutel LIKE ?",
+            (doel, len(r["sleutel"]) + 1, f"{r['sleutel']}|%"))
+        verslag["hersteld"] += cursor.rowcount
+        # En de naamregel zelf op de nieuwe sleutel zetten, anders doet hij het
+        # de volgende keer opnieuw.
+        con.execute("DELETE FROM artiestnamen WHERE sleutel=?", (r["sleutel"],))
+        con.execute(
+            "INSERT OR REPLACE INTO artiestnamen (sleutel, naam, bron,"
+            " aangemaakt) VALUES (?,?,?,?)",
+            (doel, r["naam"], "sleutel volgt de naam",
+             datetime.now().isoformat(timespec="seconds")))
     con.commit()
     return verslag
 
