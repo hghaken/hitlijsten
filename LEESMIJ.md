@@ -463,6 +463,20 @@ Runners schrijven zich er echt zonder. En een titel die helemaal uit kleine
 letters bestaat leent zijn hoofdletters van een gelijknamig nummer elders in de
 database — zo werd Sandra van Nieuwlands "beggin'" alsnog "Beggin'".
 
+**Drie strepen betekenen iets anders dan een.** top40.nl zet met `///` twee
+schrijfwijzen van dezelfde notering achter elkaar: `Ella///Ella (TROS Tune)`,
+`The Source///The Course`. Daar valt niets te splitsen — het is één notering —
+maar er moet wel gekozen worden. `corrigeer_nummer()` voert zo'n keuze door met
+alles wat erbij hoort: sleutel herberekenen, alias leggen, naam vastleggen,
+jaargangen markeren, logboekregel.
+
+En de juiste keuze is niet altijd de canonieke titel. Georgie Fame stond met
+`Yeah, Yeah///Yeah, Yeh, Yeh` in de Top 40 van 1965. Het nummer heet *Yeh, Yeh*,
+maar de **Nederlandse uitgave** heette *Yeah, Yeh, Yeh* — net als die in
+Denemarken, Duitsland, Zwitserland en Zuid-Afrika, allemaal gebaseerd op de
+Britse demoplaat. *Yeah, Yeah* was de foute eerste Britse persing. Voor een
+Nederlandse hitlijst telt de Nederlandse uitgavetitel.
+
 **Waarom een externe bron.** Bij "Dexys Midnight Runners" tegen "Dexy's Midnight
 Runners" helpt tellen niet: je moet weten hoe de band heet.
 [MusicBrainz](https://musicbrainz.org/) is een catalogus met precies dat veld,
