@@ -44,6 +44,7 @@ def maak_app() -> Flask:
     # nodigt uit tot vergelijkingen die nergens op slaan, dus de sjablonen
     # groeperen ze -- vandaar deze twee hulpjes.
     app.jinja_env.globals["is_jaarlijks"] = is_jaarlijks
+    app.jinja_env.filters["tijd"] = leesbare_tijd
     app.jinja_env.globals["weeklijsten"] = [
         s for s in LIJSTEN if not is_jaarlijks(s)]
     app.jinja_env.globals["jaarlijkse_lijsten"] = [
@@ -130,6 +131,16 @@ def leg_vast(soort: str, verwijst: str, veld: str, oud, nieuw, reden: str) -> No
     con.commit()
 
 
+def leesbare_tijd(stempel: str | None) -> str:
+    """2026-08-02T11:17:18 -> 02-08-2026 11:17. Leeg blijft leeg."""
+    if not stempel:
+        return ""
+    try:
+        return datetime.fromisoformat(stempel).strftime("%d-%m-%Y %H:%M")
+    except ValueError:
+        return stempel
+
+
 def _registreer(app: Flask) -> None:
 
     @app.teardown_appcontext
@@ -177,6 +188,13 @@ def _registreer(app: Flask) -> None:
             "SELECT lijst, jaar, week, opgehaald_op FROM opgehaald"
             " ORDER BY opgehaald_op DESC LIMIT 5"
         ).fetchall()
+        # Wanneer is er voor het laatst iets binnengehaald? Bij de weeklijsten
+        # is dat de laatste vrijdagrun, bij de jaarlijkse de laatste import.
+        laatst_op = {
+            r[0]: r[1] for r in con.execute(
+                "SELECT lijst, MAX(opgehaald_op) FROM opgehaald GROUP BY lijst")
+        }
+
         # Hoe lang is een editie? Het gemiddelde (noteringen / edities) is
         # misleidend zodra een lijst van lengte verandert: de Veronica Top 1000
         # kwam zo op 1086 uit, en zo lang is geen enkele editie geweest.
@@ -196,7 +214,7 @@ def _registreer(app: Flask) -> None:
             taak=taken.huidige(),
             week_rijen=[r for r in lijsten if not is_jaarlijks(r["lijst"])],
             jaar_rijen=[r for r in lijsten if is_jaarlijks(r["lijst"])],
-            editielengtes=editielengtes,
+            editielengtes=editielengtes, laatst_op=laatst_op,
         )
 
     @app.route("/disclaimer")
