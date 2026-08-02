@@ -86,7 +86,7 @@ LIJSTEN = {
     # nieuwe editie er is. Vandaar site=None -- daar herkent de wekelijkse run
     # aan dat hij deze lijst met rust moet laten.
     "top2000": {
-        "naam": "Top 2000",
+        "naam": "Top 2000 (NPO Radio 2)",
         "site": None,
         "slug": None,
         "lengte": 2000,
