@@ -8,6 +8,7 @@
     python -m hitlijsten controle        verdachte dubbelingen, met oordeel per paar
     python -m hitlijsten hersleutel      sleutels herberekenen na aliases.csv
     python -m hitlijsten opschonen       leestekens en schrijfwijzen rechtzetten
+    python -m hitlijsten momentopname    kopie van de database maken of terugzetten
     python -m hitlijsten testmail        proefmail versturen
 
 --jaar mag voor of na de opdracht: "hitlijsten excel --jaar 2025" werkt, en
@@ -491,6 +492,39 @@ def opdracht_kruiscontrole(jaar: int | None, *, alle_jaren: bool = False) -> Non
         log("   regels voor een hernoemde periode, die dubbel tellen)")
 
 
+def opdracht_momentopname(*, terug: str | None, lijst_tonen: bool) -> None:
+    """Een kopie van de database maken, tonen of terugzetten."""
+    from pathlib import Path
+
+    from . import momentopnames
+
+    if terug:
+        try:
+            veiligheid = momentopnames.terugzetten(terug)
+        except (FileNotFoundError, ValueError) as fout:
+            log(str(fout))
+            log("'momentopname --lijst' toont wat er te kiezen valt")
+            return
+        log(f"teruggezet naar {Path(terug).name}")
+        log(f"de database van zojuist staat als {veiligheid.name}")
+        log("draai nu 'excel' en 'pdf' opnieuw -- die horen bij de oude toestand")
+        return
+
+    if lijst_tonen:
+        opnames = momentopnames.lijst()
+        log(f"{len(opnames)} momentopnames in {momentopnames.MAP}")
+        for pad in opnames:
+            groot = pad.stat().st_size / 1024 / 1024
+            log(f"   {pad.name}   {groot:.0f} MB")
+        return
+
+    pad = momentopnames.maak("handmatig")
+    weg = momentopnames.opruimen()
+    log(f"momentopname: {pad.name} ({pad.stat().st_size / 1024 / 1024:.0f} MB)")
+    if weg:
+        log(f"{len(weg)} oude opgeruimd volgens het bewaarbeleid")
+
+
 def opdracht_opschonen(*, toepassen: bool) -> None:
     """Leestekens rechtzetten en één schrijfwijze per artiest afdwingen.
 
@@ -540,6 +574,22 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
         if not toepassen:
             log("niets gewijzigd -- draai met --toepassen om het door te voeren")
             return
+
+    # Buiten de verbinding: eerst een momentopname, dan pas iets wijzigen.
+    # Een correctie die achteraf verkeerd blijkt is anders niet terug te
+    # draaien -- `wijzigingen` vertelt wél wat er is gebeurd maar bouwt de oude
+    # toestand niet terug.
+    from . import momentopnames
+
+    log(f"momentopname vooraf: {momentopnames.maak('voor-opschonen').name}")
+    momentopnames.opruimen()
+
+    with db.verbinding() as con:
+        fouten = tekstfouten(con)
+        bakken = naamvarianten(con)
+        titels = titelvarianten(con)
+        uitgaven = uitgave_en_nummer(con)
+        dubbel = dubbele_a_kanten(con)
 
         log(f"{herstel_tekst(con, fouten)} noteringen met schone tekst")
         # Ook hier alle bakken: twee schrijfwijzen onder dezelfde artiestsleutel
@@ -857,6 +907,12 @@ def opdracht_run(jaar: int, *, stuur_mail: bool = True) -> None:
     log("=" * 60)
     log("wekelijkse run gestart")
     try:
+        # Voor alles: een momentopname. Een run die halverwege iets raars
+        # binnenhaalt is dan een opdracht terug te draaien.
+        from . import momentopnames
+
+        log(f"momentopname vooraf: {momentopnames.maak('voor-run').name}")
+        momentopnames.opruimen()
         nieuwe_weken, mislukt = opdracht_bijwerken(None)
         # Alleen bouwen voor jaargangen die daadwerkelijk data kregen; anders
         # laat een stille januari-run een lege jaarmap achter.
@@ -970,6 +1026,12 @@ def main(argv: list[str] | None = None) -> int:
                        help="leestekens en schrijfwijzen rechtzetten")
     o.add_argument("--toepassen", action="store_true",
                    help="ook echt wegschrijven; zonder dit alleen melden")
+    m = sub.add_parser("momentopname",
+                       help="kopie van de database maken of terugzetten")
+    m.add_argument("--terug", metavar="BESTAND",
+                   help="deze momentopname terugzetten")
+    m.add_argument("--lijst", action="store_true", dest="lijst_tonen",
+                   help="tonen wat er bewaard is")
     sub.add_parser("testmail", help="proefmail versturen")
 
     r = sub.add_parser("run", parents=[jaar_ouder], help="bijwerken + excel + mail")
@@ -1004,6 +1066,8 @@ def main(argv: list[str] | None = None) -> int:
         opdracht_kruiscontrole(jaar, alle_jaren=args.alle)
     elif args.opdracht == "onderscheidingen":
         opdracht_onderscheidingen(forceer=args.forceer)
+    elif args.opdracht == "momentopname":
+        opdracht_momentopname(terug=args.terug, lijst_tonen=args.lijst_tonen)
     elif args.opdracht == "opschonen":
         opdracht_opschonen(toepassen=args.toepassen)
     elif args.opdracht == "hersleutel":

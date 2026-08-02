@@ -339,6 +339,34 @@ staat geen enkel script van een andere partij in de sjablonen, er wordt één
 cookie gezet en alleen bij het aanmelden, en de webserver houdt een gewone
 toegangslog bij.
 
+### Terug kunnen
+
+`wijzigingen` schrijft op wát er is veranderd, van wat naar wat en waarom. Dat
+is een logboek en **geen terugdraaiknop**: een samenvoeging van duizenden
+noteringen staat er als één regel, en daar bouw je de oude toestand niet uit
+terug. Voor "even terug naar hoe het vanmorgen was" heb je het hele bestand
+nodig.
+
+`momentopnames.py` maakt dat bestand, met `VACUUM INTO` en niet met `cp` — dat
+werkt binnen één transactie en kan dus terwijl de webapplicatie erin leest. Door
+gzip komt 91 MB op 24 MB uit, in vijf seconden.
+
+```
+python -m hitlijsten momentopname            # er een maken
+python -m hitlijsten momentopname --lijst    # zien wat er staat
+python -m hitlijsten momentopname --terug 20260802-125424-voor-opschonen.sqlite.gz
+```
+
+Er wordt er automatisch een gemaakt vóór de wekelijkse run en vóór
+`opschonen --toepassen`. Terugzetten maakt er zelf ook een van de huidige
+toestand — teruggaan is óók een ingreep, en die wil je net zo goed ongedaan
+kunnen maken als blijkt dat je de verkeerde hebt gekozen. Bewaard blijven de
+laatste twaalf plus van elke dag de oudste, tot dertig dagen terug.
+
+**Dit is geen back-up.** Het staat op dezelfde schijf. Tegen een verkeerde
+opdracht helpt het, tegen een kapot volume niet — daarvoor is er het
+snapshotschema van de NAS en Hyper Backup.
+
 ### Opschonen
 
 De bronnen zijn niet schoon, en dat zie je pas als je negen lijsten naast elkaar
@@ -688,6 +716,7 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
     pdf.py        het jaaroverzicht als PDF
     wetenswaardigheden.py   de tien ranglijsten
     opschonen.py            typefouten opsporen en rechtzetten
+    momentopnames.py        kopie van de database, met bewaarbeleid
     muziekbron.py           MusicBrainz en Wikipedia bevragen
     jaarlijks.py  de CSV-lijsten (Top 2000, Evergreen)
     kruiscontrole.py / onderscheidingen.py  michajans.nl
@@ -742,6 +771,7 @@ cd <app-map> && . ./omgeving.sh
 ./venv/bin/python tests/test_decennium.py
 ./venv/bin/python tests/test_wetenswaardigheden.py
 ./venv/bin/python tests/test_opschonen.py
+./venv/bin/python tests/test_momentopnames.py
 ./venv/bin/python tests/test_pdf.py
 ./venv/bin/python tests/test_jaarlijks.py
 node tests/test_grafiek.mjs        # node staat niet op de NAS
