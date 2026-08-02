@@ -36,7 +36,7 @@ from typing import Iterable, Iterator, Optional
 from .config import LIJSTEN
 from .normalize import sleutel_van
 from .opschonen import (eenduidige_credit, komma_is_samenwerking,
-                        schoon_tekst, x_is_samenwerking)
+                        met_is_samenwerking, schoon_tekst, x_is_samenwerking)
 
 __all__ = ["Regel", "lees_csv", "importeer", "kruisverwijzing", "controleer"]
 # Music Datastats levert windows-1252; UTF-8 wordt eerst geprobeerd omdat een
@@ -187,11 +187,12 @@ def _noteringen(lijst: str, regels: list[Regel], jaar: int) -> Iterator[tuple]:
         positie = regel.posities.get(jaar)
         if positie is None:
             continue
-        yield (lijst, jaar, week, positie, schoon_tekst(regel.titel),
-               komma_is_samenwerking(x_is_samenwerking(
-                   eenduidige_credit(schoon_tekst(regel.artiest)))),
+        artiest = met_is_samenwerking(komma_is_samenwerking(
+            x_is_samenwerking(eenduidige_credit(schoon_tekst(regel.artiest)))))
+        titel = schoon_tekst(regel.titel)
+        yield (lijst, jaar, week, positie, titel, artiest,
                None, len(regel.posities), regel.posities.get(jaar - 1),
-               "onbekend", regel.sleutel, regel.uitjaar)
+               "onbekend", sleutel_van(artiest, titel), regel.uitjaar)
 
 
 def importeer(con: sqlite3.Connection, lijst: str, pad: Path | str, *,

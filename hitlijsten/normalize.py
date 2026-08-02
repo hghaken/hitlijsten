@@ -20,13 +20,14 @@ from typing import Iterable
 
 from .config import ALIASES_PATH, NIET_SAMENVOEGEN_PATH
 
-# "feat.", "ft", "featuring", "with" en "&" worden allemaal " & ".
+# "feat.", "ft", "featuring", "with", het Nederlandse "met" en "&"
+# worden allemaal " & ".
 #
 # Vroeger werd "feat." een eigen teken (" ft ") en "&" een ander, en dan
 # zijn "Calvin Harris feat. Rihanna" en "Calvin Harris & Rihanna" twee
 # artiesten. Dat is een verschil zonder betekenis: het gaat om dezelfde twee
 # mensen op dezelfde plaat. 162 samenwerkingen stonden er los van elkaar door.
-_FEAT = re.compile(r"\s*(?:\bfeat\b\.?|\bft\b\.?|\bfeaturing\b|\bwith\b)\s*", re.I)
+_FEAT = re.compile(r"\s*(?:\bfeat\b\.?|\bft\b\.?|\bfeaturing\b|\bwith\b|\bmet\b)\s*", re.I)
 # Samenwerkingstekens gelijktrekken: "x", "&", "+", "vs" -> "&".
 _EN = re.compile(r"\s*(?:&|\+|\bx\b|\bvs\b\.?|\bversus\b)\s*", re.I)
 _WITRUIMTE = re.compile(r"\s+")

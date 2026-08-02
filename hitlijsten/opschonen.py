@@ -43,7 +43,8 @@ from typing import Callable, Iterable, Optional
 from . import db
 
 __all__ = ["schoon_tekst", "eenduidige_credit", "gast_uit_titel",
-           "x_is_samenwerking", "komma_is_samenwerking", "tekstfouten", "herstel_tekst", "Voorstel",
+           "x_is_samenwerking", "komma_is_samenwerking",
+           "met_is_samenwerking", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
@@ -215,6 +216,39 @@ def komma_is_samenwerking(artiest: str) -> str:
         return artiest
     samen = artiest.replace(",", " & ")
     return _MEERVOUDIGE_SPATIE.sub(" ", samen).replace(" & & ", " & ").strip()
+
+
+# Het Nederlandse "met" tussen twee artiesten: "Wilma met Vader Abraham",
+# "Doe Maar met Brainpower". Ook hier zijn de uitzonderingen het echte werk:
+#
+#   Zondag Met Lubach, Fokko Met De Bordjes   Met hoort bij de naam
+#   "met dank aan", "met medewerking van",
+#   "met zang van", "met begeleiding van"     een zinsdeel, geen scheiding
+#
+# "duet met", "in duet met" en "samen met" zijn juist wel scheidingen, en
+# het voorafgaande woord gaat mee weg: "Paul De Leeuw - duet met Simone
+# Kleinsma" wordt "Paul De Leeuw & Simone Kleinsma".
+_MET_HOORT_ERBIJ = (
+    "zondag met lubach", "fokko met de bordjes",
+)
+_MET_ZINSDEEL = re.compile(
+    r"\bmet\s+(?:dank\s+aan|medewerking\s+van|zang\s+van|begeleiding\s+van)", re.I)
+_DUET = re.compile(r"\s*(?:-\s*)?\b(?:in\s+)?duet\s+met\s+|\s+samen\s+met\s+", re.I)
+_MET = re.compile(r"\s+met\s+", re.I)
+
+
+def met_is_samenwerking(artiest: str) -> str:
+    """"Wilma met Vader Abraham" -> "Wilma & Vader Abraham"."""
+    if not artiest:
+        return artiest
+    plat = _kaal(artiest)
+    if any(naam in plat for naam in _MET_HOORT_ERBIJ):
+        return artiest
+    if _MET_ZINSDEEL.search(artiest):
+        return artiest
+    artiest = _DUET.sub(" & ", artiest)
+    artiest = _MET.sub(" & ", artiest)
+    return _MEERVOUDIGE_SPATIE.sub(" ", artiest).strip()
 
 
 # --- 1. tekens -------------------------------------------------------------

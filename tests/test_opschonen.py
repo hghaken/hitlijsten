@@ -184,6 +184,30 @@ def test_een_ingetypt_procentteken_is_geen_joker():
     assert zoekpatroon("a_b") == "%a\_b%"
 
 
+def test_met_tussen_twee_artiesten_wordt_ampersand():
+    from hitlijsten.opschonen import met_is_samenwerking
+
+    assert met_is_samenwerking("Wilma met Vader Abraham") ==         "Wilma & Vader Abraham"
+    assert met_is_samenwerking("Paul De Leeuw - duet met Simone Kleinsma") ==         "Paul De Leeuw & Simone Kleinsma"
+    assert met_is_samenwerking("Conny Vandenbos in duet met Janis Ian") ==         "Conny Vandenbos & Janis Ian"
+
+
+def test_met_in_een_naam_of_zinsdeel_blijft_staan():
+    from hitlijsten.opschonen import met_is_samenwerking
+
+    for naam in ("Zondag Met Lubach & Fresku",
+                 "Erik Hulzebosch with special guest: Fokko Met De Bordjes",
+                 "Maggie MacNeal met dank aan Het Gewestelijk Orkest",
+                 "Van Dik Hout met medewerking van Kirsten",
+                 "Oh Sixteen-Oh Seven met zang van Thijs v.d. Molen",
+                 "Metallica"):
+        assert met_is_samenwerking(naam) == naam, naam
+
+
+def test_met_en_ampersand_leveren_dezelfde_sleutel():
+    assert artiestsleutel("Wilma met Vader Abraham") ==         artiestsleutel("Wilma & Vader Abraham")
+
+
 # --- de sleutelregels -------------------------------------------------------
 
 

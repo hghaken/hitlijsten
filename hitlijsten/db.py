@@ -295,8 +295,8 @@ def bewaar_week(
     """Schrijf één week weg; vervangt wat er al stond voor die week."""
     from .normalize import sleutel_van
     from .opschonen import (eenduidige_credit, gast_uit_titel,
-                            komma_is_samenwerking, schoon_tekst, splits_kanten,
-                            x_is_samenwerking)
+                            komma_is_samenwerking, met_is_samenwerking,
+                            schoon_tekst, splits_kanten, x_is_samenwerking)
 
     # Leestekens hier rechtzetten en niet in de parsers: dan geldt het voor elke
     # bron, ook voor een bron die er later bij komt. Hetzelfde geldt voor de
@@ -307,8 +307,8 @@ def bewaar_week(
         for ruwe_artiest, ruwe_titel in splits_kanten(n.artiest, n.titel):
             artiest, titel = gast_uit_titel(schoon_tekst(ruwe_artiest),
                                             schoon_tekst(ruwe_titel))
-            artiest = komma_is_samenwerking(
-                x_is_samenwerking(eenduidige_credit(artiest)))
+            artiest = met_is_samenwerking(komma_is_samenwerking(
+                x_is_samenwerking(eenduidige_credit(artiest))))
             rijen.append((
                 n.lijst, n.jaar, n.week, n.positie, titel, artiest, n.label,
                 n.weken_genoteerd, n.vorige_positie, n.site_status,
