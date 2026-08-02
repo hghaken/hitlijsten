@@ -20,7 +20,17 @@ om 22:00 de nieuwe week ophaalt.
 **De documentatie staat in [LEESMIJ.md](LEESMIJ.md)** — opzet, opdrachten,
 ontwerpkeuzes en de valkuilen van de bronsites.
 
-De noteringen zijn samengesteld door top40.nl en oranjetop30.nl, en voor de
-jaarlijkse lijsten door NPO Radio 2 en NPO Radio 5 — die laatste verzameld via
-[datastats.nl](https://www.datastats.nl/). De rechten liggen bij hen; deze code
-verzamelt en toont hun gegevens.
+## Licentie
+
+De **code** staat onder de [MIT-licentie](LICENSE) — doe ermee wat je wilt, met
+naamsvermelding en zonder garantie.
+
+De **gegevens niet.** De noteringen zijn samengesteld door top40.nl en
+oranjetop30.nl, en voor de jaarlijkse lijsten door NPO Radio 2 en NPO Radio 5
+(verzameld via [datastats.nl](https://www.datastats.nl/)). Die rechten liggen
+bij hen en worden door deze licentie niet geraakt: dit project verzamelt en
+toont hun werk, het claimt het niet. De database en de opgehaalde pagina's zitten
+daarom ook niet in deze repository.
+
+En verder: `lettertypen/DejaVuSans*.ttf` heeft zijn eigen, vrije licentie —
+zie `lettertypen/LICENSE_DEJAVU`.
