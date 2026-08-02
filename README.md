@@ -17,6 +17,9 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
 om 22:00 de nieuwe week ophaalt.
 
+Geschreven met hulp van **Claude Code**; alle achtendertig commits dragen die
+vermelding, en de overwegingen bij elke keuze staan in de commitberichten.
+
 **De documentatie staat in [LEESMIJ.md](LEESMIJ.md)** — opzet, opdrachten,
 ontwerpkeuzes en de valkuilen van de bronsites.
 
