@@ -203,7 +203,8 @@ De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
 De vier weeklijsten komen van een website. De **Top 2000** en de **Evergreen
 Top 1000** zijn één uitzending per jaar en komen binnen als CSV van Music
-Datastats — een matrix met een regel per nummer en een kolom per editie.
+Datastats ([datastats.nl](https://www.datastats.nl/)) — een matrix met een regel
+per nummer en een kolom per editie.
 
 ```bash
 python -m hitlijsten.cli jaarlijks --lijst top2000  --bestand .../top2000.csv
