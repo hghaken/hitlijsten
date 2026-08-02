@@ -99,6 +99,21 @@ LIJSTEN = {
         # editiepagina toont jaartallen in plaats van weken.
         "editie_week": 52,
     },
+    "veronica": {
+        "naam": "Top 1000 (Veronica)",
+        "site": None,
+        "slug": None,
+        # Tweeentwintig edities lang precies duizend, maar in 2025 ineens
+        # drieduizend. `lengte` is voor de jaarlijkse lijsten dan ook een
+        # bovengrens en geen verwachting: de echte lengte komt per editie uit
+        # de data zelf.
+        "lengte": 3000,
+        "bestand": "VeronicaTop1000",
+        "heeft_label": False,
+        "vanaf_jaar": 2003,
+        "jaarlijks": True,
+        "editie_week": 52,
+    },
     "top4000": {
         "naam": "Top 4000 (Radio 10)",
         "site": None,

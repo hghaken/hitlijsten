@@ -13,6 +13,7 @@ er nieuw binnenkwam, en zet zestig jaar archief online op
 | Top 2000 (NPO Radio 2) | CSV (Music Datastats) | 2000 | 1999 |
 | Evergreen Top 1000 (NPO Radio 5) | CSV (Music Datastats) | 1000 | 2008 |
 | Top 4000 (Radio 10) | CSV (Music Datastats) | 4000 | 2005 |
+| Top 1000 (Veronica) | CSV (Music Datastats) | 1000–3000 | 2003 |
 
 De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen*.
 Waar elke lijst begint, met de nummer 1 van de oudste week die we hebben:
@@ -49,10 +50,11 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 411.482 noteringen. Top 40
+- **Het hele archief staat in de database**: 436.482 noteringen. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
-  2005–2025 (21) en Evergreen Top 1000 2008–2025 (18).
+  2005–2025 (21), Veronica Top 1000 2003–2025 (23) en Evergreen Top 1000
+  2008–2025 (18).
 - 305 Excel-bestanden en 149 PDF-jaaroverzichten gebouwd, plus 130 aliassen,
   267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
@@ -194,8 +196,8 @@ De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
 ### De jaarlijkse lijsten
 
-De vier weeklijsten komen van een website. De **Top 2000**, de **Top 4000** en
-de **Evergreen Top 1000** zijn één uitzending per jaar en komen binnen als CSV van Music
+De vier weeklijsten komen van een website. De **Top 2000**, de **Top 4000**, de
+**Veronica Top 1000** en de **Evergreen Top 1000** zijn één uitzending per jaar en komen binnen als CSV van Music
 Datastats ([datastats.nl](https://www.datastats.nl/)) — een matrix met een regel
 per nummer en een kolom per editie.
 
@@ -211,8 +213,7 @@ een van dertig nodigt uit tot vergelijkingen die nergens op slaan.
 
 Alle lijsten met `jaarlijks` in hun definitie lopen door hetzelfde bestand
 (`hitlijsten/jaarlijks.py`), dus **een lijst toevoegen is een regel in
-`config.LIJSTEN` en één keer importeren** — geen nieuwe code. In dezelfde map staan er nog drie klaar:
-Q Top 1500, Rock Top 500 en de Veronica Top 1000.
+`config.LIJSTEN` en één keer importeren** — geen nieuwe code. In dezelfde map staan er nog twee klaar: de Q Top 1500 en de Rock Top 500.
 
 Elke editie wordt weggeschreven als jaargang met **week 52**, de week van de
 uitzending. Daardoor werken de sleutels, het jaaroverzicht en de database
@@ -276,8 +277,10 @@ geïmporteerd moet worden, een waarschuwing is een schoonheidsfoutje in verder
 goede data. In de Evergreen van 2013 staan twee nummers op 279 en ontbreekt 278
 — een typefout bij de bron. Dat wordt gemeld en verder genegeerd; achttien
 jaargangen laten vallen om één verkeerd cijfer zou onzin zijn. Meer dan een
-procent scheef is wél een fout. De lengte komt per editie uit de data zelf, want
-de Q Top 1500 begon als 1000 en de Veronica Top 1000 was ooit 3000 lang.
+procent scheef is wél een fout. De lengte komt per editie uit de data zelf, en dat is geen theorie: de Veronica
+Top 1000 was tweeëntwintig jaar lang precies duizend en werd in 2025 ineens
+drieduizend, en de Q Top 1500 begon als 1000. In de configuratie is `lengte`
+voor deze lijsten dan ook een bovengrens en geen verwachting.
 
 Nog niet gedaan: Excel en PDF voor deze lijst. Die bouwers gaan uit van weken en
 punten, dus die hebben een eigen vorm nodig.

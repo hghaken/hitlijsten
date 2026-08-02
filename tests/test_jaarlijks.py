@@ -128,6 +128,22 @@ def test_dubbele_positie_geeft_een_waarschuwing():
     assert any("dubbele" in w for w in waarschuwingen), waarschuwingen
 
 
+def test_edities_mogen_van_lengte_verschillen():
+    """Zoals de Veronica Top 1000: 22 jaar duizend, en in 2025 ineens 3000.
+
+    De lengte komt per editie uit de data; `lengte` in de configuratie is
+    alleen een bovengrens. Zou de controle de configuratie als verwachting
+    nemen, dan zou een van de twee edities altijd fout zijn.
+    """
+    rijen = [(a, t, 1980, p if p <= 1000 else 0, p)
+             for p, (a, t) in enumerate(
+                 ((f"Artiest {i}", f"Lied {i}") for i in range(1, 2001)), 1)]
+    edities, regels = jaarlijks.lees_csv(_csv(rijen))
+    fouten, waarschuwingen = jaarlijks.controleer(LIJST, edities, regels)
+    assert not fouten, fouten
+    assert not waarschuwingen, waarschuwingen
+
+
 def test_verkeerde_kop_wordt_geweigerd():
     pad = _csv(_volle_editie(), kop=["Positie", "Naam", "Titel", "Jaar", "2024", "2025"])
     try:
