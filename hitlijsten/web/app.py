@@ -186,6 +186,11 @@ def _registreer(app: Flask) -> None:
             jaar_rijen=[r for r in lijsten if is_jaarlijks(r["lijst"])],
         )
 
+    @app.route("/disclaimer")
+    def disclaimer():
+        """Wat deze site is en wat je er niet van moet verwachten."""
+        return render_template("disclaimer.html")
+
     # --- jaaroverzicht -----------------------------------------------------
 
     @app.route("/jaar")

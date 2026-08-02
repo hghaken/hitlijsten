@@ -283,6 +283,7 @@ op de NAS, achter de reverse proxy naar `10.10.8.20:8642`.
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
 | Wetenswaardigheden | tien ranglijsten over de hele historie |
+| Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
 aliassen, uitzonderingen, vrije SELECT-query's, beheer (opnieuw ophalen, Excel
@@ -296,6 +297,22 @@ daar alvast opgelicht.
 
 Wachtwoord wijzigen: pas `wachtwoord` in `app/webapp.ini` aan en herstart de
 dienst met `sudo systemctl restart hitlijsten-web`.
+
+### De disclaimer
+
+`/disclaimer` staat rechtsboven in de kop en onderaan in de bronvermelding. Hij
+noemt niet alleen dat het een hobbyproject is, maar ook **wat er concreet mis
+kan gaan** — de sleutel die een nummer kan splitsen, de punten die onze eigen
+berekening zijn, de uitzenddatums die afgeleid zijn uit een gemeten regel, en
+fouten in de bron zelf. Een disclaimer die alleen "aan deze gegevens kunnen geen
+rechten worden ontleend" zegt, helpt niemand.
+
+Verder: de rechten liggen bij de omroepen en de sites, met een verzoek om
+contact op te nemen als iemand iets verwijderd wil zien; en wat er van de
+bezoeker wordt bijgehouden. Dat laatste is nagekeken en niet aangenomen — er
+staat geen enkel script van een andere partij in de sjablonen, er wordt één
+cookie gezet en alleen bij het aanmelden, en de webserver houdt een gewone
+toegangslog bij.
 
 ### Wetenswaardigheden
 

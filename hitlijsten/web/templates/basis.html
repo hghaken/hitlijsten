@@ -167,6 +167,14 @@
   }
   details summary { cursor: pointer; }
 
+  /* Een pagina met lopende tekst in plaats van tabellen: regels van tachtig
+     tekens lezen prettiger dan regels van tweehonderd. */
+  .lap { max-width: 58rem; }
+  .lap h2 { margin-top: 2.2rem; }
+  .lap p, .lap li { color: #d8d3ea; line-height: 1.65; margin-bottom: .8rem; }
+  .lap ul { margin: 0 0 1rem 1.2rem; }
+  .lap li { margin-bottom: .55rem; }
+
   /* --- wetenswaardigheden ------------------------------------------------ */
 
   /* Snelkoppelingen naar de blokken; op een telefoon lopen ze netjes door. */
@@ -318,6 +326,7 @@
       {% endif %}
     </nav>
     <span class="rechts">
+      <a href="{{ url_for('disclaimer') }}">Disclaimer</a>
       {% if is_aangemeld() %}
         <a href="{{ url_for('afmelden') }}">Afmelden</a>
       {% else %}
@@ -347,7 +356,8 @@
   <br><b>Jaarlijkse lijsten</b> samengesteld door NPO&nbsp;Radio&nbsp;2
   (Top&nbsp;2000) en NPO&nbsp;Radio&nbsp;5 (Evergreen Top&nbsp;1000), verzameld
   via <a href="https://www.datastats.nl/" rel="noopener">datastats.nl</a>.
-  <br>Deze pagina toont hun gegevens; de rechten liggen bij hen.
+  <br>Deze pagina toont hun gegevens; de rechten liggen bij hen. Zie de
+  <a href="{{ url_for('disclaimer') }}">disclaimer</a>.
 </footer>
 
 <script>
