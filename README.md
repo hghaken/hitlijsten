@@ -19,7 +19,7 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 | Rock Top 500 (Arrow) | datastats.nl | vanaf 2000 |
 | Kink Top 1500 | datastats.nl | vanaf 2019 |
 
-481.982 noteringen: 7.541 weken en 143 jaaredities. Draait op een Synology NAS: een
+483.799 noteringen over elf lijsten: 7.541 weken en 143 jaaredities. Draait op een Synology NAS: een
 Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
 om 22:00 de nieuwe week ophaalt.
 
@@ -27,7 +27,8 @@ Geschreven met hulp van **Claude Code**; alle commits dragen die
 vermelding, en de overwegingen bij elke keuze staan in de commitberichten.
 
 **De documentatie staat in [LEESMIJ.md](LEESMIJ.md)** — opzet, opdrachten,
-ontwerpkeuzes en de valkuilen van de bronsites.
+ontwerpkeuzes en de valkuilen van de bronsites. De database zelf, tabel voor
+tabel en kolom voor kolom, staat in [DATABASE.md](DATABASE.md).
 
 ## Licentie
 

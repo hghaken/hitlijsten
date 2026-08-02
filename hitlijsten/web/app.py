@@ -491,7 +491,7 @@ def _registreer(app: Flask) -> None:
 
     # --- wetenswaardigheden ------------------------------------------------
 
-    # Per lijst een eigen ingang: tien lijsten x drie regels is niets, en zo
+    # Per lijst een eigen ingang: elf lijsten x drie regels is niets, en zo
     # hoeft er niet opnieuw geteld te worden als je heen en weer klikt.
     _weetjes_cache: dict[str, dict] = {}
 

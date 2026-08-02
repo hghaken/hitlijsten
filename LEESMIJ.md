@@ -53,13 +53,14 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 481.982 noteringen. Top 40
+- **Het hele archief staat in de database**: 483.799 noteringen over elf
+  lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
   Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26) en
   Kink Top 1500 2019–2025 (7).
-- 305 Excel-bestanden en 149 PDF-jaaroverzichten gebouwd, plus 130 aliassen,
+- 591 Excel-bestanden en 292 PDF-jaaroverzichten gebouwd, plus 606 aliassen,
   267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
   `hitlijsten-run.timer`. Eerstvolgende keer: vrijdag 7 augustus 2026.
@@ -376,7 +377,7 @@ verwijderde map, deze kopieën zitten er juist in en gaan met één knop terug.
 
 ### Opschonen
 
-De bronnen zijn niet schoon, en dat zie je pas als je negen lijsten naast elkaar
+De bronnen zijn niet schoon, en dat zie je pas als je elf lijsten naast elkaar
 legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 
 | Soort | Gevonden | Beslist door |
