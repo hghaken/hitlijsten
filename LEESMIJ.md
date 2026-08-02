@@ -53,14 +53,14 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 483.799 noteringen over elf
+- **Het hele archief staat in de database**: 484.386 noteringen over elf
   lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
   Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26) en
   Kink Top 1500 2019–2025 (7).
-- 591 Excel-bestanden en 292 PDF-jaaroverzichten gebouwd, plus 606 aliassen,
+- 591 Excel-bestanden en 292 PDF-jaaroverzichten gebouwd, plus 651 aliassen,
   267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
   `hitlijsten-run.timer`. Eerstvolgende keer: vrijdag 7 augustus 2026.
@@ -308,7 +308,7 @@ op de NAS, achter een reverse proxy.
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; klik springt naar de jaargang van de hoogste notering |
-| Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is**, dat alleen de geraakte jaargangen opnieuw bouwt |
+| Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen), voortgangsbalken per stap, en een taakstand die een herstart overleeft |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
 
@@ -391,6 +391,21 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Uitgave voor het nummer | 24 titels | een regel |
 | Dubbele A-kanten | 210 nummers, 1.817 noteringen | een regel |
 | Dubbele haken | 225 nummers, 1.703 noteringen | een regel |
+| Eén samenwerkingscredit (feat./ft./featuring/x/komma/met → &) | 2.796 namen, ~30.000 noteringen | regels met beschermlijsten |
+| Gastartiest uit de titel naar de artiest | 2 nummers | een smalle regel |
+| Versies die een plek deelden (jaren 60) | 19 nummers, 269 noteringen | woordvergelijking + Discogs |
+| ///-schrijfwijzen en /-hernoemingen | 21 + 16 gevallen | MusicBrainz, Discogs, hoezen |
+| Ondertitel achter een streepje → tussen haken | 321 titels | versie-/themawoorden |
+
+**Eén credit-stijl.** De bronnen schrijven een samenwerking op vijf manieren
+(feat., feat, ft., ft, featuring) plus de x, de komma en het Nederlandse "met".
+Alles wordt **&** — in de weergave én in de sleutel, zodat "Calvin Harris feat.
+Rihanna" en "Calvin Harris & Rihanna" dezelfde artiest zijn. De beschermlijsten
+zijn opgezocht en niet bedacht: alle 401 komma-namen zijn aan MusicBrainz
+voorgelegd (26 echte bandnamen als Earth, Wind & Fire), de x kijkt naar zijn
+buren (Lil Nas X, X Ambassadors), en "met" kent zijn zinsdelen (met dank aan,
+met medewerking van) en zijn actnamen (Zondag Met Lubach, Fokko Met De
+Bordjes).
 
 **De dubbele haken** zijn de manier waarop Music Datastats naamgenoten uit
 elkaar houdt: `Asia ((GBR))` naast `Asia ((NLD))`, `Nirvana ((USA))` naast
@@ -494,6 +509,12 @@ Frieden // Een Beetje Vrede`) — en twee gevallen waar de dubbele streep gewoon
 in de naam hoort. Discogs crediteert *This Is What You Came For* zelf als
 **Calvin Harris // Rihanna**, en Outlandish' single heet echt *Warrior //
 Worrier*. Daar viel niets te repareren.
+
+**De Discogs-sleutel.** De zoek-API werkt zonder sleutel op 25 verzoeken per
+minuut; met een persoonlijke token (gratis, discogs.com → Settings →
+Developers) wordt dat 60. De token staat in `discogs.ini` naast `webapp.ini` en
+`mail.ini` — buiten git, en zonder het bestand werkt alles gewoon, alleen
+langzamer.
 
 **Twee catalogi, twee vragen.** MusicBrainz is een catalogus van *nummers*,
 Discogs een van *platen* — en dat verschil beslist welke je nodig hebt:

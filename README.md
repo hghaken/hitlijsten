@@ -19,7 +19,9 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 | Rock Top 500 (Arrow) | datastats.nl | vanaf 2000 |
 | Kink Top 1500 | datastats.nl | vanaf 2019 |
 
-483.799 noteringen over elf lijsten: 7.541 weken en 143 jaaredities. Draait op een Synology NAS: een
+484.386 noteringen over elf lijsten: 7.541 weken en 143 jaaredities.
+De namen en titels zijn opgeschoond en geverifieerd tegen MusicBrainz,
+Discogs en Wikipedia; elke correctie staat met reden in een logboek. Draait op een Synology NAS: een
 Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
 om 22:00 de nieuwe week ophaalt.
 

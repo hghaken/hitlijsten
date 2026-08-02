@@ -22,19 +22,20 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 
 | Tabel | Rijen | Waarvoor |
 |---|---|---|
-| [`noteringen`](#noteringen) | 483.799 | de gegevens: één rij per nummer per week |
+| [`noteringen`](#noteringen) | 484.386 | de gegevens: één rij per nummer per week |
 | [`opgehaald`](#opgehaald) | 7.684 | welke week wanneer is binnengehaald |
 | [`bestaat_niet`](#bestaat_niet) | 267 | weken die nooit zijn uitgezonden |
-| [`aliases`](#aliases) | 606 | twee sleutels die hetzelfde nummer zijn |
+| [`aliases`](#aliases) | 651 | twee sleutels die hetzelfde nummer zijn |
 | [`niet_samenvoegen`](#niet_samenvoegen) | 4 | het omgekeerde: lijkt hetzelfde, is het niet |
-| [`artiestnamen`](#artiestnamen-en-titelnamen) | 1.080 | de vastgestelde schrijfwijze per artiest |
-| [`titelnamen`](#artiestnamen-en-titelnamen) | 1.685 | idem per nummer |
+| [`artiestnamen`](#artiestnamen-en-titelnamen) | 1.131 | de vastgestelde schrijfwijze per artiest |
+| [`titelnamen`](#artiestnamen-en-titelnamen) | 1.975 | idem per nummer |
 | [`onderscheidingen`](#onderscheidingen) | 4.044 | Alarmschijven en Dancesmashes |
 | [`correcties`](#correcties) | 0 | jaartotalen van een tweede bron |
 | [`te_bouwen`](#te_bouwen) | 0 | welke jaargang opnieuw gebouwd moet |
-| [`wijzigingen`](#wijzigingen) | 10.584 | logboek van elke correctie |
+| [`wijzigingen`](#wijzigingen) | 11.437 | logboek van elke correctie |
+| [`taak`](#taak) | 0–1 | de lopende (of laatst gedraaide) achtergrondtaak |
 
-Peildatum 2 augustus 2026.
+Peildatum 3 augustus 2026.
 
 ---
 
@@ -56,7 +57,7 @@ Wat de normalisatie doet, in volgorde:
    geschrapt: "Bløf" werd "bl f" en stond los van "Blof".
 3. **Accenten weghalen** — "Beyoncé" wordt "beyonce".
 4. **Samenwerkingstekens gelijktrekken** — `feat.`, `ft`, `featuring`, `with`,
-   `&`, `+`, `x` en `vs` worden allemaal ` & `. **Alleen bij de artiest**: in
+   het Nederlandse `met`, `&`, `+`, `x` en `vs` worden allemaal ` & `. **Alleen bij de artiest**: in
    een titel is de x van "Malcolm X" gewoon een letter. Dat `feat.` en `&`
    hetzelfde opleveren is bewust: het gaat om dezelfde twee mensen op dezelfde
    plaat, en anders staan "Calvin Harris feat. Rihanna" en "Calvin Harris &
@@ -317,7 +318,7 @@ Het logboek. Elke correctie staat erin, met wat er stond en wat er nu staat.
 |---|---|---|
 | `id` | INTEGER | rijteller |
 | `tijdstip` | TEXT | ISO met een `T`, lokale tijd |
-| `soort` | TEXT | `tekst`, `artiestnaam`, `titelnaam`, `dubbele a-kant`, `titel`, `artiest`, `uitjaar`, `sleutel`, `alias` |
+| `soort` | TEXT | `tekst`, `artiestnaam`, `titelnaam`, `dubbele a-kant`, `versies`, `correctie`, `titel`, `artiest`, `uitjaar`, `sleutel`, `alias` |
 | `verwijst` | TEXT | welke rij of sleutel |
 | `veld` | TEXT | welke kolom |
 | `oud`, `nieuw` | TEXT | de waarden |
@@ -331,6 +332,30 @@ leverde, en dat is precies wat je later wilt kunnen nazoeken.
 > oude toestand niet uit terug. Daarvoor zijn de
 > [momentopnames](LEESMIJ.md#terug-kunnen): een gzip-kopie van het hele bestand,
 > automatisch vóór elke run en vóór elk opschonen, met één knop terug te zetten.
+
+---
+
+## taak
+
+De lopende — of laatst gedraaide — achtergrondtaak. **Eén rij, `id` is altijd 1.**
+
+| Kolom | Type | Betekenis |
+|---|---|---|
+| `naam`, `gestart`, `bijgewerkt` | TEXT | wat er draait en sinds wanneer |
+| `proces` | INTEGER | het procesnummer, om te zien of hij nog leeft |
+| `klaar`, `gelukt` | INTEGER | de uitkomst |
+| `fout` | TEXT | de foutmelding, als die er is |
+| `regels` | TEXT | de laatste meldingen, één per regel |
+| `stap`, `stappen`, `stap_naam` | | waar hij is ("stap 3 van 5: Excel bouwen") |
+| `deel`, `deel_van` | INTEGER | de plek binnen die stap ("jaargang 40 van 62") |
+
+Stond eerst in het geheugen van de webapplicatie, en dat gaf twee keer een
+verkeerd beeld: na een herstart was de voortgang weg, en werk vanaf de
+opdrachtregel was onzichtbaar. Nu ziet elk proces dezelfde stand, tekent de
+beheerpagina er voortgangsbalken van, en blijkt uit het procesnummer of een
+taak die op "bezig" staat echt nog leeft — zo niet, dan meldt de pagina dat hij
+is afgebroken. Een voorbije taak verdwijnt na een kwartier, of eerder met de
+knop *Melding opruimen*.
 
 ---
 
