@@ -14,6 +14,16 @@ er nieuw binnenkwam, en zet zestig jaar archief online op
 | Evergreen Top 1000 (NPO Radio 5) | CSV (Music Datastats) | 1000 | 2008 |
 
 De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen*.
+Waar elke lijst begint, met de nummer 1 van de oudste week die we hebben:
+
+| Lijst | Oudste notering | Nummer 1 |
+|---|---|---|
+| Nederlandse Top 40 | 1965 week 1 | The Beatles — I Feel Fine |
+| Tipparade | 1967 week 28 | Golden Earrings — Sound Of The Screaming Day |
+| Oranje Top 30 | 2008 week 1 | Jan Smit — Dan volg je haar benen |
+| Sterren NL Top 25 | 2019 week 40 | Marco Borsato, Armin van Buuren & Davina Michelle — Hoe Het Danst |
+| Top 2000 | editie 1999 | Queen — Bohemian Rhapsody |
+| Evergreen Top 1000 | editie 2008 | Elvis Presley — Are You Lonesome To-night |
 
 ## Waar het draait
 
