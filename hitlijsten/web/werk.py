@@ -102,6 +102,46 @@ def bouw_werk(wat: str, jaar: str | None,
                 _met_uitvoer(taak, cli.opdracht_kruiscontrole, None, alle_jaren=True)
         return "Kruiscontrole michajans.nl", werk
 
+    if wat == "bijwerken-wijziging":
+        # Wat "Alles bijwerken" doet, maar dan alleen voor de jaargangen die
+        # daadwerkelijk zijn aangeraakt. Een alias voor een artiest die in drie
+        # jaargangen staat kost zo tien seconden in plaats van een half uur.
+        def werk(taak: Taak) -> None:
+            from .. import db
+            from ..normalize import vergeet_aliases
+
+            vergeet_aliases()
+            taak.meld("stap 1/3: sleutels herberekenen")
+            with db.verbinding() as con:
+                jaren = [r[0] for r in con.execute(
+                    "SELECT DISTINCT jaar FROM noteringen ORDER BY jaar")]
+            for j in jaren:
+                _met_uitvoer(taak, cli.opdracht_hersleutel, j)
+
+            taak.meld("stap 2/3: opschonen en toepassen")
+            _met_uitvoer(taak, cli.opdracht_opschonen, toepassen=True)
+
+            with db.verbinding() as con:
+                open_staand = db.te_bouwen(con)
+            if not open_staand:
+                taak.meld("stap 3/3: geen enkele jaargang is aangeraakt -- "
+                          "er valt niets te bouwen")
+                return
+
+            per_jaar = sorted({j for _, j in open_staand})
+            taak.meld(f"stap 3/3: {len(open_staand)} jaargang-lijstparen "
+                      f"aangeraakt ({', '.join(map(str, per_jaar))})")
+            for j in per_jaar:
+                _met_uitvoer(taak, cli.opdracht_excel, j)
+                _met_uitvoer(taak, cli.opdracht_pdf, j, altijd=True)
+            _met_uitvoer(taak, cli.opdracht_decennium, None)
+            with db.verbinding() as con:
+                for lijst_naam, j in open_staand:
+                    db.gebouwd(con, lijst_naam, j)
+                con.commit()
+            taak.meld("klaar -- alleen wat nodig was")
+        return "Bijwerken wat veranderd is", werk
+
     if wat == "volledig":
         # Na een wijziging in de aliassen moet er altijd hetzelfde rijtje
         # gebeuren, in deze volgorde: eerst de sleutels (die laten de alias

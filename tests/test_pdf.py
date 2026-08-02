@@ -125,15 +125,26 @@ def test_nieuwe_week_maakt_het_bestand_verouderd():
     assert not pdf.is_actueel(con, pad, "top40", 2020)
 
 
-def test_handmatige_wijziging_maakt_alles_verouderd():
-    """Een nieuwe alias verschuift de punten, ook van een oude jaargang."""
-    con = _database(_vullen(1975, [1]))
-    pad = pdf.schrijf_jaaroverzicht(con, "top40", 1975, MAP, altijd=True)
-    assert pdf.is_actueel(con, pad, "top40", 1975)
-    con.execute("INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud,"
-                " nieuw, reden) VALUES (?,'alias','a|b','naar',NULL,'c|d','test')",
-                ((datetime.now() + timedelta(minutes=1)).isoformat(timespec="seconds"),))
-    assert not pdf.is_actueel(con, pad, "top40", 1975)
+def test_alleen_de_geraakte_jaargang_veroudert():
+    """Een alias verschuift de punten -- maar niet van elke jaargang.
+
+    Vroeger keek dit naar de laatste regel in `wijzigingen`, en dat gold voor
+    alles tegelijk: één alias maakte alle 883 bestanden verdacht, oftewel een
+    half uur bouwen voor drie jaargangen werk. Nu staat er per (lijst, jaargang)
+    in `te_bouwen` wat er is aangeraakt.
+    """
+    con = _database(_vullen(1975, [1]) + _vullen(1976, [1]))
+    oud_bestand = pdf.schrijf_jaaroverzicht(con, "top40", 1975, MAP, altijd=True)
+    ander = pdf.schrijf_jaaroverzicht(con, "top40", 1976, MAP, altijd=True)
+    assert pdf.is_actueel(con, oud_bestand, "top40", 1975)
+
+    db.markeer_te_bouwen(con, lijst="top40", jaar=1975, reden="alias")
+    assert not pdf.is_actueel(con, oud_bestand, "top40", 1975)
+    assert pdf.is_actueel(con, ander, "top40", 1976),         "een jaargang die er niets mee te maken heeft blijft actueel"
+
+    db.gebouwd(con, "top40", 1975)
+    pdf.schrijf_jaaroverzicht(con, "top40", 1975, MAP, altijd=True)
+    assert pdf.is_actueel(con, oud_bestand, "top40", 1975)
 
 
 def test_ontbrekend_bestand_is_nooit_actueel():

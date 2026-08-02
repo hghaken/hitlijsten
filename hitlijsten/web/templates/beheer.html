@@ -13,16 +13,27 @@
 <p class="hint">
   Heb je een alias toegevoegd of iets met de hand rechtgezet, dan moet er
   altijd hetzelfde rijtje gebeuren: sleutels herberekenen, namen gelijktrekken,
-  en dan Excel, decennia en PDF opnieuw bouwen — in die volgorde, want de
-  bestanden horen bij de toestand van dat moment. Er draait er één tegelijk, dus
-  vijf knoppen achter elkaar indrukken werkt niet. Deze doet ze alle vijf.
+  en dan de bestanden opnieuw bouwen — in die volgorde, want die bestanden horen
+  bij de toestand van dat moment. Er draait er één tegelijk, dus knoppen achter
+  elkaar indrukken werkt niet; deze doen het rijtje in één keer.
+  <br><b>Bijwerken wat veranderd is</b> bouwt alleen de jaargangen die de
+  wijziging echt heeft geraakt. Een artiest die in drie jaargangen staat kost
+  dan seconden in plaats van een half uur.
 </p>
-<form method="post" action="{{ url_for('beheer_start') }}"
-      onsubmit="return confirm('Dit duurt ongeveer een half uur. Je kunt de voortgang onderaan volgen. Beginnen?')">
-  <input type="hidden" name="wat" value="volledig">
-  <button class="hoofd" type="submit">Alles bijwerken</button>
-  <span class="hint">— duurt ongeveer een half uur</span>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}">
+  <input type="hidden" name="wat" value="bijwerken-wijziging">
+  <button class="hoofd" type="submit">Bijwerken wat veranderd is</button>
+  <span class="hint">— meestal een paar minuten</span>
 </form>
+<form class="inline" method="post" action="{{ url_for('beheer_start') }}"
+      onsubmit="return confirm('Alle 883 bestanden opnieuw bouwen duurt ongeveer een half uur. Meestal is \'Bijwerken wat veranderd is\' genoeg. Toch beginnen?')">
+  <input type="hidden" name="wat" value="volledig">
+  <button type="submit">Alles opnieuw bouwen</button>
+  <span class="hint">— een half uur</span>
+</form>
+{% if openstaand %}
+<p class="hint">Wacht op bouwen: {{ openstaand }}</p>
+{% endif %}
 
 <h2>Ophalen</h2>
 <form method="post" action="{{ url_for('beheer_start') }}">

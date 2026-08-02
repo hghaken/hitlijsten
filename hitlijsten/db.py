@@ -100,6 +100,18 @@ CREATE TABLE IF NOT EXISTS niet_samenvoegen (
     PRIMARY KEY (sleutel_a, sleutel_b)
 );
 
+-- Welke (lijst, jaargang) opnieuw gebouwd moet worden. Zonder deze tabel is
+-- "verouderd" niet per jaargang te bepalen en maakt elke wijziging alle 883
+-- bestanden verdacht -- een half uur bouwen voor een alias die drie jaargangen
+-- raakt. Wordt geleegd zodra het bestand er staat.
+CREATE TABLE IF NOT EXISTS te_bouwen (
+    lijst      TEXT NOT NULL,
+    jaar       INTEGER NOT NULL,
+    reden      TEXT,
+    aangemaakt TEXT,
+    PRIMARY KEY (lijst, jaar)
+);
+
 -- Elke handmatige wijziging via de webapplicatie. Zonder dit logboek zou een
 -- correctie niet te onderscheiden zijn van wat de bron zelf leverde, en dat is
 -- precies wat je later wilt kunnen nazoeken.
@@ -183,6 +195,43 @@ def verbinding() -> Iterator[sqlite3.Connection]:
         con.commit()
     finally:
         con.close()
+
+
+def markeer_te_bouwen(con: sqlite3.Connection, *, sleutels=None,
+                      lijst: str | None = None, jaar: int | None = None,
+                      reden: str = "") -> int:
+    """Onthoud welke jaargangen opnieuw gebouwd moeten worden.
+
+    Met `sleutels` wordt opgezocht in welke (lijst, jaargang) die nummers
+    voorkomen -- dat is precies wat een alias of een hernoeming raakt, en meestal
+    zijn dat er drie en niet zeshonderd.
+    """
+    paren = set()
+    if lijst and jaar:
+        paren.add((lijst, jaar))
+    for sleutel in list(sleutels or []):
+        paren |= {(r[0], r[1]) for r in con.execute(
+            "SELECT DISTINCT lijst, jaar FROM noteringen WHERE sleutel=?",
+            (sleutel,))}
+    if not paren:
+        return 0
+    con.executemany(
+        "INSERT OR REPLACE INTO te_bouwen (lijst, jaar, reden, aangemaakt)"
+        " VALUES (?,?,?,?)",
+        [(l, j, reden, datetime.now().isoformat(timespec="seconds"))
+         for l, j in paren])
+    return len(paren)
+
+
+def te_bouwen(con: sqlite3.Connection) -> list[tuple[str, int]]:
+    """Wat er nog gebouwd moet worden, oudste markering eerst."""
+    return [(r[0], r[1]) for r in con.execute(
+        "SELECT lijst, jaar FROM te_bouwen ORDER BY aangemaakt, jaar")]
+
+
+def gebouwd(con: sqlite3.Connection, lijst: str, jaar: int) -> None:
+    """Haal een jaargang van de lijst af; het bestand staat er weer."""
+    con.execute("DELETE FROM te_bouwen WHERE lijst=? AND jaar=?", (lijst, jaar))
 
 
 def bewaar_week(

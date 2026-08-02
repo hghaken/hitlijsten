@@ -895,8 +895,13 @@ def _registreer(app: Flask) -> None:
             "SELECT DISTINCT jaar FROM noteringen ORDER BY jaar DESC")]
         opnames = [(p.name, p.stat().st_size / 1024 / 1024)
                    for p in momentopnames.lijst()]
+        wacht = db.te_bouwen(verbinding())
+        openstaand = ", ".join(
+            f"{lijst_naam} {jaar}" for lijst_naam, jaar in wacht[:12])
+        if len(wacht) > 12:
+            openstaand += f" en nog {len(wacht) - 12}"
         return render_template("beheer.html", jaren=jaren, taak=taken.huidige(),
-                               opnames=opnames)
+                               opnames=opnames, openstaand=openstaand)
 
     @app.route("/beheer/start", methods=["POST"])
     @vereist_aanmelding

@@ -230,6 +230,53 @@ def test_hernoemen_mag_een_samenvoeging_niet_ongedaan_maken():
     assert artiestsleutel("AC/DC") != artiestsleutel("ACDC")
 
 
+# --- alleen bouwen wat er veranderd is --------------------------------------
+
+
+def _schone_database():
+    from hitlijsten import db as dbmod
+
+    con = sqlite3.connect(":memory:")
+    con.row_factory = sqlite3.Row
+    con.executescript(dbmod.SCHEMA)
+    con.executemany(
+        "INSERT INTO noteringen (lijst, jaar, week, positie, artiest, titel,"
+        " sleutel) VALUES (?,?,1,1,'A','B',?)",
+        [("top40", 1999, "a teens|mamma mia"),
+         ("top40", 2000, "a teens|mamma mia"),
+         ("tipparade", 2001, "a teens|mamma mia"),
+         ("top40", 1975, "abba|waterloo")])
+    return con
+
+
+def test_markeren_vindt_alleen_de_geraakte_jaargangen():
+    """Een artiest in drie jaargangen mag geen zeshonderd bestanden verdacht maken."""
+    from hitlijsten import db as dbmod
+
+    con = _schone_database()
+    dbmod.markeer_te_bouwen(con, sleutels=["a teens|mamma mia"], reden="alias")
+    assert sorted(dbmod.te_bouwen(con)) == [
+        ("tipparade", 2001), ("top40", 1999), ("top40", 2000)]
+
+
+def test_gebouwd_haalt_een_jaargang_van_de_lijst():
+    from hitlijsten import db as dbmod
+
+    con = _schone_database()
+    dbmod.markeer_te_bouwen(con, sleutels=["a teens|mamma mia"])
+    dbmod.gebouwd(con, "top40", 1999)
+    assert ("top40", 1999) not in dbmod.te_bouwen(con)
+    assert len(dbmod.te_bouwen(con)) == 2
+
+
+def test_onbekende_sleutel_markeert_niets():
+    from hitlijsten import db as dbmod
+
+    con = _schone_database()
+    assert dbmod.markeer_te_bouwen(con, sleutels=["bestaat|niet"]) == 0
+    assert dbmod.te_bouwen(con) == []
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     mislukt = 0

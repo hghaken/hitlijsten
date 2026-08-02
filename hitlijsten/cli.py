@@ -728,6 +728,8 @@ def opdracht_hersleutel(jaar: int) -> None:
                 con.execute(
                     "UPDATE noteringen SET sleutel=? WHERE id=?", (nieuw, r["id"])
                 )
+                db.markeer_te_bouwen(con, lijst=r["lijst"], jaar=jaar,
+                                     reden="sleutel gewijzigd")
                 gewijzigd += 1
         con.commit()
     log(f"{gewijzigd} van {len(rijen)} sleutels bijgewerkt")

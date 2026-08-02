@@ -40,6 +40,8 @@ from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Callable, Iterable, Optional
 
+from . import db
+
 __all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
@@ -110,12 +112,18 @@ def herstel_tekst(con: sqlite3.Connection, fouten: Iterable[dict],
     for fout in fouten:
         oud_a, oud_t = fout["oud"]
         nieuw_a, nieuw_t = fout["nieuw"]
+        jaren = [r[0] for r in con.execute(
+            "SELECT DISTINCT jaar FROM noteringen WHERE lijst=? AND artiest=?"
+            " AND titel=?", (fout["lijst"], oud_a, oud_t))]
         cursor = con.execute(
             "UPDATE noteringen SET artiest=?, titel=? WHERE lijst=? AND"
             " artiest=? AND titel=?",
             (nieuw_a, nieuw_t, fout["lijst"], oud_a, oud_t))
         if not cursor.rowcount:
             continue
+        for jaar in jaren:
+            db.markeer_te_bouwen(con, lijst=fout["lijst"], jaar=jaar,
+                                 reden="leestekens")
         geraakt += cursor.rowcount
         con.execute(
             "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud,"
@@ -511,6 +519,8 @@ def splits_dubbele_a_kanten(con: sqlite3.Connection) -> dict:
     for geval in gevallen:
         rij, kanten = geval["rij"], geval["kanten"]
         eerste, rest = kanten[0], kanten[1:]
+        db.markeer_te_bouwen(con, lijst=rij["lijst"], jaar=rij["jaar"],
+                             reden="dubbele A-kant")
         con.execute(
             "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE id=?",
             (eerste[0], eerste[1], sleutel_van(*eerste), rij["id"]))
@@ -581,6 +591,7 @@ def pas_titels_toe(con: sqlite3.Connection) -> dict:
         goed = tabel.get(r["sleutel"])
         if not goed or goed == r["titel"]:
             continue
+        db.markeer_te_bouwen(con, sleutels=[r["sleutel"]], reden="titel")
         cursor = con.execute(
             "UPDATE noteringen SET titel=? WHERE sleutel=? AND titel=?",
             (goed, r["sleutel"], r["titel"]))
@@ -667,6 +678,8 @@ def pas_namen_toe(con: sqlite3.Connection) -> dict:
         goed = tabel.get(code)
         if not goed or goed == r["artiest"]:
             continue
+        db.markeer_te_bouwen(con, sleutels=[r["sleutel"]],
+                             reden="artiestnaam")
         cursor = con.execute(
             "UPDATE noteringen SET artiest=? WHERE sleutel=? AND artiest=?",
             (goed, r["sleutel"], r["artiest"]))

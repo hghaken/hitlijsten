@@ -206,17 +206,21 @@ def is_actueel(con: sqlite3.Connection, pad: Path, lijst: str, jaar: int) -> boo
     """Is het bewaarde bestand jonger dan de gegevens waar het uit komt?
 
     Twee dingen kunnen het verouderen: een week die opnieuw is opgehaald, en een
-    handmatige wijziging (alias, uitzondering, correctie). Dat laatste is niet
-    per jaargang bij te houden, dus elke wijziging maakt alle bestanden verdacht.
-    Opnieuw bouwen kost een halve seconde, dus dat mag ruim gerekend worden.
+    handmatige wijziging (alias, uitzondering, correctie). Dat tweede stond
+    vroeger in `wijzigingen` en gold voor alles tegelijk -- één alias maakte
+    zeshonderd bestanden verdacht, en dat is een half uur bouwen voor drie
+    jaargangen werk. Nu houdt `te_bouwen` per (lijst, jaargang) bij wat er
+    aangeraakt is.
     """
     if not pad.exists():
+        return False
+    if con.execute("SELECT 1 FROM te_bouwen WHERE lijst=? AND jaar=?",
+                   (lijst, jaar)).fetchone():
         return False
     gemaakt = datetime.fromtimestamp(pad.stat().st_mtime)
     for vraag, waarden in (
         ("SELECT MAX(opgehaald_op) FROM opgehaald WHERE lijst=? AND jaar=?",
          (lijst, jaar)),
-        ("SELECT MAX(tijdstip) FROM wijzigingen", ()),
     ):
         try:
             laatste = con.execute(vraag, waarden).fetchone()[0]
