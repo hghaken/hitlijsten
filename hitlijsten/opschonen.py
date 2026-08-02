@@ -42,7 +42,8 @@ from typing import Callable, Iterable, Optional
 
 __all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
-           "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord"]
+           "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
+           "titelvarianten", "pas_titels_toe", "geleende_hoofdletters"]
 
 # Wat er in de bronnen misgaat met leestekens. Bewust kort: elk teken hier is
 # er een waarvan is vastgesteld dat het in de data staat en nooit bedoeld is.
@@ -307,7 +308,19 @@ def _accenten(naam: str) -> int:
     return sum(1 for teken in naam if ord(teken) > 127 and teken.isalpha())
 
 
-def meerderheidsnaam(namen: dict[str, int]) -> str:
+def _apostrofs(naam: str) -> int:
+    """Hoeveel apostrofs staan erin?
+
+    Alleen zinnig bij titels. Een weggelaten apostrof is een slordigheid --
+    "Dont Speak", "Beggin", "Raindrops Keep Fallin On My Head" -- terwijl een
+    band zich wél bewust zonder kan schrijven: Shakespears Sister en Dexys
+    Midnight Runners hebben er echt geen. Vandaar dat dit bij een artiestnaam
+    niet meetelt en bij een titel wel.
+    """
+    return naam.count("'")
+
+
+def meerderheidsnaam(namen: dict[str, int], *, apostrof: bool = False) -> str:
     """De juiste schrijfwijze kiezen uit varianten van dezelfde naam.
 
     Niet simpelweg de meerderheid, want die heeft twee keer aantoonbaar
@@ -326,7 +339,8 @@ def meerderheidsnaam(namen: dict[str, int]) -> str:
     """
     def rangschik(paar):
         naam, aantal = paar
-        return (_accenten(naam), naam != naam.lower(), aantal)
+        return (_accenten(naam), _apostrofs(naam) if apostrof else 0,
+                naam != naam.lower(), aantal)
 
     return max(namen.items(), key=rangschik)[0]
 
@@ -337,6 +351,98 @@ def bewaar_artiestnaam(con: sqlite3.Connection, sleutel: str, naam: str,
         "INSERT OR REPLACE INTO artiestnamen (sleutel, naam, bron, aangemaakt)"
         " VALUES (?,?,?,?)",
         (sleutel, naam, bron, datetime.now().isoformat(timespec="seconds")))
+
+
+def bewaar_titel(con: sqlite3.Connection, sleutel: str, naam: str,
+                 bron: str) -> None:
+    con.execute(
+        "INSERT OR REPLACE INTO titelnamen (sleutel, naam, bron, aangemaakt)"
+        " VALUES (?,?,?,?)",
+        (sleutel, naam, bron, datetime.now().isoformat(timespec="seconds")))
+
+
+def titelvarianten(con: sqlite3.Connection) -> dict[str, list]:
+    """Nummers die onder meer dan één titel in de database staan.
+
+    Dezelfde indeling als bij de artiesten. "Beggin" tegen "Beggin'" is een
+    tekenkwestie; "Kronenburg Park (Ga Die Wereld Uit)" tegen "Kronenburg Park -
+    Ga Die Wereld Uit" is dat niet, want daar verschilt de opbouw en niet alleen
+    de spelling.
+    """
+    per_sleutel: dict[str, dict[str, int]] = {}
+    for r in con.execute("SELECT sleutel, titel, COUNT(*) n FROM noteringen"
+                         " GROUP BY sleutel, titel"):
+        titels = per_sleutel.setdefault(r["sleutel"], {})
+        titels[r["titel"]] = titels.get(r["titel"], 0) + r["n"]
+
+    bakken: dict[str, list] = {"tekens": [], "anders": []}
+    for sleutel, titels in per_sleutel.items():
+        if len(titels) < 2:
+            continue
+        kale = {_kaal(_zonder_bronrommel(t)) for t in titels}
+        soort = "tekens" if len(kale) == 1 else "anders"
+        bakken[soort].append((sleutel, dict(
+            sorted(titels.items(), key=lambda p: -p[1]))))
+    return bakken
+
+
+def geleende_hoofdletters(con: sqlite3.Connection) -> list[tuple[str, str, str]]:
+    """Titels die helemaal klein zijn terwijl een ander nummer ze wél schrijft.
+
+    Sandra van Nieuwland staat met "beggin'" in de Top 40 en verder niemand,
+    dus binnen dat nummer valt er niets te kiezen. Maar Madcon, Maneskin, The
+    Four Seasons en Timebox staan er allemaal met "Beggin'". Dan is de
+    hoofdletter geen smaak maar een gegeven dat elders in dezelfde database
+    staat.
+
+    Alleen van klein naar groot, en alleen als de letters verder exact gelijk
+    zijn. Geeft (sleutel, oud, nieuw).
+    """
+    met_hoofdletter: dict[str, dict[str, int]] = {}
+    klein: dict[str, list[tuple[str, str]]] = {}
+    for r in con.execute("SELECT sleutel, titel, COUNT(*) n FROM noteringen"
+                         " GROUP BY sleutel, titel"):
+        titel = r["titel"]
+        if titel != titel.lower():
+            vormen = met_hoofdletter.setdefault(titel.lower(), {})
+            vormen[titel] = vormen.get(titel, 0) + r["n"]
+        else:
+            klein.setdefault(titel, []).append((r["sleutel"], titel))
+
+    uit = []
+    for kleine_titel, gevallen in klein.items():
+        vormen = met_hoofdletter.get(kleine_titel)
+        if not vormen:
+            continue
+        goed = max(vormen.items(), key=lambda p: p[1])[0]
+        uit += [(sleutel, oud, goed) for sleutel, oud in gevallen]
+    return uit
+
+
+def pas_titels_toe(con: sqlite3.Connection) -> dict:
+    """Schrijf de vastgestelde titel naar alle noteringen die afwijken."""
+    tabel = {r["sleutel"]: r["naam"]
+             for r in con.execute("SELECT sleutel, naam FROM titelnamen")}
+    verslag = {"nummers": 0, "noteringen": 0}
+    for r in list(con.execute(
+            "SELECT sleutel, titel, COUNT(*) n FROM noteringen"
+            " GROUP BY sleutel, titel")):
+        goed = tabel.get(r["sleutel"])
+        if not goed or goed == r["titel"]:
+            continue
+        cursor = con.execute(
+            "UPDATE noteringen SET titel=? WHERE sleutel=? AND titel=?",
+            (goed, r["sleutel"], r["titel"]))
+        verslag["noteringen"] += cursor.rowcount
+        verslag["nummers"] += 1
+        con.execute(
+            "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud,"
+            " nieuw, reden) VALUES (?,?,?,?,?,?,?)",
+            (datetime.now().isoformat(timespec="seconds"), "titelnaam",
+             r["sleutel"], "titel", r["titel"], goed,
+             f"eenduidige schrijfwijze ({cursor.rowcount} noteringen)"))
+    con.commit()
+    return verslag
 
 
 def artiestnamen(con: sqlite3.Connection) -> dict[str, str]:

@@ -502,8 +502,10 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
 
     Zonder --toepassen wordt alleen gemeld wat er zou gebeuren.
     """
-    from .opschonen import (herstel_tekst, meerderheidsnaam, naamvarianten,
-                            bewaar_artiestnaam, pas_namen_toe, tekstfouten)
+    from .opschonen import (bewaar_artiestnaam, bewaar_titel,
+                            geleende_hoofdletters, herstel_tekst,
+                            meerderheidsnaam, naamvarianten, pas_namen_toe,
+                            pas_titels_toe, tekstfouten, titelvarianten)
 
     with db.verbinding() as con:
         fouten = tekstfouten(con)
@@ -517,20 +519,49 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
         log(f"{len(bakken['tekens'])} artiesten met alleen een verschil in "
             f"hoofdletters of accenten")
         log(f"{len(bakken['lidwoord'])} met en zonder lidwoord, "
-            f"{len(bakken['anders'])} met een echt andere schrijfwijze "
-            f"(die laatste blijven met rust)")
+            f"{len(bakken['anders'])} met een echt andere schrijfwijze")
+
+        titels = titelvarianten(con)
+        log(f"{len(titels['tekens'])} nummers met meer dan een titel die "
+            f"alleen in tekens verschilt, {len(titels['anders'])} die anders "
+            f"zijn opgebouwd")
 
         if not toepassen:
             log("niets gewijzigd -- draai met --toepassen om het door te voeren")
             return
 
         log(f"{herstel_tekst(con, fouten)} noteringen met schone tekst")
-        for code, namen in bakken["tekens"]:
+        # Ook hier alle bakken: twee schrijfwijzen onder dezelfde artiestsleutel
+        # zijn dezelfde artiest, want dat samenvoegen is eerder met de hand
+        # nagelopen. "Wham" en "Wham!" hoeven niet allebei te blijven staan.
+        for code, namen in (bakken["tekens"] + bakken["lidwoord"]
+                            + bakken["anders"]):
             bewaar_artiestnaam(con, code, meerderheidsnaam(namen), "meerderheid")
         con.commit()
         verslag = pas_namen_toe(con)
         log(f"{verslag['noteringen']} noteringen kregen de vastgestelde "
             f"artiestnaam ({verslag['artiesten']} schrijfwijzen)")
+
+        # Beide bakken, anders dan bij de artiesten. Alles wat dezelfde
+        # sleutel heeft is per definitie hetzelfde nummer -- dat is wat een
+        # sleutel betekent -- dus er valt hier niets te beschermen, alleen te
+        # kiezen. "Beggin" en "Beggin'" verschillen in een apostrof en zaten
+        # daardoor in de bak "echt anders"; dat was een verschil zonder gevolg.
+        for sleutel, varianten in titels["tekens"] + titels["anders"]:
+            bewaar_titel(con, sleutel,
+                         meerderheidsnaam(varianten, apostrof=True),
+                         "meerderheid")
+        con.commit()
+        verslag = pas_titels_toe(con)
+        log(f"{verslag['noteringen']} noteringen kregen de vastgestelde titel "
+            f"({verslag['nummers']} schrijfwijzen)")
+
+        for sleutel, oud, goed in geleende_hoofdletters(con):
+            bewaar_titel(con, sleutel, goed, "hoofdletters van elders")
+        con.commit()
+        verslag = pas_titels_toe(con)
+        log(f"{verslag['noteringen']} noteringen kregen hoofdletters van een "
+            f"gelijknamig nummer ({verslag['nummers']} titels)")
 
 
 def opdracht_hersleutel(jaar: int) -> None:

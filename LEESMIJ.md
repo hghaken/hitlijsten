@@ -350,6 +350,7 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Spatiëring ("ACDC" / "AC/DC") | 61 artiesten | MusicBrainz |
 | Typefouten in namen en titels | 31 artiesten, 86 nummers | MusicBrainz + Wikipedia |
 | Onmogelijke uitgavejaren | 47 nummers | de Top 40 zelf |
+| Titels met twee schrijfwijzen | 1.544 nummers, 13.905 noteringen | een regel |
 
 **Het uitgavejaar heeft een ijkpunt dat beter is dan een catalogus: de eigen
 Top 40.** Een nummer kan niet uitkomen nadat het genoteerd stond. Over de 6.004
@@ -374,6 +375,15 @@ ontleden — é wordt e plus een tekentje — maar de ø van Bløf is een eigen 
 Die overleefde de ontleding en werd daarna als rommel geschrapt, waarna "Bløf"
 als "bl f" naast "Blof" stond. Nu vertaald, samen met æ, ß, ł en een stuk of tien
 andere.
+
+**Eén schrijfwijze per artiest én per titel.** Dat tweede was er eerst niet, en
+dat viel meteen op: "Beggin" van Madcon in de Top 40 naast "Beggin'" in de Top
+4000 — één nummer volgens de sleutel, twee regels in het zoekscherm. Bij een
+titel telt een **apostrof** mee als bewijs ("Dont Speak" verliest van "Don't
+Speak"), bij een artiestnaam juist niet: Shakespears Sister en Dexys Midnight
+Runners schrijven zich er echt zonder. En een titel die helemaal uit kleine
+letters bestaat leent zijn hoofdletters van een gelijknamig nummer elders in de
+database — zo werd Sandra van Nieuwlands "beggin'" alsnog "Beggin'".
 
 **Waarom een externe bron.** Bij "Dexys Midnight Runners" tegen "Dexy's Midnight
 Runners" helpt tellen niet: je moet weten hoe de band heet.

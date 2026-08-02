@@ -79,6 +79,16 @@ CREATE TABLE IF NOT EXISTS artiestnamen (
     aangemaakt TEXT
 );
 
+-- Hetzelfde voor de titel, per volledige sleutel. Nodig om dezelfde reden:
+-- "Beggin" in de Top 40 en "Beggin'" in de Top 4000 is een nummer, en dan hoort
+-- er ook een schrijfwijze te staan.
+CREATE TABLE IF NOT EXISTS titelnamen (
+    sleutel    TEXT PRIMARY KEY,   -- de volledige sleutel, artiest en titel
+    naam       TEXT NOT NULL,
+    bron       TEXT,
+    aangemaakt TEXT
+);
+
 -- Het omgekeerde: paren die op elkaar lijken en dicht op elkaar noteerden,
 -- maar aantoonbaar losse nummers zijn. Zonder deze lijst stelt `controle` ze
 -- elke keer opnieuw voor.
