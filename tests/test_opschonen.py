@@ -208,6 +208,24 @@ def test_met_en_ampersand_leveren_dezelfde_sleutel():
     assert artiestsleutel("Wilma met Vader Abraham") ==         artiestsleutel("Wilma & Vader Abraham")
 
 
+def test_ondertitel_achter_een_streep_gaat_tussen_haken():
+    from hitlijsten.opschonen import ondertitel_tussen_haken
+
+    assert ondertitel_tussen_haken("Cheerleader - Felix Jaehn Remix") ==         "Cheerleader (Felix Jaehn Remix)"
+    assert ondertitel_tussen_haken("Eye Of The Tiger - The Theme From Rocky III")         == "Eye Of The Tiger (The Theme From Rocky III)"
+    assert ondertitel_tussen_haken("Another Brick In The Wall - Part II") ==         "Another Brick In The Wall (Part II)"
+
+
+def test_medley_en_tweede_titel_blijven_met_streep():
+    """"One Love - People Get Ready" is een medley, geen ondertitel."""
+    from hitlijsten.opschonen import ondertitel_tussen_haken
+
+    for t in ("One Love - People Get Ready", "Un Dia - One Day",
+              "Buona Sera - Oh Marie", "De Storm - Geef Niet Op",
+              "Savage Love (Laxed - Siren Beat)"):
+        assert ondertitel_tussen_haken(t) == t, t
+
+
 # --- de sleutelregels -------------------------------------------------------
 
 

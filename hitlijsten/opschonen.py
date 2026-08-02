@@ -44,7 +44,7 @@ from . import db
 
 __all__ = ["schoon_tekst", "eenduidige_credit", "gast_uit_titel",
            "x_is_samenwerking", "komma_is_samenwerking",
-           "met_is_samenwerking", "tekstfouten", "herstel_tekst", "Voorstel",
+           "met_is_samenwerking", "ondertitel_tussen_haken", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
@@ -249,6 +249,38 @@ def met_is_samenwerking(artiest: str) -> str:
     artiest = _DUET.sub(" & ", artiest)
     artiest = _MET.sub(" & ", artiest)
     return _MEERVOUDIGE_SPATIE.sub(" ", artiest).strip()
+
+
+# "Cheerleader - Felix Jaehn Remix", "Eye Of The Tiger - The Theme From
+# Rocky III". Het deel achter het streepje is een ondertitel, en de
+# huisstijl zet die tussen haken: "Cheerleader (Felix Jaehn Remix)".
+#
+# Alleen als dat deel zichzelf verraadt met een versie- of themawoord.
+# Zonder die eis sneuvelen medleys ("One Love - People Get Ready") en
+# tweetalige dubbeltitels ("Un Dia - One Day"), en dat zijn geen
+# ondertitels maar tweede titels. De sleutel verandert nooit mee: die
+# gooit leestekens toch al weg, dus dit is puur weergave.
+_ONDERTITELWOORD = re.compile(
+    r"\b(?:re-?mix(?:es)?|rmx|mix(?:es)?|live|version|versie|edit|akoestisch|acoustic|unplugged|instrumenta[al]*|demo|club|extended|radio|mono|stereo|deel [ivx0-9]+|part [ivx0-9]+|pt\.? [ivx0-9]+|theme|thema|titelsong|titeltrack|tune|anthem|tribute|g[eé]n[eé]rique|soundtrack|titelnummer)\b", re.I)
+
+
+def ondertitel_tussen_haken(titel: str) -> str:
+    """"Titel - Sub" -> "Titel (Sub)", alleen bij een echte ondertitel."""
+    if not titel or " - " not in titel:
+        return titel
+    kop, _, staart = titel.partition(" - ")
+    # Het streepje moet buiten haken staan; in "Savage Love (Laxed - Siren
+    # Beat)" hoort het bij de haak en blijft alles zoals het is.
+    if kop.count("(") != kop.count(")"):
+        return titel
+    if not kop.strip() or not _ONDERTITELWOORD.search(staart):
+        return titel
+    # Nog een streepje in de staart wordt een spatie: "DJ Fle - Minisiren
+    # Remix" leest tussen haken als "DJ Fle Minisiren Remix".
+    staart = staart.replace(" - ", " ").strip()
+    if staart.startswith("(") and staart.endswith(")"):
+        staart = staart[1:-1]
+    return f"{kop.strip()} ({staart})"
 
 
 # --- 1. tekens -------------------------------------------------------------

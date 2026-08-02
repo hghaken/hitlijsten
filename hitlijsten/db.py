@@ -296,7 +296,8 @@ def bewaar_week(
     from .normalize import sleutel_van
     from .opschonen import (eenduidige_credit, gast_uit_titel,
                             komma_is_samenwerking, met_is_samenwerking,
-                            schoon_tekst, splits_kanten, x_is_samenwerking)
+                            ondertitel_tussen_haken, schoon_tekst,
+                            splits_kanten, x_is_samenwerking)
 
     # Leestekens hier rechtzetten en niet in de parsers: dan geldt het voor elke
     # bron, ook voor een bron die er later bij komt. Hetzelfde geldt voor de
@@ -307,6 +308,7 @@ def bewaar_week(
         for ruwe_artiest, ruwe_titel in splits_kanten(n.artiest, n.titel):
             artiest, titel = gast_uit_titel(schoon_tekst(ruwe_artiest),
                                             schoon_tekst(ruwe_titel))
+            titel = ondertitel_tussen_haken(titel)
             artiest = met_is_samenwerking(komma_is_samenwerking(
                 x_is_samenwerking(eenduidige_credit(artiest))))
             rijen.append((
