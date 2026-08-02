@@ -32,7 +32,8 @@
   <div class="melding fout">Voor deze editie staat er nog niets in de database.</div>
 {% else %}
 
-{% set nieuw = nummers | selectattr('edities', 'equalto', 1) | list %}
+{% set binnen = nummers | rejectattr('vorige') | list %}
+{% set terug = binnen | selectattr('eerder') | list %}
 {% set altijd = nummers | selectattr('edities', 'equalto', edities|length) | list %}
 
 <div class="kaarten">
@@ -48,6 +49,11 @@
     <div class="cijfer">{{ altijd|length }}</div>
     <div class="naam">elk jaar genoteerd</div>
   </div>
+  <div class="kaart">
+    <div class="cijfer">{{ (binnen|length) - (terug|length) }}<span
+      style="font-size:1rem; color:var(--gedempt)"> + {{ terug|length }}</span></div>
+    <div class="naam">nieuw + terug</div>
+  </div>
   <div class="kaart" style="min-width:20rem">
     <div class="naam">nummer 1 van {{ jaar }}</div>
     <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
@@ -62,8 +68,12 @@
   De Top 2000 is één uitzending per jaar, tussen kerst en oud en nieuw, dus geen
   weken en geen punten — alleen de positie. <b>Vorige editie</b> is de plek van
   vorig jaar, <b>edities</b> het aantal jaren waarin het nummer stond, en
-  <b>hoogste</b> de beste positie ooit. Klik op een artiest of titel voor de
-  grafiek van het verloop over alle {{ edities|length }} edities.
+  <b>hoogste</b> de beste positie ooit.
+  <b>Terug sinds</b> betekent dat het nummer vorig jaar niet in de lijst stond
+  maar daarvoor wél — wijs het aan om te zien hoeveel edities het miste.
+  Klik op een artiest of titel voor de grafiek van het verloop over alle
+  {{ edities|length }} edities; overgeslagen jaren blijven daar als lege kolom
+  staan, met een stippellijn over het gat.
 </p>
 
 <div class="tabelvak">
@@ -87,11 +97,17 @@
         <td class="getal hint">{{ n.uitjaar or '' }}</td>
         <td class="getal">{{ n.vorige or '' }}</td>
         {# Een lagere positie is beter, dus vorige - nu: positief = gestegen. #}
+        {# Geen vorige notering betekent niet automatisch "nieuw": het kan ook
+           een terugkeer zijn. In 2025 waren dat er 53 tegen 74 echt nieuwe. #}
         <td class="getal" data-sorteer="{{ (n.vorige - n.positie) if n.vorige else -9999 }}">
           {% if n.vorige %}
             {% set verschil = n.vorige - n.positie %}
             <span class="{% if verschil > 0 %}op{% elif verschil < 0 %}neer{% endif %}"
               >{{ '+' ~ verschil if verschil > 0 else verschil }}</span>
+          {% elif n.eerder %}
+            <span class="speld terug"
+                  title="Stond er in {{ n.eerder }} voor het laatst in, dus {{ jaar - n.eerder - 1 }} editie{{ 's' if jaar - n.eerder - 1 != 1 else '' }} gemist"
+              >terug sinds {{ n.eerder }}</span>
           {% else %}<span class="speld nieuw">nieuw</span>{% endif %}
         </td>
         <td class="getal">{{ n.edities }}</td>
@@ -105,7 +121,9 @@
 <h2>Positie per editie</h2>
 <p class="hint" style="margin-top:-.3rem">
   Een rij per nummer uit deze editie, een kolom per jaargang. Goud is nummer 1.
-  Een lege cel betekent dat het nummer dat jaar niet in de lijst stond.
+  Een <b>–</b> betekent dat het nummer die editie oversloeg maar er ervoor én
+  erna wel in stond; een lege cel dat het er toen nog niet (of niet meer) in
+  hoorde.
   Horizontaal scrollen voor de oudere edities.
   Hieronder staat de top {{ matrix_tot }}; tweeduizend rijen maal
   {{ edities|length }} kolommen maakt de pagina anders onwerkbaar zwaar.
@@ -129,10 +147,16 @@
         <td class="breed" style="position:sticky; left:0; background:#0f1626">
           {{ n.artiest }} <span class="hint">— {{ n.titel }}</span>
         </td>
+        {# Een lege cel kan twee dingen betekenen: het nummer bestond nog
+           niet in de lijst (of niet meer), of het sloeg dat jaar over. Alleen
+           dat tweede is een gat, en dat krijgt een streepje -- anders lijkt een
+           onderbroken reeks precies op een korte reeks. #}
         {% for e in edities %}
           {% set p = n.posities.get(e) %}
           <td class="getal {% if p == 1 %}top1{% elif p and p <= 10 %}top3{% endif %}">
-            {{ p if p else '' }}</td>
+            {% if p %}{{ p }}{% elif n.posities and e > n.posities.keys()|min
+              and e < n.posities.keys()|max %}<span class="gat"
+              title="in {{ e }} niet genoteerd">–</span>{% endif %}</td>
         {% endfor %}
       </tr>
       {% endfor %}

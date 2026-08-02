@@ -220,7 +220,19 @@ lijst krijgt daarom een eigen pagina: de editie met *vorige editie*, *verschil*,
 *aantal edities* en *hoogste ooit*, en daaronder de matrix **nummer × editie**
 — precies de vorm van de bron. Klikken op een artiest of titel opent dezelfde
 grafiek als bij de weeklijsten, maar dan met een punt per editie in plaats van
-per week; de server zegt in het veld `as` welke van de twee het is. Die matrix toont standaard de top 250; 2000 rijen
+per week; de server zegt in het veld `as` welke van de twee het is.
+
+**Een overgeslagen editie is een eigen geval.** Van de 4927 nummers hebben er
+1358 een gat in hun reeks — "Dolce Vita" van Ryan Paris miste er twintig. Dat
+wordt op drie plekken getoond:
+
+- in de **matrix** met een `–`, dus zichtbaar anders dan een lege cel (die
+  betekent: hoorde er toen nog niet of niet meer in);
+- in de **grafiek** blijft de overgeslagen editie een lege kolom, met een
+  stippellijn over het gat — net als een re-entry bij de weeklijsten;
+- in de **editietabel** met *terug sinds 2021* in plaats van *nieuw*. Dat
+  onderscheid is niet klein: van de 127 nummers in de editie van 2025 zonder
+  notering in 2024 waren er 74 echt nieuw en 53 terug van weggeweest. Die matrix toont standaard de top 250; 2000 rijen
 maal 27 kolommen maakt de pagina anders 5 MB.
 
 **De sleutel is de brug naar de andere lijsten.** Artiest en titel gaan door

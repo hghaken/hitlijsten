@@ -570,6 +570,11 @@ def editie_klassement(
     uit = []
     for rij in dit_jaar:
         alles = historie.get(rij["sleutel"], {})
+        # Stond het er vorig jaar niet in, dan is het OF een binnenkomer OF een
+        # terugkeer. Dat verschil is groot -- in 2025 waren van de 127 nummers
+        # zonder vorige notering er 74 nieuw en 53 terug -- en zonder `eerder`
+        # zou de pagina ze allemaal "nieuw" noemen.
+        eerder = [j for j in alles if j < jaar]
         uit.append({
             "positie": rij["positie"],
             "artiest": rij["artiest"],
@@ -577,6 +582,7 @@ def editie_klassement(
             "sleutel": rij["sleutel"],
             "uitjaar": rij["uitjaar"],
             "vorige": alles.get(jaar - 1),
+            "eerder": max(eerder) if eerder else None,
             "edities": len(alles),
             "hoogste": min(alles.values()) if alles else rij["positie"],
             "posities": alles,
