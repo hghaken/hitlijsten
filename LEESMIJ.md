@@ -525,6 +525,19 @@ Aliassen, uitzonderingen en correcties zaten vroeger in CSV-bestanden; die staan
 sinds juli 2026 in de database (tabellen `aliases`, `niet_samenvoegen`,
 `correcties`) en zijn te beheren via de webapplicatie.
 
+**Waarom er dan tóch `aliases-export.csv` en `niet-samenvoegen-export.csv` in
+deze repository staan.** Ze worden door niets gelezen — de database is de bron.
+Maar de database staat in `.gitignore`, en die honderddertig aliassen en vier
+uitzonderingen zijn handwerk: elk paar is met de hand beoordeeld. Zonder export
+zou dat werk op precies één plek bestaan, op één schijf. De export is de enige
+versiebeheerde kopie ervan.
+
+De wekelijkse run schrijft die export elke vrijdag opnieuw weg naast de code, dus
+de kopie op de NAS is nooit ouder dan een week. Het bestand *in deze repository*
+is een momentopname van de laatste keer dat de code is bijgewerkt; wil je hem
+gelijktrekken, haal dan de verse op van de NAS. Terugzetten in een lege database
+kan met `hitlijsten.migratie_csv`.
+
 ### Testen
 
 ```bash

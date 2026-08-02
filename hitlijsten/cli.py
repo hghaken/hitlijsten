@@ -708,6 +708,18 @@ def opdracht_run(jaar: int, *, stuur_mail: bool = True) -> None:
         # Alleen bouwen voor jaargangen die daadwerkelijk data kregen; anders
         # laat een stille januari-run een lege jaarmap achter.
         bestanden = []
+        # Aliassen en uitzonderingen zijn handwerk dat alleen in de database
+        # bestaat, en die staat niet in git. Elke run schrijft daarom een verse
+        # export naast de code, zodat er nooit meer dan een week tussen de
+        # database en de kopie zit.
+        try:
+            from .migratie_csv import exporteer
+
+            for pad in exporteer():
+                log(f"geexporteerd: {pad.name}")
+        except Exception as fout:            # nooit de run laten stranden
+            log(f"export van aliassen mislukt: {fout}")
+
         for bouwjaar in sorted({j for _, j in nieuwe_weken}):
             bestanden += opdracht_excel(bouwjaar)
             # De PDF van die jaargang klopt nu niet meer; meteen vernieuwen,
