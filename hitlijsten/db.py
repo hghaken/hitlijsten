@@ -100,6 +100,32 @@ CREATE TABLE IF NOT EXISTS niet_samenvoegen (
     PRIMARY KEY (sleutel_a, sleutel_b)
 );
 
+-- De taak die op dit moment draait, of als laatste heeft gedraaid. Eén rij.
+--
+-- Stond vroeger in het geheugen van de webapplicatie, en dat gaf twee keer een
+-- verkeerd beeld: na een herstart was de voortgang weg, en werk dat vanaf de
+-- opdrachtregel liep was er helemaal niet in te zien. Dan staat er "niets aan
+-- de gang" terwijl er een half uur aan bestanden wordt gebouwd.
+CREATE TABLE IF NOT EXISTS taak (
+    id         INTEGER PRIMARY KEY CHECK (id = 1),
+    naam       TEXT NOT NULL,
+    gestart    TEXT NOT NULL,
+    bijgewerkt TEXT NOT NULL,
+    proces     INTEGER,          -- om te zien of hij nog leeft
+    klaar      INTEGER NOT NULL DEFAULT 0,
+    gelukt     INTEGER,
+    fout       TEXT,
+    regels     TEXT,             -- de laatste meldingen, één per regel
+    -- Waar hij is, zodat de pagina balken kan tekenen in plaats van alleen
+    -- tekst. `stap` telt de fasen ("3 van 5: Excel bouwen"), `deel` telt binnen
+    -- een fase ("jaargang 40 van 62").
+    stap       INTEGER,
+    stappen    INTEGER,
+    stap_naam  TEXT,
+    deel       INTEGER,
+    deel_van   INTEGER
+);
+
 -- Welke (lijst, jaargang) opnieuw gebouwd moet worden. Zonder deze tabel is
 -- "verouderd" niet per jaargang te bepalen en maakt elke wijziging alle 883
 -- bestanden verdacht -- een half uur bouwen voor een alias die drie jaargangen

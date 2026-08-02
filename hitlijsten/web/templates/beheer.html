@@ -157,6 +157,21 @@
 
 <h2>Voortgang</h2>
 <p id="stand" class="hint">niets aan de gang</p>
+
+<div id="balken" style="display:none; max-width:52rem; margin:.6rem 0 1rem">
+  <div style="display:flex; justify-content:space-between; font-size:.86rem">
+    <span id="fase-naam"></span><span id="fase-tel" class="hint"></span>
+  </div>
+  <progress id="fase-balk" value="0" max="1" style="width:100%; height:1.1rem"></progress>
+
+  <div id="deel-vak" style="margin-top:.5rem">
+    <div style="display:flex; justify-content:space-between; font-size:.86rem">
+      <span class="hint">binnen deze stap</span><span id="deel-tel" class="hint"></span>
+    </div>
+    <progress id="deel-balk" value="0" max="1" style="width:100%; height:.7rem"></progress>
+  </div>
+</div>
+
 <pre id="voortgang"></pre>
 
 <script>
@@ -166,8 +181,43 @@ async function ververs() {
     const t = await r.json();
     const stand = document.getElementById("stand");
     const vak = document.getElementById("voortgang");
-    if (!t.naam) { stand.textContent = "niets aan de gang"; vak.style.display = "none"; return; }
+    const balken = document.getElementById("balken");
+    if (!t.naam) {
+      stand.textContent = "niets aan de gang";
+      vak.style.display = balken.style.display = "none";
+      return;
+    }
     vak.style.display = "block";
+
+    /* De balken. `stappen` is nul bij een taak die geen fasen meldt -- dan
+       tonen we ze niet, want een balk die niet beweegt is misleidender dan
+       geen balk. */
+    if (t.stappen) {
+      balken.style.display = "block";
+      const klaar = !t.bezig;
+      document.getElementById("fase-naam").textContent =
+        klaar ? "afgerond" : t.stap + ". " + t.stap_naam;
+      document.getElementById("fase-tel").textContent =
+        "stap " + t.stap + " van " + t.stappen;
+      const balk = document.getElementById("fase-balk");
+      balk.max = t.stappen;
+      /* Tijdens een stap is die stap bezig en dus nog niet af: laat de balk
+         staan op wat er klaar is, niet op wat er loopt. */
+      balk.value = klaar ? t.stappen : t.stap - 1;
+
+      const deelVak = document.getElementById("deel-vak");
+      if (t.deel_van && !klaar) {
+        deelVak.style.display = "block";
+        document.getElementById("deel-tel").textContent =
+          t.deel + " van " + t.deel_van;
+        const d = document.getElementById("deel-balk");
+        d.max = t.deel_van; d.value = t.deel;
+      } else {
+        deelVak.style.display = "none";
+      }
+    } else {
+      balken.style.display = "none";
+    }
     vak.textContent = (t.regels || []).join("\n") + (t.fout ? "\n\n" + t.fout : "");
     vak.scrollTop = vak.scrollHeight;
     if (t.bezig) {

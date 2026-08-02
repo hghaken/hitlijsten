@@ -111,34 +111,39 @@ def bouw_werk(wat: str, jaar: str | None,
             from ..normalize import vergeet_aliases
 
             vergeet_aliases()
-            taak.meld("stap 1/3: sleutels herberekenen")
+            taak.fase(1, 3, "sleutels herberekenen")
             with db.verbinding() as con:
                 jaren = [r[0] for r in con.execute(
                     "SELECT DISTINCT jaar FROM noteringen ORDER BY jaar")]
-            for j in jaren:
+            for nr, j in enumerate(jaren, 1):
+                taak.tel(nr, len(jaren))
                 _met_uitvoer(taak, cli.opdracht_hersleutel, j)
 
-            taak.meld("stap 2/3: opschonen en toepassen")
+            taak.fase(2, 3, "opschonen en toepassen")
             _met_uitvoer(taak, cli.opdracht_opschonen, toepassen=True)
 
             with db.verbinding() as con:
                 open_staand = db.te_bouwen(con)
             if not open_staand:
-                taak.meld("stap 3/3: geen enkele jaargang is aangeraakt -- "
-                          "er valt niets te bouwen")
+                taak.fase(3, 3, "niets aangeraakt, er valt niets te bouwen")
                 return
 
             per_jaar = sorted({j for _, j in open_staand})
-            taak.meld(f"stap 3/3: {len(open_staand)} jaargang-lijstparen "
-                      f"aangeraakt ({', '.join(map(str, per_jaar))})")
-            for j in per_jaar:
+            taak.fase(3, 3, f"bouwen: {len(per_jaar)} jaargangen")
+            for nr, j in enumerate(per_jaar, 1):
+                taak.tel(nr, len(per_jaar))
                 _met_uitvoer(taak, cli.opdracht_excel, j)
                 _met_uitvoer(taak, cli.opdracht_pdf, j, altijd=True)
+                # Per jaargang afvinken en niet aan het eind in een keer.
+                # Anders blijft de teller op de beginstand staan en weet je
+                # halverwege niet hoever hij is -- en bij een afgebroken taak
+                # zou al het gedane werk opnieuw moeten.
+                with db.verbinding() as con:
+                    for lijst_naam, jaargang in open_staand:
+                        if jaargang == j:
+                            db.gebouwd(con, lijst_naam, jaargang)
+                    con.commit()
             _met_uitvoer(taak, cli.opdracht_decennium, None)
-            with db.verbinding() as con:
-                for lijst_naam, j in open_staand:
-                    db.gebouwd(con, lijst_naam, j)
-                con.commit()
             taak.meld("klaar -- alleen wat nodig was")
         return "Bijwerken wat veranderd is", werk
 
@@ -174,25 +179,28 @@ def bouw_werk(wat: str, jaar: str | None,
         def werk(taak: Taak) -> None:
             from ..normalize import vergeet_aliases
 
-            stappen = 5
-            taak.meld(f"stap 1/{stappen}: sleutels herberekenen")
             vergeet_aliases()
-            for j in cli._jaren_in_database():
+            jaren = cli._jaren_in_database()
+
+            taak.fase(1, 5, "sleutels herberekenen")
+            for nr, j in enumerate(jaren, 1):
+                taak.tel(nr, len(jaren))
                 _met_uitvoer(taak, cli.opdracht_hersleutel, j)
 
-            taak.meld(f"stap 2/{stappen}: opschonen en toepassen")
+            taak.fase(2, 5, "opschonen en toepassen")
             _met_uitvoer(taak, cli.opdracht_opschonen, toepassen=True)
 
-            taak.meld(f"stap 3/{stappen}: Excel bouwen")
+            taak.fase(3, 5, "Excel bouwen")
             totaal = 0
-            for j in cli._jaren_in_database():
+            for nr, j in enumerate(jaren, 1):
+                taak.tel(nr, len(jaren))
                 totaal += len(_met_uitvoer(taak, cli.opdracht_excel, j))
             taak.meld(f"{totaal} Excel-bestanden")
 
-            taak.meld(f"stap 4/{stappen}: decenniumlijsten")
+            taak.fase(4, 5, "decenniumlijsten")
             _met_uitvoer(taak, cli.opdracht_decennium, None)
 
-            taak.meld(f"stap 5/{stappen}: PDF-jaaroverzichten")
+            taak.fase(5, 5, "PDF-jaaroverzichten")
             paden = _met_uitvoer(taak, cli.opdracht_pdf, None, altijd=True)
             taak.meld(f"{len(paden)} PDF-bestanden")
             taak.meld("klaar -- alles staat weer gelijk")

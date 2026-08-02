@@ -979,4 +979,6 @@ def _registreer(app: Flask) -> None:
         return {
             "bezig": not t.klaar, "naam": t.naam, "gestart": t.gestart,
             "regels": t.regels[-60:], "gelukt": t.gelukt, "fout": t.fout,
+            "stap": t.stap, "stappen": t.stappen, "stap_naam": t.stap_naam,
+            "deel": t.deel, "deel_van": t.deel_van,
         }
