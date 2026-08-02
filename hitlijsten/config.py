@@ -99,6 +99,17 @@ LIJSTEN = {
         # editiepagina toont jaartallen in plaats van weken.
         "editie_week": 52,
     },
+    "top4000": {
+        "naam": "Top 4000 (Radio 10)",
+        "site": None,
+        "slug": None,
+        "lengte": 4000,
+        "bestand": "Top4000",
+        "heeft_label": False,
+        "vanaf_jaar": 2005,
+        "jaarlijks": True,
+        "editie_week": 52,
+    },
     "evergreen": {
         "naam": "Evergreen Top 1000 (NPO Radio 5)",
         "site": None,

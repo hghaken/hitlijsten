@@ -221,7 +221,16 @@ def _registreer(app: Flask) -> None:
         # dan de omgekeerde positie; die jaargang krijgt dus een eigen opzet,
         # met de matrix over de edities heen.
         if is_jaarlijks(lijst):
-            nummers = db.editie_klassement(con, lijst, jaar)
+            alle_nummers = db.editie_klassement(con, lijst, jaar)
+            # Een editie van vierduizend regels is 2,9 MB HTML. Korte lijsten
+            # blijven compleet; pas boven de grens wordt er afgetopt, met een
+            # keuze om alsnog alles te tonen.
+            gevraagd_toon = request.args.get("toon", "")
+            toon = (len(alle_nummers) if gevraagd_toon == "alles"
+                    else int(gevraagd_toon) if gevraagd_toon.isdigit()
+                    and int(gevraagd_toon) in EDITIE_KEUZES
+                    else min(EDITIE_DREMPEL, len(alle_nummers)))
+            nummers = alle_nummers[:toon]
             # De matrix is 2000 rijen x 27 edities; volledig getoond verdubbelt
             # dat de pagina naar ruim 5 MB. De editie zelf blijft compleet, de
             # matrix wordt begrensd -- met een keuze om hem toch uit te klappen.
@@ -231,9 +240,11 @@ def _registreer(app: Flask) -> None:
                           and int(gevraagd) in MATRIX_KEUZES else MATRIX_KEUZES[0])
             return render_template(
                 "editie.html", lijst=lijst, jaren=jaren, jaar=jaar,
-                nummers=nummers, edities=db.edities_van(con, lijst),
+                nummers=nummers, totaal=len(alle_nummers),
+                edities=db.edities_van(con, lijst),
                 matrix=nummers[:matrix_tot], matrix_tot=matrix_tot,
-                matrix_keuzes=MATRIX_KEUZES,
+                matrix_keuzes=MATRIX_KEUZES, toon=toon,
+                editie_keuzes=[k for k in EDITIE_KEUZES if k < len(alle_nummers)],
                 markeer=request.args.get("markeer") or "",
             )
 
@@ -314,6 +325,9 @@ def _registreer(app: Flask) -> None:
 
     # Hoeveel rijen de matrix van een jaarlijkse lijst standaard toont.
     MATRIX_KEUZES = (250, 500, 1000)
+    # Boven dit aantal wordt de editietabel afgetopt.
+    EDITIE_DREMPEL = 2000
+    EDITIE_KEUZES = (500, 1000, 2000, 4000)
 
     @app.route("/decennium")
     def decennium_overzicht():

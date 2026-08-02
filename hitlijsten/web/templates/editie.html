@@ -43,13 +43,15 @@
   <div class="melding fout">Voor deze editie staat er nog niets in de database.</div>
 {% else %}
 
+{# De kaartjes tellen over wat er getoond wordt; bij een afgetopte
+   editie is dat het bovenste deel, en dat staat er dan ook bij. #}
 {% set binnen = nummers | rejectattr('vorige') | list %}
 {% set terug = binnen | selectattr('eerder') | list %}
 {% set altijd = nummers | selectattr('edities', 'equalto', edities|length) | list %}
 
 <div class="kaarten">
   <div class="kaart">
-    <div class="cijfer">{{ nummers|length }}</div>
+    <div class="cijfer">{{ totaal }}</div>
     <div class="naam">noteringen</div>
   </div>
   <div class="kaart">
@@ -80,6 +82,15 @@
   weken en geen punten — alleen de positie. <b>Vorige editie</b> is de plek van
   vorig jaar, <b>edities</b> het aantal jaren waarin het nummer stond, en
   <b>hoogste</b> de beste positie ooit.
+  {% if toon < totaal %}
+    Hieronder staan de eerste {{ toon }} van {{ totaal }}; vierduizend regels
+    maken de pagina anders onwerkbaar zwaar.
+    <span style="white-space:nowrap">Toon
+      {% for k in editie_keuzes %}<a href="{{ url_for('jaaroverzicht', lijst=lijst,
+         jaar=jaar, toon=k) }}">{{ k }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+      · <a href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar, toon='alles') }}">alle
+      {{ totaal }}</a>.</span>
+  {% endif %}
   <b>Terug sinds</b> betekent dat het nummer vorig jaar niet in de lijst stond
   maar daarvoor wél — wijs het aan om te zien hoeveel edities het miste.
   Klik op een artiest of titel voor de grafiek van het verloop over alle

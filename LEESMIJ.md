@@ -12,6 +12,7 @@ er nieuw binnenkwam, en zet zestig jaar archief online op
 | Oranje Top 30 | oranjetop30.nl | 30 | 2008 |
 | Top 2000 (NPO Radio 2) | CSV (Music Datastats) | 2000 | 1999 |
 | Evergreen Top 1000 (NPO Radio 5) | CSV (Music Datastats) | 1000 | 2008 |
+| Top 4000 (Radio 10) | CSV (Music Datastats) | 4000 | 2005 |
 
 De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen*.
 Waar elke lijst begint, met de nummer 1 van de oudste week die we hebben:
@@ -48,10 +49,10 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 327.482 noteringen. Top 40
+- **Het hele archief staat in de database**: 411.482 noteringen. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
-  (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities) en de
-  Evergreen Top 1000 2008–2025 (18 edities).
+  (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
+  2005–2025 (21) en Evergreen Top 1000 2008–2025 (18).
 - 305 Excel-bestanden en 149 PDF-jaaroverzichten gebouwd, plus 130 aliassen,
   267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
@@ -193,8 +194,8 @@ De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
 ### De jaarlijkse lijsten
 
-De vier weeklijsten komen van een website. De **Top 2000** en de **Evergreen
-Top 1000** zijn één uitzending per jaar en komen binnen als CSV van Music
+De vier weeklijsten komen van een website. De **Top 2000**, de **Top 4000** en
+de **Evergreen Top 1000** zijn één uitzending per jaar en komen binnen als CSV van Music
 Datastats ([datastats.nl](https://www.datastats.nl/)) — een matrix met een regel
 per nummer en een kolom per editie.
 
@@ -210,9 +211,8 @@ een van dertig nodigt uit tot vergelijkingen die nergens op slaan.
 
 Alle lijsten met `jaarlijks` in hun definitie lopen door hetzelfde bestand
 (`hitlijsten/jaarlijks.py`), dus **een lijst toevoegen is een regel in
-`config.LIJSTEN` en één keer importeren** — geen nieuwe code. In dezelfde map
-staan nog vier van deze CSV's klaar: Q Top 1500, Radio 10 Top 4000, Rock Top 500
-en de Veronica Top 1000.
+`config.LIJSTEN` en één keer importeren** — geen nieuwe code. In dezelfde map staan er nog drie klaar:
+Q Top 1500, Rock Top 500 en de Veronica Top 1000.
 
 Elke editie wordt weggeschreven als jaargang met **week 52**, de week van de
 uitzending. Daardoor werken de sleutels, het jaaroverzicht en de database
@@ -238,8 +238,10 @@ wordt op drie plekken getoond:
   stippellijn over het gat — net als een re-entry bij de weeklijsten;
 - in de **editietabel** met *terug sinds 2021* in plaats van *nieuw*. Dat
   onderscheid is niet klein: van de 127 nummers in de editie van 2025 zonder
-  notering in 2024 waren er 74 echt nieuw en 53 terug van weggeweest. Die matrix toont standaard de top 250; 2000 rijen
-maal 27 kolommen maakt de pagina anders 5 MB.
+  notering in 2024 waren er 74 echt nieuw en 53 terug van weggeweest. Die matrix toont standaard de top 250; 2000 rijen maal 27 kolommen maakt de
+pagina anders 5 MB. Bij een editie van meer dan tweeduizend regels wordt ook de
+tabel zelf afgetopt — de Top 4000 gaat daarmee van 2,9 naar 1,7 MB. Kortere
+lijsten blijven compleet.
 
 **De sleutel is de brug naar de andere lijsten.** Artiest en titel gaan door
 dezelfde `sleutel_van()`, dus "Golden Earring — Radar Love" krijgt overal
