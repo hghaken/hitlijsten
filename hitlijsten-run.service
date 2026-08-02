@@ -6,6 +6,7 @@
 # Taakplanner onderuit halen, inclusief de backup- en replicatietaken die er ook
 # in staan. De webapplicatie draait al onder systemd, dus dit past ernaast.
 #
+# Pas de paden hieronder aan je eigen opstelling aan.
 # Installeren: dit bestand en hitlijsten-run.timer naar /etc/systemd/system/,
 # daarna `systemctl daemon-reload` en `systemctl enable hitlijsten-run.timer`
 # gevolgd door `systemctl start hitlijsten-run.timer` -- op DSM (systemd 219)
@@ -18,5 +19,5 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 User=claude
-WorkingDirectory=/volume1/Hitlijsten/app
-ExecStart=/volume1/Hitlijsten/app/wekelijkse-run.sh
+WorkingDirectory=/pad/naar/hitlijsten/app
+ExecStart=/pad/naar/hitlijsten/app/wekelijkse-run.sh

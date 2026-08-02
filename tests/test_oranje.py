@@ -3,8 +3,7 @@
 Draait volledig op de HTML in de cache -- geen netwerkverkeer. Werkt zowel onder
 pytest als los:
 
-    cd /volume1/Hitlijsten/app && . ./omgeving.sh
-    ./venv/bin/python tests/test_oranje.py
+    python tests/test_oranje.py
 """
 from __future__ import annotations
 

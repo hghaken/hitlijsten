@@ -17,42 +17,24 @@ De archiefdieptes zijn gemeten, niet aangenomen — zie *Oude jaargangen ophalen
 
 ## Waar het draait
 
-**Alles draait op de NAS** (DS1522+, 10.10.8.20). De Windows-pc speelt geen rol
-meer — geen code, geen database, geen geplande taak.
+Dit is een hobbyproject dat op een NAS in een meterkast draait; de precieze
+opstelling — adressen, mappen, systemd-units, de mailrelay — staat in
+`BEHEER.md`, dat bewust niet in deze repository zit.
+
+Wat je moet weten om de code te begrijpen:
 
 | | |
 |---|---|
-| Map | `/volume1/Hitlijsten/` — `app/` (code), `data/` (database), `excel/`, `cache/` |
-| Python | 3.14.5, eigen venv in `app/venv/` |
-| Webapplicatie | `https://hitlijsten.hhaken.nl` → reverse proxy → `10.10.8.20:8642` |
-| Dienst | systemd-unit `hitlijsten-web` (enabled, start `app/start-web.sh`) |
-| Wekelijkse run | timer `hitlijsten-run.timer` → `app/wekelijkse-run.sh`, vrijdag 22:00 |
-| Logboek | `app/run.log` |
-| Gebruiker | `claude` |
+| Python | 3.14, eigen venv |
+| Webapplicatie | Flask, achter een reverse proxy |
+| Wekelijkse run | een systemd-timer, vrijdagavond |
+| Paden | via `HITLIJSTEN_DATA`, `HITLIJSTEN_CACHE` en `HITLIJSTEN_EXCEL` |
 | Pakketten | requests, beautifulsoup4, lxml, openpyxl, Flask, fpdf2 |
 
-### En waar staat de broncode dan?
-
-Op de NAS staat **geen git**. De enige kloon van
-[github.com/hghaken/hitlijsten](https://github.com/hghaken/hitlijsten) staat op
-`C:\Users\Admin\Projects\hitlijsten`, naast de andere
-site-spiegels. De werkwijze is dus:
-
-1. bewerken en testen in die map;
-2. de gewijzigde bestanden naar `/volume1/Hitlijsten/app` kopiëren;
-3. de tests daar nog een keer draaien;
-4. committen en pushen vanuit de kloon.
-
-In die map staat **alleen broncode** (33 MB). Geen database, geen
-Excel-bestanden, geen PDF's — die horen bij het draaiende systeem en staan op
-de NAS. Van `.cache/` staat er alleen jaargang 2026, want daarop draaien
-`test_top40nl.py` en `test_oranje.py`; de NAS heeft zijn eigen volledige cache.
-
-`app/omgeving.sh` zet `HITLIJSTEN_DATA`, `HITLIJSTEN_CACHE` en
-`HITLIJSTEN_EXCEL`. De code staat los van de gegevens, zodat je `app/` kunt
-vervangen zonder de database aan te raken — **source die shell altijd** voordat
-je met de hand een opdracht draait, anders kijkt het script naar een lege
-database naast de code.
+De code staat los van de gegevens: de database, de cache en de Excel-bestanden
+liggen naast de broncode, niet erin. Zo kun je de code in zijn geheel vervangen
+zonder de database aan te raken. Zonder die omgevingsvariabelen valt alles terug
+op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
@@ -71,7 +53,7 @@ Een map per decennium, daarin een map per jaargang, daarin per lijst drie
 bestanden — twee werkboeken en een PDF:
 
 ```
-/volume1/Hitlijsten/excel/
+<hitlijsten>/excel/
   1960-1969/ ... 2010-2019/
   2020-2029/
     Top40_Decennium_2020-2029.xlsx
@@ -83,7 +65,7 @@ bestanden — twee werkboeken en een PDF:
       OranjeTop30_2026.xlsx    OranjeTop30_Jaar_2026.xlsx  OranjeTop30_2026.pdf
 ```
 
-Over Samba te bereiken als `\\10.10.8.20\Hitlijsten\excel`.
+Op de NAS ook via Samba te bereiken; zie `BEHEER.md`.
 
 Met zestig jaargangen Top 40 zouden zestig mappen naast elkaar onwerkbaar zijn,
 vandaar de tussenlaag.
@@ -272,7 +254,7 @@ punten, dus die hebben een eigen vorm nodig.
 
 **https://hitlijsten.hhaken.nl** — dezelfde gegevens als de Excel-bestanden,
 maar doorzoekbaar en zonder download. Draait als systemd-dienst `hitlijsten-web`
-op de NAS, achter de reverse proxy naar `10.10.8.20:8642`.
+op de NAS, achter een reverse proxy.
 
 **Vrij toegankelijk:**
 
@@ -391,8 +373,7 @@ dezelfde volgorde.
 Alles draait op de NAS. Inloggen en de omgeving laden:
 
 ```bash
-ssh lom-nas
-cd /volume1/Hitlijsten/app && . ./omgeving.sh
+cd <app-map> && . ./omgeving.sh
 ./venv/bin/python -m hitlijsten run
 ```
 
@@ -495,7 +476,7 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
 ## Hoe het in elkaar zit
 
 ```
-/volume1/Hitlijsten/app/
+<app-map>/
   omgeving.sh          zet HITLIJSTEN_DATA / _CACHE / _EXCEL
   start-web.sh         wordt door systemd gestart (hitlijsten-web)
   wekelijkse-run.sh    wordt door hitlijsten-run.timer gestart
@@ -517,7 +498,7 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
     wetenswaardigheden.py   de tien ranglijsten
     jaarlijks.py  de CSV-lijsten (Top 2000, Evergreen)
     kruiscontrole.py / onderscheidingen.py  michajans.nl
-    mail.py       melding via de MailPlus-relay
+    mail.py       melding via de mailrelay
     cli.py        de opdrachten hierboven
     web/          de Flask-applicatie (app.py, templates/)
   lettertypen/    DejaVu Sans, ingesloten in de PDF's (met licentie)
@@ -527,7 +508,7 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
 De gegevens staan er bewust náást, niet in:
 
 ```
-/volume1/Hitlijsten/
+<hitlijsten>/
   data/hitlijsten.sqlite   de database (46 MB)
   cache/                   de ruwe HTML van alle opgehaalde pagina's (2 GB)
   excel/                   de werkboeken en PDF's (46 MB)
@@ -547,7 +528,7 @@ sinds juli 2026 in de database (tabellen `aliases`, `niet_samenvoegen`,
 ### Testen
 
 ```bash
-cd /volume1/Hitlijsten/app && . ./omgeving.sh
+cd <app-map> && . ./omgeving.sh
 ./venv/bin/python tests/test_top40nl.py
 ./venv/bin/python tests/test_oranje.py
 ./venv/bin/python tests/test_excel.py
@@ -741,7 +722,7 @@ gewoon opnieuw probeert. Anders zou één onderhoudspagina zich permanent
 vastzetten. Blijft dezelfde week falen, dan is het geen toeval en moet de parser
 aangepast worden.
 
-Alle details staan in **`/volume1/Hitlijsten/app/run.log`**. Dat groeit langzaam
+Alle details staan in **`run.log` naast de code**. Dat groeit langzaam
 en wordt niet automatisch opgeschoond.
 
 ## Eigenaardigheden van de bronnen
@@ -784,16 +765,19 @@ iets met de hand buiten die shell om, zet die variabele dan zelf.
 
 ## Mail
 
-De melding gaat naar `heye@hhaken.nl` via de MailPlus-relay op 10.10.8.20, zonder
-wachtwoord — die relay accepteert post vanaf het thuisnetwerk, en de NAS staat
-daar zelf op. Wil je dat dichtzetten, vul dan `app/mail.ini` in:
+Na de wekelijkse run gaat er een melding uit met wat er nieuw binnenkwam en wat
+er misging. Alle instellingen staan in `mail.ini` naast de code; dat bestand
+staat niet in git. Zonder ontvanger doet de module niets en zegt dat ook —
+een standaardadres in de broncode is precies het soort ding dat je vergeet aan
+te passen.
 
 ```ini
 [mail]
-host = 10.10.8.20
-poort = 587
-starttls = ja
-gebruiker = info@songhook.nl
-wachtwoord = ...
-ontvanger = heye@hhaken.nl
+host = mailserver.thuis
+poort = 25
+afzender = hitlijsten@voorbeeld.nl
+ontvanger = jij@voorbeeld.nl
+gebruiker =            ; leeg = geen aanmelding
+wachtwoord =
+starttls = nee
 ```

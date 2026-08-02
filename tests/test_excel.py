@@ -2,8 +2,7 @@
 
 Draaien kan met pytest, maar ook zonder:
 
-    cd /volume1/Hitlijsten/app && . ./omgeving.sh
-    ./venv/bin/python tests/test_excel.py
+    python tests/test_excel.py
 
 De testdata gaat naar een tijdelijke sqlite-database en een tijdelijke map; de
 echte database en de echte Excel-bestanden worden niet aangeraakt.

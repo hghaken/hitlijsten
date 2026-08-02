@@ -1,7 +1,6 @@
 """Tests voor het decennium- en het totaalklassement (db.totalen_over).
 
-    cd /volume1/Hitlijsten/app && . ./omgeving.sh
-    ./venv/bin/python tests/test_decennium.py
+    python tests/test_decennium.py
 
 De kern is dat dit klassement de som van de jaaroverzichten moet zijn -- niet
 iets wat er ongeveer op lijkt. Daarom wordt er per jaargang gerekend en pas

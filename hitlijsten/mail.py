@@ -1,8 +1,17 @@
-"""Melding per mail via de MailPlus-relay op de NAS.
+"""Melding per mail na de wekelijkse run.
 
-De relay op 10.10.8.20 accepteert post vanaf het thuisnetwerk zonder wachtwoord.
-Wil je dat later dichtzetten, vul dan gebruiker/wachtwoord in mail.ini; deze
-module gebruikt ze zodra ze er staan.
+Alle instellingen komen uit `mail.ini` naast de code; dat bestand staat niet in
+git. Zonder ontvanger doet deze module niets -- dat is met opzet: een standaard
+adres in de broncode is precies het soort ding dat je vergeet aan te passen.
+
+    [mail]
+    host = mailserver.thuis
+    poort = 25
+    afzender = hitlijsten@voorbeeld.nl
+    ontvanger = jij@voorbeeld.nl
+    gebruiker =            ; leeg = geen aanmelding
+    wachtwoord =
+    starttls = nee
 """
 from __future__ import annotations
 
@@ -16,10 +25,10 @@ from .config import ROOT
 MAIL_INI = ROOT / "mail.ini"
 
 STANDAARD = {
-    "host": "10.10.8.20",
+    "host": "localhost",
     "poort": "25",
-    "afzender": "hitlijsten@hhaken.nl",
-    "ontvanger": "heye@hhaken.nl",
+    "afzender": "hitlijsten@localhost",
+    "ontvanger": "",
     "gebruiker": "",
     "wachtwoord": "",
     "starttls": "nee",
@@ -38,6 +47,10 @@ def instellingen() -> dict[str, str]:
 
 def verstuur(onderwerp: str, tekst: str, *, html: str | None = None) -> None:
     cfg = instellingen()
+    if not cfg["ontvanger"]:
+        # Liever hoorbaar niets doen dan post naar een leeg adres proberen.
+        raise RuntimeError(
+            f"geen ontvanger ingesteld; vul [mail] ontvanger in {MAIL_INI}")
 
     bericht = EmailMessage()
     bericht["Subject"] = onderwerp

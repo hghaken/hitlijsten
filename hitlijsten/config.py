@@ -12,7 +12,7 @@ def _map(naam: str, standaard: Path) -> Path:
     """Een map die met een omgevingsvariabele te verzetten is.
 
     Op de pc staat alles onder de projectmap. Op de NAS staat de code in
-    /volume1/Hitlijsten/app terwijl data, cache en Excel daarnaast staan, zodat
+    <app-map> terwijl data, cache en Excel daarnaast staan, zodat
     de code vervangen kan worden zonder de gegevens aan te raken.
     """
     uit_omgeving = os.environ.get(naam)

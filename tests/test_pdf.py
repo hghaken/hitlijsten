@@ -1,7 +1,6 @@
 """Tests voor het jaaroverzicht als PDF (hitlijsten/pdf.py).
 
-    cd /volume1/Hitlijsten/app && . ./omgeving.sh
-    ./venv/bin/python tests/test_pdf.py
+    python tests/test_pdf.py
 
 Een PDF ziet er in een test altijd goed uit — je kunt hem niet bekijken. Wat
 hier vastligt is dus niet de opmaak maar wat er misgaat als je niet oplet: het

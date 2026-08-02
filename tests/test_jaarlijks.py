@@ -1,7 +1,6 @@
 """Tests voor het inlezen van de jaarlijkse lijsten (hitlijsten/jaarlijks.py).
 
-    cd /volume1/Hitlijsten/app && . ./omgeving.sh
-    ./venv/bin/python tests/test_top2000.py
+    python tests/test_top2000.py
 
 De bron is een matrix in plaats van een lijst per week, en dat is precies waar
 het mis kan gaan: een kolom die verschuift, een lege cel die als positie 0 wordt

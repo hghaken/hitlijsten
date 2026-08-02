@@ -1,7 +1,6 @@
 """Tests voor de tien ranglijsten (hitlijsten/wetenswaardigheden.py).
 
-    cd /volume1/Hitlijsten/app && . ./omgeving.sh
-    ./venv/bin/python tests/test_wetenswaardigheden.py
+    python tests/test_wetenswaardigheden.py
 
 De cijfers zien er altijd plausibel uit, ook als ze fout zijn — een ranglijst
 geeft nu eenmaal altijd een winnaar. Daarom staan hier de randgevallen vast:

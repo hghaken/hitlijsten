@@ -832,7 +832,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.opdracht == "testmail":
         mail.verstuur(
             "Hitlijsten: proefmail",
-            "Als je dit leest werkt de melding vanaf de pc via de MailPlus-relay.",
+            "Als je dit leest werkt de melding vanaf de pc via de mailrelay.",
         )
         log("proefmail verstuurd")
     elif args.opdracht == "run":
