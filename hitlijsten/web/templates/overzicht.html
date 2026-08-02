@@ -54,7 +54,7 @@
     <td class="getal">{{ r['jaren'] }}</td>
     <td class="getal">{{ r['van'] }}</td>
     <td class="getal">{{ r['tot'] }}</td>
-    <td class="getal">{{ (r['noteringen'] // r['jaren']) if r['jaren'] else '' }}</td>
+    <td class="getal">{{ editielengtes.get(r['lijst'], '') }}</td>
     <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
   </tr>
   {% endfor %}

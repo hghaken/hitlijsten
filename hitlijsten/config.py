@@ -99,6 +99,18 @@ LIJSTEN = {
         # editiepagina toont jaartallen in plaats van weken.
         "editie_week": 52,
     },
+    "qtop1500": {
+        "naam": "Q Top 1500 (Qmusic)",
+        "site": None,
+        "slug": None,
+        # Negentien edities van duizend; vanaf 2024 vijftienhonderd.
+        "lengte": 1500,
+        "bestand": "QTop1500",
+        "heeft_label": False,
+        "vanaf_jaar": 2005,
+        "jaarlijks": True,
+        "editie_week": 52,
+    },
     "veronica": {
         "naam": "Top 1000 (Veronica)",
         "site": None,

@@ -177,6 +177,18 @@ def _registreer(app: Flask) -> None:
             "SELECT lijst, jaar, week, opgehaald_op FROM opgehaald"
             " ORDER BY opgehaald_op DESC LIMIT 5"
         ).fetchall()
+        # Hoe lang is een editie? Het gemiddelde (noteringen / edities) is
+        # misleidend zodra een lijst van lengte verandert: de Veronica Top 1000
+        # kwam zo op 1086 uit, en zo lang is geen enkele editie geweest.
+        # Daarom de echte kortste en langste editie.
+        editielengtes = {}
+        for lijst_naam in [r["lijst"] for r in lijsten if is_jaarlijks(r["lijst"])]:
+            rij = con.execute(
+                "SELECT MIN(n), MAX(n) FROM (SELECT COUNT(*) n FROM noteringen"
+                " WHERE lijst=? GROUP BY jaar)", (lijst_naam,)).fetchone()
+            editielengtes[lijst_naam] = (
+                f"{rij[0]}" if rij[0] == rij[1] else f"{rij[0]}–{rij[1]}")
+
         # Groeperen gebeurt hier en niet in het sjabloon: een sqlite3.Row kent
         # geen attributen, dus selectattr() vindt er niets in.
         return render_template(
@@ -184,6 +196,7 @@ def _registreer(app: Flask) -> None:
             taak=taken.huidige(),
             week_rijen=[r for r in lijsten if not is_jaarlijks(r["lijst"])],
             jaar_rijen=[r for r in lijsten if is_jaarlijks(r["lijst"])],
+            editielengtes=editielengtes,
         )
 
     @app.route("/disclaimer")
