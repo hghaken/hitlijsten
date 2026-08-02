@@ -307,7 +307,7 @@ op de NAS, achter een reverse proxy.
 | Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel- en PDF-download |
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
-| Zoeken | klik op de artiest of titel springt naar de jaargang van de hoogste notering |
+| Zoeken | op artiest, titel of beide; `*` als jokerteken; klik springt naar de jaargang van de hoogste notering |
 | Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is**, dat alleen de geraakte jaargangen opnieuw bouwt |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
