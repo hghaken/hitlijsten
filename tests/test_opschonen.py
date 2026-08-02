@@ -124,6 +124,42 @@ def test_gast_die_al_bij_de_artiest_staat_wordt_niet_verdubbeld():
     assert gast_uit_titel("Eminem & Rihanna", "Love The Way You Lie (feat. Rihanna)")         == ("Eminem & Rihanna", "Love The Way You Lie")
 
 
+def test_x_tussen_twee_artiesten_wordt_ampersand():
+    from hitlijsten.opschonen import x_is_samenwerking
+
+    assert x_is_samenwerking("Snelle x Maan") == "Snelle & Maan"
+    assert x_is_samenwerking("ATB x Topic x A7S") == "ATB & Topic & A7S"
+
+
+def test_de_x_in_een_naam_blijft_staan():
+    """De valkuil: de x is ook gewoon een letter."""
+    from hitlijsten.opschonen import x_is_samenwerking
+
+    for naam in ("Lil Nas X & Billy Ray Cyrus", "Kygo & X Ambassadors",
+                 "Machine Gun Kelly, X Ambassadors & Bebe Rexha",
+                 "Dutch X Factor 2010", "Liberty X", "Cygnus X",
+                 "X-Press 2 & David Byrne", "Richard-X vs Liberty-X"):
+        assert x_is_samenwerking(naam) == naam, naam
+
+
+def test_komma_tussen_twee_artiesten_wordt_ampersand():
+    from hitlijsten.opschonen import komma_is_samenwerking
+
+    assert komma_is_samenwerking("50 Cent, Dr. Dre & Alicia Keys") ==         "50 Cent & Dr. Dre & Alicia Keys"
+
+
+def test_de_komma_in_een_bandnaam_blijft_staan():
+    """Opgezocht en niet bedacht: MusicBrainz kent deze als één act."""
+    from hitlijsten.opschonen import komma_is_samenwerking
+
+    for naam in ("Earth, Wind & Fire", "Crosby, Stills, Nash & Young",
+                 "Blood, Sweat & Tears", "Dave Dee, Dozy, Beaky, Mick & Tich",
+                 "Grover Washington, Jr.", "Tyler, The Creator",
+                 "Phats & Small & Earth, Wind & Fire",
+                 "ELP [Emerson, Lake & Palmer]"):
+        assert komma_is_samenwerking(naam) == naam, naam
+
+
 # --- de sleutelregels -------------------------------------------------------
 
 

@@ -35,7 +35,8 @@ from typing import Iterable, Iterator, Optional
 
 from .config import LIJSTEN
 from .normalize import sleutel_van
-from .opschonen import eenduidige_credit, schoon_tekst
+from .opschonen import (eenduidige_credit, komma_is_samenwerking,
+                        schoon_tekst, x_is_samenwerking)
 
 __all__ = ["Regel", "lees_csv", "importeer", "kruisverwijzing", "controleer"]
 # Music Datastats levert windows-1252; UTF-8 wordt eerst geprobeerd omdat een
@@ -187,7 +188,8 @@ def _noteringen(lijst: str, regels: list[Regel], jaar: int) -> Iterator[tuple]:
         if positie is None:
             continue
         yield (lijst, jaar, week, positie, schoon_tekst(regel.titel),
-               eenduidige_credit(schoon_tekst(regel.artiest)),
+               komma_is_samenwerking(x_is_samenwerking(
+                   eenduidige_credit(schoon_tekst(regel.artiest)))),
                None, len(regel.posities), regel.posities.get(jaar - 1),
                "onbekend", regel.sleutel, regel.uitjaar)
 

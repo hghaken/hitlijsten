@@ -42,7 +42,8 @@ from typing import Callable, Iterable, Optional
 
 from . import db
 
-__all__ = ["schoon_tekst", "eenduidige_credit", "gast_uit_titel", "tekstfouten", "herstel_tekst", "Voorstel",
+__all__ = ["schoon_tekst", "eenduidige_credit", "gast_uit_titel",
+           "x_is_samenwerking", "komma_is_samenwerking", "tekstfouten", "herstel_tekst", "Voorstel",
            "lidwoordparen", "naamparen", "titelparen", "naamvarianten",
            "meerderheidsnaam", "pas_namen_toe", "migreer_lidwoord",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
@@ -135,6 +136,85 @@ def gast_uit_titel(artiest: str, titel: str) -> tuple:
     if _kaal(gast) in _kaal(artiest or ""):
         return artiest, kale_titel
     return f"{artiest} & {gast}".strip(" &"), kale_titel
+
+
+# De "x" tussen twee artiesten is sinds een jaar of tien de gewone manier
+# om een samenwerking te schrijven: "Snelle x Maan", "Coldplay x BTS".
+# Maar de x is ook gewoon een letter, en dan mag hij niet sneuvelen:
+#
+#   Lil Nas X & Billy Ray Cyrus      X hoort bij de naam, & is de scheiding
+#   Kygo & X Ambassadors             idem, andersom
+#   Dutch X Factor 2010              hier is X geen van beide
+#
+# De regel: een losse x is alleen een scheidingsteken als er aan geen van
+# beide kanten al een scheidingsteken staat. Dat vangt de eerste twee. Voor
+# namen waarin de X gewoon meedoet is er een lijst -- die zijn niet af te
+# leiden, alleen op te sommen.
+_X_TUSSEN = re.compile(r"(?<=[^&,/+(])\s+x\s+(?=[^&,/+)])", re.I)
+_X_HOORT_ERBIJ = (
+    "dutch x factor", "x factor",
+)
+
+
+def x_is_samenwerking(artiest: str) -> str:
+    """"Snelle x Maan" -> "Snelle & Maan", maar Lil Nas X blijft heel."""
+    if not artiest:
+        return artiest
+    plat = _kaal(artiest)
+    if any(naam in plat for naam in _X_HOORT_ERBIJ):
+        return artiest
+    return _MEERVOUDIGE_SPATIE.sub(" ", _X_TUSSEN.sub(" & ", artiest)).strip()
+
+
+# Een komma tussen twee artiesten is een scheidingsteken -- "50 Cent, Dr. Dre
+# & Alicia Keys" zijn er drie -- maar in een bandnaam hoort hij erbij, en aan
+# de vorm is dat niet te zien. Dit lijstje is daarom niet bedacht maar
+# opgezocht: elk van de 401 artiestnamen met een komma is aan MusicBrainz
+# voorgelegd met de vraag of de hele reeks één act is. Bij 26 was het antwoord
+# ja.
+#
+# Een naam die één van deze bevat blijft in zijn geheel met rust. Dat is
+# nodig voor "Phats & Small & Earth, Wind & Fire" en "ELP [Emerson, Lake &
+# Palmer]": daar hoort de komma bij het stuk dat beschermd is.
+_KOMMA_HOORT_ERBIJ = (
+    "Ashton, Gardner & Dyke",
+    "Blood, Sweat & Tears",
+    "Cotton, Lloyd & Christian",
+    "Crosby, Stills & Nash",
+    "Crosby, Stills, Nash & Young",
+    "Dave Dee, Dozy, Beaky, Mick & Tich",
+    "Dutch, Rhythm, Steel & Show Band",
+    "Earth, Wind & Fire",
+    "Ecstasy, Passion & Pain",
+    "Emerson, Lake & Palmer",
+    "Faith, Hope & Charity",
+    "Grover Washington, Jr.",
+    "Hamilton, Joe Frank & Reynolds",
+    "Julie Driscoll, Brian Auger & The Trinity",
+    "Linda, Roos & Jessica",
+    "Lipps, Inc.",
+    "Los Angeles, The Voices",
+    "Marilyn McCoo & Billy Davis, Jr.",
+    "Marshall, Hain",
+    "Marvin, Welch & Farrar",
+    "McGuinn, Clark & Hillman",
+    "Peter, Paul and Mary",
+    "Portugal, The Man",
+    "Ray, Goodman & Brown",
+    "Tina, Toos & Tessa",
+    "Tyler, The Creator",
+)
+
+
+def komma_is_samenwerking(artiest: str) -> str:
+    """"50 Cent, Dr. Dre & Alicia Keys" -> "50 Cent & Dr. Dre & Alicia Keys"."""
+    if not artiest or "," not in artiest:
+        return artiest
+    plat = _kaal(artiest)
+    if any(_kaal(naam) in plat for naam in _KOMMA_HOORT_ERBIJ):
+        return artiest
+    samen = artiest.replace(",", " & ")
+    return _MEERVOUDIGE_SPATIE.sub(" ", samen).replace(" & & ", " & ").strip()
 
 
 # --- 1. tekens -------------------------------------------------------------
