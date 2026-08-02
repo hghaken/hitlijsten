@@ -49,15 +49,13 @@
 </p>
 <div class="tabelvak"><table>
   <thead><tr><th>Lijst</th><th class="getal">Edities</th><th class="getal">Van</th>
-      <th class="getal">Tot · opgehaald</th><th class="getal">Per editie</th><th class="getal">Noteringen</th></tr></thead><tbody>
+      <th class="getal">Tot</th><th class="getal">Per editie</th><th class="getal">Noteringen</th></tr></thead><tbody>
   {% for r in jaar_rijen %}
   <tr>
     <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
     <td class="getal">{{ r['jaren'] }}</td>
     <td class="getal">{{ r['van'] }}</td>
-    <td class="getal">{{ r['tot'] }}
-      <span class="hint" style="margin-left:.5rem; font-size:.82rem"
-        >{{ laatst_op.get(r['lijst']) | tijd }}</span></td>
+    <td class="getal">{{ r['tot'] }}</td>
     <td class="getal">{{ editielengtes.get(r['lijst'], '') }}</td>
     <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
   </tr>
