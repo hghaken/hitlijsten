@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import csv
 import sqlite3
+from datetime import datetime
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Iterator, Optional
@@ -219,10 +220,15 @@ def importeer(con: sqlite3.Connection, lijst: str, pad: Path | str, *,
                 "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
                 " artiest, label, weken_genoteerd, vorige_positie, site_status,"
                 " sleutel, uitjaar) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", rijen)
+            # Niet datetime('now') van sqlite: dat is UTC, en overal elders in
+            # deze code staat lokale tijd. Twee uur verschil in de kolom
+            # "opgehaald" op het overzicht, en `is_actueel` denkt dat een net
+            # ingelezen editie twee uur oud is.
             con.execute(
                 "INSERT OR REPLACE INTO opgehaald (lijst, jaar, week, aantal,"
-                " opgehaald_op) VALUES (?,?,?,?,datetime('now'))",
-                (lijst, jaar, LIJSTEN[lijst].get("editie_week", 52), len(rijen)))
+                " opgehaald_op) VALUES (?,?,?,?,?)",
+                (lijst, jaar, LIJSTEN[lijst].get("editie_week", 52), len(rijen),
+                 datetime.now().isoformat(timespec="seconds")))
             geschreven[jaar] = len(rijen)
     except Exception:
         con.execute("ROLLBACK TO SAVEPOINT jaarlijks")

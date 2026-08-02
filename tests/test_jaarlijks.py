@@ -55,6 +55,24 @@ def _database():
 # --- de lijstdefinitie ------------------------------------------------------
 
 
+def test_ophaalmoment_staat_in_lokale_tijd():
+    """Niet in UTC, want de rest van de database doet dat ook niet.
+
+    Dit stond er wel: de import gebruikte `datetime('now')` van sqlite, en dat
+    is UTC. In de zomer scheelt dat twee uur -- zichtbaar in de kolom
+    "opgehaald" op het overzicht, en `is_actueel` denkt dan dat een net
+    ingelezen editie al twee uur oud is.
+    """
+    from datetime import datetime
+
+    con = _database()
+    pad = _csv(_volle_editie(edities=(2024,)), edities=(2024,))
+    jaarlijks.importeer(con, LIJST, pad)
+    stempel = con.execute("SELECT opgehaald_op FROM opgehaald").fetchone()[0]
+    verschil = abs((datetime.now() - datetime.fromisoformat(stempel)).total_seconds())
+    assert verschil < 60, f"{stempel} wijkt {verschil / 3600:.1f} uur af van nu"
+
+
 def test_de_jaarlijkse_lijsten_worden_niet_opgehaald():
     """Er is geen site; de wekelijkse run moet ze met rust laten."""
     for lijst in ("top2000", "evergreen"):
