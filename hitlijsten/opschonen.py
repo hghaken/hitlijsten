@@ -49,7 +49,7 @@ __all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
            "uitgave_en_nummer", "splits_kanten", "splits_dubbele_a_kanten",
            "spatievarianten", "verzeker_aliassen", "versies_op_een_plek",
            "zelfde_act", "splits_versies",
-           "corrigeer_nummer"]
+           "corrigeer_nummer", "splits_nummer"]
 
 # Wat er in de bronnen misgaat met leestekens. Bewust kort: elk teken hier is
 # er een waarvan is vastgesteld dat het in de data staat en nooit bedoeld is.
@@ -631,6 +631,57 @@ def corrigeer_nummer(con: sqlite3.Connection, sleutel: str, *,
          f"{nieuwe_artiest} - {nieuwe_titel}", reden))
     con.commit()
     return {"noteringen": aantal, "sleutel": nieuwe_sleutel}
+
+
+def splits_nummer(con: sqlite3.Connection, sleutel: str,
+                  kanten: list[tuple[str, str]],
+                  reden: str = "met de hand vastgesteld") -> dict:
+    """Maak van één notering meerdere, elk met een eigen artiest en titel.
+
+    Het handmatige tegenhangertje van `splits_versies`, voor de gevallen die
+    geen regel halen. "Kom Naar Kaïro" stond in 1969 als
+    "Marijke Mulder///Mien Smulders" in de Tipparade: twee zangeressen, dezelfde
+    titel, één plek. Automatisch is dat niet te onderscheiden van een hernoemde
+    notering -- "The Source///The Course" ziet er precies zo uit en is er wél
+    een -- dus dat oordeel komt van buiten.
+
+    Zelfde afspraak als altijd: de positie telt één keer, dus elke kant krijgt
+    de punten van die plek.
+    """
+    from .normalize import sleutel_van
+
+    rijen = list(con.execute(
+        "SELECT id, lijst, jaar, week, positie, artiest, titel, label,"
+        " weken_genoteerd, vorige_positie, site_status, uitjaar"
+        " FROM noteringen WHERE sleutel=?", (sleutel,)))
+    if not rijen:
+        raise LookupError(f"geen noteringen met sleutel {sleutel!r}")
+
+    db.markeer_te_bouwen(con, sleutels=[sleutel], reden="splitsing")
+    eerste, rest = kanten[0], kanten[1:]
+    nieuw_aantal = 0
+    for rij in rijen:
+        con.execute(
+            "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE id=?",
+            (eerste[0], eerste[1], sleutel_van(*eerste), rij["id"]))
+        for artiest, titel in rest:
+            con.execute(
+                "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
+                " artiest, label, weken_genoteerd, vorige_positie, site_status,"
+                " sleutel, uitjaar) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                (rij["lijst"], rij["jaar"], rij["week"], rij["positie"], titel,
+                 artiest, rij["label"], rij["weken_genoteerd"],
+                 rij["vorige_positie"], rij["site_status"],
+                 sleutel_van(artiest, titel), rij["uitjaar"]))
+            nieuw_aantal += 1
+    con.execute(
+        "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud, nieuw,"
+        " reden) VALUES (?,?,?,?,?,?,?)",
+        (datetime.now().isoformat(timespec="seconds"), "versies", sleutel,
+         "artiest+titel", f"{rijen[0]['artiest']} - {rijen[0]['titel']}",
+         " + ".join(f"{a} - {t}" for a, t in kanten), reden))
+    con.commit()
+    return {"noteringen": len(rijen), "nieuw": nieuw_aantal}
 
 
 def splits_versies(con: sqlite3.Connection, lijst: str = "top40") -> dict:
