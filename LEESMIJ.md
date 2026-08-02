@@ -477,6 +477,24 @@ Denemarken, Duitsland, Zwitserland en Zuid-Afrika, allemaal gebaseerd op de
 Britse demoplaat. *Yeah, Yeah* was de foute eerste Britse persing. Voor een
 Nederlandse hitlijst telt de Nederlandse uitgavetitel.
 
+**Vier soorten streep, vier betekenissen.** De bronnen gebruiken de schuine
+streep voor van alles, en het ziet er telkens hetzelfde uit:
+
+| Vorm | Betekent meestal | Wat ermee gebeurt |
+|---|---|---|
+| `A / B` bij artiest én titel | twee opnamen op één plek | splitsen (17 gevallen, 1965–1972) |
+| `A / B` alleen bij de titel | de uitgave voor het nummer | de uitgave eraf (24) |
+| `A /// B` | dezelfde notering, twee schrijfwijzen | kiezen (21) |
+| `A // B` | van alles | per geval (18) |
+
+Die laatste is de lastigste, want daar zit élke betekenis in: een verminkte naam
+(`Tino//Martin`), een remix die de notering overnam (`Love Tonight // Love
+Tonight - David Guetta Remix`), twee opnamen die een plek deelden (`Ein Bißchen
+Frieden // Een Beetje Vrede`) — en twee gevallen waar de dubbele streep gewoon
+in de naam hoort. Discogs crediteert *This Is What You Came For* zelf als
+**Calvin Harris // Rihanna**, en Outlandish' single heet echt *Warrior //
+Worrier*. Daar viel niets te repareren.
+
 **Twee catalogi, twee vragen.** MusicBrainz is een catalogus van *nummers*,
 Discogs een van *platen* — en dat verschil beslist welke je nodig hebt:
 

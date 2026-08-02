@@ -54,7 +54,7 @@ def _wacht() -> None:
     _laatste = time.monotonic()
 
 
-def _vraag(adres: str) -> dict:
+def _vraag(adres: str, extra_kop: Optional[dict] = None) -> dict:
     """Eén adres ophalen, met geduld bij een 503.
 
     MusicBrainz antwoordt met 503 zodra je te snel gaat -- niet als storing maar
@@ -66,7 +66,8 @@ def _vraag(adres: str) -> dict:
     for poging in range(POGINGEN):
         _wacht()
         try:
-            antwoord = requests.get(adres, headers=KOP, timeout=25)
+            antwoord = requests.get(adres, headers={**KOP, **(extra_kop or {})},
+                                    timeout=25)
             if antwoord.status_code in (429, 503):
                 time.sleep(float(antwoord.headers.get("Retry-After", 0))
                            or 2 ** (poging + 1))
@@ -181,7 +182,29 @@ def canonieke_titel(artiest: str, titels: list[str],
 # De zoek-API werkt zonder sleutel zolang je je aan de rem houdt: 25 verzoeken
 # per minuut voor wie zich niet aanmeldt, vandaar de ruime pauze hieronder.
 DISCOGS = "https://api.discogs.com/database/search"
-DISCOGS_PAUZE = 2.6
+# Zonder sleutel staat Discogs 25 verzoeken per minuut toe, met sleutel 60.
+DISCOGS_PAUZE_KAAL = 2.6
+DISCOGS_PAUZE_SLEUTEL = 1.1
+DISCOGS_INSTELLINGEN = ROOT / "discogs.ini"
+
+
+def _discogs_sleutel() -> Optional[str]:
+    """De persoonlijke sleutel uit discogs.ini, als die er is.
+
+    Het bestand staat in .gitignore, net als webapp.ini en mail.ini: een sleutel
+    hoort niet in een openbare repository. Zonder bestand werkt alles gewoon,
+    alleen langzamer.
+
+        [discogs]
+        token = ...
+    """
+    if not DISCOGS_INSTELLINGEN.exists():
+        return None
+    import configparser
+
+    parser = configparser.ConfigParser()
+    parser.read(DISCOGS_INSTELLINGEN, encoding="utf-8")
+    return parser.get("discogs", "token", fallback="").strip() or None
 
 
 def zoek_uitgave(artiest: str, titel: str, land: str = "Netherlands",
@@ -200,11 +223,14 @@ def zoek_uitgave(artiest: str, titel: str, land: str = "Netherlands",
     if bestand.exists():
         antwoord = json.loads(bestand.read_text(encoding="utf-8"))
     else:
-        rust = DISCOGS_PAUZE - (time.monotonic() - _laatste)
+        sleutel = _discogs_sleutel()
+        pauze = DISCOGS_PAUZE_SLEUTEL if sleutel else DISCOGS_PAUZE_KAAL
+        rust = pauze - (time.monotonic() - _laatste)
         if rust > 0:
             time.sleep(rust)
         _laatste = time.monotonic()
-        antwoord = _vraag(adres)
+        antwoord = _vraag(adres, extra_kop=(
+            {"Authorization": f"Discogs token={sleutel}"} if sleutel else None))
         if antwoord:
             CACHE.mkdir(parents=True, exist_ok=True)
             bestand.write_text(json.dumps(antwoord, ensure_ascii=False),

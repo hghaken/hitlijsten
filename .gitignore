@@ -17,6 +17,7 @@ data/
 
 # Wachtwoord en sessiesleutel van de webapplicatie.
 webapp.ini
+discogs.ini
 mail.ini
 
 # Logboeken en werkbestanden.
