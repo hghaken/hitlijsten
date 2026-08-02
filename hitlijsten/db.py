@@ -68,6 +68,17 @@ CREATE TABLE IF NOT EXISTS aliases (
     aangemaakt TEXT
 );
 
+-- De vastgestelde schrijfwijze van een artiest, per artiestsleutel. Nodig
+-- omdat de bronnen het oneens zijn: "Beatles" tegen "The Beatles", "coldplay"
+-- tegen "Coldplay". Zonder deze tabel zou zo'n correctie bij de volgende
+-- vrijdagrun weer ongedaan gemaakt worden door de bron zelf.
+CREATE TABLE IF NOT EXISTS artiestnamen (
+    sleutel    TEXT PRIMARY KEY,   -- de artiestsleutel, zonder titel
+    naam       TEXT NOT NULL,      -- zo hoort hij te staan
+    bron       TEXT,               -- musicbrainz | meerderheid | hand
+    aangemaakt TEXT
+);
+
 -- Het omgekeerde: paren die op elkaar lijken en dicht op elkaar noteerden,
 -- maar aantoonbaar losse nummers zijn. Zonder deze lijst stelt `controle` ze
 -- elke keer opnieuw voor.
@@ -169,10 +180,14 @@ def bewaar_week(
 ) -> int:
     """Schrijf één week weg; vervangt wat er al stond voor die week."""
     from .normalize import sleutel_van
+    from .opschonen import schoon_tekst
 
+    # Leestekens hier rechtzetten en niet in de parsers: dan geldt het voor elke
+    # bron, ook voor een bron die er later bij komt.
     rijen = [
         (
-            n.lijst, n.jaar, n.week, n.positie, n.titel, n.artiest, n.label,
+            n.lijst, n.jaar, n.week, n.positie, schoon_tekst(n.titel),
+            schoon_tekst(n.artiest), n.label,
             n.weken_genoteerd, n.vorige_positie, n.site_status,
             sleutel_van(n.artiest, n.titel),
         )

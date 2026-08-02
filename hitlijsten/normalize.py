@@ -30,6 +30,23 @@ _WITRUIMTE = re.compile(r"\s+")
 # sleutel de artiest van de titel en mag daar niet uit de tekst zelf komen.
 _ROMMEL = re.compile(r"[^a-z0-9 &]")
 
+# Een lidwoord vooraan de artiestnaam is geen naam maar een gewoonte, en de
+# bronnen zijn het er niet over eens: top40.nl schrijft "The Beatles", Music
+# Datastats schrijft "Beatles". Dat leverde 353 artiesten op met twee
+# gescheiden geschiedenissen. Alleen vooraan, alleen bij de artiest -- in een
+# titel draagt het lidwoord wel betekenis ("The Wall" is niet "Wall").
+_LIDWOORD = re.compile(r"^(?:the|de|het) ")
+
+# Letters die NFKD niet uit elkaar haalt. Een e met een accent valt vanzelf
+# uiteen in "e" plus een tekentje, maar de o van Bløf is een eigen letter: die
+# overleeft de ontleding en wordt daarna als "rommel" weggegooid. "Bløf" werd zo
+# "bl f" en stond los van "Blof" -- de band viel in tweeen. Vandaar deze tabel.
+_LETTERS = {
+    "ø": "o", "Ø": "O", "æ": "ae", "Æ": "AE", "œ": "oe", "Œ": "OE",
+    "ß": "ss", "ł": "l", "Ł": "L", "đ": "d", "Đ": "D", "ð": "d", "Ð": "D",
+    "þ": "th", "Þ": "TH", "ı": "i", "ħ": "h", "ŧ": "t", "ĸ": "k",
+}
+
 _TYPOGRAFIE = {
     "‘": "'", "’": "'", "‚": "'",
     "“": '"', "”": '"', "„": '"',
@@ -48,6 +65,8 @@ def normaliseer(tekst: str, *, samenwerking: bool = True) -> str:
     if not tekst:
         return ""
     for van, naar in _TYPOGRAFIE.items():
+        tekst = tekst.replace(van, naar)
+    for van, naar in _LETTERS.items():
         tekst = tekst.replace(van, naar)
     # Accenten weg: "Beyoncé" == "Beyonce".
     tekst = unicodedata.normalize("NFKD", tekst)
@@ -93,11 +112,18 @@ def niet_samenvoegen() -> set[frozenset[str]]:
         }
 
 
+def artiestsleutel(artiest: str) -> str:
+    """De artiest, vergelijkbaar gemaakt: samenwerkingstekens gelijk, lidwoord weg.
+
+    Bij de artiest betekent "x" een samenwerking en wordt hij gelijkgetrokken
+    met "&"; bij de titel niet, want daar is het een letter ("Malcolm X").
+    """
+    return _LIDWOORD.sub("", normaliseer(artiest))
+
+
 def sleutel_van(artiest: str, titel: str) -> str:
     """De sleutel waarop een nummer over weken heen wordt herkend."""
-    # Bij de artiest betekent "x" een samenwerking en wordt hij gelijkgetrokken
-    # met "&"; bij de titel niet, want daar is het een letter ("Malcolm X").
-    ruw = f"{normaliseer(artiest)}|{normaliseer(titel, samenwerking=False)}"
+    ruw = f"{artiestsleutel(artiest)}|{normaliseer(titel, samenwerking=False)}"
     return _volg_alias(ruw)
 
 

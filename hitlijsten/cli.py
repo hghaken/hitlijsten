@@ -7,6 +7,7 @@
     python -m hitlijsten excel           Excel-bestanden opnieuw bouwen
     python -m hitlijsten controle        verdachte dubbelingen, met oordeel per paar
     python -m hitlijsten hersleutel      sleutels herberekenen na aliases.csv
+    python -m hitlijsten opschonen       leestekens en schrijfwijzen rechtzetten
     python -m hitlijsten testmail        proefmail versturen
 
 --jaar mag voor of na de opdracht: "hitlijsten excel --jaar 2025" werkt, en
@@ -490,6 +491,48 @@ def opdracht_kruiscontrole(jaar: int | None, *, alle_jaren: bool = False) -> Non
         log("   regels voor een hernoemde periode, die dubbel tellen)")
 
 
+def opdracht_opschonen(*, toepassen: bool) -> None:
+    """Leestekens rechtzetten en één schrijfwijze per artiest afdwingen.
+
+    Twee dingen die na elke run opnieuw kunnen ontstaan, want de bronnen
+    veranderen niet: de backtick van Music Datastats, en een lijst die
+    "coldplay" schrijft waar een andere "Coldplay" schrijft. De zwaardere
+    ingrepen -- nummers samenvoegen, artiesten samenvoegen -- staan hier NIET
+    in. Die vragen een oordeel per geval en horen niet in een wekelijkse taak.
+
+    Zonder --toepassen wordt alleen gemeld wat er zou gebeuren.
+    """
+    from .opschonen import (herstel_tekst, meerderheidsnaam, naamvarianten,
+                            bewaar_artiestnaam, pas_namen_toe, tekstfouten)
+
+    with db.verbinding() as con:
+        fouten = tekstfouten(con)
+        log(f"{len(fouten)} schrijfwijzen met een verkeerd leesteken"
+            f" ({sum(f['aantal'] for f in fouten)} noteringen)")
+        for fout in fouten[:5]:
+            log(f"   {fout['oud'][0]} - {fout['oud'][1]}")
+            log(f"   {fout['nieuw'][0]} - {fout['nieuw'][1]}")
+
+        bakken = naamvarianten(con)
+        log(f"{len(bakken['tekens'])} artiesten met alleen een verschil in "
+            f"hoofdletters of accenten")
+        log(f"{len(bakken['lidwoord'])} met en zonder lidwoord, "
+            f"{len(bakken['anders'])} met een echt andere schrijfwijze "
+            f"(die laatste blijven met rust)")
+
+        if not toepassen:
+            log("niets gewijzigd -- draai met --toepassen om het door te voeren")
+            return
+
+        log(f"{herstel_tekst(con, fouten)} noteringen met schone tekst")
+        for code, namen in bakken["tekens"]:
+            bewaar_artiestnaam(con, code, meerderheidsnaam(namen), "meerderheid")
+        con.commit()
+        verslag = pas_namen_toe(con)
+        log(f"{verslag['noteringen']} noteringen kregen de vastgestelde "
+            f"artiestnaam ({verslag['artiesten']} schrijfwijzen)")
+
+
 def opdracht_hersleutel(jaar: int) -> None:
     """Bereken alle sleutels opnieuw, bijvoorbeeld na het bewerken van aliases.csv.
 
@@ -720,6 +763,14 @@ def opdracht_run(jaar: int, *, stuur_mail: bool = True) -> None:
         except Exception as fout:            # nooit de run laten stranden
             log(f"export van aliassen mislukt: {fout}")
 
+        # Voor het bouwen opschonen, niet erna: de bronnen leveren elke week
+        # opnieuw een backtick of een "coldplay", en die hoort niet in de
+        # Excel-bestanden terecht te komen.
+        try:
+            opdracht_opschonen(toepassen=True)
+        except Exception as fout:            # nooit de run laten stranden
+            log(f"opschonen mislukt: {fout}")
+
         for bouwjaar in sorted({j for _, j in nieuwe_weken}):
             bestanden += opdracht_excel(bouwjaar)
             # De PDF van die jaargang klopt nu niet meer; meteen vernieuwen,
@@ -805,6 +856,10 @@ def main(argv: list[str] | None = None) -> int:
     ond.add_argument("--forceer", action="store_true", help="cache negeren")
     sub.add_parser("hersleutel", parents=[jaar_ouder],
                    help="sleutels opnieuw berekenen na aliases.csv")
+    o = sub.add_parser("opschonen",
+                       help="leestekens en schrijfwijzen rechtzetten")
+    o.add_argument("--toepassen", action="store_true",
+                   help="ook echt wegschrijven; zonder dit alleen melden")
     sub.add_parser("testmail", help="proefmail versturen")
 
     r = sub.add_parser("run", parents=[jaar_ouder], help="bijwerken + excel + mail")
@@ -839,6 +894,8 @@ def main(argv: list[str] | None = None) -> int:
         opdracht_kruiscontrole(jaar, alle_jaren=args.alle)
     elif args.opdracht == "onderscheidingen":
         opdracht_onderscheidingen(forceer=args.forceer)
+    elif args.opdracht == "opschonen":
+        opdracht_opschonen(toepassen=args.toepassen)
     elif args.opdracht == "hersleutel":
         opdracht_hersleutel(jaar)
     elif args.opdracht == "testmail":

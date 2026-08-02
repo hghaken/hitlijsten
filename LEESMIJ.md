@@ -338,6 +338,71 @@ staat geen enkel script van een andere partij in de sjablonen, er wordt één
 cookie gezet en alleen bij het aanmelden, en de webserver houdt een gewone
 toegangslog bij.
 
+### Opschonen
+
+De bronnen zijn niet schoon, en dat zie je pas als je negen lijsten naast elkaar
+legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
+
+| Soort | Gevonden | Beslist door |
+|---|---|---|
+| Leestekens | 3.344 schrijfwijzen, 32.399 noteringen | een regel |
+| Lidwoord ("The Beatles" / "Beatles") | 349 artiesten, 21.833 sleutels | MusicBrainz |
+| Spatiëring ("ACDC" / "AC/DC") | 61 artiesten | MusicBrainz |
+| Typefouten in namen en titels | 31 artiesten, 86 nummers | MusicBrainz + Wikipedia |
+
+**De sleutel is waar het pijn doet.** Een verkeerd leesteken is lelijk maar
+onschuldig: de sleutel gooit leestekens toch al weg. Erger is wat de sleutel
+wél raakt. "Beatles" en "The Beatles" leverden twee gescheiden geschiedenissen
+op, en "Crocodille Rock" naast "Crocodile Rock" splitste één nummer in tweeën —
+met verdeelde punten en twee halve noteringen in de jaarlijst.
+
+**Twee fouten in de normalisatie zelf** kwamen bij dit werk boven water. De
+eerste: een lidwoord vooraan de artiestnaam telde mee, terwijl de bronnen het er
+niet over eens zijn (top40.nl schrijft "The Beatles", Music Datastats schrijft
+"Beatles"). De tweede: `normaliseer()` haalt accenten weg door letters te
+ontleden — é wordt e plus een tekentje — maar de ø van Bløf is een eigen letter.
+Die overleefde de ontleding en werd daarna als rommel geschrapt, waarna "Bløf"
+als "bl f" naast "Blof" stond. Nu vertaald, samen met æ, ß, ł en een stuk of tien
+andere.
+
+**Waarom een externe bron.** Bij "Dexys Midnight Runners" tegen "Dexy's Midnight
+Runners" helpt tellen niet: je moet weten hoe de band heet.
+[MusicBrainz](https://musicbrainz.org/) is een catalogus met precies dat veld,
+open en zonder sleutel, en Wikipedia is de tweede mening bij Nederlandse
+artiesten. `muziekbron.py` houdt zich aan één verzoek per seconde, zet alles op
+schijf en bewaart een mislukking **niet** — een 503 die als antwoord in de cache
+belandt ziet er later uit als "die artiest bestaat niet".
+
+**Wat er niet gebeurt.** Lijken is niet hetzelfde als zijn, en dat is geen
+theorie:
+
+- *The Unforgiven I*, *II* en *III* van Metallica lijken op elkaar en zijn drie
+  nummers. De wachtregel: twee schrijfwijzen die ooit in dezelfde week van
+  dezelfde lijst stonden worden nooit samengevoegd.
+- **Roy Dekkers** (Oranje Top 30, 2012) is niet **Roxy Dekker** (Top 40, 2023),
+  al schelen ze twee letters. **D:ream** is niet **Dream**, **Reunion** (1974)
+  is niet **Re-Union** (2004), **R.O.O.S.** is niet **Roos** en **Pennywise**
+  is niet **Penny Wise**. Die vijf staan met naam en reden in de code.
+- 273 "dubbele posities" in de Tipparade bleken echt: in maart 1971 deelden
+  **acht versies van *Love Story*** plek 23.
+- 306 artiesten houden meer dan één schrijfwijze omdat er geen regel voor te
+  maken is. Die blijven met rust; ze staan in `opschonen --toepassen` netjes
+  geteld.
+
+**Elke correctie staat in `wijzigingen`**, met de oude waarde, de nieuwe en de
+reden. Zonder dat logboek is een correctie niet te onderscheiden van wat de bron
+zelf leverde, en dat is precies wat je later wilt kunnen nazoeken.
+
+De vastgestelde schrijfwijze per artiest staat in de tabel `artiestnamen`.
+Zonder die tabel zou de vrijdagrun de correctie de week erop weer ongedaan maken
+— de bron blijft immers "coldplay" schrijven. Daarom draait `opschonen` ook mee
+in de wekelijkse run, vóór het bouwen van de Excel-bestanden.
+
+```
+python -m hitlijsten opschonen              # alleen melden
+python -m hitlijsten opschonen --toepassen  # doorvoeren
+```
+
 ### Wetenswaardigheden
 
 Tien ranglijsten per lijst, in `wetenswaardigheden.py`: meeste
@@ -553,6 +618,8 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
     excel.py      de Excel-bestanden
     pdf.py        het jaaroverzicht als PDF
     wetenswaardigheden.py   de tien ranglijsten
+    opschonen.py            typefouten opsporen en rechtzetten
+    muziekbron.py           MusicBrainz en Wikipedia bevragen
     jaarlijks.py  de CSV-lijsten (Top 2000, Evergreen)
     kruiscontrole.py / onderscheidingen.py  michajans.nl
     mail.py       melding via de mailrelay
@@ -605,6 +672,7 @@ cd <app-map> && . ./omgeving.sh
 ./venv/bin/python tests/test_datums.py
 ./venv/bin/python tests/test_decennium.py
 ./venv/bin/python tests/test_wetenswaardigheden.py
+./venv/bin/python tests/test_opschonen.py
 ./venv/bin/python tests/test_pdf.py
 ./venv/bin/python tests/test_jaarlijks.py
 node tests/test_grafiek.mjs        # node staat niet op de NAS
