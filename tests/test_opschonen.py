@@ -62,6 +62,21 @@ def test_lege_tekst_blijft_leeg():
     assert schoon_tekst(None) is None
 
 
+def test_dubbele_haken_worden_enkele():
+    """De disambiguatie van Music Datastats blijft, de tweede haak niet."""
+    assert schoon_tekst("The Scorpions ((GBR))") == "The Scorpions (GBR)"
+    assert schoon_tekst("Snow ((Hey Oh))") == "Snow (Hey Oh)"
+    assert schoon_tekst("Amber ((= Marie Claire Cremers))") ==         "Amber (= Marie Claire Cremers)"
+
+
+def test_meer_dan_een_paar_haken_in_een_regel():
+    assert schoon_tekst("Someday Child ((1966)) / Same Old Song ((1971))") ==         "Someday Child (1966) / Same Old Song (1971)"
+
+
+def test_enkele_haken_blijven_met_rust():
+    assert schoon_tekst("Sweet Dreams (Are Made Of This)") ==         "Sweet Dreams (Are Made Of This)"
+
+
 # --- de sleutelregels -------------------------------------------------------
 
 

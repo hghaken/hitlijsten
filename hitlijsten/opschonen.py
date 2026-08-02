@@ -60,6 +60,11 @@ _TEKENS = {
     "�": "",    # vervangingsteken: kapotte codering, beter weg dan fout
 }
 _MEERVOUDIGE_SPATIE = re.compile(r"\s{2,}")
+# Music Datastats zet dubbele haken om naamgenoten te scheiden: "Asia ((GBR))"
+# naast "Asia ((NLD))", "Nirvana ((USA))" naast "Nirvana ((GBR))". Dat
+# onderscheid is echt en blijft staan; alleen de tweede haak is nergens voor
+# nodig en leest slecht.
+_DUBBELE_HAKEN = re.compile(r"\(\((.+?)\)\)")
 
 
 def schoon_tekst(tekst: str) -> str:
@@ -73,6 +78,7 @@ def schoon_tekst(tekst: str) -> str:
         return tekst
     for van, naar in _TEKENS.items():
         tekst = tekst.replace(van, naar)
+    tekst = _DUBBELE_HAKEN.sub(lambda m: f"({m.group(1)})", tekst)
     return _MEERVOUDIGE_SPATIE.sub(" ", tekst).strip()
 
 

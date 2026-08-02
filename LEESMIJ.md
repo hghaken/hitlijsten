@@ -382,6 +382,13 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Titels met twee schrijfwijzen | 1.544 nummers, 13.905 noteringen | een regel |
 | Uitgave voor het nummer | 24 titels | een regel |
 | Dubbele A-kanten | 210 nummers, 1.817 noteringen | een regel |
+| Dubbele haken | 225 nummers, 1.703 noteringen | een regel |
+
+**De dubbele haken** zijn de manier waarop Music Datastats naamgenoten uit
+elkaar houdt: `Asia ((GBR))` naast `Asia ((NLD))`, `Nirvana ((USA))` naast
+`Nirvana ((GBR))`, `Amber ((= Marie Claire Cremers))`. Dat onderscheid is echt
+en blijft staan — alleen de tweede haak is nergens voor nodig. De sleutel
+verandert er niet van, want die gooit leestekens toch al weg.
 
 **De dubbele A-kant.** In de jaren zestig en zeventig kwamen er singles uit met
 twee kanten die allebei gedraaid werden en allebei de lijst haalden. top40.nl

@@ -537,7 +537,7 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
     Zonder --toepassen wordt alleen gemeld wat er zou gebeuren.
     """
     from .opschonen import (bewaar_artiestnaam, bewaar_titel,
-                            geleende_hoofdletters, herstel_tekst,
+                            geleende_hoofdletters, herstel_tekst, schoon_tekst,
                             meerderheidsnaam, naamvarianten, pas_namen_toe,
                             pas_titels_toe, splits_dubbele_a_kanten,
                             tekstfouten, titelvarianten, uitgave_en_nummer,
@@ -590,6 +590,16 @@ def opdracht_opschonen(*, toepassen: bool) -> None:
         titels = titelvarianten(con)
         uitgaven = uitgave_en_nummer(con)
         dubbel = dubbele_a_kanten(con)
+
+        # Eerst de vastgestelde namen zelf schoonmaken. Doe je dat niet, dan
+        # zet `pas_namen_toe` hieronder de rommel meteen weer terug.
+        for tabel in ("artiestnamen", "titelnamen"):
+            for r in list(con.execute(f"SELECT sleutel, naam FROM {tabel}")):
+                schoon = schoon_tekst(r["naam"])
+                if schoon != r["naam"]:
+                    con.execute(f"UPDATE {tabel} SET naam=? WHERE sleutel=?",
+                                (schoon, r["sleutel"]))
+        con.commit()
 
         log(f"{herstel_tekst(con, fouten)} noteringen met schone tekst")
         # Ook hier alle bakken: twee schrijfwijzen onder dezelfde artiestsleutel
