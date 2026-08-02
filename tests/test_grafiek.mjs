@@ -353,6 +353,39 @@ tests.gat_tussen_twee_edities_wordt_gestippeld = async () => {
   gelijk(teksten(svg, "week"), ["2023", "2024", "2025"]);
 };
 
+// --- de verticale schaal -----------------------------------------------------
+
+tests.korte_lijst_krijgt_een_lineaire_schaal = async () => {
+  // Top 40: elke plek is een stap. Positie 2 hoort vlak onder 1 te staan,
+  // niet op een vijfde van de hoogte.
+  const { svg } = await grafiek(antwoord([1, 2, 40], { lengte: 40 }));
+  gelijk(teksten(svg, "as"), ["1", "40"], "twee hulplijnen: boven en onder");
+  const p = svg.kinderen.filter((k) => k.naam === "circle").map((k) => Number(k.kenmerken.cy));
+  const hoogte = p[2] - p[0];
+  const stap = (p[1] - p[0]) / hoogte;
+  waar(stap > 0.02 && stap < 0.04, `positie 2 op ${(stap * 100).toFixed(1)}% is niet lineair`);
+};
+
+tests.lange_lijst_krijgt_een_logaritmische_schaal = async () => {
+  // Top 4000: lineair zou 4 tot 252 minder dan een tiende van de hoogte zijn.
+  const { svg } = await grafiek(antwoord([4, 252, 4000], { lengte: 4000 }));
+  gelijk(teksten(svg, "as"), ["1", "10", "100", "1000", "4000"],
+         "hulplijnen op elke macht van tien");
+  const p = svg.kinderen.filter((k) => k.naam === "circle").map((k) => Number(k.kenmerken.cy));
+  const hoogte = p[2] - p[0];
+  const spreiding = (p[1] - p[0]) / hoogte;
+  waar(spreiding > 0.4, `4 tot 252 beslaat maar ${(spreiding * 100).toFixed(1)}% van de hoogte`);
+};
+
+tests.positie_staat_altijd_op_dezelfde_hoogte = async () => {
+  // Vergelijkbaar blijven tussen nummers: de schaal hangt aan de lijst, niet
+  // aan het nummer.
+  const een = await grafiek(antwoord([4, 5], { lengte: 4000 }));
+  const twee = await grafiek(antwoord([4, 3000], { lengte: 4000 }));
+  const y = (r) => Number(r.svg.kinderen.find((k) => k.naam === "circle").kenmerken.cy);
+  gelijk(y(een), y(twee), "positie 4 hoort even hoog te staan in beide grafieken");
+};
+
 // --- loper ------------------------------------------------------------------
 
 function gelijk(gekregen, verwacht, bericht = "") {

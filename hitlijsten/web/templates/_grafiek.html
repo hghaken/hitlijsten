@@ -11,7 +11,9 @@
   <div class="plaat"></div>
   <p class="hint voet">
     De verticale schaal loopt van 1 tot de lengte van de lijst, dus hoger in
-    beeld is een hogere notering. Onder elk punt staat de positie en het
+    beeld is een hogere notering. Bij de lange lijsten is die schaal
+    <b>logaritmisch</b> — anders zou een nummer dat tussen 4 en 252 beweegt een
+    vlakke streep bovenin zijn. De hulplijnen staan op 1, 10, 100 en 1000. Onder elk punt staat de positie en het
     verschil met de vorige keer: groen is gestegen, rood gedaald, <b>N</b> de
     binnenkomst. Een stippellijn overbrugt een keer dat het nummer er niet in
     stond.
@@ -73,15 +75,33 @@
     const beschikbaar = Math.min(vensterbreedte() * 0.92, 1120) - RANDX * 2;
     const STAP = Math.max(KRAP, Math.min(RUIM, beschikbaar / Math.max(1, reeks.length - 1)));
     const x = (i) => RANDX + i * STAP;
-    const y = (p) => RANDBOVEN + ((p - 1) / Math.max(1, lengte - 1)) * HOOG;
+
+    // De verdeling hangt af van hoe lang de lijst is.
+    //
+    // Bij een Top 40 is lineair het eerlijkst: elke plek is een stap, en 1 en 2
+    // horen dicht bij elkaar te staan. Bij een lijst van vierduizend werkt dat
+    // niet -- een nummer dat tussen 4 en 252 beweegt is dan een vlakke lijn
+    // bovenin, want dat is nog geen tiende van de hoogte. Logaritmisch geeft de
+    // kop de ruimte die hij verdient: diezelfde reeks beslaat dan de halve
+    // grafiek, terwijl positie 4 nog steeds op dezelfde hoogte staat voor elk
+    // nummer -- de schaal blijft dus vergelijkbaar tussen nummers onderling.
+    const LOGARITMISCH = lengte > 100;
+    const y = LOGARITMISCH
+      ? (p) => RANDBOVEN + (Math.log(p) / Math.log(lengte)) * HOOG
+      : (p) => RANDBOVEN + ((p - 1) / Math.max(1, lengte - 1)) * HOOG;
+
+    // Hulplijnen: bij een lineaire schaal boven en onder, bij een logaritmische
+    // op elke macht van tien, zodat je kunt zien hoe de schaal loopt.
+    const hulplijnen = LOGARITMISCH
+      ? [1, 10, 100, 1000, 10000].filter((p) => p < lengte).concat([lengte])
+      : [1, lengte];
     const breedte = Math.max(300, RANDX * 2 + Math.max(1, reeks.length - 1) * STAP);
     const svg = vorm("svg", {
       viewBox: `0 0 ${breedte} ${Y_VERSCHIL + 12}`,
       width: breedte, height: Y_VERSCHIL + 12, class: "reeks",
     });
 
-    // Hulplijnen op positie 1 en op de onderkant van de lijst.
-    [1, lengte].forEach(function (p) {
+    hulplijnen.forEach(function (p) {
       svg.appendChild(vorm("line", {
         x1: RANDX - 16, x2: breedte - RANDX + 16, y1: y(p), y2: y(p),
         stroke: "currentColor", "stroke-opacity": p === 1 ? ".25" : ".12",

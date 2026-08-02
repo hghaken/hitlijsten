@@ -228,6 +228,15 @@ lijst krijgt daarom een eigen pagina: de editie met *vorige editie*, *verschil*,
 grafiek als bij de weeklijsten, maar dan met een punt per editie in plaats van
 per week; de server zegt in het veld `as` welke van de twee het is.
 
+**De verticale schaal hangt af van de lengte van de lijst.** Bij een Top 40 is
+lineair het eerlijkst: elke plek is een stap, en 1 en 2 horen dicht bij elkaar
+te staan. Bij een lijst van vierduizend werkt dat niet — een nummer dat tussen 4
+en 252 beweegt beslaat dan nog geen tiende van de hoogte en is dus een vlakke
+streep. Boven de honderd wordt de schaal daarom **logaritmisch**: diezelfde
+reeks beslaat dan de halve grafiek, met hulplijnen op 1, 10, 100 en 1000. Wat
+blijft: positie 4 staat voor élk nummer op dezelfde hoogte, dus twee grafieken
+naast elkaar leggen mag nog steeds.
+
 **Een overgeslagen editie is een eigen geval.** Van de 4927 nummers hebben er
 1358 een gat in hun reeks — "Dolce Vita" van Ryan Paris miste er twintig. Dat
 wordt op drie plekken getoond:
