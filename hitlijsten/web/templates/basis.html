@@ -119,7 +119,15 @@
     border: 1px solid var(--rand); background: rgba(255,255,255,.05);
     color: var(--ink);
   }
-  select option { background: #131a2b; }
+  /* De uitklaplijst tekent de browser zelf, en Chrome negeert een eigen
+     achtergrondkleur: die lijst blijft wit. Vandaar donkere letters in plaats
+     van een donkere balk -- anders erft de groepskop de lichte kleur van de
+     site en staat hij wit op wit. */
+  select option { color: #111827; }
+  select optgroup {
+    color: #3f4a5c; font-style: normal; font-weight: 700;
+    font-size: .82rem; letter-spacing: .4px; text-transform: uppercase;
+  }
   input::placeholder { color: #6f6890; }
   input[type=text] { min-width: 17rem; }
   textarea { width: 100%; font-family: Consolas, monospace; font-size: 13px; }
