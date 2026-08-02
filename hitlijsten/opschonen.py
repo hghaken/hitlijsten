@@ -48,7 +48,8 @@ __all__ = ["schoon_tekst", "tekstfouten", "herstel_tekst", "Voorstel",
            "titelvarianten", "pas_titels_toe", "geleende_hoofdletters",
            "uitgave_en_nummer", "splits_kanten", "splits_dubbele_a_kanten",
            "spatievarianten", "verzeker_aliassen", "versies_op_een_plek",
-           "zelfde_act", "splits_versies"]
+           "zelfde_act", "splits_versies",
+           "corrigeer_nummer"]
 
 # Wat er in de bronnen misgaat met leestekens. Bewust kort: elk teken hier is
 # er een waarvan is vastgesteld dat het in de data staat en nooit bedoeld is.
@@ -578,6 +579,58 @@ def dubbele_a_kanten(con: sqlite3.Connection) -> list[dict]:
         if len(kanten) > 1:
             uit.append({"rij": dict(r), "kanten": kanten})
     return uit
+
+
+def corrigeer_nummer(con: sqlite3.Connection, sleutel: str, *,
+                     artiest: str | None = None, titel: str | None = None,
+                     reden: str = "met de hand vastgesteld") -> dict:
+    """Zet artiest en/of titel van één nummer goed, overal tegelijk.
+
+    Het gereedschap voor een correctie die uit een bron komt in plaats van uit
+    een regel. top40.nl zet met /// twee schrijfwijzen van dezelfde notering
+    achter elkaar -- "Ella///Ella (TROS Tune)" -- en welke van de twee de goede
+    is, is een vraag aan een catalogus.
+
+    Doet meteen alles wat erbij hoort: de sleutel opnieuw berekenen, een alias
+    van de oude naar de nieuwe zodat een herberekening het niet terugdraait, de
+    naam vastleggen zodat de vrijdagrun het niet terugdraait, de jaargangen
+    markeren voor de herbouw, en het geheel in `wijzigingen`.
+    """
+    from .normalize import sleutel_van
+
+    huidig = con.execute(
+        "SELECT artiest, titel FROM noteringen WHERE sleutel=? LIMIT 1",
+        (sleutel,)).fetchone()
+    if not huidig:
+        raise LookupError(f"geen noteringen met sleutel {sleutel!r}")
+    nieuwe_artiest = artiest if artiest is not None else huidig["artiest"]
+    nieuwe_titel = titel if titel is not None else huidig["titel"]
+    nieuwe_sleutel = sleutel_van(nieuwe_artiest, nieuwe_titel)
+
+    db.markeer_te_bouwen(con, sleutels=[sleutel], reden="correctie")
+    aantal = con.execute(
+        "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE sleutel=?",
+        (nieuwe_artiest, nieuwe_titel, nieuwe_sleutel, sleutel)).rowcount
+
+    if nieuwe_sleutel != sleutel:
+        con.execute(
+            "INSERT OR REPLACE INTO aliases (van, naar, opmerking, aangemaakt)"
+            " VALUES (?,?,?,?)",
+            (sleutel, nieuwe_sleutel, reden,
+             datetime.now().isoformat(timespec="seconds")))
+    if artiest is not None:
+        bewaar_artiestnaam(con, nieuwe_sleutel.split("|", 1)[0],
+                           nieuwe_artiest, "hand")
+    if titel is not None:
+        bewaar_titel(con, nieuwe_sleutel, nieuwe_titel, "hand")
+    con.execute(
+        "INSERT INTO wijzigingen (tijdstip, soort, verwijst, veld, oud, nieuw,"
+        " reden) VALUES (?,?,?,?,?,?,?)",
+        (datetime.now().isoformat(timespec="seconds"), "correctie", sleutel,
+         "artiest+titel", f"{huidig['artiest']} - {huidig['titel']}",
+         f"{nieuwe_artiest} - {nieuwe_titel}", reden))
+    con.commit()
+    return {"noteringen": aantal, "sleutel": nieuwe_sleutel}
 
 
 def splits_versies(con: sqlite3.Connection, lijst: str = "top40") -> dict:
