@@ -30,6 +30,23 @@ meer — geen code, geen database, geen geplande taak.
 | Gebruiker | `claude` |
 | Pakketten | requests, beautifulsoup4, lxml, openpyxl, Flask, fpdf2 |
 
+### En waar staat de broncode dan?
+
+Op de NAS staat **geen git**. De enige kloon van
+[github.com/hghaken/hitlijsten](https://github.com/hghaken/hitlijsten) staat op
+`C:\Users\Admin\Projects\hitlijsten`, naast de andere
+site-spiegels. De werkwijze is dus:
+
+1. bewerken en testen in die map;
+2. de gewijzigde bestanden naar `/volume1/Hitlijsten/app` kopiëren;
+3. de tests daar nog een keer draaien;
+4. committen en pushen vanuit de kloon.
+
+In die map staat **alleen broncode** (33 MB). Geen database, geen
+Excel-bestanden, geen PDF's — die horen bij het draaiende systeem en staan op
+de NAS. Van `.cache/` staat er alleen jaargang 2026, want daarop draaien
+`test_top40nl.py` en `test_oranje.py`; de NAS heeft zijn eigen volledige cache.
+
 `app/omgeving.sh` zet `HITLIJSTEN_DATA`, `HITLIJSTEN_CACHE` en
 `HITLIJSTEN_EXCEL`. De code staat los van de gegevens, zodat je `app/` kunt
 vervangen zonder de database aan te raken — **source die shell altijd** voordat
