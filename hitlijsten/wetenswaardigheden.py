@@ -46,6 +46,7 @@ TOP = 10   # hoeveel regels per ranglijst
 class _Taal:
     """De woorden die per soort lijst verschillen."""
 
+    een: str                   # "week" / "editie"
     meer: str                  # "weken" / "edities"
     tijdvak: str               # "Periode" / "Edities"
     wanneer: str               # kolomkop voor een los moment
@@ -64,7 +65,7 @@ class _Taal:
 
 _TAAL = {
     False: _Taal(
-        meer="weken", tijdvak="Periode", wanneer="Datum",
+        een="week", meer="weken", tijdvak="Periode", wanneer="Datum",
         in_de_lijst="Meeste weken in de lijst",
         langst="Langst genoteerd",
         op_een="Langst op nummer 1", op_een_kolom="Weken op 1",
@@ -78,7 +79,7 @@ _TAAL = {
              "tien eendagsvliegen.",
     ),
     True: _Taal(
-        meer="edities", tijdvak="Edities", wanneer="Editie",
+        een="editie", meer="edities", tijdvak="Edities", wanneer="Editie",
         in_de_lijst="Meeste noteringen over alle edities",
         langst="Vaakst in de lijst",
         op_een="Vaakst op nummer 1", op_een_kolom="Keer op 1",
@@ -205,7 +206,8 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
         return str(kalender[nr].year) if jaarlijks else als_tekst(kalender[nr])
 
     def aantal(n: int) -> str:
-        return f"{n} {taal.meer}"
+        """Eén editie is geen edities."""
+        return f"{n} {taal.een if n == 1 else taal.meer}"
 
     # --- per artiest optellen ----------------------------------------------
     # De sleutel is `artiest|titel` en al genormaliseerd, dus het deel voor de
