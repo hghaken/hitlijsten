@@ -29,6 +29,17 @@
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
+  {% if jaar and lijst in weeklijsten %}
+    {# Rechtstreeks naar een losse week van deze jaargang. #}
+    <select onchange="if (this.value) location = this.value">
+      <option value="">per week…</option>
+      {% for w in weken %}
+        <option value="{{ url_for('weeklijst', lijst=lijst, jaar=jaar, week=w) }}"
+          >week {{ w }}</option>
+      {% endfor %}
+    </select>
+  {% endif %}
+
   {% if jaar %}
   <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar) }}"
      title="Werkboek met een tab per week en het puntenklassement">⤓ Excel</a>

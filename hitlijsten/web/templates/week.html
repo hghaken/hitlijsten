@@ -1,0 +1,78 @@
+{% extends "basis.html" %}
+{% block titel %}Week {{ week }}, {{ jaar }} {{ lijst_namen.get(lijst, lijst) }} — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Weeklijst</h1>
+<p class="onder">De complete lijst van één week, zoals hij is uitgezonden.</p>
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
+      flex-wrap:wrap; margin-bottom:1.4rem">
+  <select name="lijst" onchange="this.form.submit()">
+    {# Alleen de weeklijsten: een jaarlijkse lijst heeft geen weken. #}
+    {% for sleutel in weeklijsten %}
+      <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}
+        >{{ lijst_namen.get(sleutel, sleutel) }}</option>
+    {% endfor %}
+  </select>
+  <select name="jaar" onchange="this.form.submit()">
+    {% for j in jaren %}
+      <option value="{{ j }}" {% if jaar == j %}selected{% endif %}>{{ j }}</option>
+    {% endfor %}
+  </select>
+  <select name="week" onchange="this.form.submit()">
+    {% for w in weken %}
+      <option value="{{ w }}" {% if week == w %}selected{% endif %}>week {{ w }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+
+  {# Bladeren langs de kalender van uitgezonden weken, over de jaargrens heen:
+     na week 52 komt week 1 van het jaar erop, en een overgeslagen kerstweek
+     wordt overgeslagen. #}
+  {% if vorige %}
+    <a class="knop" href="{{ url_for('weeklijst', lijst=lijst, jaar=vorige[0], week=vorige[1]) }}"
+       title="week {{ vorige[1] }}, {{ vorige[0] }}">‹ vorige</a>
+  {% endif %}
+  {% if volgende %}
+    <a class="knop" href="{{ url_for('weeklijst', lijst=lijst, jaar=volgende[0], week=volgende[1]) }}"
+       title="week {{ volgende[1] }}, {{ volgende[0] }}">volgende ›</a>
+  {% endif %}
+
+  <span class="hint" style="margin-left:auto">
+    {% if datum %}uitgezonden op vrijdag {{ datum }} · {% endif %}{{ rijen|length }} noteringen
+  </span>
+</form>
+
+{% if not rijen %}
+  <div class="melding fout">Deze week staat niet in de database.</div>
+{% else %}
+
+<div class="tabelvak"><table>
+  <thead><tr>
+    <th class="getal">Positie</th><th class="getal">Vorige</th>
+    <th>Artiest</th><th>Titel</th>
+    {% if heeft_label %}<th>Label</th>{% endif %}
+    <th class="getal">Weken</th>
+  </tr></thead><tbody>
+  {% for r in rijen %}
+  <tr>
+    <td class="getal {% if r['positie'] == 1 %}top1{% elif r['positie'] <= 3 %}top3{% endif %}">
+      {{ r['positie'] }}</td>
+    <td class="getal hint">
+      {% if r['vorige_positie'] %}{{ r['vorige_positie'] }}
+      {% elif r['site_status'] == 'terug' %}terug
+      {% else %}<b>nieuw</b>{% endif %}</td>
+    {# Klikken springt naar het jaaroverzicht met dit nummer opgelicht — daar
+       staat de grafiek van het hele verloop binnen handbereik. #}
+    <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar,
+           markeer=r['sleutel']) }}">{{ r['artiest'] }}</a></td>
+    <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar,
+           markeer=r['sleutel']) }}">{{ r['titel'] }}</a></td>
+    {% if heeft_label %}<td class="hint">{{ r['label'] or '' }}</td>{% endif %}
+    <td class="getal hint">{{ r['weken_genoteerd'] or '' }}</td>
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+
+{% endif %}
+{% endblock %}

@@ -287,6 +287,63 @@ def _registreer(app: Flask) -> None:
             laatste_week=laatste_week,
         )
 
+    @app.route("/week")
+    def weeklijst():
+        """Eén week zoals hij is uitgezonden, met bladeren langs de kalender.
+
+        Alleen voor de weeklijsten: een jaarlijkse lijst heeft geen weken, en
+        de editie staat al compleet op de jaarpagina.
+        """
+        con = verbinding()
+        lijst = request.args.get("lijst") or "top40"
+        if lijst not in LIJSTEN or is_jaarlijks(lijst):
+            lijst = "top40"
+
+        # De kalender van uitgezonden weken van deze lijst, op volgorde. Daar
+        # komt alles uit: de keuzelijsten, de standaardweek (de nieuwste) en de
+        # buren om langs te bladeren -- over de jaargrens heen, en een
+        # overgeslagen kerstweek wordt daarbij vanzelf overgeslagen.
+        kalender = [(r[0], r[1]) for r in con.execute(
+            "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst=?"
+            " ORDER BY jaar, week", (lijst,))]
+        if not kalender:
+            abort(404)
+
+        try:
+            jaar = int(request.args.get("jaar", ""))
+            week = int(request.args.get("week", ""))
+        except ValueError:
+            jaar, week = kalender[-1]
+        if (jaar, week) not in kalender:
+            # Een jaartal zonder geldige week: de eerste week van dat jaar,
+            # zodat wisselen van jaar in de keuzelijst altijd ergens uitkomt.
+            in_jaar = [w for j, w in kalender if j == jaar]
+            if in_jaar:
+                week = in_jaar[0] if week not in in_jaar else week
+            else:
+                jaar, week = kalender[-1]
+
+        plek = kalender.index((jaar, week))
+        vorige = kalender[plek - 1] if plek > 0 else None
+        volgende = kalender[plek + 1] if plek + 1 < len(kalender) else None
+
+        rijen = list(con.execute(
+            "SELECT positie, vorige_positie, artiest, titel, label,"
+            " weken_genoteerd, site_status, sleutel FROM noteringen"
+            " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie, artiest",
+            (lijst, jaar, week)))
+        try:
+            datum = als_tekst(vrijdag_van(jaar, week))
+        except Exception:
+            datum = None
+        return render_template(
+            "week.html", lijst=lijst, jaar=jaar, week=week, rijen=rijen,
+            jaren=sorted({j for j, _ in kalender}, reverse=True),
+            weken=[w for j, w in kalender if j == jaar],
+            vorige=vorige, volgende=volgende, datum=datum,
+            heeft_label=any(r["label"] for r in rijen),
+        )
+
     @app.route("/disclaimer")
     def disclaimer():
         """Wat deze site is en wat je er niet van moet verwachten."""
