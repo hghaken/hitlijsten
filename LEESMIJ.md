@@ -53,8 +53,8 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 484.386 noteringen over elf
-  lijsten. Top 40
+- **Het hele archief staat in de database**: 539.163 noteringen over
+  eenentwintig lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
@@ -201,9 +201,9 @@ De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
 ### De jaarlijkse lijsten
 
-De vier weeklijsten komen van een website. De zeven jaarlijkse lijsten — Top 2000,
-Top 4000, Veronica Top 1000, Q Top 1500, Evergreen Top 1000, Rock Top 500 en
-Kink Top 1500 — zijn één
+De vier weeklijsten komen van een website. De zeventien jaarlijkse lijsten —
+van de Top 2000 en de Top 4000 tot de Festival Top 1003, de Sublime Soul
+Top 1000 en de Toplijsten van de jaren 60 en 70 — zijn één
 uitzending per jaar en komen binnen als CSV van Music
 Datastats ([datastats.nl](https://www.datastats.nl/)) — een matrix met een regel
 per nummer en een kolom per editie.
@@ -310,7 +310,7 @@ op de NAS, achter een reverse proxy.
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; klik springt naar de jaargang van de hoogste notering |
 | Weeklijst | één week zoals uitgezonden, met week-keuzelijst en bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
-| Jaarlijsten totaal | alle zeven jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
+| Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
 | Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen), voortgangsbalken per stap, en een taakstand die een herstart overleeft |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
@@ -380,7 +380,7 @@ verwijderde map, deze kopieën zitten er juist in en gaan met één knop terug.
 
 ### Opschonen
 
-De bronnen zijn niet schoon, en dat zie je pas als je elf lijsten naast elkaar
+De bronnen zijn niet schoon, en dat zie je pas als je eenentwintig lijsten naast elkaar
 legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 
 | Soort | Gevonden | Beslist door |

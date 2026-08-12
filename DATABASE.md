@@ -22,7 +22,7 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 
 | Tabel | Rijen | Waarvoor |
 |---|---|---|
-| [`noteringen`](#noteringen) | 484.386 | de gegevens: één rij per nummer per week |
+| [`noteringen`](#noteringen) | 539.163 | de gegevens: één rij per nummer per week |
 | [`opgehaald`](#opgehaald) | 7.684 | welke week wanneer is binnengehaald |
 | [`bestaat_niet`](#bestaat_niet) | 267 | weken die nooit zijn uitgezonden |
 | [`aliases`](#aliases) | 651 | twee sleutels die hetzelfde nummer zijn |

@@ -18,8 +18,18 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 | Evergreen Top 1000 (NPO Radio 5) | datastats.nl | vanaf 2008 |
 | Rock Top 500 (Arrow) | datastats.nl | vanaf 2000 |
 | Kink Top 1500 | datastats.nl | vanaf 2019 |
+| 90's Top 500 (Qmusic) | datastats.nl | vanaf 2010 |
+| Toplijst van de jaren 60 (NPO Radio 5) | datastats.nl | vanaf 2010 |
+| Toplijst van de jaren 70 (NPO Radio 5) | datastats.nl | vanaf 2010 |
+| Zomer Top 500 (Qmusic) | datastats.nl | vanaf 2012 |
+| Q Zeroes Top 500 (Qmusic) | datastats.nl | vanaf 2013 |
+| 80's Top 810 (Radio 10) | datastats.nl | vanaf 2014 |
+| Festival Top 1003 (NPO Radio 3FM) | datastats.nl | vanaf 2018 |
+| Kink 80's Top 500 | datastats.nl | vanaf 2021 |
+| Sublime Soul Top 1000 (Sublime) | datastats.nl | vanaf 2021 |
+| De Koninklijke 500 (NPO Radio 2) | datastats.nl | vanaf 2022 |
 
-484.386 noteringen over elf lijsten: 7.541 weken en 143 jaaredities.
+539.163 noteringen over eenentwintig lijsten: 7.545 weken en 253 jaaredities.
 De namen en titels zijn opgeschoond en geverifieerd tegen MusicBrainz,
 Discogs en Wikipedia; elke correctie staat met reden in een logboek. Draait op een Synology NAS: een
 Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
@@ -38,8 +48,9 @@ De **code** staat onder de [MIT-licentie](LICENSE) — doe ermee wat je wilt, me
 naamsvermelding en zonder garantie.
 
 De **gegevens niet.** De noteringen zijn samengesteld door top40.nl en
-oranjetop30.nl, en voor de jaarlijkse lijsten door NPO Radio 2, Radio 10,
-Veronica, Qmusic, NPO Radio 5 en Arrow Classic Rock (verzameld via
+oranjetop30.nl, en voor de jaarlijkse lijsten door NPO Radio 2, NPO 3FM,
+NPO Radio 5, Radio 10, Veronica, Qmusic, Sublime, Arrow Classic Rock en
+KINK (verzameld via
 [datastats.nl](https://www.datastats.nl/)). Die rechten liggen
 bij hen en worden door deze licentie niet geraakt: dit project verzamelt en
 toont hun werk, het claimt het niet. De database en de opgehaalde pagina's zitten
