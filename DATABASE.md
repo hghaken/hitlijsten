@@ -34,6 +34,7 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 | [`te_bouwen`](#te_bouwen) | 0 | welke jaargang opnieuw gebouwd moet |
 | [`wijzigingen`](#wijzigingen) | 11.437 | logboek van elke correctie |
 | [`taak`](#taak) | 0–1 | de lopende (of laatst gedraaide) achtergrondtaak |
+| [`berichten`](#berichten) | groeit | bezoekersberichten voor gastenboek en postbus |
 
 Peildatum 3 augustus 2026.
 
@@ -334,6 +335,26 @@ leverde, en dat is precies wat je later wilt kunnen nazoeken.
 > automatisch vóór elke run en vóór elk opschonen, met één knop terug te zetten.
 
 ---
+
+## berichten
+
+Wat bezoekers achterlaten via het formulier. Alles komt binnen met status
+`nieuw`; de beheerder publiceert (→ `gepubliceerd`, zichtbaar in het
+gastenboek), houdt privé (→ `prive`) of verwijdert (spam laat geen rij achter).
+
+| Kolom | Type | Betekenis |
+|---|---|---|
+| `id` | INTEGER | rijteller |
+| `tijdstip` | TEXT | lokale tijd, ISO |
+| `soort` | TEXT | `opmerking`, `tip`, `bug` of `aanvulling` |
+| `naam` | TEXT | zoals opgegeven; leeg = "Een bezoeker" |
+| `email` | TEXT | alleen voor antwoord; komt nooit op de site |
+| `tekst` | TEXT | het bericht, maximaal 5.000 tekens |
+| `pagina` | TEXT | waar de melder stond ("gaat over") |
+| `mag_openbaar` | INTEGER | het vinkje "mag in het gastenboek" |
+| `status` | TEXT | `nieuw`, `gepubliceerd` of `prive` |
+| `antwoord` | TEXT | korte reactie van de beheerder, onder het bericht |
+| `ip` | TEXT | voor de limiet van vijf berichten per adres per dag |
 
 ## taak
 

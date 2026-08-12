@@ -313,6 +313,9 @@ op de NAS, achter een reverse proxy.
 | Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
 | Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen), voortgangsbalken per stap, en een taakstand die een herstart overleeft |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
+| Gastenboek | gepubliceerde bezoekersberichten, met eventueel een antwoord van de beheerder eronder |
+| Bericht achterlaten | formulier voor opmerkingen, tips, bugs en aanvullingen; spamwering met honeypot, invultijd en per-IP-limiet, geen CAPTCHA; alles komt privé binnen en niets staat live zonder akkoord |
+| Berichten | (achter de login) de postbus: publiceren, privé houden, verwijderen of beantwoorden; mailmelding bij elk nieuw bericht |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,

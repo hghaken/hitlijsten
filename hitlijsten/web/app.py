@@ -349,6 +349,148 @@ def _registreer(app: Flask) -> None:
         """Wat deze site is en wat je er niet van moet verwachten."""
         return render_template("disclaimer.html")
 
+    # --- gastenboek en feedback --------------------------------------------
+
+    @app.route("/gastenboek")
+    def gastenboek():
+        """De gepubliceerde berichten, nieuwste bovenaan."""
+        con = verbinding()
+        berichten = list(con.execute(
+            "SELECT * FROM berichten WHERE status='gepubliceerd'"
+            " ORDER BY tijdstip DESC"))
+        return render_template("gastenboek.html", berichten=berichten)
+
+    @app.route("/feedback", methods=["GET", "POST"])
+    def feedback():
+        """Het formulier voor bezoekers; alles komt privé binnen.
+
+        Spamwering zonder CAPTCHA, drie lagen: een honeypot-veld dat mensen
+        niet zien maar bots invullen, een minimale invultijd, en een limiet
+        per IP-adres. Wie daar doorheen komt en toch rommel stuurt, wordt
+        gewoon niet gepubliceerd -- niets staat live zonder akkoord.
+        """
+        if request.method == "POST":
+            fout = _bewaar_bericht(verbinding())
+            if fout:
+                flash(fout, "fout")
+            else:
+                flash("Dank voor je bericht! Het is aangekomen en wordt "
+                      "gelezen; wat in het gastenboek mag, verschijnt daar "
+                      "na een akkoord.", "goed")
+                return redirect(url_for("gastenboek"))
+        return render_template(
+            "feedback.html",
+            pagina=request.args.get("pagina") or request.form.get("pagina") or "",
+            soort=request.args.get("soort") or request.form.get("soort") or "",
+            geopend=int(datetime.now().timestamp()))
+
+    def _bezoeker_ip() -> str:
+        """Het echte adres, ook achter de reverse proxy van de NAS."""
+        doorgegeven = request.headers.get("X-Forwarded-For", "")
+        if doorgegeven:
+            return doorgegeven.split(",")[0].strip()
+        return request.headers.get("X-Real-IP") or request.remote_addr or "?"
+
+    def _bewaar_bericht(con: sqlite3.Connection) -> str | None:
+        """Controleer en bewaar een binnengekomen bericht. Geeft de foutmelding
+        terug, of None als het gelukt is."""
+        # De honeypot: een veld dat via CSS onzichtbaar is. Een mens laat het
+        # leeg; een bot die blind alle velden invult, valt hier door de mand.
+        if request.form.get("website", ""):
+            return "Er ging iets mis met het formulier."
+        try:
+            geopend = int(request.form.get("geopend", "0"))
+        except ValueError:
+            geopend = 0
+        duur = datetime.now().timestamp() - geopend
+        if not 4 <= duur <= 6 * 3600:
+            return ("Dat ging wel erg snel — probeer het nog een keer "
+                    "(dit weert geautomatiseerde inzendingen).")
+
+        soort = request.form.get("soort", "")
+        if soort not in ("opmerking", "tip", "bug", "aanvulling"):
+            return "Kies wat voor soort bericht het is."
+        tekst = request.form.get("tekst", "").strip()
+        if not tekst:
+            return "Een leeg bericht heeft geen zin — schrijf iets!"
+        if len(tekst) > 5000:
+            return "Dat is te lang voor één bericht (maximaal 5.000 tekens)."
+        naam = request.form.get("naam", "").strip()[:100]
+        email = request.form.get("email", "").strip()[:200]
+        if email and ("@" not in email or "." not in email.split("@")[-1]):
+            return "Dat e-mailadres ziet er niet goed uit."
+
+        ip = _bezoeker_ip()
+        gister = datetime.fromtimestamp(
+            datetime.now().timestamp() - 24 * 3600).isoformat(timespec="seconds")
+        aantal = con.execute(
+            "SELECT COUNT(*) FROM berichten WHERE ip=? AND tijdstip>?",
+            (ip, gister)).fetchone()[0]
+        if aantal >= 5:
+            return ("Vanaf dit adres zijn al vijf berichten binnengekomen "
+                    "vandaag — probeer het morgen weer.")
+
+        con.execute(
+            "INSERT INTO berichten (tijdstip, soort, naam, email, tekst,"
+            " pagina, mag_openbaar, ip) VALUES (?,?,?,?,?,?,?,?)",
+            (datetime.now().isoformat(timespec="seconds"), soort,
+             naam or None, email or None, tekst,
+             request.form.get("pagina", "").strip()[:300] or None,
+             1 if request.form.get("mag_openbaar") else 0, ip))
+        con.commit()
+
+        # De mailmelding is een luxe, geen voorwaarde: als de mail faalt is
+        # het bericht al veilig bewaard en zichtbaar op de berichtenpagina.
+        try:
+            from ..mail import verstuur
+            verstuur(
+                f"Hitlijsten: nieuw bericht ({soort})",
+                f"Van: {naam or 'anoniem'} {email or ''}\n"
+                f"Soort: {soort}\n"
+                f"Pagina: {request.form.get('pagina', '') or '-'}\n"
+                f"Gastenboek: {'ja' if request.form.get('mag_openbaar') else 'nee'}\n"
+                f"\n{tekst}\n")
+        except Exception:
+            pass
+        return None
+
+    @app.route("/berichten")
+    @vereist_aanmelding
+    def berichten():
+        """De postbus voor de beheerder: alles, met knoppen per bericht."""
+        con = verbinding()
+        rijen = list(con.execute(
+            "SELECT * FROM berichten ORDER BY"
+            " CASE status WHEN 'nieuw' THEN 0 ELSE 1 END, tijdstip DESC"))
+        return render_template("berichten.html", berichten=rijen)
+
+    @app.route("/berichten/actie", methods=["POST"])
+    @vereist_aanmelding
+    def berichten_actie():
+        con = verbinding()
+        nummer = request.form.get("id", "")
+        actie = request.form.get("actie", "")
+        rij = con.execute("SELECT * FROM berichten WHERE id=?",
+                          (nummer,)).fetchone()
+        if rij is None:
+            abort(404)
+        if actie == "publiceren":
+            con.execute("UPDATE berichten SET status='gepubliceerd'"
+                        " WHERE id=?", (nummer,))
+        elif actie == "prive":
+            con.execute("UPDATE berichten SET status='prive' WHERE id=?",
+                        (nummer,))
+        elif actie == "verwijderen":
+            con.execute("DELETE FROM berichten WHERE id=?", (nummer,))
+        elif actie == "antwoord":
+            con.execute("UPDATE berichten SET antwoord=? WHERE id=?",
+                        (request.form.get("antwoord", "").strip()[:2000]
+                         or None, nummer))
+        else:
+            abort(400)
+        con.commit()
+        return redirect(url_for("berichten"))
+
     # --- jaaroverzicht -----------------------------------------------------
 
     @app.route("/jaar")

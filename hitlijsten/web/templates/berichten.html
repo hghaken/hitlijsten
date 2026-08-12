@@ -1,0 +1,48 @@
+{% extends "basis.html" %}
+{% block titel %}Berichten — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Berichten</h1>
+<p class="onder">De postbus: alles wat bezoekers achterlieten, nieuw bovenaan.
+  Publiceren zet een bericht in het <a href="{{ url_for('gastenboek') }}">gastenboek</a>;
+  privé houden handelt het af zonder het te tonen; verwijderen is voor spam.</p>
+
+{% if not berichten %}
+  <p class="hint">De postbus is leeg.</p>
+{% endif %}
+
+{% for b in berichten %}
+<div class="kaart" style="margin-bottom:1rem; max-width:66rem
+     {% if b.status == 'nieuw' %}; border-color:rgba(122,92,255,.55){% endif %}">
+  <div style="display:flex; gap:.8rem; align-items:baseline; flex-wrap:wrap">
+    <b>{{ b.naam or "anoniem" }}</b>
+    {% if b.email %}<span class="hint">{{ b.email }}</span>{% endif %}
+    <span class="hint">{{ b.tijdstip.replace("T", " ") }} · {{ b.soort }}
+      · {{ b.status }}{% if not b.mag_openbaar %} · wil níét in het gastenboek{% endif %}
+      · {{ b.ip }}</span>
+  </div>
+  {% if b.pagina %}<p class="hint" style="margin:.3rem 0 0">Gaat over:
+    <a href="{{ b.pagina }}">{{ b.pagina }}</a></p>{% endif %}
+  <p style="white-space:pre-line; margin:.5rem 0 .8rem">{{ b.tekst }}</p>
+
+  <form method="post" action="{{ url_for('berichten_actie') }}"
+        style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-start">
+    <input type="hidden" name="id" value="{{ b.id }}">
+    {% if b.mag_openbaar and b.status != 'gepubliceerd' %}
+      <button class="hoofd" name="actie" value="publiceren">Publiceren</button>
+    {% endif %}
+    {% if b.status != 'prive' %}
+      <button name="actie" value="prive">Privé houden</button>
+    {% endif %}
+    <button name="actie" value="verwijderen"
+      onclick="return confirm('Dit bericht definitief verwijderen?')">Verwijderen</button>
+    <span style="flex:1; min-width:16rem; display:flex; gap:.6rem">
+      <input name="antwoord" placeholder="antwoord voor in het gastenboek…"
+        value="{{ b.antwoord or '' }}" maxlength="2000" style="flex:1">
+      <button name="actie" value="antwoord">Bewaar antwoord</button>
+    </span>
+  </form>
+</div>
+{% endfor %}
+
+{% endblock %}

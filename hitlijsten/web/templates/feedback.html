@@ -1,0 +1,54 @@
+{% extends "basis.html" %}
+{% block titel %}Bericht achterlaten — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Bericht achterlaten</h1>
+<p class="onder">Een opmerking, tip, bug of aanvulling — alles is welkom.</p>
+
+<form method="post" action="{{ url_for('feedback') }}" class="kaart"
+      style="max-width:44rem; display:grid; gap:.9rem">
+
+  <label>Wat voor bericht is het?<br>
+    <select name="soort" required style="margin-top:.3rem">
+      <option value="" {% if not soort %}selected{% endif %} disabled>maak een keuze…</option>
+      <option value="opmerking" {% if soort == "opmerking" %}selected{% endif %}>een opmerking</option>
+      <option value="tip" {% if soort == "tip" %}selected{% endif %}>een tip</option>
+      <option value="bug" {% if soort == "bug" %}selected{% endif %}>een bug — er is iets stuk</option>
+      <option value="aanvulling" {% if soort == "aanvulling" %}selected{% endif %}>een aanvulling — er klopt of ontbreekt iets</option>
+    </select>
+  </label>
+
+  <label>Je bericht<br>
+    <textarea name="tekst" rows="7" required maxlength="5000"
+      style="width:100%; margin-top:.3rem" placeholder="Schrijf maar…"></textarea>
+  </label>
+
+  <div style="display:grid; gap:.9rem; grid-template-columns:1fr 1fr">
+    <label>Naam <span class="hint">(mag leeg)</span><br>
+      <input name="naam" maxlength="100" style="width:100%; margin-top:.3rem"></label>
+    <label>E-mail <span class="hint">(alleen als je antwoord wilt)</span><br>
+      <input name="email" type="email" maxlength="200" style="width:100%; margin-top:.3rem"></label>
+  </div>
+
+  <label style="display:flex; gap:.5rem; align-items:baseline">
+    <input type="checkbox" name="mag_openbaar" checked>
+    <span>Mijn bericht mag in het <a href="{{ url_for('gastenboek') }}">gastenboek</a>
+      <span class="hint">— uitvinken als het alleen voor de beheerder is</span></span>
+  </label>
+
+  {% if pagina %}
+  <p class="hint" style="margin:0">Gaat over: <code>{{ pagina }}</code></p>
+  {% endif %}
+  <input type="hidden" name="pagina" value="{{ pagina }}">
+  <input type="hidden" name="geopend" value="{{ geopend }}">
+  {# De honeypot: onzichtbaar voor mensen, onweerstaanbaar voor bots. #}
+  <div style="position:absolute; left:-9999px" aria-hidden="true">
+    <label>Website <input name="website" tabindex="-1" autocomplete="off"></label>
+  </div>
+
+  <div><button class="hoofd" type="submit">Versturen</button></div>
+  <p class="hint" style="margin:0">Er wordt niets automatisch gepubliceerd:
+    elk bericht wordt eerst gelezen. Je e-mailadres komt nooit op de site.</p>
+</form>
+
+{% endblock %}

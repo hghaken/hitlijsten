@@ -333,7 +333,9 @@
       <a href="{{ url_for('totaal_lijst') }}">Totaal lijst</a>
       <a href="{{ url_for('jaarlijksen_lijst') }}">Jaarlijsten totaal</a>
       <a href="{{ url_for('wetenswaardigheden') }}">Wetenswaardigheden</a>
+      <a href="{{ url_for('gastenboek') }}">Gastenboek</a>
       {% if is_aangemeld() %}
+        <a href="{{ url_for('berichten') }}">Berichten</a>
         <a href="{{ url_for('zoek') }}">Zoeken</a>
         <a href="{{ url_for('aliassen') }}">Aliassen</a>
         <a href="{{ url_for('uitzonderingen') }}">Uitzonderingen</a>
@@ -376,6 +378,10 @@
   <a href="https://www.datastats.nl/" rel="noopener">datastats.nl</a>.
   <br>Deze pagina toont hun gegevens; de rechten liggen bij hen. Zie de
   <a href="{{ url_for('disclaimer') }}">disclaimer</a>.
+  Iets gezien dat niet klopt?
+  <a href="{{ url_for('feedback', soort='aanvulling', pagina=request.path) }}">Meld
+  het</a> — of laat een bericht achter in het
+  <a href="{{ url_for('gastenboek') }}">gastenboek</a>.
 </footer>
 
 <script>

@@ -152,6 +152,23 @@ CREATE TABLE IF NOT EXISTS wijzigingen (
     reden     TEXT
 );
 
+-- Berichten van bezoekers: opmerkingen, tips, bugs en aanvullingen. Alles
+-- komt privé binnen (status "nieuw"); wat de beheerder publiceert verschijnt
+-- in het gastenboek. Spam wordt verwijderd en laat dus geen rij achter.
+CREATE TABLE IF NOT EXISTS berichten (
+    id           INTEGER PRIMARY KEY,
+    tijdstip     TEXT NOT NULL,
+    soort        TEXT NOT NULL,             -- opmerking | tip | bug | aanvulling
+    naam         TEXT,
+    email        TEXT,
+    tekst        TEXT NOT NULL,
+    pagina       TEXT,                      -- waar de melder stond
+    mag_openbaar INTEGER NOT NULL DEFAULT 0,
+    status       TEXT NOT NULL DEFAULT 'nieuw',  -- nieuw | gepubliceerd | prive
+    antwoord     TEXT,                      -- korte reactie van de beheerder
+    ip           TEXT                       -- voor de per-IP-limiet
+);
+
 -- Weken die aantoonbaar niet bestaan: week 53 in een jaar met 52 weken, of een
 -- lijst die een week oversloeg (Sterren NL had geen week 52 in 2025). Zonder
 -- deze administratie probeert de wekelijkse run ze eeuwig opnieuw en meldt hij
