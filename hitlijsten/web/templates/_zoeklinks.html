@@ -1,0 +1,17 @@
+{# Zoeklinks naar YouTube en Spotify bij een nummer — dezelfde icoontjes en
+   dezelfde zoekopdracht (artiest plus titel) als op de Ots Radio-webplayer,
+   zodat de twee sites zich hetzelfde gedragen.
+
+   Het zijn zóéklinks, geen directe: een catalogus koppelen per nummer zou
+   34.000 opzoekacties vragen en veroudert; een zoekopdracht is altijd raak. #}
+{% macro zoeklinks(artiest, titel) %}
+{%- set vraag = ((artiest or '') ~ ' ' ~ (titel or ''))|trim|urlencode -%}
+{%- if vraag %}<span class="zoeklinks" onclick="event.stopPropagation()"
+  ><a target="_blank" rel="noopener" title="Zoek op YouTube"
+      href="https://www.youtube.com/results?search_query={{ vraag }}"
+    ><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="#FF0000" d="M21.6 7.2a2.5 2.5 0 0 0-1.75-1.77C18.25 5 12 5 12 5s-6.25 0-7.85.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.75 1.77C5.75 19 12 19 12 19s6.25 0 7.85-.43a2.5 2.5 0 0 0 1.75-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8z"/><path fill="#fff" d="M10 14.6l5.2-2.6L10 9.4z"/></svg></a
+  ><a target="_blank" rel="noopener" title="Zoek op Spotify"
+      href="https://open.spotify.com/search/{{ vraag }}"
+    ><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1DB954"/><path fill="#000" d="M16.9 16.3a.7.7 0 0 1-.96.23c-2.64-1.6-5.95-1.96-9.86-1.07a.7.7 0 1 1-.31-1.36c4.28-.98 7.94-.56 10.9 1.25.33.2.44.64.23.95zm1.3-2.9a.87.87 0 0 1-1.2.29c-3.02-1.86-7.62-2.4-11.2-1.31a.87.87 0 1 1-.5-1.67c4.08-1.23 9.15-.63 12.6 1.5.41.25.54.78.29 1.19zm.11-3.02C14.66 8.27 8.9 8.07 5.46 9.12a1.04 1.04 0 1 1-.6-2c3.95-1.2 10.3-.97 14.3 1.42a1.04 1.04 0 0 1-1.07 1.78z"/></svg></a
+  ></span>{% endif -%}
+{% endmacro %}

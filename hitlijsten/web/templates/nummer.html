@@ -1,7 +1,8 @@
 {% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
 {% block titel %}{{ rijen[0]['titel'] }} — Hitlijsten{% endblock %}
 {% block inhoud %}
-<h1>{{ rijen[-1]['titel'] }} <span class="hint">— {{ rijen[-1]['artiest'] }}</span></h1>
+<h1>{{ rijen[-1]['titel'] }} <span class="hint">— {{ rijen[-1]['artiest'] }}</span>{{ zoeklinks(rijen[-1]['artiest'], rijen[-1]['titel']) }}</h1>
 <p class="sleutel">{{ sleutel }}</p>
 
 {% if aliassen %}

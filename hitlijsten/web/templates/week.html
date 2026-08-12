@@ -1,4 +1,5 @@
 {% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
 {% block titel %}Week {{ week }}, {{ jaar }} {{ lijst_namen.get(lijst, lijst) }} — Hitlijsten{% endblock %}
 {% block inhoud %}
 
@@ -67,7 +68,7 @@
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar,
            markeer=r['sleutel']) }}">{{ r['artiest'] }}</a></td>
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar,
-           markeer=r['sleutel']) }}">{{ r['titel'] }}</a></td>
+           markeer=r['sleutel']) }}">{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
     {% if heeft_label %}<td class="hint">{{ r['label'] or '' }}</td>{% endif %}
     <td class="getal hint">{{ r['weken_genoteerd'] or '' }}</td>
   </tr>

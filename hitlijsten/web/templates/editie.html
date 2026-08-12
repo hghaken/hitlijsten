@@ -1,4 +1,5 @@
 {% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
 {% block titel %}{{ lijst_namen.get(lijst, lijst) }} {{ jaar }} — Hitlijsten{% endblock %}
 {% block inhoud %}
 
@@ -121,7 +122,7 @@
         <td class="getal {% if n.positie == 1 %}top1{% elif n.positie <= 3 %}top3{% endif %}">
           {{ n.positie }}</td>
         <td class="breed klikbaar" title="Klik voor het verloop">{{ n.artiest }}</td>
-        <td class="breed klikbaar" title="Klik voor het verloop">{{ n.titel }}</td>
+        <td class="breed klikbaar" title="Klik voor het verloop">{{ n.titel }}{{ zoeklinks(n.artiest, n.titel) }}</td>
         <td class="getal hint">{{ n.uitjaar or '' }}</td>
         <td class="getal">{{ n.vorige or '' }}</td>
         {# Een lagere positie is beter, dus vorige - nu: positief = gestegen. #}

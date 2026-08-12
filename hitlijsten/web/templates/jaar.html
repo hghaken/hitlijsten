@@ -1,4 +1,5 @@
 {% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
 {% block titel %}{{ jaar or '' }} {{ lijst_namen.get(lijst, lijst) }} — Hitlijsten{% endblock %}
 {% block inhoud %}
 
@@ -115,7 +116,7 @@
         <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
           {{ loop.index }}</td>
         <td class="breed klikbaar" title="Klik voor de grafiek">{{ n.artiest }}</td>
-        <td class="breed klikbaar" title="Klik voor de grafiek">{{ n.titel }}</td>
+        <td class="breed klikbaar" title="Klik voor de grafiek">{{ n.titel }}{{ zoeklinks(n.artiest, n.titel) }}</td>
         {% if nummers[0].label %}<td class="hint">{{ n.label or '' }}</td>{% endif %}
         <td class="getal">{{ n.punten }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>

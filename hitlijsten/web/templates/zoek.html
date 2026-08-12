@@ -1,4 +1,5 @@
 {% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
 {% block titel %}Zoeken — Hitlijsten{% endblock %}
 {% block inhoud %}
 <h1>Noteringen zoeken</h1>
@@ -38,7 +39,7 @@
       <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=r['lijst'],
              jaar=r['piekjaar'], markeer=r['sleutel']) }}"
              title="naar {{ r['piekjaar'] }}, waar dit nummer op {{ r['hoogste'] }} stond"
-             >{{ r['titel'] }}</a></td>
+             >{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
       <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
       <td class="getal">{{ r['van'] }}</td>
       <td class="getal">{{ r['tot'] }}</td>
