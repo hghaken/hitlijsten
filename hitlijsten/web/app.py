@@ -1046,8 +1046,19 @@ def _registreer(app: Flask) -> None:
                 waarden.append(lijst)
             vraag += " GROUP BY sleutel, lijst ORDER BY weken DESC LIMIT 200"
             resultaten = list(verbinding().execute(vraag, waarden))
+        # Wie "abba fernando" intypt bedoelt meestal artiest en titel, maar
+        # dat matcht geen van beide kolommen. Bij nul treffers en meerdere
+        # woorden stellen we de pipe-varianten voor, klikbaar: elke plek
+        # tussen twee woorden kan de grens zijn.
+        suggesties = []
+        woorden = term.split()
+        if term and not resultaten and "|" not in term and len(woorden) > 1:
+            suggesties = [
+                " ".join(woorden[:i]) + " | " + " ".join(woorden[i:])
+                for i in range(1, len(woorden))
+            ]
         return render_template("zoek.html", term=term, lijst=lijst, waar=waar,
-                               resultaten=resultaten)
+                               resultaten=resultaten, suggesties=suggesties)
 
     @app.route("/nummer/<path:sleutel>")
     def nummer(sleutel: str):

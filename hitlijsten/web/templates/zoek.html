@@ -24,6 +24,14 @@
 {% if term %}
   <p class="hint">{{ resultaten|length }} resultaten{% if resultaten|length == 200 %}
     (afgekapt op 200 — maak de zoekterm specifieker){% endif %}</p>
+  {% if suggesties %}
+  <div class="melding goed" style="max-width:44rem">
+    Zocht je op artiest <b>én</b> titel? Zet er een pipe tussen — probeer
+    {% for sug in suggesties %}
+      <a href="{{ url_for('zoek', term=sug, lijst=lijst, waar=waar) }}"><code>{{ sug }}</code></a>{% if not loop.last %} of{% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
   <div class="tabelvak"><table>
     <thead><tr><th>Artiest</th><th>Titel</th><th>Lijst</th><th class="getal">Van</th>
         <th class="getal">Tot</th><th class="getal">Weken</th>
