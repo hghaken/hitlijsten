@@ -1,4 +1,5 @@
 {% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
 {% block titel %}Totaal lijst Top 40 {{ van }}–{{ tot }} — Hitlijsten{% endblock %}
 {% block inhoud %}
 
@@ -83,7 +84,7 @@
         <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
           {{ loop.index }}</td>
         <td class="breed"><a class="stil" href="{{ doel }}">{{ n.artiest }}</a></td>
-        <td class="breed"><a class="stil" href="{{ doel }}">{{ n.titel }}</a></td>
+        <td class="breed"><a class="stil" href="{{ doel }}">{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
         <td class="getal">{{ n.punten }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
         <td class="getal">{{ n.weken }}</td>

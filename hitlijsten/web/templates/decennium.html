@@ -1,4 +1,5 @@
 {% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
 {% block titel %}{{ decennium }}'s Top 40 — Hitlijsten{% endblock %}
 {% block inhoud %}
 
@@ -84,7 +85,7 @@
         <td class="breed"><a class="stil" href="{{ doel }}"
             title="Naar {{ n.beste_jaar }}">{{ n.artiest }}</a></td>
         <td class="breed"><a class="stil" href="{{ doel }}"
-            title="Naar {{ n.beste_jaar }}">{{ n.titel }}</a></td>
+            title="Naar {{ n.beste_jaar }}">{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
         <td class="getal">{{ n.punten }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
         <td class="getal">{{ n.weken }}</td>
