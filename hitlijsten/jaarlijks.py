@@ -204,7 +204,7 @@ def importeer(con: sqlite3.Connection, lijst: str, pad: Path | str, *,
     `vorige_positie` de plek van vorig jaar -- dezelfde betekenis als bij de
     weeklijsten, alleen een editie in plaats van een week verder terug.
     """
-    from .db import bewaar_week
+    from .db import bewaar_week, markeer_te_bouwen
 
     edities, regels = lees_csv(pad)
     fouten, waarschuwingen = controleer(lijst, edities, regels)
@@ -233,6 +233,10 @@ def importeer(con: sqlite3.Connection, lijst: str, pad: Path | str, *,
                 " opgehaald_op) VALUES (?,?,?,?,?)",
                 (lijst, jaar, LIJSTEN[lijst].get("editie_week", 52), len(rijen),
                  datetime.now().isoformat(timespec="seconds")))
+            # In de bouwwachtrij, zodat "Bijwerken wat veranderd is" op de
+            # beheerpagina de Excel en PDF van deze editie oppakt -- met
+            # voortgangsbalk, in plaats van een losse commandoregel-klus.
+            markeer_te_bouwen(con, lijst=lijst, jaar=jaar, reden="import")
             geschreven[jaar] = len(rijen)
     except Exception:
         con.execute("ROLLBACK TO SAVEPOINT jaarlijks")
