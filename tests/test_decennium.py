@@ -309,6 +309,36 @@ def test_alle_jaren_van_een_lege_lijst():
     assert van > tot, "een lege periode, zodat de aanroeper het kan afvangen"
 
 
+def test_jaarlijkse_totalen_normaliseren_op_lijstlengte():
+    """Een 1 in de Rock Top 500 telt even zwaar als een 1 in de Top 2000."""
+    con = _database([])
+    con.executemany(
+        "INSERT INTO noteringen (lijst, jaar, week, positie, titel, artiest,"
+        " sleutel) VALUES (?,?,52,?,?,?,?)",
+        [
+            # arrow-editie van 2 lang: Zeppelin op 1, vulling op 2
+            ("arrow", 2020, 1, "Stairway", "Led Zeppelin", "led zeppelin|stairway"),
+            ("arrow", 2020, 2, "Vul", "Iemand", "iemand|vul"),
+            # top2000-editie van 4 lang: Zeppelin ook op 1, Queen op 4
+            ("top2000", 2020, 1, "Stairway", "Led Zeppelin", "led zeppelin|stairway"),
+            ("top2000", 2020, 2, "Vul2", "Iemand", "iemand|vul2"),
+            ("top2000", 2020, 3, "Vul3", "Iemand", "iemand|vul3"),
+            ("top2000", 2020, 4, "Bo Rap", "Queen", "queen|bo rap"),
+        ])
+    from hitlijsten.db import jaarlijkse_totalen
+
+    uit = jaarlijkse_totalen(con)
+    zeppelin = next(n for n in uit if n["sleutel"] == "led zeppelin|stairway")
+    # Twee keer een nummer 1 = precies 2 punten, hoe lang de lijsten ook zijn.
+    assert zeppelin["punten"] == 2.0, zeppelin
+    assert zeppelin["edities"] == 2 and zeppelin["lijsten"] == 2
+    # De laatste plek is bijna nul: 1/4 in een lijst van vier.
+    queen = next(n for n in uit if n["sleutel"] == "queen|bo rap")
+    assert queen["punten"] == 0.2, queen
+    # En de volgorde is op punten.
+    assert uit[0]["sleutel"] == "led zeppelin|stairway"
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     mislukt = 0

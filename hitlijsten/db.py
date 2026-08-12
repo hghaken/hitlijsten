@@ -509,6 +509,60 @@ def alle_jaren(con: sqlite3.Connection, lijst: str) -> tuple[int, int]:
     return (rij[0], rij[1]) if rij and rij[0] is not None else (0, -1)
 
 
+def jaarlijkse_totalen(con: sqlite3.Connection) -> list[dict]:
+    """Alle nummers uit de jaarlijkse lijsten samen, eerlijk geteld.
+
+    De lijsten zijn niet zomaar optelbaar: een nummer 1 in de Top 4000 zou
+    4.000 punten waard zijn en een nummer 1 in de Rock Top 500 maar 500,
+    terwijl het dezelfde prestatie is. Daarom wordt er per editie
+    **genormaliseerd**: een notering telt (lengte − positie + 1) / lengte
+    punten, dus de nummer 1 van élke lijst is precies één punt waard en de
+    laatste plek bijna nul. De lengte komt per editie uit de gegevens zelf,
+    want die wisselt (de Veronica Top 1000 was ooit drieduizend).
+
+    Wat overblijft weegt hoogte én trouw: wie hoog staat verdient veel per
+    editie, wie er elk jaar in staat stapelt edities. Het maximum is dus het
+    aantal edities dat er ooit was.
+    """
+    from .config import LIJSTEN, is_jaarlijks
+
+    jaarlijks = [naam for naam in LIJSTEN if is_jaarlijks(naam)]
+    plek = ",".join("?" for _ in jaarlijks)
+    rijen = list(con.execute(
+        f"SELECT lijst, jaar, positie, artiest, titel, sleutel FROM noteringen"
+        f" WHERE lijst IN ({plek})", jaarlijks))
+
+    lengte: dict[tuple, int] = {}
+    for r in rijen:
+        paar = (r["lijst"], r["jaar"])
+        lengte[paar] = max(lengte.get(paar, 0), r["positie"])
+
+    nummers: dict[str, dict] = {}
+    for r in rijen:
+        n = nummers.setdefault(r["sleutel"], {
+            "sleutel": r["sleutel"], "artiest": r["artiest"],
+            "titel": r["titel"], "punten": 0.0, "edities": 0,
+            "lijsten": set(), "hoogste": None, "hoogste_lijst": None,
+            "hoogste_jaar": None,
+        })
+        n["artiest"], n["titel"] = r["artiest"], r["titel"]
+        deler = lengte[(r["lijst"], r["jaar"])]
+        n["punten"] += (deler - r["positie"] + 1) / deler
+        n["edities"] += 1
+        n["lijsten"].add(r["lijst"])
+        if n["hoogste"] is None or r["positie"] < n["hoogste"]:
+            n["hoogste"] = r["positie"]
+            n["hoogste_lijst"] = r["lijst"]
+            n["hoogste_jaar"] = r["jaar"]
+
+    uit = sorted(nummers.values(),
+                 key=lambda n: (-n["punten"], n["hoogste"]))
+    for n in uit:
+        n["punten"] = round(n["punten"], 1)
+        n["lijsten"] = len(n["lijsten"])
+    return uit
+
+
 def totalen_over(
     con: sqlite3.Connection, lijst: str, van: int, tot: int
 ) -> list[dict]:

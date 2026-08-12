@@ -564,6 +564,44 @@ def _registreer(app: Flask) -> None:
             markeer=request.args.get("markeer") or "",
         )
 
+    _jaarlijksen_cache: dict = {}
+
+    @app.route("/jaarlijksen")
+    def jaarlijksen_lijst():
+        """Alle jaarlijkse lijsten samen, genormaliseerd op lijstlengte.
+
+        Dezelfde cache-opzet als de wetenswaardigheden: één telling over
+        238.500 noteringen kost een seconde, en de uitkomst verandert alleen
+        als er een editie bij komt of een correctie is gedaan.
+        """
+        con = verbinding()
+        namen = [s for s in LIJSTEN if is_jaarlijks(s)]
+        plek = ",".join("?" for _ in namen)
+        stempel = tuple(con.execute(
+            f"SELECT COUNT(*), MAX(opgehaald_op) FROM noteringen"
+            f" JOIN opgehaald USING (lijst, jaar, week)"
+            f" WHERE lijst IN ({plek})", namen).fetchone())
+        wijzig = con.execute(
+            "SELECT MAX(tijdstip) FROM wijzigingen").fetchone()[0]
+        if _jaarlijksen_cache.get("stempel") != (stempel, wijzig):
+            _jaarlijksen_cache["stempel"] = (stempel, wijzig)
+            _jaarlijksen_cache["nummers"] = db.jaarlijkse_totalen(con)
+        nummers = _jaarlijksen_cache["nummers"]
+
+        gevraagd = request.args.get("toon", "")
+        toon = (len(nummers) if gevraagd == "alles"
+                else int(gevraagd) if gevraagd.isdigit() and int(gevraagd) in AANTALLEN
+                else AANTALLEN[2])
+        edities = con.execute(
+            f"SELECT COUNT(DISTINCT lijst || '-' || jaar) FROM noteringen"
+            f" WHERE lijst IN ({plek})", namen).fetchone()[0]
+        return render_template(
+            "jaarlijksen.html", nummers=nummers[:toon],
+            aantallen=AANTALLEN, toon=toon, totaal=len(nummers),
+            aantal_lijsten=len(namen), edities=edities,
+            markeer=request.args.get("markeer") or "",
+        )
+
     @app.route("/download/totaal")
     def download_totaal():
         """De volledige lijst als Excel -- daar past hij wél in zijn geheel in."""

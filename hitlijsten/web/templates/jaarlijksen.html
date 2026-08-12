@@ -1,0 +1,85 @@
+{% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
+{% block titel %}Jaarlijsten totaal — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Jaarlijsten totaal</h1>
+<p class="onder">Alle {{ aantal_lijsten }} jaarlijkse lijsten samen — van de
+  Top 2000 tot de Rock Top 500 — eerlijk geteld.</p>
+
+{% if not nummers %}
+  <div class="melding fout">Er staat nog niets in de database.</div>
+{% else %}
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
+      flex-wrap:wrap; margin-bottom:1.4rem">
+  <select name="toon" onchange="this.form.submit()">
+    {% for a in aantallen %}
+      <option value="{{ a }}" {% if toon == a %}selected{% endif %}>
+        top {{ a }}</option>
+    {% endfor %}
+    <option value="alles" {% if toon == totaal %}selected{% endif %}>
+      alle {{ '{:,}'.format(totaal).replace(',', '.') }} — traag</option>
+  </select>
+  <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+
+  <span class="hint" style="margin-left:auto">
+    {{ aantal_lijsten }} lijsten · {{ edities }} edities ·
+    de weeklijsten staan in de <a href="{{ url_for('totaal_lijst') }}">totaallijst</a>
+  </span>
+</form>
+
+<div class="kaarten">
+  <div class="kaart">
+    <div class="cijfer">{{ '{:,}'.format(totaal).replace(',', '.') }}</div>
+    <div class="naam">unieke nummers</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ aantal_lijsten }}</div>
+    <div class="naam">jaarlijkse lijsten</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ edities }}</div>
+    <div class="naam">edities</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ nummers[0].punten }}</div>
+    <div class="naam">hoogste score ({{ nummers[0].titel[:24] }})</div>
+  </div>
+</div>
+
+<p class="hint" style="max-width:62rem">
+  <b>Hoe er geteld wordt.</b> De lijsten verschillen van lengte — 500 tot
+  4.000 — dus punten optellen zou de langste lijst laten winnen. Daarom telt
+  elke notering <b>(lengte − positie + 1) ÷ lengte</b> punten: de nummer&nbsp;1
+  van élke lijst is precies één punt waard, de laatste plek bijna nul. Wie hoog
+  staat verdient veel per editie; wie er elk jaar in staat, stapelt. Het
+  maximum is dus het aantal edities: {{ edities }}.
+</p>
+
+<div class="tabelvak"><table id="jaarlijksen" data-markeer="{{ markeer }}">
+  <thead><tr>
+    <th class="getal">#</th><th>Artiest</th><th>Titel</th>
+    <th class="getal">Punten</th><th class="getal">Edities</th>
+    <th class="getal">Lijsten</th><th class="getal">Hoogste</th>
+  </tr></thead><tbody>
+  {% for n in nummers %}
+  {% set doel = url_for('jaaroverzicht', lijst=n.hoogste_lijst,
+                        jaar=n.hoogste_jaar, markeer=n.sleutel) %}
+  <tr data-sleutel="{{ n.sleutel }}">
+    <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
+      {{ loop.index }}</td>
+    <td class="breed"><a class="stil" href="{{ doel }}">{{ n.artiest }}</a></td>
+    <td class="breed"><a class="stil" href="{{ doel }}">{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
+    <td class="getal sterk">{{ n.punten }}</td>
+    <td class="getal">{{ n.edities }}</td>
+    <td class="getal">{{ n.lijsten }}</td>
+    <td class="getal hint {% if n.hoogste == 1 %}top1{% endif %}"
+        title="in de {{ lijst_namen.get(n.hoogste_lijst, n.hoogste_lijst) }} van {{ n.hoogste_jaar }}">
+      {{ n.hoogste }}</td>
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+
+{% endif %}
+{% endblock %}

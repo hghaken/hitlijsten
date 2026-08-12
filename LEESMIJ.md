@@ -310,6 +310,7 @@ op de NAS, achter een reverse proxy.
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; klik springt naar de jaargang van de hoogste notering |
 | Weeklijst | één week zoals uitgezonden, met week-keuzelijst en bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
+| Jaarlijsten totaal | alle zeven jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
 | Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen), voortgangsbalken per stap, en een taakstand die een herstart overleeft |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
