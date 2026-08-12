@@ -307,7 +307,7 @@ op de NAS, achter een reverse proxy.
 | Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel- en PDF-download |
 | Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
-| Zoeken | op artiest, titel of beide; `*` als jokerteken; klik springt naar de jaargang van de hoogste notering |
+| Zoeken | op artiest, titel of beide; `*` als jokerteken; klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
 | Weeklijst | één week zoals uitgezonden, met week-keuzelijst en bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
 | Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
@@ -317,6 +317,7 @@ op de NAS, achter een reverse proxy.
 | Bericht achterlaten | formulier voor opmerkingen, tips, bugs en aanvullingen; spamwering met honeypot, invultijd en per-IP-limiet, geen CAPTCHA; alles komt privé binnen en niets staat live zonder akkoord |
 | Berichten | (achter de login) de postbus: publiceren, privé houden, verwijderen of beantwoorden; mailmelding bij elk nieuw bericht |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
+| Vindbaarheid | `sitemap.xml` (±36.000 pagina's, gecachet), `robots.txt`, meta-descriptions, canonical-links en Open Graph-tags op elke pagina |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
 aliassen, uitzonderingen, vrije SELECT-query's, beheer (opnieuw ophalen, Excel

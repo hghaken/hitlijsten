@@ -22,6 +22,11 @@ from . import taken
 
 INSTELLINGEN = ROOT / "webapp.ini"
 
+# Waar de site voor de buitenwereld woont; voor canonical-links, Open
+# Graph-tags en de sitemap. Achter de reverse proxy is request.url_root
+# onbetrouwbaar (http, intern adres), dus dit staat vast.
+HOOFD_URL = "https://hitlijsten.hhaken.nl"
+
 # Vrije query's zijn alleen-lezen. Een typefout in een UPDATE zonder WHERE is
 # onherstelbaar, en daar staat geen enkel gemak tegenover: wijzigen kan via de
 # bewerkschermen, die alles vastleggen in de tabel `wijzigingen`.
@@ -36,6 +41,8 @@ def maak_app() -> Flask:
     app.config.update(_lees_instellingen())
     # Niet "lijsten" noemen: dat botst met de zoekresultaten die zo heten.
     app.jinja_env.globals["is_aangemeld"] = is_aangemeld
+    app.jinja_env.globals["hoofd_url"] = HOOFD_URL
+    app.jinja_env.globals["canoniek"] = _canoniek
     app.jinja_env.globals["lijst_namen"] = {
         sleutel: cfg["naam"] for sleutel, cfg in LIJSTEN.items()
     }
@@ -99,6 +106,20 @@ def vereist_aanmelding(functie):
         return functie(*args, **kwargs)
 
     return omhulsel
+
+
+def _canoniek() -> str:
+    """Het publieke adres van de huidige pagina, netjes percent-gecodeerd.
+
+    Flask levert request.path ontcijferd af ("/nummer/golden earring|radar
+    love"); voor een canonical-link moeten spaties en pijpen weer %20 en %7C
+    worden. De query-string is nog rauw en kan zo mee.
+    """
+    from urllib.parse import quote
+
+    pad = quote(request.path, safe="/")
+    vraag = request.query_string.decode()
+    return HOOFD_URL + pad + (f"?{vraag}" if vraag else "")
 
 
 def is_aangemeld() -> bool:
@@ -343,6 +364,60 @@ def _registreer(app: Flask) -> None:
             vorige=vorige, volgende=volgende, datum=datum,
             heeft_label=any(r["label"] for r in rijen),
         )
+
+    _sitemap_cache: dict = {}
+
+    @app.route("/sitemap.xml")
+    def sitemap():
+        """Alle openbare pagina's voor de zoekmachines.
+
+        Verreweg de meeste regels zijn nummerpagina's: elke unieke sleutel is
+        een landingspagina voor een zoekopdracht als "hoogste positie Radar
+        Love". De limiet van het sitemap-formaat is 50.000 regels; met zo'n
+        45.000 nummers past alles nu in een bestand, en de teller hieronder
+        maakt er lawaai van als dat ooit niet meer zo is.
+        """
+        con = verbinding()
+        stempel = tuple(con.execute(
+            "SELECT COUNT(*), MAX(tijdstip) FROM wijzigingen").fetchone()) + (
+            con.execute("SELECT COUNT(*) FROM noteringen").fetchone()[0],)
+        if _sitemap_cache.get("stempel") != stempel:
+            regels = ["/", "/jaar", "/week", "/decennium", "/totaal",
+                      "/jaarlijksen", "/wetenswaardigheden", "/zoek",
+                      "/gastenboek", "/feedback", "/disclaimer"]
+            for r in con.execute(
+                    "SELECT DISTINCT lijst, jaar FROM noteringen"
+                    " ORDER BY lijst, jaar"):
+                regels.append(url_for("jaaroverzicht", lijst=r["lijst"],
+                                      jaar=r["jaar"]))
+            for r in con.execute(
+                    "SELECT DISTINCT sleutel FROM noteringen ORDER BY sleutel"):
+                regels.append(url_for("nummer", sleutel=r["sleutel"]))
+            if len(regels) > 50000:
+                app.logger.warning("sitemap: %d regels, boven de limiet van"
+                                   " 50.000 -- opsplitsen", len(regels))
+            stukken = ['<?xml version="1.0" encoding="UTF-8"?>',
+                       '<urlset xmlns="http://www.sitemaps.org/schemas/'
+                       'sitemap/0.9">']
+            # XML-escape: de jaargang-URL's dragen een & in de query.
+            stukken += [f"<url><loc>{HOOFD_URL}{pad.replace('&', '&amp;')}"
+                        f"</loc></url>" for pad in regels[:50000]]
+            stukken.append("</urlset>")
+            _sitemap_cache["stempel"] = stempel
+            _sitemap_cache["xml"] = "\n".join(stukken)
+        return app.response_class(_sitemap_cache["xml"],
+                                  mimetype="application/xml")
+
+    @app.route("/robots.txt")
+    def robots():
+        regels = ["User-agent: *"]
+        regels += [f"Disallow: {pad}" for pad in (
+            "/beheer", "/berichten", "/taak", "/aliassen", "/uitzonderingen",
+            "/query", "/wijzigingen", "/aanmelden", "/notering/", "/reeks",
+            "/download/")]
+        regels.append(f"Sitemap: {HOOFD_URL}/sitemap.xml")
+        return app.response_class("\n".join(regels) + "\n",
+                                  mimetype="text/plain")
 
     @app.route("/disclaimer")
     def disclaimer():
@@ -908,7 +983,6 @@ def _registreer(app: Flask) -> None:
     # --- noteringen zoeken -------------------------------------------------
 
     @app.route("/zoek")
-    @vereist_aanmelding
     def zoek():
         term = (request.args.get("term") or "").strip()
         lijst = request.args.get("lijst") or ""
@@ -949,7 +1023,6 @@ def _registreer(app: Flask) -> None:
                                resultaten=resultaten)
 
     @app.route("/nummer/<path:sleutel>")
-    @vereist_aanmelding
     def nummer(sleutel: str):
         con = verbinding()
         rijen = list(con.execute(

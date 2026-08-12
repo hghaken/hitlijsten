@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block titel %}Hitlijsten{% endblock %}</title>
+{# De beschrijving verschijnt onder de link in zoekresultaten; pagina's met
+   een eigen verhaal overschrijven het blok. De canonical wijst altijd naar
+   het publieke adres -- achter de reverse proxy is request.url_root
+   onbruikbaar. #}
+<meta name="description" content="{% block beschrijving %}Zestig jaar Nederlandse hitlijsten doorzoekbaar: de Top 40 vanaf 1965, de Top 2000 en negentien andere lijsten, met het verloop van elk nummer in een grafiek.{% endblock %}">
+<link rel="canonical" href="{{ canoniek() }}">
+<meta property="og:site_name" content="Hitlijsten">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="nl_NL">
+<meta property="og:title" content="{{ self.titel() }}">
+<meta property="og:description" content="{{ self.beschrijving() }}">
+<meta property="og:url" content="{{ canoniek() }}">
 <style>
   /* Zelfde taal als hhaken.nl en otsradio.hhaken.nl: donkere ondergrond,
      glasachtige kaarten, een verloop van blauw naar paars als accent. */
@@ -333,10 +345,10 @@
       <a href="{{ url_for('totaal_lijst') }}">Totaal lijst</a>
       <a href="{{ url_for('jaarlijksen_lijst') }}">Jaarlijsten totaal</a>
       <a href="{{ url_for('wetenswaardigheden') }}">Wetenswaardigheden</a>
+      <a href="{{ url_for('zoek') }}">Zoeken</a>
       <a href="{{ url_for('gastenboek') }}">Gastenboek</a>
       {% if is_aangemeld() %}
         <a href="{{ url_for('berichten') }}">Berichten</a>
-        <a href="{{ url_for('zoek') }}">Zoeken</a>
         <a href="{{ url_for('aliassen') }}">Aliassen</a>
         <a href="{{ url_for('uitzonderingen') }}">Uitzonderingen</a>
         <a href="{{ url_for('query') }}">Query</a>
