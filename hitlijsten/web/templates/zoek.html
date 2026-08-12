@@ -6,7 +6,7 @@
 
 <form method="get">
   <input type="text" name="term" value="{{ term }}"
-         placeholder="zoekterm, * als jokerteken" autofocus>
+         placeholder="zoekterm, * als joker, artiest | titel samen" autofocus>
   <select name="waar">
     <option value="beide" {% if waar == 'beide' %}selected{% endif %}>artiest en titel</option>
     <option value="artiest" {% if waar == 'artiest' %}selected{% endif %}>alleen artiest</option>
@@ -55,6 +55,9 @@
     <b>bevat</b>: <code>beatles</code> vindt ook "The Beatles". Met een sterretje
     bepaal je zelf waar het woord staat — <code>beatles*</code> begint ermee,
     <code>*beatles</code> eindigt erop, <code>*beat*</code> is weer bevat.
+    Wil je op artiest <b>én</b> titel tegelijk zoeken, zet er een pipe tussen:
+    <code>abba | fernando</code> — links de artiest, rechts de titel, jokers
+    mogen aan beide kanten.
   </p>
 {% endif %}
 {% endblock %}

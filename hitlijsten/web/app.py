@@ -990,7 +990,34 @@ def _registreer(app: Flask) -> None:
         if waar not in ("beide", "artiest", "titel"):
             waar = "beide"
         resultaten = []
-        if term:
+        # "abba | fernando" zoekt op artiest EN titel tegelijk. De pipe is
+        # geen willekeurige keuze: intern is de sleutel al artiest|titel, dus
+        # wie een sleutel plakt uit het beheergedeelte zoekt meteen goed.
+        artiest_deel = titel_deel = None
+        if "|" in term:
+            links, _, rechts = term.partition("|")
+            artiest_deel, titel_deel = links.strip(), rechts.strip()
+            if not (artiest_deel and titel_deel):
+                # Een kant leeg ("abba |") is geen EN-zoekopdracht; zoek dan
+                # gewoon op wat er wel staat.
+                term = artiest_deel or titel_deel
+                artiest_deel = titel_deel = None
+        if artiest_deel and titel_deel:
+            vraag = (
+                "SELECT sleutel, lijst, MAX(titel) titel, MAX(artiest) artiest,"
+                " MIN(jaar) van, MAX(jaar) tot, COUNT(*) weken, MIN(positie) hoogste,"
+                " (SELECT x.jaar FROM noteringen x WHERE x.sleutel=n.sleutel"
+                "  AND x.lijst=n.lijst ORDER BY x.positie, x.jaar LIMIT 1) piekjaar"
+                " FROM noteringen n WHERE artiest LIKE ? ESCAPE '\\'"
+                " AND titel LIKE ? ESCAPE '\\'"
+            )
+            waarden = [zoekpatroon(artiest_deel), zoekpatroon(titel_deel)]
+            if lijst in LIJSTEN:
+                vraag += " AND lijst=?"
+                waarden.append(lijst)
+            vraag += " GROUP BY sleutel, lijst ORDER BY weken DESC LIMIT 200"
+            resultaten = list(verbinding().execute(vraag, waarden))
+        elif term:
             patroon = zoekpatroon(term)
             # `piekjaar` is de jaargang waarin het nummer zijn hoogste plek
             # haalde, en bij gelijke hoogte de eerste. Daar springt de link
