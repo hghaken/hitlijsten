@@ -25,6 +25,8 @@
 
   <a class="knop" href="{{ url_for('download_totaal') }}"
      title="De volledige lijst van {{ totaal }} nummers als werkboek — bouwen duurt een seconde of tien">⤓ Excel</a>
+  <a class="knop" href="{{ url_for('download_totaal_pdf') }}"
+     title="De volledige lijst van {{ totaal }} nummers als PDF — bouwen duurt even">⤓ PDF</a>
 
   <span class="hint" style="margin-left:auto">
     Alleen de Nederlandse Top 40 · {{ tot - van + 1 }} jaargangen ·

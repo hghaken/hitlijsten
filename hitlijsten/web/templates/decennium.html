@@ -19,6 +19,8 @@
   {% if nummers %}
   <a class="knop" href="{{ url_for('download_decennium', decennium=decennium) }}"
      title="Het puntenklassement van {{ decennium }}–{{ decennium + 9 }} als werkboek">⤓ Excel</a>
+  <a class="knop" href="{{ url_for('download_decennium_pdf', decennium=decennium) }}"
+     title="Het puntenklassement van {{ decennium }}–{{ decennium + 9 }} als PDF">⤓ PDF</a>
   {% endif %}
 
   <span class="hint" style="margin-left:auto">

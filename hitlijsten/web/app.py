@@ -819,6 +819,88 @@ def _registreer(app: Flask) -> None:
             markeer=request.args.get("markeer") or "",
         )
 
+    def _stuur_excel(wb, bestand: str):
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return send_file(
+            buffer, as_attachment=True, download_name=bestand,
+            mimetype="application/vnd.openxmlformats-officedocument"
+                     ".spreadsheetml.sheet")
+
+    def _stuur_pdf(inhoud: bytes, bestand: str):
+        return send_file(io.BytesIO(inhoud), as_attachment=True,
+                         download_name=bestand, mimetype="application/pdf")
+
+    @app.route("/download/week/<lijst>/<int:jaar>/<int:week>")
+    def download_week(lijst: str, jaar: int, week: int):
+        """Eén weeklijst als Excel."""
+        if lijst not in LIJSTEN or is_jaarlijks(lijst):
+            abort(404)
+        wb = excel.bouw_week_werkboek(verbinding(), lijst, jaar, week)
+        if wb is None:
+            abort(404)
+        naam = LIJSTEN[lijst]["bestand"]
+        return _stuur_excel(wb, f"{naam}_{jaar}_Week{week:02d}.xlsx")
+
+    @app.route("/download/pdf/week/<lijst>/<int:jaar>/<int:week>")
+    def download_week_pdf(lijst: str, jaar: int, week: int):
+        """Eén weeklijst als PDF."""
+        if lijst not in LIJSTEN or is_jaarlijks(lijst):
+            abort(404)
+        from .. import pdf as pdfbouwer
+        inhoud = pdfbouwer.bouw_weeklijst(verbinding(), lijst, jaar, week)
+        if inhoud is None:
+            abort(404)
+        naam = LIJSTEN[lijst]["bestand"]
+        return _stuur_pdf(inhoud, f"{naam}_{jaar}_Week{week:02d}.pdf")
+
+    @app.route("/download/jaarlijksen")
+    def download_jaarlijksen():
+        """De gecombineerde jaarlijst als Excel, alle nummers."""
+        wb = excel.bouw_jaarlijksen_werkboek(verbinding())
+        if wb is None:
+            flash("Er staat nog niets in de database.", "fout")
+            return redirect(url_for("jaarlijksen_lijst"))
+        return _stuur_excel(wb, "JaarlijstenTotaal.xlsx")
+
+    @app.route("/download/pdf/jaarlijksen")
+    def download_jaarlijksen_pdf():
+        """De gecombineerde jaarlijst als PDF, alle nummers."""
+        from .. import pdf as pdfbouwer
+        inhoud = pdfbouwer.bouw_jaarlijksen(verbinding())
+        if inhoud is None:
+            flash("Er staat nog niets in de database.", "fout")
+            return redirect(url_for("jaarlijksen_lijst"))
+        return _stuur_pdf(inhoud, "JaarlijstenTotaal.pdf")
+
+    @app.route("/download/pdf/decennium/<int:decennium>")
+    def download_decennium_pdf(decennium: int):
+        """Het decenniumklassement als PDF."""
+        from .. import pdf as pdfbouwer
+        inhoud = pdfbouwer.bouw_klassement(
+            verbinding(), DECENNIUM_LIJST, decennium, decennium + 9)
+        if inhoud is None:
+            flash(f"Voor de {decennium}'s staat er niets in de database.",
+                  "fout")
+            return redirect(url_for("decennium_overzicht"))
+        naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
+        return _stuur_pdf(
+            inhoud, f"{naam}_Decennium_{decennium}-{decennium + 9}.pdf")
+
+    @app.route("/download/pdf/totaal")
+    def download_totaal_pdf():
+        """Het totaalklassement over alle jaargangen als PDF."""
+        from .. import pdf as pdfbouwer
+        con = verbinding()
+        van, tot = db.alle_jaren(con, DECENNIUM_LIJST)
+        inhoud = pdfbouwer.bouw_klassement(con, DECENNIUM_LIJST, van, tot)
+        if inhoud is None:
+            flash("Er staat nog niets in de database.", "fout")
+            return redirect(url_for("totaal_lijst"))
+        naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
+        return _stuur_pdf(inhoud, f"{naam}_Totaal_{van}-{tot}.pdf")
+
     @app.route("/download/totaal")
     def download_totaal():
         """De volledige lijst als Excel -- daar past hij wél in zijn geheel in."""

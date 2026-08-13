@@ -24,6 +24,11 @@
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
+  <a class="knop" href="{{ url_for('download_jaarlijksen') }}"
+     title="Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers als werkboek">⤓ Excel</a>
+  <a class="knop" href="{{ url_for('download_jaarlijksen_pdf') }}"
+     title="Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers als PDF — bouwen duurt even">⤓ PDF</a>
+
   <span class="hint" style="margin-left:auto">
     {{ aantal_lijsten }} lijsten · {{ edities }} edities ·
     de weeklijsten staan in de <a href="{{ url_for('totaal_lijst') }}">totaallijst</a>

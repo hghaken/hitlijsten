@@ -305,12 +305,12 @@ op de NAS, achter een reverse proxy.
 |---|---|
 | Overzicht | wat er in de database zit, in twee tabellen: weeklijsten en jaarlijkse lijsten |
 | Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel- en PDF-download |
-| Decennium | het puntenklassement over tien jaargangen Top 40, met Excel-download |
-| Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel-download |
+| Decennium | het puntenklassement over tien jaargangen Top 40, met Excel- en PDF-download |
+| Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel- en PDF-download |
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; `artiest \| titel` zoekt op allebei tegelijk (bij nul treffers met meerdere woorden stelt de pagina die schrijfwijze klikbaar voor); klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
-| Weeklijst | één week zoals uitgezonden, met week-keuzelijst en bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) |
+| Weeklijst | één week zoals uitgezonden, met week-keuzelijst, bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en Excel- en PDF-download |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
-| Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
+| Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard; met Excel- en PDF-download |
 | Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen), voortgangsbalken per stap, en een taakstand die een herstart overleeft |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Gastenboek | gepubliceerde bezoekersberichten, met eventueel een antwoord van de beheerder eronder |

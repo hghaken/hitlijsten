@@ -187,6 +187,127 @@ def bouw_jaaroverzicht(
     return bytes(pdf.output())
 
 
+# --- de andere uitvoer: dezelfde vormgeving, andere kolommen ---------------
+#
+# De banner, de voetregel en de tabelstijl zijn die van het jaaroverzicht;
+# alleen de kolommen en de rijen verschillen per lijstsoort. Deze bouwers
+# maken de bytes ter plekke (geen bestanden op schijf): een weeklijst is
+# klein, en de klassementen mogen nooit achterlopen op de database.
+
+
+def _tabel_pdf(naam: str, jaartekst, ondertitel: str, kolommen: list,
+               rijen: list, vet: tuple = ("#", "Punten")) -> bytes:
+    """Een klassement als PDF: kolommen (kop, mm, uitlijning) en rijen."""
+    pdf = _Blad(naam, jaartekst, ondertitel)
+    pdf.alias_nb_pages()
+    breed = sum(k[1] for k in kolommen)
+
+    for begin in range(0, len(rijen), REGELS_PER_PAGINA):
+        pdf.add_page()
+        y = BANNER + 9
+        pdf.set_font("dejavu", "B", 7.5)
+        pdf.set_text_color(*GRIJS)
+        x = KANTLIJN
+        for kop, kolbreed, uitlijning in kolommen:
+            pdf.set_xy(x, y)
+            pdf.cell(kolbreed, 5, kop.upper(), align=uitlijning)
+            x += kolbreed
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_draw_color(*ACCENT)
+        pdf.set_line_width(0.5)
+        pdf.line(KANTLIJN, y + 5.3, KANTLIJN + breed, y + 5.3)
+        pdf.set_line_width(0.2)
+        y += 6.8
+
+        for rij in rijen[begin:begin + REGELS_PER_PAGINA]:
+            pdf.set_draw_color(*LIJN)
+            pdf.line(KANTLIJN, y + REGEL - 0.6, KANTLIJN + breed, y + REGEL - 0.6)
+            x = KANTLIJN
+            for (kop, kolbreed, uitlijning), waarde in zip(kolommen, rij):
+                pdf.set_font("dejavu", "B" if kop in vet else "", 8)
+                pdf.set_xy(x, y)
+                tekst = "" if waarde is None else str(waarde)
+                pdf.cell(kolbreed, REGEL - 0.6,
+                         _kort(pdf, tekst, kolbreed - 2), align=uitlijning)
+                x += kolbreed
+            y += REGEL
+
+    return bytes(pdf.output())
+
+
+def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
+                   week: int) -> Optional[bytes]:
+    """Eén week zoals uitgezonden."""
+    rijen_db = list(con.execute(
+        "SELECT positie, vorige_positie, artiest, titel, weken_genoteerd,"
+        " site_status FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
+        " ORDER BY positie", (lijst, jaar, week)))
+    if not rijen_db:
+        return None
+
+    kolommen = [("Positie", 15, "C"), ("Vorige", 15, "C"),
+                ("Artiest", 63, "L"), ("Titel", 78, "L"), ("Weken", 15, "C")]
+    rijen = []
+    for r in rijen_db:
+        vorige = r["vorige_positie"]
+        if vorige is None:
+            vorige = "terug" if r["site_status"] == "terug" else "nieuw"
+        rijen.append([r["positie"], vorige, r["artiest"], r["titel"],
+                      r["weken_genoteerd"]])
+
+    naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
+    return _tabel_pdf(naam, f"week {week}", f"Weeklijst · {len(rijen)} noteringen",
+                      kolommen, rijen, vet=("Positie",))
+
+
+def bouw_klassement(con: sqlite3.Connection, lijst: str, van: int,
+                    tot: int) -> Optional[bytes]:
+    """Het puntenklassement over een reeks jaargangen (decennium of alles)."""
+    from .db import totalen_over
+
+    nummers = totalen_over(con, lijst, van, tot)
+    if not nummers:
+        return None
+
+    kolommen = [("#", 9, "C"), ("Artiest", 48, "L"), ("Titel", 62, "L"),
+                ("Punten", 16, "C"), ("Hoogste", 15, "C"), ("Weken", 13, "C"),
+                ("Jaargangen", 23, "C")]
+    rijen = []
+    for nr, n in enumerate(nummers, start=1):
+        jaren = n["jaren"]
+        rijen.append([nr, n["artiest"], n["titel"], n["punten"], n["hoogste"],
+                      n["weken"],
+                      str(jaren[0]) if len(jaren) == 1
+                      else f"{jaren[0]}-{jaren[-1]}"])
+
+    naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
+    return _tabel_pdf(naam, f"{van}-{tot}",
+                      f"Puntenklassement · {len(rijen)} nummers over "
+                      f"{tot - van + 1} jaargangen", kolommen, rijen)
+
+
+def bouw_jaarlijksen(con: sqlite3.Connection) -> Optional[bytes]:
+    """De gecombineerde lijst over alle jaarlijkse lijsten."""
+    from .db import jaarlijkse_totalen
+
+    nummers = jaarlijkse_totalen(con)
+    if not nummers:
+        return None
+
+    kolommen = [("#", 10, "C"), ("Artiest", 46, "L"), ("Titel", 58, "L"),
+                ("Punten", 14, "C"), ("Edities", 13, "C"), ("Lijsten", 12, "C"),
+                ("Hoogste", 14, "C"), ("Hoogste in", 19, "L")]
+    rijen = []
+    for nr, n in enumerate(nummers, start=1):
+        rijen.append([nr, n["artiest"], n["titel"], n["punten"], n["edities"],
+                      n["lijsten"], n["hoogste"],
+                      f"{n['hoogste_lijst']} {n['hoogste_jaar']}"])
+
+    return _tabel_pdf("Jaarlijsten totaal", "alle lijsten",
+                      f"Alle jaarlijkse lijsten samen, genormaliseerd · "
+                      f"{len(rijen)} nummers", kolommen, rijen)
+
+
 # --- op schijf bewaren ------------------------------------------------------
 #
 # De jaargangen 1965-2025 zijn afgesloten en veranderen niet meer, dus die

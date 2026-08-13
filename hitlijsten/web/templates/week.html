@@ -39,6 +39,13 @@
        title="week {{ volgende[1] }}, {{ volgende[0] }}">volgende ›</a>
   {% endif %}
 
+  {% if rijen %}
+  <a class="knop" href="{{ url_for('download_week', lijst=lijst, jaar=jaar, week=week) }}"
+     title="Deze weeklijst als werkboek">⤓ Excel</a>
+  <a class="knop" href="{{ url_for('download_week_pdf', lijst=lijst, jaar=jaar, week=week) }}"
+     title="Deze weeklijst als PDF">⤓ PDF</a>
+  {% endif %}
+
   <span class="hint" style="margin-left:auto">
     {% if datum %}uitgezonden op vrijdag {{ datum }} · {% endif %}{{ rijen|length }} noteringen
   </span>

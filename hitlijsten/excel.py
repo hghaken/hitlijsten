@@ -605,6 +605,51 @@ def bouw_totalen_werkboek(
     return wb
 
 
+def bouw_week_werkboek(
+    con: sqlite3.Connection, lijst: str, jaar: int, week: int
+) -> Optional[Workbook]:
+    """Eén weeklijst als los werkboek -- dezelfde tab als in het jaarbestand."""
+    gegevens = verzamel_lijst(con, lijst, jaar)
+    if gegevens is None or week not in gegevens.alle_per_week:
+        return None
+    wb = Workbook()
+    wb.remove(wb.active)
+    _weektab(wb, gegevens, week)
+    return wb
+
+
+def bouw_jaarlijksen_werkboek(con: sqlite3.Connection) -> Optional[Workbook]:
+    """De gecombineerde lijst over alle jaarlijkse lijsten, één tab."""
+    from .db import jaarlijkse_totalen
+
+    nummers = jaarlijkse_totalen(con)
+    if not nummers:
+        return None
+
+    kolommen = ["#", "Artiest", "Titel", "Punten", "Edities", "Lijsten",
+                "Hoogste positie", "Hoogste in", "Sleutel"]
+    rijen: list[list[Any]] = []
+    for nr, n in enumerate(nummers, start=1):
+        naam = LIJSTEN.get(n["hoogste_lijst"], {}).get("naam", n["hoogste_lijst"])
+        rijen.append([nr, n["artiest"], n["titel"], n["punten"], n["edities"],
+                      n["lijsten"], n["hoogste"], f"{naam} {n['hoogste_jaar']}",
+                      n["sleutel"]])
+
+    toelichting = (
+        "Alle jaarlijkse lijsten samen, genormaliseerd op lijstlengte: elke "
+        "notering telt (lengte - positie + 1) / lengte punten, dus de nummer 1 "
+        "van elke lijst is precies één punt waard. Het maximum is het aantal "
+        "edities."
+    )
+    wb = Workbook()
+    wb.remove(wb.active)
+    ws = wb.create_sheet(tabnaam("Jaarlijsten totaal"))
+    _schrijf_tabel(ws, kolommen, rijen, toelichting=toelichting,
+                   centreer=("#", "Punten", "Edities", "Lijsten",
+                             "Hoogste positie"))
+    return wb
+
+
 def _datum(iso: str) -> date:
     jaar, maand, dag = (int(deel) for deel in iso.split("-"))
     return date(jaar, maand, dag)
