@@ -1623,6 +1623,11 @@ def _registreer(app: Flask) -> None:
                         " -backup.")
             if not fout and not request.form.get("streaming"):
                 bestanden = [b for b in bestanden if not b.streaming]
+            media = request.form.get("media", "audio")
+            if not fout and media == "audio":
+                bestanden = [b for b in bestanden if not b.video]
+            elif not fout and media == "video":
+                bestanden = [b for b in bestanden if b.video]
             if not fout and not bestanden:
                 fout = ("Geen draaibare nummers gevonden -- is dit de"
                         " database.xml of de backup-zip uit VirtualDJ?")
@@ -1633,6 +1638,8 @@ def _registreer(app: Flask) -> None:
                 _vdj_sessies[token] = {
                     "bestanden": bestanden,
                     "streaming": bool(request.form.get("streaming")),
+                    "media": media if media in ("audio", "video", "beide")
+                             else "audio",
                     "niveau": int(niveau) if niveau in "1234" else 2,
                     "tijd": datetime.now(),
                 }
@@ -1647,6 +1654,9 @@ def _registreer(app: Flask) -> None:
                 "lokaal": sum(1 for b in kaart["bestanden"]
                               if not b.streaming),
                 "streaming": kaart["streaming"],
+                "media": {"audio": "alleen audio", "video": "alleen video",
+                          "beide": "audio én video"}[kaart.get("media",
+                                                               "audio")],
                 "niveau": vdjmodule.NIVEAUS[kaart["niveau"]],
             }
         return render_template("vdj.html", fout=fout, stand=stand,

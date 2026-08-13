@@ -43,8 +43,10 @@ NIVEAUS = {
 
 # Wat we als draaibaar bestand beschouwen; de rest (netsearch-verwijzingen,
 # video-overlays, html) blijft buiten de playlist.
-_AUDIO = (".mp3", ".flac", ".wav", ".ogg", ".m4a", ".aac", ".aif", ".aiff",
-          ".wma", ".mp4", ".mkv", ".avi", ".vob", ".webm", ".mov")
+_GELUID = (".mp3", ".flac", ".wav", ".ogg", ".m4a", ".aac", ".aif",
+           ".aiff", ".wma")
+_BEELD = (".mp4", ".mkv", ".avi", ".vob", ".webm", ".mov")
+_AUDIO = _GELUID + _BEELD
 
 _HAAKJES = re.compile(r"\s*[\(\[][^\)\]]*[\)\]]")
 
@@ -63,6 +65,7 @@ class Bestand:
     titel: str
     bitrate: int
     streaming: bool = False
+    video: bool = False
     sleutel: str = ""
     kern: str = ""          # sleutel met de haakjes-delen uit de titel
 
@@ -96,8 +99,12 @@ def lees_database(bron) -> list[Bestand]:
                     bitrate = int(infos.get("Bitrate", 0)) if infos is not None else 0
                 except ValueError:
                     bitrate = 0
+                # netsearch://tdv... is de videocatalogus, td... audio.
+                video = (pad.lower().endswith(_BEELD)
+                         or pad.startswith("netsearch://tdv"))
                 uit.append(Bestand(pad=pad, artiest=artiest, titel=titel,
-                                   bitrate=bitrate, streaming=streaming))
+                                   bitrate=bitrate, streaming=streaming,
+                                   video=video))
         el.clear()
 
     for b in uit:

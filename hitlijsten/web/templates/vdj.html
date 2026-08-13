@@ -15,6 +15,8 @@
     <div class="naam">nummers geladen ({{ '{:,}'.format(stand.lokaal).replace(',', '.') }} lokaal)</div></div>
   <div class="kaart"><div class="cijfer">{{ 'aan' if stand.streaming else 'uit' }}</div>
     <div class="naam">streaming (netsearch)</div></div>
+  <div class="kaart"><div class="cijfer">{{ stand.media }}</div>
+    <div class="naam">bestandssoort</div></div>
   <div class="kaart"><div class="cijfer">{{ stand.niveau }}</div>
     <div class="naam">matching-strengheid</div></div>
 </div>
@@ -49,6 +51,16 @@
            {% if stand and stand.streaming %}checked{% endif %}>
     <span>Ook streaming-nummers (netsearch) meenemen
       <span class="hint">— een lokaal bestand wint altijd van streaming</span></span>
+  </label>
+
+  <label>Bestandssoort<br>
+    <select name="media" style="margin-top:.3rem">
+      <option value="audio" {% if not stand or stand.media == 'alleen audio' %}selected{% endif %}>alleen audio (mp3 e.a.)</option>
+      <option value="video" {% if stand and stand.media == 'alleen video' %}selected{% endif %}>alleen video (mp4 e.a.)</option>
+      <option value="beide" {% if stand and stand.media == 'audio én video' %}selected{% endif %}>audio én video</option>
+    </select>
+    <span class="hint" style="display:block">Standaard alleen audio: anders
+      wint de videoversie nogal eens op bestandsgrootte.</span>
   </label>
 
   <label>Matching-strengheid<br>
