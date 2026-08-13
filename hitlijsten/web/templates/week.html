@@ -4,7 +4,7 @@
 {% block titel %}Week {{ week }}, {{ jaar }} {{ lijst_namen.get(lijst, lijst) }} — Hitlijsten{% endblock %}
 {% block inhoud %}
 
-<h1>Weeklijst</h1>
+<h1>Weeklijst van de {{ lijst_namen.get(lijst, lijst) }}</h1>
 <p class="onder">De complete lijst van één week, zoals hij is uitgezonden.</p>
 
 <form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
