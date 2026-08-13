@@ -136,6 +136,21 @@
      pagina; de klasse zet het scriptje onderaan. Daarboven blijft de vaste
      hoogte, anders wordt een editie van vierduizend rijen onhandelbaar. */
   .tabelvak.past { max-height: none; }
+
+  /* --- smalle schermen --------------------------------------------------- */
+  @media (max-width: 760px) {
+    /* De nav wrapt hier naar vijf, zes regels; laten plakken zou een derde
+       van het scherm permanent bezet houden. Dus: compacter en gewoon
+       meescrollen. */
+    header { position: static; }
+    header .binnen { padding: .45rem .7rem; gap: .35rem .8rem; }
+    header nav { gap: .05rem .3rem; }
+    header nav a { padding: .12rem .4rem; font-size: .84rem; }
+    main { padding: 1rem .7rem 3rem; }
+    h1 { font-size: 1.3rem; }
+    th, td { padding: .35rem .5rem; }
+    .kaart { min-width: 8.5rem; }
+  }
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
   th, td { padding: .45rem .7rem; text-align: left; white-space: nowrap; }
   thead th {
