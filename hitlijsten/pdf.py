@@ -284,13 +284,15 @@ def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
 
 
 def bouw_klassement(con: sqlite3.Connection, lijst: str, van: int,
-                    tot: int) -> Optional[bytes]:
+                    tot: int, top: Optional[int] = None) -> Optional[bytes]:
     """Het puntenklassement over een reeks jaargangen (decennium of alles)."""
     from .db import totalen_over
 
     nummers = totalen_over(con, lijst, van, tot)
     if not nummers:
         return None
+    if top:
+        nummers = nummers[:top]
 
     kolommen = [("#", 9, "C"), ("Artiest", 48, "L"), ("Titel", 62, "L"),
                 ("Punten", 16, "C"), ("Hoogste", 15, "C"), ("Weken", 13, "C"),
@@ -304,18 +306,22 @@ def bouw_klassement(con: sqlite3.Connection, lijst: str, van: int,
                       else f"{jaren[0]}-{jaren[-1]}"])
 
     naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
+    soort = f"Top {top} van het puntenklassement" if top else "Puntenklassement"
     return _tabel_pdf(naam, f"{van}-{tot}",
-                      f"Puntenklassement · {len(rijen)} nummers over "
+                      f"{soort} · {len(rijen)} nummers over "
                       f"{tot - van + 1} jaargangen", kolommen, rijen)
 
 
-def bouw_jaarlijksen(con: sqlite3.Connection) -> Optional[bytes]:
+def bouw_jaarlijksen(con: sqlite3.Connection,
+                     top: Optional[int] = None) -> Optional[bytes]:
     """De gecombineerde lijst over alle jaarlijkse lijsten."""
     from .db import jaarlijkse_totalen
 
     nummers = jaarlijkse_totalen(con)
     if not nummers:
         return None
+    if top:
+        nummers = nummers[:top]
 
     kolommen = [("#", 10, "C"), ("Artiest", 46, "L"), ("Titel", 58, "L"),
                 ("Punten", 14, "C"), ("Edities", 13, "C"), ("Lijsten", 12, "C"),
@@ -326,8 +332,9 @@ def bouw_jaarlijksen(con: sqlite3.Connection) -> Optional[bytes]:
                       n["lijsten"], n["hoogste"],
                       f"{n['hoogste_lijst']} {n['hoogste_jaar']}"])
 
+    kop = f"top {top} van alle" if top else "alle"
     return _tabel_pdf("Jaarlijsten totaal", "alle lijsten",
-                      f"Alle jaarlijkse lijsten samen, genormaliseerd · "
+                      f"De {kop} jaarlijkse lijsten samen, genormaliseerd · "
                       f"{len(rijen)} nummers", kolommen, rijen)
 
 

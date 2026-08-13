@@ -819,6 +819,18 @@ def _registreer(app: Flask) -> None:
             markeer=request.args.get("markeer") or "",
         )
 
+    def _gekozen_top():
+        """De top uit de keuzelijst, of None voor alles.
+
+        Zelfde spelregels als op het scherm: alleen de vaste keuzes tellen,
+        al het andere betekent "alles". Zo kan een gemanipuleerde URL nooit
+        iets anders opleveren dan de pagina zelf toont.
+        """
+        ruw = request.args.get("toon", "")
+        if ruw.isdigit() and int(ruw) in AANTALLEN:
+            return int(ruw)
+        return None
+
     def _stuur_excel(wb, bestand: str):
         buffer = io.BytesIO()
         wb.save(buffer)
@@ -858,21 +870,25 @@ def _registreer(app: Flask) -> None:
     @app.route("/download/jaarlijksen")
     def download_jaarlijksen():
         """De gecombineerde jaarlijst als Excel, alle nummers."""
-        wb = excel.bouw_jaarlijksen_werkboek(verbinding())
+        top = _gekozen_top()
+        wb = excel.bouw_jaarlijksen_werkboek(verbinding(), top=top)
         if wb is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("jaarlijksen_lijst"))
-        return _stuur_excel(wb, "JaarlijstenTotaal.xlsx")
+        naam = f"JaarlijstenTotaal_top{top}" if top else "JaarlijstenTotaal"
+        return _stuur_excel(wb, f"{naam}.xlsx")
 
     @app.route("/download/pdf/jaarlijksen")
     def download_jaarlijksen_pdf():
         """De gecombineerde jaarlijst als PDF, alle nummers."""
         from .. import pdf as pdfbouwer
-        inhoud = pdfbouwer.bouw_jaarlijksen(verbinding())
+        top = _gekozen_top()
+        inhoud = pdfbouwer.bouw_jaarlijksen(verbinding(), top=top)
         if inhoud is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("jaarlijksen_lijst"))
-        return _stuur_pdf(inhoud, "JaarlijstenTotaal.pdf")
+        naam = f"JaarlijstenTotaal_top{top}" if top else "JaarlijstenTotaal"
+        return _stuur_pdf(inhoud, f"{naam}.pdf")
 
     @app.route("/download/pdf/decennium/<int:decennium>")
     def download_decennium_pdf(decennium: int):
@@ -894,24 +910,30 @@ def _registreer(app: Flask) -> None:
         from .. import pdf as pdfbouwer
         con = verbinding()
         van, tot = db.alle_jaren(con, DECENNIUM_LIJST)
-        inhoud = pdfbouwer.bouw_klassement(con, DECENNIUM_LIJST, van, tot)
+        top = _gekozen_top()
+        inhoud = pdfbouwer.bouw_klassement(con, DECENNIUM_LIJST, van, tot,
+                                           top=top)
         if inhoud is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("totaal_lijst"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
-        return _stuur_pdf(inhoud, f"{naam}_Totaal_{van}-{tot}.pdf")
+        staart = f"_top{top}" if top else ""
+        return _stuur_pdf(inhoud, f"{naam}_Totaal_{van}-{tot}{staart}.pdf")
 
     @app.route("/download/totaal")
     def download_totaal():
         """De volledige lijst als Excel -- daar past hij wél in zijn geheel in."""
         con = verbinding()
         van, tot = db.alle_jaren(con, DECENNIUM_LIJST)
-        wb = excel.bouw_totalen_werkboek(con, DECENNIUM_LIJST, van, tot)
+        top = _gekozen_top()
+        wb = excel.bouw_totalen_werkboek(con, DECENNIUM_LIJST, van, tot,
+                                         top=top)
         if wb is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("totaal_lijst"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
-        bestand = f"{naam}_Totaal_{van}-{tot}.xlsx"
+        staart = f"_top{top}" if top else ""
+        bestand = f"{naam}_Totaal_{van}-{tot}{staart}.xlsx"
         buffer = io.BytesIO()
         wb.save(buffer)
         buffer.seek(0)

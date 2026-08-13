@@ -24,10 +24,11 @@
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
-  <a class="knop" href="{{ url_for('download_jaarlijksen') }}"
-     title="Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers als werkboek">⤓ Excel</a>
-  <a class="knop" href="{{ url_for('download_jaarlijksen_pdf') }}"
-     title="Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers als PDF — bouwen duurt even">⤓ PDF</a>
+  {% set top = toon if toon != totaal else None %}
+  <a class="knop" href="{{ url_for('download_jaarlijksen', toon=top) }}"
+     title="{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als werkboek">⤓ Excel</a>
+  <a class="knop" href="{{ url_for('download_jaarlijksen_pdf', toon=top) }}"
+     title="{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}">⤓ PDF</a>
 
   <span class="hint" style="margin-left:auto">
     {{ aantal_lijsten }} lijsten · {{ edities }} edities ·

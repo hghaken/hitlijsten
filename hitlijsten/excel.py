@@ -533,16 +533,21 @@ def bouw_decennium_werkboek(
 
 
 def bouw_totalen_werkboek(
-    con: sqlite3.Connection, lijst: str, van: int, tot: int
+    con: sqlite3.Connection, lijst: str, van: int, tot: int,
+    top: Optional[int] = None,
 ) -> Optional[Workbook]:
     """Eén tab met het puntenklassement over de jaargangen `van` t/m `tot`.
 
     Alleen zinvol voor een lijst die al die jaren even lang was -- zie
-    `totalen_over` en de LEESMIJ. Geeft None als er geen data is.
+    `totalen_over` en de LEESMIJ. Geeft None als er geen data is. Met `top`
+    alleen de bovenste zoveel -- wat er op het scherm gekozen is, hoort er
+    ook uit te komen.
     """
     nummers = totalen_over(con, lijst, van, tot)
     if not nummers:
         return None
+    if top:
+        nummers = nummers[:top]
 
     cfg = LIJSTEN.get(lijst, {})
     heeft_label = bool(cfg.get("heeft_label"))
@@ -592,7 +597,8 @@ def bouw_totalen_werkboek(
         rijen.append(waarden)
 
     toelichting = (
-        f"Puntenklassement {van}-{tot} van de {cfg.get('naam', lijst)}. "
+        (f"De top {top} van het " if top else "Het ") +
+        f"puntenklassement {van}-{tot} van de {cfg.get('naam', lijst)}. "
         "Punten per notering = lijstlengte - positie + 1, per jaargang gerekend "
         "en daarna opgeteld: dit klassement is dus de som van de jaarbestanden."
     )
@@ -618,13 +624,17 @@ def bouw_week_werkboek(
     return wb
 
 
-def bouw_jaarlijksen_werkboek(con: sqlite3.Connection) -> Optional[Workbook]:
+def bouw_jaarlijksen_werkboek(
+    con: sqlite3.Connection, top: Optional[int] = None
+) -> Optional[Workbook]:
     """De gecombineerde lijst over alle jaarlijkse lijsten, één tab."""
     from .db import jaarlijkse_totalen
 
     nummers = jaarlijkse_totalen(con)
     if not nummers:
         return None
+    if top:
+        nummers = nummers[:top]
 
     kolommen = ["#", "Artiest", "Titel", "Punten", "Edities", "Lijsten",
                 "Hoogste positie", "Hoogste in", "Sleutel"]
