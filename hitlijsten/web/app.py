@@ -350,7 +350,7 @@ def _registreer(app: Flask) -> None:
 
         rijen = list(con.execute(
             "SELECT positie, vorige_positie, artiest, titel, label,"
-            " weken_genoteerd, site_status, sleutel FROM noteringen"
+            " weken_genoteerd, site_status, sleutel, alarmschijf FROM noteringen"
             " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie, artiest",
             (lijst, jaar, week)))
         try:
