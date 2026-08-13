@@ -52,9 +52,17 @@
 
   header {
     position: sticky; top: 0; z-index: 20;
-    /* Doorzichtig genoeg om de banner erachter te laten schijnen; de blur
-       houdt de menuteksten leesbaar op elke ondergrond. */
-    background: rgba(9,12,24,.18); backdrop-filter: blur(7px);
+    /* Bovenaan de pagina naadloos over de banner: een verloop naar
+       transparant in plaats van een egale laag (die eindigt altijd met een
+       zichtbare rand). Zodra er gescrold is, krijgt de balk via het scriptje
+       onderaan de klasse `vast` en daarmee een dichte laag -- anders schuift
+       de inhoud leesbaar-onvriendelijk door het menu heen. */
+    background: linear-gradient(180deg, rgba(9,12,24,.55), rgba(9,12,24,0));
+    transition: background-color .25s;
+  }
+  header.vast {
+    background: rgba(9,12,24,.85);
+    backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--rand);
   }
   header .binnen {
@@ -481,6 +489,15 @@
     });
   });
 })();
+</script>
+<script>
+  // De menubalk: doorzichtig op de banner, dicht zodra er gescrold is.
+  (() => {
+    const kop = document.querySelector("header");
+    const zet = () => kop.classList.toggle("vast", window.scrollY > 8);
+    addEventListener("scroll", zet, {passive: true});
+    zet();
+  })();
 </script>
 </body>
 </html>
