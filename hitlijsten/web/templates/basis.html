@@ -50,11 +50,6 @@
     background-attachment: fixed;
   }
 
-  .banier {
-    height: clamp(64px, 9vw, 122px);
-    background: url("{{ url_for('static', filename='banner.jpg') }}") center/cover no-repeat;
-    border-bottom: 1px solid var(--rand);
-  }
   header {
     position: sticky; top: 0; z-index: 20;
     background: rgba(9,12,24,.72); backdrop-filter: blur(14px);
@@ -78,7 +73,21 @@
   header nav a.actief { color: var(--ink); background: var(--glas); }
   .rechts { margin-left: auto; }
 
-  main { max-width: 1600px; margin: 0 auto; padding: 1.6rem 1.4rem 4rem; }
+  main { max-width: 1600px; margin: 0 auto; padding: 1.6rem 1.4rem 4rem; position: relative; }
+  /* De banner als achtergrond van de paginakop: hij ligt ACHTER de titel en
+     de eerste kaarten (negatieve z-index binnen main) en vloeit onderaan met
+     een masker uit in de pagina-achtergrond. Het donkere laagje erover houdt
+     de tekst leesbaar op de felle golven. */
+  main::before {
+    content: ""; position: absolute; left: 50%; top: 0; z-index: -1;
+    width: 100vw; transform: translateX(-50%);
+    height: min(19vw, 350px);
+    background:
+      linear-gradient(180deg, rgba(9,12,24,.45), rgba(9,12,24,.15) 60%),
+      url("{{ url_for('static', filename='banner.jpg') }}") top center/cover no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, #000 45%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 45%, transparent 100%);
+  }
   h1 { font-size: 1.5rem; margin: 0 0 .3rem; font-weight: 650; }
   h1 + .onder { color: var(--gedempt); margin: 0 0 1.5rem; font-size: .95rem; }
   h2 {
@@ -376,8 +385,6 @@
     </span>
   </div>
 </header>
-{# De banner: decoratief, scrolt gewoon mee (alleen de menubalk is sticky). #}
-<div class="banier" role="presentation"></div>
 <main>
   {% with meldingen = get_flashed_messages(with_categories=true) %}
     {% for soort, tekst in meldingen %}
