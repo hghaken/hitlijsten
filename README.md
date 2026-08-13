@@ -33,7 +33,10 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 De namen en titels zijn opgeschoond en geverifieerd tegen MusicBrainz,
 Discogs en Wikipedia; elke correctie staat met reden in een logboek. Elk
 nummer draagt bovendien zijn Alarmschijf-belletje (bron: top40.nl) en een
-Nederlandstalig-markering met filter. Draait op een Synology NAS: een
+Nederlandstalig-markering met filter. Voor bezoekers: artiestpagina's, een
+datumprikker ("wat stond er op 1 op jouw geboortedag?"), records, versies,
+een jaargang-vergelijker, een wekelijks weekbericht met RSS-feed en een
+gastenboek. Draait op een Synology NAS: een
 Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
 om 22:00 de nieuwe week ophaalt.
 

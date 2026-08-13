@@ -102,6 +102,10 @@ De tabel waar het om gaat. **Eén rij per nummer per week per lijst.**
 | `uitjaar` | INTEGER | jaar van uitgave; alleen de jaarlijkse lijsten leveren dit |
 | `alarmschijf` | INTEGER | het belletje van top40.nl: dit nummer is (ooit) Alarmschijf geweest; per notering zoals de bron het toont |
 
+Indexen: `(lijst, jaar, sleutel)`, `(lijst, jaar, week)` en een kale
+`(sleutel)` — die laatste draagt de artiestpagina's (alles van één artiest
+is een prefix-zoektocht op `artiest|…`).
+
 **Indexen:** `(lijst, jaar, sleutel)` en `(lijst, jaar, week)`.
 
 ### Waarom de primaire sleutel een rijteller is

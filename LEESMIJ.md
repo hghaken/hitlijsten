@@ -327,7 +327,7 @@ op de NAS, achter een reverse proxy.
 | Bericht achterlaten | formulier voor opmerkingen, tips, bugs en aanvullingen; spamwering met honeypot, invultijd en per-IP-limiet, geen CAPTCHA; alles komt privé binnen en niets staat live zonder akkoord |
 | Berichten | (achter de login) de postbus: publiceren, privé houden, verwijderen of beantwoorden; mailmelding bij elk nieuw bericht |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
-| Vormgeving | tabellen tot 100 rijen krijgen hun volle hoogte (geen binnenste scrollbalk); daarboven een scrollvak van 78vh |
+| Vormgeving | menubalk in twee rijen (de lijsten boven, de extra's en het beheer gedempt eronder), doorschijnend over de banner en met blur zodra er gescrold is; tabellen tot 100 rijen krijgen hun volle hoogte (geen binnenste scrollbalk), daarboven een scrollvak van 78vh; onder de 760px compact en niet-plakkend |
 | Banner | eigen ontwerp, vast aan de bovenrand achter de doorzichtige menubalk (die dichtgaat na scrollen); dezelfde banner siert de kop van elke PDF en is de og:image van gedeelde links |
 | Vindbaarheid | sitemap-index in twee delen (±50.000 pagina's incl. artiesten, gecachet), `robots.txt`, meta-descriptions, canonical-links, Open Graph-tags en JSON-LD structured data (MusicRecording, MusicGroup, ItemList) |
 
