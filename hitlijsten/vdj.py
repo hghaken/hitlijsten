@@ -183,7 +183,18 @@ def match(regels: list[dict], bestanden: list[Bestand],
             bestand, trap = _beste(op_sleutel[sleutel]), 1
         elif niveau >= 2 and kern in op_kern:
             bestand, trap = _beste(op_kern[kern]), 2
-        elif niveau >= 3 and kerntitel in op_kerntitel:
+        elif niveau >= 2 and kerntitel in op_kerntitel:
+            # Het duet-geval: de lijst crediteert "Meat Loaf & Ellen Foley",
+            # het bestand is getagd als "Meat Loaf". Is de ene artiest een
+            # deelverzameling van de andere (gesplitst op &), dan is dat
+            # dezelfde plaat -- geen gok, dus dit hoort bij "strak".
+            delen = set(artiestdeel.split(" & "))
+            past = [b for b in op_kerntitel[kerntitel]
+                    if (lambda d: d and (d <= delen or delen <= d))(
+                        set(b.kern.split("|", 1)[0].split(" & ")))]
+            if past:
+                bestand, trap = _beste(past), 2
+        if bestand is None and niveau >= 3 and kerntitel in op_kerntitel:
             past = [b for b in op_kerntitel[kerntitel]
                     if _lijkt(b.kern.split("|", 1)[0], artiestdeel, 0.6)
                     or set(b.kern.split("|", 1)[0].split())
