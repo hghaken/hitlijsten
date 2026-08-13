@@ -4,7 +4,7 @@
 {% block titel %}Week {{ week }}, {{ jaar }} {{ lijst_namen.get(lijst, lijst) }} — Hitlijsten{% endblock %}
 {% block inhoud %}
 
-<h1>Weeklijst van de {{ lijst_namen.get(lijst, lijst) }}</h1>
+<h1>Weeklijsten</h1>
 <p class="onder">De complete lijst van één week, zoals hij is uitgezonden —
   kies uit {% for wk in weeklijsten %}de {{ lijst_namen.get(wk, wk) }}{% if not loop.last %}{% if loop.revindex == 2 %} en {% else %}, {% endif %}{% endif %}{% endfor %}.</p>
 
