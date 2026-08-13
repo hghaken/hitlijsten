@@ -647,13 +647,16 @@ def _registreer(app: Flask) -> None:
         # met de matrix over de edities heen.
         if is_jaarlijks(lijst):
             alle_nummers = db.editie_klassement(con, lijst, jaar)
-            # Een editie van vierduizend regels is 2,9 MB HTML. Korte lijsten
-            # blijven compleet; pas boven de grens wordt er afgetopt, met een
-            # keuze om alsnog alles te tonen.
+            # Een editie van vierduizend regels is 2,9 MB HTML. Dezelfde
+            # keuzelijst als overal (100/500/..., standaard 100); tot 250
+            # nummers is er niets te kiezen en staat gewoon alles er.
             alle_nummers = _alleen_nl(alle_nummers)
-            toon = (len(alle_nummers)
-                    if request.args.get("toon") == "alles"
-                    else min(EDITIE_DREMPEL, len(alle_nummers)))
+            gevraagd = request.args.get("toon", "")
+            toon = (len(alle_nummers) if gevraagd == "alles"
+                    else int(gevraagd) if gevraagd.isdigit()
+                    and int(gevraagd) in AANTALLEN else AANTALLEN[0])
+            if len(alle_nummers) <= 250:
+                toon = len(alle_nummers)
             # Komt de bezoeker binnen via een verwijzing naar een bepaald
             # nummer, dan is aftoppen juist verkeerd: bij een editie van
             # vierduizend staat plek 3033 niet op de eerste tweeduizend, en dan
@@ -680,7 +683,7 @@ def _registreer(app: Flask) -> None:
                 edities=db.edities_van(con, lijst),
                 matrix=nummers[:matrix_tot], matrix_tot=matrix_tot,
                 matrix_keuzes=MATRIX_KEUZES, toon=toon,
-                drempel=EDITIE_DREMPEL, markeer=markeer,
+                aantallen=AANTALLEN, markeer=markeer,
             )
 
         rijen = list(con.execute(
