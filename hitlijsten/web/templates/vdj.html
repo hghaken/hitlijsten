@@ -1,0 +1,119 @@
+{% extends "basis.html" %}
+{% block titel %}VirtualDJ-playlist — Hitlijsten{% endblock %}
+{% block beschrijving %}Upload je VirtualDJ-database, kies een jaaroverzicht en download een kant-en-klare .vdjfolder-playlist met de hits die je zelf in je bibliotheek hebt — plus de lijst van wat je mist.{% endblock %}
+{% block inhoud %}
+
+<h1>VirtualDJ-playlist</h1>
+<p class="onder">Upload je <code>database.xml</code>, kies een jaaroverzicht,
+  en krijg een playlist met de hits die je zélf in je bibliotheek hebt —
+  in klassementvolgorde. Wat je mist, staat er als boodschappenlijst bij.</p>
+
+<form method="post" enctype="multipart/form-data" class="kaart"
+      style="display:grid; gap:.9rem; max-width:46rem">
+  <label>Je VirtualDJ-database(s)<br>
+    <input type="file" name="database" accept=".xml" multiple required
+           style="margin-top:.3rem">
+    <span class="hint" style="display:block">Meestal
+      <code>Documents\VirtualDJ\database.xml</code> of
+      <code>AppData\Local\VirtualDJ\database.xml</code>; heb je muziek op een
+      losse schijf, upload dan ook de <code>VirtualDJ\database.xml</code> van
+      die schijf. Er wordt niets bewaard — de database wordt gelezen en
+      meteen vergeten.</span>
+  </label>
+
+  <div style="display:flex; gap:.7rem; flex-wrap:wrap">
+    <select name="lijst" onchange="jarenBij(this.value)">
+      {% for sleutel, naam in lijst_namen.items() %}
+        <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}>{{ naam }}</option>
+      {% endfor %}
+    </select>
+    <select name="jaar" id="jaarkeuze">
+      {% for j in jaren[lijst] %}
+        <option value="{{ j }}" {% if jaar == j|string %}selected{% endif %}>{{ j }}</option>
+      {% endfor %}
+    </select>
+    <select name="top">
+      {% for t in ("40", "100", "500", "1000", "alles") %}
+        <option value="{{ t }}" {% if top == t %}selected{% endif %}>{% if t == "alles" %}alles{% else %}top {{ t }}{% endif %}</option>
+      {% endfor %}
+    </select>
+    <select name="niveau" title="Hoe streng de matching is">
+      {% for nr, naam in niveaus.items() %}
+        <option value="{{ nr }}" {% if niveau == nr|string %}selected{% endif %}>{{ naam }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <label style="display:flex; gap:.5rem; align-items:baseline">
+    <input type="checkbox" name="streaming" value="1"
+           {% if streaming_aan %}checked{% endif %}>
+    <span>Ook streaming-nummers (netsearch) meenemen
+      <span class="hint">— een lokaal bestand wint altijd van streaming</span></span>
+  </label>
+
+  <div><button class="hoofd" type="submit">Maak de playlist</button>
+    <span class="hint">bij een grote database kan dit een minuut duren</span></div>
+</form>
+
+{% if fout %}<div class="melding fout" style="margin-top:1rem">{{ fout }}</div>{% endif %}
+
+{% if uitkomst %}
+<div class="kaarten" style="margin-top:1.6rem">
+  <div class="kaart"><div class="cijfer">{{ uitkomst.gevonden }} van {{ uitkomst.koppels|length }}</div>
+    <div class="naam">gevonden in je bibliotheek</div></div>
+  <div class="kaart"><div class="cijfer">{{ uitkomst.koppels|length - uitkomst.gevonden }}</div>
+    <div class="naam">ontbreekt (je boodschappenlijst)</div></div>
+  {% if uitkomst.twijfel %}
+  <div class="kaart"><div class="cijfer">{{ uitkomst.twijfel }}</div>
+    <div class="naam">twijfelgevallen (zeer soepel gematcht)</div></div>
+  {% endif %}
+  <div class="kaart"><div class="cijfer">{{ '{:,}'.format(uitkomst.bibliotheek).replace(',', '.') }}</div>
+    <div class="naam">nummers in je database</div></div>
+</div>
+
+<p style="margin-top:1rem">
+  <a class="knop" id="vdjknop" download="{{ uitkomst.bestandsnaam }}">⤓ {{ uitkomst.bestandsnaam }}</a>
+  <span class="hint">zet hem in je VirtualDJ-map onder <code>MyLists</code></span>
+</p>
+<textarea id="vdjinhoud" style="display:none">{{ uitkomst.vdjfolder }}</textarea>
+<script>
+  (() => {
+    const blob = new Blob([document.getElementById("vdjinhoud").value],
+                          {type: "application/xml"});
+    document.getElementById("vdjknop").href = URL.createObjectURL(blob);
+  })();
+</script>
+
+<h2>Het rapport</h2>
+<div class="tabelvak"><table>
+  <thead><tr><th class="getal">Positie</th><th>Artiest</th><th>Titel</th>
+    <th>Status</th><th>Bestand</th></tr></thead><tbody>
+  {% for k in uitkomst.koppels %}
+  <tr>
+    <td class="getal">{{ k.hoogste }}</td>
+    <td>{{ k.artiest }}</td>
+    <td><a class="stil" href="{{ url_for('nummer', sleutel=k.sleutel) }}">{{ k.titel }}</a></td>
+    <td>{% if k.bestand %}<span class="speld nieuw">{{ niveaus[k.niveau] }}</span>
+        {% else %}<span class="speld terug">ontbreekt</span>{% endif %}</td>
+    <td class="hint" style="max-width:26rem; overflow:hidden; text-overflow:ellipsis">
+      {{ k.bestand.pad if k.bestand else '' }}</td>
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{# De jaargangen per lijst, zodat de jaarkeuzelijst meewisselt. #}
+<script>
+  const jarenPerLijst = {{ jaren | tojson }};
+  function jarenBij(lijst) {
+    const keuze = document.getElementById("jaarkeuze");
+    keuze.innerHTML = "";
+    (jarenPerLijst[lijst] || []).forEach((j) => {
+      const optie = document.createElement("option");
+      optie.value = j; optie.textContent = j;
+      keuze.appendChild(optie);
+    });
+  }
+</script>
+
+{% endblock %}
