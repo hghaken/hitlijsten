@@ -747,6 +747,10 @@ def _registreer(app: Flask) -> None:
         toon = (len(gesorteerd) if gevraagd == "alles"
                 else int(gevraagd) if gevraagd.isdigit()
                 and int(gevraagd) in AANTALLEN else AANTALLEN[0])
+        # Tot 250 nummers is er niets te kiezen: toon alles, zonder
+        # keuzelijst (de template verbergt hem onder deze drempel).
+        if len(gesorteerd) <= 250:
+            toon = len(gesorteerd)
         if markeer:
             plek = next((i for i, n in enumerate(gesorteerd, 1)
                          if n["sleutel"] == markeer), 0)
@@ -806,6 +810,8 @@ def _registreer(app: Flask) -> None:
         toon = (len(nummers) if gevraagd == "alles"
                 else int(gevraagd) if gevraagd.isdigit()
                 and int(gevraagd) in AANTALLEN else AANTALLEN[0])
+        if len(nummers) <= 250:
+            toon = len(nummers)
         if markeer:
             plek = next((i for i, n in enumerate(nummers, 1)
                          if n["sleutel"] == markeer), 0)

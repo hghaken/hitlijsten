@@ -30,6 +30,7 @@
       <option value="{{ j }}" {% if jaar == j %}selected{% endif %}>{{ j }}</option>
     {% endfor %}
   </select>
+  {% if totaal > 250 %}
   <select name="toon" onchange="this.form.submit()">
     {% for a in aantallen %}
       <option value="{{ a }}" {% if toon == a %}selected{% endif %}>top {{ a }}</option>
@@ -37,6 +38,7 @@
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
       alle {{ '{:,}'.format(totaal).replace(',', '.') }} — traag</option>
   </select>
+  {% endif %}
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
   {{ nl_filter() }}
 
