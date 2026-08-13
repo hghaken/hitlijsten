@@ -184,8 +184,11 @@
     </thead>
     <tbody>
       {% for n in matrix %}
-      <tr>
-        <td class="breed" style="position:sticky; left:0; background:#0f1626">
+      {# data-sleutel + klikbaar: daarmee haakt _grafiek.html aan, net als in
+         het klassement hierboven. #}
+      <tr data-sleutel="{{ n.sleutel }}">
+        <td class="breed klikbaar" title="Klik voor het verloop"
+            style="position:sticky; left:0; background:#0f1626">
           {{ n.artiest }} <span class="hint">— {{ n.titel }}</span>
         </td>
         {# Een lege cel kan twee dingen betekenen: het nummer bestond nog
