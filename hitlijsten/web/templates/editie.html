@@ -43,12 +43,14 @@
   {{ nl_filter() }}
 
   {% if jaar %}
-  <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar) }}"
-     title="Werkboek met de complete editie en de kerngetallen">⤓ Excel</a>
+  {% set top = toon if toon != totaal else None %}
+  {% set nl = '1' if nl_filter_aan else None %}
+  <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, toon=top, nl=nl) }}"
+     title="{% if top or nl %}De getoonde selectie als werkboek{% else %}Werkboek met de complete editie en de kerngetallen{% endif %}">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, soort='matrix') }}"
-     title="Werkboek met de matrix nummer x editie">⤓ editiematrix</a>
-  <a class="knop" href="{{ url_for('download_pdf', lijst=lijst, jaar=jaar) }}"
-     title="De complete editie als PDF, veertig regels per pagina">⤓ PDF</a>
+     title="Werkboek met de matrix nummer x editie, altijd de volledige editie">⤓ editiematrix</a>
+  <a class="knop" href="{{ url_for('download_pdf', lijst=lijst, jaar=jaar, toon=top, nl=nl) }}"
+     title="{% if top or nl %}De getoonde selectie als PDF{% else %}De complete editie als PDF, veertig regels per pagina{% endif %}">⤓ PDF</a>
   {% endif %}
 
   {# Geen Excel- of PDF-knop: die bouwers gaan uit van weken en punten, en die
