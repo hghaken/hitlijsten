@@ -994,18 +994,21 @@ def _registreer(app: Flask) -> None:
     def download_decennium_pdf(decennium: int):
         """Het decenniumklassement als PDF."""
         from .. import pdf as pdfbouwer
+        top = _gekozen_top()
         alleen, staartje = _nl_keuze()
         inhoud = pdfbouwer.bouw_klassement(
             verbinding(), DECENNIUM_LIJST, decennium, decennium + 9,
-            alleen=alleen)
+            top=top, alleen=alleen)
         if inhoud is None:
             flash(f"Voor de {decennium}'s staat er niets in de database.",
                   "fout")
             return redirect(url_for("decennium_overzicht"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
+        staart = f"_top{top}" if top else ""
         return _stuur_pdf(
             inhoud,
-            f"{naam}_Decennium_{decennium}-{decennium + 9}{staartje}.pdf")
+            f"{naam}_Decennium_{decennium}-{decennium + 9}"
+            f"{staart}{staartje}.pdf")
 
     @app.route("/download/pdf/totaal")
     def download_totaal_pdf():
@@ -1132,6 +1135,21 @@ def _registreer(app: Flask) -> None:
             abort(404)
         soort = request.args.get("soort", "weken")
         naam = LIJSTEN[lijst]["bestand"]
+        top = _gekozen_top()
+        alleen, staartje = _nl_keuze()
+        if soort != "matrix" and (top or alleen is not None):
+            # Het scherm toont een selectie (top of Nederlandstalig); dan
+            # hoort de download die selectie te zijn: het puntenklassement
+            # van deze jaargang, ter plekke gebouwd. Het volledige werkboek
+            # met de weektabs blijft er via de keuze "alles" gewoon naast
+            # bestaan.
+            wb = excel.bouw_totalen_werkboek(verbinding(), lijst, jaar, jaar,
+                                             top=top, alleen=alleen)
+            if wb is None:
+                flash("Niets te downloaden binnen deze selectie.", "fout")
+                return redirect(url_for("jaaroverzicht", lijst=lijst, jaar=jaar))
+            staart = f"_top{top}" if top else ""
+            return _stuur_excel(wb, f"{naam}_{jaar}{staart}{staartje}.xlsx")
         bestand = (f"{naam}_Jaar_{jaar}.xlsx" if soort == "matrix"
                    else f"{naam}_{jaar}.xlsx")
         pad = EXCEL_DIR / decennium_van(jaar) / str(jaar) / bestand
@@ -1150,14 +1168,18 @@ def _registreer(app: Flask) -> None:
         decenniumbestand dat na de vrijdagrun een week oud is zou stilletjes
         verkeerde totalen laten zien.
         """
+        top = _gekozen_top()
         alleen, staartje = _nl_keuze()
-        wb = excel.bouw_decennium_werkboek(verbinding(), DECENNIUM_LIJST,
-                                           decennium, alleen=alleen)
+        wb = excel.bouw_totalen_werkboek(verbinding(), DECENNIUM_LIJST,
+                                         decennium, decennium + 9, top=top,
+                                         alleen=alleen)
         if wb is None:
             flash(f"Voor de {decennium}'s staat er niets in de database.", "fout")
             return redirect(url_for("decennium_overzicht"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
-        bestand = f"{naam}_Decennium_{decennium}-{decennium + 9}{staartje}.xlsx"
+        staart = f"_top{top}" if top else ""
+        bestand = (f"{naam}_Decennium_{decennium}-{decennium + 9}"
+                   f"{staart}{staartje}.xlsx")
         buffer = io.BytesIO()
         wb.save(buffer)
         buffer.seek(0)
@@ -1177,10 +1199,23 @@ def _registreer(app: Flask) -> None:
 
         if lijst not in LIJSTEN:
             abort(404)
+        con = verbinding()
+        naam = LIJSTEN[lijst]["bestand"]
+        top = _gekozen_top()
+        alleen, staartje = _nl_keuze()
+        if top or alleen is not None:
+            # Zelfde spelregel als bij de Excel: de selectie op het scherm
+            # is de selectie in het bestand.
+            inhoud = pdfbouwer.bouw_klassement(con, lijst, jaar, jaar,
+                                               top=top, alleen=alleen)
+            if inhoud is None:
+                flash("Niets te downloaden binnen deze selectie.", "fout")
+                return redirect(url_for("jaaroverzicht", lijst=lijst, jaar=jaar))
+            staart = f"_top{top}" if top else ""
+            return _stuur_pdf(inhoud, f"{naam}_{jaar}{staart}{staartje}.pdf")
         # De afgesloten jaargangen staan al op schijf; die worden alleen
         # opnieuw gebouwd als de gegevens sindsdien zijn veranderd.
-        con = verbinding()
-        bestand = f"{LIJSTEN[lijst]['bestand']}_{jaar}.pdf"
+        bestand = f"{naam}_{jaar}.pdf"
         try:
             pad = pdfbouwer.schrijf_jaaroverzicht(con, lijst, jaar)
         except Exception:
