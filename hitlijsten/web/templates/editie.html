@@ -41,6 +41,10 @@
   {% endif %}
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
   {{ nl_filter() }}
+  <label class="nlfilter" title="Alleen de nummers die in dit jaar voor het eerst in deze lijst verschenen">
+    <input type="checkbox" name="nieuw" value="1" onchange="this.form.submit()"
+           {% if nieuw_filter_aan %}checked{% endif %}>
+    <span class="speld nieuw">nieuw</span></label>
 
   {% if jaar %}
   {% set top = toon if toon != totaal else None %}

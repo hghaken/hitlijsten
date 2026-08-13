@@ -273,7 +273,23 @@ def _registreer(app: Flask) -> None:
     def _nl_filter_stand():
         # Elke lijstpagina kent hetzelfde filter; de templates lezen de stand
         # hieruit zodat niet elke render-aanroep hem hoeft door te geven.
-        return {"nl_filter_aan": bool(request.args.get("nl"))}
+        return {"nl_filter_aan": bool(request.args.get("nl")),
+                "nieuw_filter_aan": bool(request.args.get("nieuw"))}
+
+    def _alleen_binnenkomers(con, lijst, jaar, rijen):
+        """Alleen wat in dit jaar voor het eerst in deze lijst verscheen.
+
+        "Voor het eerst" is over de hele historie van de lijst gerekend, niet
+        binnen de jaargang: Last Christmas komt elk jaar terug maar is alleen
+        in 1984 een binnenkomer. Bij een jaarlijkse lijst betekent het: de
+        eerste editie waarin het nummer ooit stond.
+        """
+        if not request.args.get("nieuw"):
+            return rijen
+        eerste = {r[0]: r[1] for r in con.execute(
+            "SELECT sleutel, MIN(jaar) FROM noteringen WHERE lijst=?"
+            " GROUP BY sleutel", (lijst,))}
+        return [n for n in rijen if eerste.get(n["sleutel"]) == jaar]
 
     def _alleen_nl(rijen, sleutel_van=lambda r: r["sleutel"]):
         """Pas het Nederlandstalig-filter toe als dat aan staat."""
@@ -650,7 +666,8 @@ def _registreer(app: Flask) -> None:
             # Een editie van vierduizend regels is 2,9 MB HTML. Dezelfde
             # keuzelijst als overal (100/500/..., standaard 100); tot 250
             # nummers is er niets te kiezen en staat gewoon alles er.
-            alle_nummers = _alleen_nl(alle_nummers)
+            alle_nummers = _alleen_binnenkomers(con, lijst, jaar,
+                                                _alleen_nl(alle_nummers))
             gevraagd = request.args.get("toon", "")
             toon = (len(alle_nummers) if gevraagd == "alles"
                     else int(gevraagd) if gevraagd.isdigit()
@@ -738,7 +755,8 @@ def _registreer(app: Flask) -> None:
         gesorteerd = sorted(nummers.values(),
                             key=lambda n: (-n["punten"], n["hoogste"], n["eerste_week"]))
 
-        gesorteerd = _alleen_nl(gesorteerd)
+        gesorteerd = _alleen_binnenkomers(con, lijst, jaar,
+                                          _alleen_nl(gesorteerd))
 
         # Standaard de top 100 -- een compleet jaar is honderden rijen plus
         # de weekmatrix, en dat maakt de pagina traag. De hoogtepunten
