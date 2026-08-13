@@ -1021,16 +1021,20 @@ def _registreer(app: Flask) -> None:
         if lijst not in LIJSTEN:
             lijst = DECENNIUM_LIJST
         con = verbinding()
+        # Met het NL-filter rekenen de ranglijsten zichzelf uit over alleen
+        # de Nederlandstalige nummers -- knippen in een bestaand klassement
+        # zou gaten in de volgorde slaan.
+        alleen = _nl_sleutels() if request.args.get("nl") else None
         stempel = tuple(con.execute(
             "SELECT COUNT(*), MAX(opgehaald_op) FROM noteringen"
             " JOIN opgehaald USING (lijst, jaar, week) WHERE lijst=?",
             (lijst,),
-        ).fetchone())
-        kaart = _weetjes_cache.setdefault(lijst, {})
+        ).fetchone()) + (len(alleen or ()),)
+        kaart = _weetjes_cache.setdefault((lijst, alleen is not None), {})
         if kaart.get("stempel") != stempel:
             kaart["stempel"] = stempel
-            kaart["blokken"] = weetjes.verzamel(con, lijst)
-            kaart["cijfers"] = weetjes.cijfers(con, lijst)
+            kaart["blokken"] = weetjes.verzamel(con, lijst, alleen)
+            kaart["cijfers"] = weetjes.cijfers(con, lijst, alleen)
         return render_template(
             "wetenswaardigheden.html", lijst=lijst,
             blokken=kaart["blokken"], cijfers=kaart["cijfers"],

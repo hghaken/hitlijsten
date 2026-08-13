@@ -31,6 +31,7 @@
     {% endfor %}
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+  {{ nl_filter() }}
 
   {% if jaar and lijst in weeklijsten %}
     {# Rechtstreeks naar een losse week van deze jaargang. #}

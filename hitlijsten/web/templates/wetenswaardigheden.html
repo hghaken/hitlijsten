@@ -1,6 +1,7 @@
 {% extends "basis.html" %}
 {% block titel %}Wetenswaardigheden {{ lijst_namen.get(lijst, lijst) }} —
   Hitlijsten{% endblock %}
+{% from "_vlag.html" import nl_vlag, nl_filter with context %}
 {% block inhoud %}
 {% set jaarlijks = is_jaarlijks(lijst) %}
 
@@ -28,6 +29,7 @@
     </optgroup>
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+  {{ nl_filter() }}
 </form>
 
 {% if not blokken %}

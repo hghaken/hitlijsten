@@ -124,8 +124,17 @@ class _Nummer:
     punten_per_jaar: dict[int, int] = field(default_factory=dict)
 
 
-def _lees(con: sqlite3.Connection, lijst: str) -> tuple[list[date], dict[str, _Nummer]]:
-    """Alle noteringen van één lijst, per nummer op de kalender gelegd."""
+def _lees(con: sqlite3.Connection, lijst: str,
+          alleen: set | None = None) -> tuple[list[date], dict[str, _Nummer]]:
+    """Alle noteringen van één lijst, per nummer op de kalender gelegd.
+
+    Met `alleen` blijven uitsluitend die sleutels over -- zo rekenen alle
+    ranglijsten zichzelf uit over bijvoorbeeld alleen de Nederlandstalige
+    nummers, in plaats van dat er achteraf rijen uit een klassement worden
+    geknipt (dat zou gaten in de volgorde slaan). De lijstlengte voor de
+    puntentelling komt wel van de volledige lijst: positie 5 blijft positie 5,
+    ook als je alleen naar de Nederlandstalige nummers kijkt.
+    """
     rijen = list(con.execute(
         "SELECT jaar, week, positie, artiest, titel, sleutel FROM noteringen"
         " WHERE lijst=? ORDER BY jaar, week, positie",
@@ -140,6 +149,9 @@ def _lees(con: sqlite3.Connection, lijst: str) -> tuple[list[date], dict[str, _N
     for r in rijen:
         datum = vrijdag_van(r["jaar"], r["week"])
         lengte[datum] = max(lengte.get(datum, 0), r["positie"])
+
+    if alleen is not None:
+        rijen = [r for r in rijen if r["sleutel"] in alleen]
 
     kalender = sorted(lengte)
     volgnummer = {datum: nr for nr, datum in enumerate(kalender)}
@@ -192,9 +204,10 @@ def _beste_jaar(n: _Nummer) -> int:
     return max(n.punten_per_jaar, key=lambda j: n.punten_per_jaar[j])
 
 
-def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
+def verzamel(con: sqlite3.Connection, lijst: str = "top40",
+             alleen: set | None = None) -> list[Blok]:
     """De tien ranglijsten. Lege database -> lege lijst."""
-    kalender, nummers = _lees(con, lijst)
+    kalender, nummers = _lees(con, lijst, alleen)
     if not nummers:
         return []
     jaarlijks = is_jaarlijks(lijst)
@@ -421,16 +434,25 @@ def verzamel(con: sqlite3.Connection, lijst: str = "top40") -> list[Blok]:
     return blokken
 
 
-def cijfers(con: sqlite3.Connection, lijst: str = "top40") -> dict:
+def cijfers(con: sqlite3.Connection, lijst: str = "top40",
+            alleen: set | None = None) -> dict:
     """Een paar totalen voor boven de pagina."""
+    if alleen is None:
+        voorwaarde, waarden = "", (lijst,)
+    else:
+        # De totalen tellen dan alleen de gekozen nummers mee, maar de
+        # periode (van/tot) en het weektal blijven van de volledige lijst.
+        plek = ",".join("?" for _ in alleen) or "''"
+        voorwaarde = f" AND sleutel IN ({plek})"
+        waarden = (lijst, *alleen)
     rij = con.execute(
         "SELECT COUNT(*), COUNT(DISTINCT sleutel), MIN(jaar), MAX(jaar),"
-        " COUNT(DISTINCT jaar || '-' || week) FROM noteringen WHERE lijst=?",
-        (lijst,),
+        " COUNT(DISTINCT jaar || '-' || week) FROM noteringen WHERE lijst=?"
+        + voorwaarde, waarden,
     ).fetchone()
     artiesten = con.execute(
         "SELECT COUNT(DISTINCT substr(sleutel, 1, instr(sleutel, '|') - 1))"
-        " FROM noteringen WHERE lijst=?", (lijst,),
+        " FROM noteringen WHERE lijst=?" + voorwaarde, waarden,
     ).fetchone()[0]
     return {
         "noteringen": rij[0], "nummers": rij[1], "van": rij[2], "tot": rij[3],
