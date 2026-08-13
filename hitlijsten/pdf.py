@@ -35,8 +35,11 @@ LETTERTYPEN = ROOT / "lettertypen"
 
 REGELS_PER_PAGINA = 40
 
-ACCENT = (206, 32, 39)          # rood, zoals de officiële jaarlijsten
-ACCENT_DONKER = (150, 20, 26)
+# Sinds de eigen banner (blauwpaars, zoals de site) kleuren de lijnen mee;
+# het rood van de officiële jaarlijsten paste daar niet meer bij.
+ACCENT = (86, 80, 245)
+ACCENT_DONKER = (43, 36, 140)
+BANNER_AFBEELDING = ROOT / "middelen" / "banner.jpg"
 GRIJS = (110, 110, 110)
 LIJN = (214, 214, 214)
 
@@ -72,14 +75,19 @@ class _Blad(FPDF):
         self.set_creator("hitlijsten.hhaken.nl")
 
     def header(self) -> None:
-        # Verloop in dunne strookjes; fpdf2 kent geen echte gradiënt.
-        stappen = 60
-        breedte = 210 / stappen
-        for i in range(stappen):
-            deel = i / (stappen - 1)
-            self.set_fill_color(*(round(a + (b - a) * deel)
-                                  for a, b in zip(ACCENT, ACCENT_DONKER)))
-            self.rect(i * breedte, 0, breedte + 0.3, BANNER, "F")
+        if BANNER_AFBEELDING.exists():
+            # De banner van de site, op maat gesneden voor 210 x 24 mm.
+            self.image(str(BANNER_AFBEELDING), 0, 0, 210, BANNER)
+        else:
+            # Zonder afbeelding: verloop in strookjes, fpdf2 kent geen echte
+            # gradiënt.
+            stappen = 60
+            breedte = 210 / stappen
+            for i in range(stappen):
+                deel = i / (stappen - 1)
+                self.set_fill_color(*(round(a + (b - a) * deel)
+                                      for a, b in zip(ACCENT, ACCENT_DONKER)))
+                self.rect(i * breedte, 0, breedte + 0.3, BANNER, "F")
 
         self.set_text_color(255, 255, 255)
         self.set_font("dejavu", "B", 16)

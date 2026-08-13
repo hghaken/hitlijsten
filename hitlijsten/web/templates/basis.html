@@ -18,6 +18,9 @@
 <meta property="og:title" content="{{ self.titel() }}">
 <meta property="og:description" content="{{ self.beschrijving() }}">
 <meta property="og:url" content="{{ canoniek() }}">
+<meta property="og:image" content="{{ hoofd_url }}{{ url_for('static', filename='banner.jpg') }}">
+<meta property="og:image:width" content="2000">
+<meta property="og:image:height" content="343">
 <style>
   /* Zelfde taal als hhaken.nl en otsradio.hhaken.nl: donkere ondergrond,
      glasachtige kaarten, een verloop van blauw naar paars als accent. */
@@ -47,6 +50,11 @@
     background-attachment: fixed;
   }
 
+  .banier {
+    height: clamp(64px, 9vw, 122px);
+    background: url("{{ url_for('static', filename='banner.jpg') }}") center/cover no-repeat;
+    border-bottom: 1px solid var(--rand);
+  }
   header {
     position: sticky; top: 0; z-index: 20;
     background: rgba(9,12,24,.72); backdrop-filter: blur(14px);
@@ -368,6 +376,8 @@
     </span>
   </div>
 </header>
+{# De banner: decoratief, scrolt gewoon mee (alleen de menubalk is sticky). #}
+<div class="banier" role="presentation"></div>
 <main>
   {% with meldingen = get_flashed_messages(with_categories=true) %}
     {% for soort, tekst in meldingen %}
