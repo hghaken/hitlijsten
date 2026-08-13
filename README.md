@@ -31,7 +31,9 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 
 539.163 noteringen over eenentwintig lijsten: 7.545 weken en 253 jaaredities.
 De namen en titels zijn opgeschoond en geverifieerd tegen MusicBrainz,
-Discogs en Wikipedia; elke correctie staat met reden in een logboek. Draait op een Synology NAS: een
+Discogs en Wikipedia; elke correctie staat met reden in een logboek. Elk
+nummer draagt bovendien zijn Alarmschijf-belletje (bron: top40.nl) en een
+Nederlandstalig-markering met filter. Draait op een Synology NAS: een
 Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
 om 22:00 de nieuwe week ophaalt.
 

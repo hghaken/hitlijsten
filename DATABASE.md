@@ -100,6 +100,7 @@ De tabel waar het om gaat. **Eén rij per nummer per week per lijst.**
 | `site_status` | TEXT | `nieuw`, `stijger`, `daler`, `gelijk`, `terug`, `onbekend` |
 | `sleutel` | TEXT | zie [De sleutel](#de-sleutel) |
 | `uitjaar` | INTEGER | jaar van uitgave; alleen de jaarlijkse lijsten leveren dit |
+| `alarmschijf` | INTEGER | het belletje van top40.nl: dit nummer is (ooit) Alarmschijf geweest; per notering zoals de bron het toont |
 
 **Indexen:** `(lijst, jaar, sleutel)` en `(lijst, jaar, week)`.
 
