@@ -61,8 +61,11 @@
     transition: background-color .25s;
   }
   header.vast {
-    background: rgba(9,12,24,.85);
-    backdrop-filter: blur(10px);
+    /* Ook in de vaste stand doorschijnend: de blur houdt de menutekst
+       leesbaar terwijl de banner en de inhoud erdoorheen schemeren. */
+    background: rgba(9,12,24,.45);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--rand);
   }
   header .binnen {
