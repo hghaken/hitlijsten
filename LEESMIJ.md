@@ -304,21 +304,23 @@ op de NAS, achter een reverse proxy.
 | Pagina | Wat je er ziet |
 |---|---|
 | Overzicht | wat er in de database zit, in twee tabellen: weeklijsten en jaarlijkse lijsten |
-| Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met Excel- en PDF-download |
-| Decennium | het puntenklassement over tien jaargangen Top 40, met Excel- en PDF-download |
-| Totaal lijst | hetzelfde over alle jaargangen 1965–nu, met Excel- en PDF-download |
+| Jaaroverzicht | puntenklassement en de matrix positie-per-week, per lijst en jaargang; ook een **binnenkomers-vinkje** (nummers die dat jaar voor het éérst in de lijst verschenen — over de hele historie gerekend, dus Last Christmas telt alleen in 1984) |
+| Selecties & downloads | overal dezelfde spelregels: keuzelijst top 100/500/1000/2500/alles (standaard 100; onder de 250 nummers geen keuzelijst maar meteen alles), de filters NL en binnenkomers, en **wat op het scherm staat, zit in het bestand** — Excel en PDF volgen de selectie met `_topN`/`_NL`/`_nieuw` in de bestandsnaam; op "alles" zonder filter komen de rijke voorgebouwde jaarwerkboeken met weektabs, en de matrix-downloads blijven altijd volledig |
+| Decennium | het puntenklassement over tien jaargangen Top 40 |
+| Totaal lijst | hetzelfde over alle jaargangen 1965–nu |
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; `artiest \| titel` zoekt op allebei tegelijk (bij nul treffers met meerdere woorden stelt de pagina die schrijfwijze klikbaar voor); klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
-| Weeklijst | één week zoals uitgezonden, met week-keuzelijst, bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en Excel- en PDF-download |
+| Weeklijst | één week zoals uitgezonden, met week-keuzelijst, bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en de nieuw/terug-spelden |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
 | Alarmschijf | rood belletje 🔔 vóór de titel op de Top 40-weeklijsten; het belletje van top40.nl zelf (klasse `hitrecord`), per plaat vastgelegd in `noteringen.alarmschijf` en elke vrijdagrun bijgehouden; michajans.nl blijft de bron voor de toekenningsdatum |
 | Nederlandstalig | rood-wit-blauw vlaggetje voor de titel, op elke lijstpagina én de wetenswaardigheden óók als filter (checkbox "NL"; de weetjes-ranglijsten rekenen zichzelf dan opnieuw uit over alleen Nederlandstalig, en de ter-plekke gebouwde Excel- en PDF-downloads filteren mee, met `_NL` in de bestandsnaam); herkenning in drie trappen — lijstbewijs (Oranje/Sterren NL zijn per definitie Nederlandstalig), artiestroute en titel-woordenlijst — met handmatige correctie op de nummerpagina die altijd wint |
-| Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard; met Excel- en PDF-download |
+| Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
 | Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen), voortgangsbalken per stap, en een taakstand die een herstart overleeft |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Gastenboek | gepubliceerde bezoekersberichten, met eventueel een antwoord van de beheerder eronder |
 | Bericht achterlaten | formulier voor opmerkingen, tips, bugs en aanvullingen; spamwering met honeypot, invultijd en per-IP-limiet, geen CAPTCHA; alles komt privé binnen en niets staat live zonder akkoord |
 | Berichten | (achter de login) de postbus: publiceren, privé houden, verwijderen of beantwoorden; mailmelding bij elk nieuw bericht |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
+| Vormgeving | tabellen tot 100 rijen krijgen hun volle hoogte (geen binnenste scrollbalk); daarboven een scrollvak van 78vh |
 | Banner | eigen ontwerp, vast aan de bovenrand achter de doorzichtige menubalk (die dichtgaat na scrollen); dezelfde banner siert de kop van elke PDF en is de og:image van gedeelde links |
 | Vindbaarheid | `sitemap.xml` (±36.000 pagina's, gecachet), `robots.txt`, meta-descriptions, canonical-links en Open Graph-tags op elke pagina |
 
