@@ -82,6 +82,14 @@
   header nav a:hover { color: var(--ink); background: var(--glas); }
   header nav a.actief { color: var(--ink); background: var(--glas); }
   .rechts { margin-left: auto; }
+  .binnen.subbalk { padding-top: 0; padding-bottom: .45rem; }
+  .subnav { display: flex; gap: .15rem .3rem; flex-wrap: wrap; }
+  .subnav a {
+    color: var(--gedempt); text-decoration: none; font-size: .82rem;
+    padding: .1rem .45rem; border-radius: 7px;
+  }
+  .subnav a:hover { color: var(--ink); background: var(--glas); }
+  .subnav .scheiding { color: var(--rand); align-self: center; }
 
   main { max-width: 1600px; margin: 0 auto; padding: 1.6rem 1.4rem 4rem; }
   /* De banner zit vast aan de bovenrand van het SCHERM (position: fixed):
@@ -391,31 +399,18 @@
 </head>
 <body>
 <header>
+  {# Twee rijen: bovenin de lijsten zelf, daaronder -- rustiger gezet -- de
+     extra's en (na aanmelden) het beheer. Vijftien links op een rij was
+     niet meer te overzien. #}
   <div class="binnen">
     <span class="merk"><span>Hitlijsten</span></span>
     <nav>
       <a href="{{ url_for('overzicht') }}">Overzicht</a>
       <a href="{{ url_for('jaaroverzicht') }}">Jaaroverzicht</a>
       <a href="{{ url_for('weeklijst') }}">Weeklijst</a>
-      <a href="{{ url_for('jouw_dag') }}">Jouw dag</a>
-      <a href="{{ url_for('weekbericht') }}">Weekbericht</a>
       <a href="{{ url_for('decennium_overzicht') }}">Decennium</a>
       <a href="{{ url_for('totaal_lijst') }}">Totaal lijst</a>
       <a href="{{ url_for('jaarlijksen_lijst') }}">Jaarlijsten totaal</a>
-      <a href="{{ url_for('wetenswaardigheden') }}">Wetenswaardigheden</a>
-      <a href="{{ url_for('records') }}">Records</a>
-      <a href="{{ url_for('versies') }}">Versies</a>
-      <a href="{{ url_for('vergelijk') }}">Vergelijk</a>
-      <a href="{{ url_for('zoek') }}">Zoeken</a>
-      <a href="{{ url_for('gastenboek') }}">Gastenboek</a>
-      {% if is_aangemeld() %}
-        <a href="{{ url_for('berichten') }}">Berichten</a>
-        <a href="{{ url_for('aliassen') }}">Aliassen</a>
-        <a href="{{ url_for('uitzonderingen') }}">Uitzonderingen</a>
-        <a href="{{ url_for('query') }}">Query</a>
-        <a href="{{ url_for('beheer') }}">Beheer</a>
-        <a href="{{ url_for('wijzigingen') }}">Logboek</a>
-      {% endif %}
     </nav>
     <span class="rechts">
       <a href="{{ url_for('verras') }}" title="Verras me: een willekeurig nummer">🎲</a>
@@ -426,6 +421,27 @@
         <a href="{{ url_for('aanmelden') }}">Aanmelden</a>
       {% endif %}
     </span>
+  </div>
+  <div class="binnen subbalk">
+    <nav class="subnav">
+      <a href="{{ url_for('zoek') }}">Zoeken</a>
+      <a href="{{ url_for('jouw_dag') }}">Jouw dag</a>
+      <a href="{{ url_for('weekbericht') }}">Weekbericht</a>
+      <a href="{{ url_for('wetenswaardigheden') }}">Wetenswaardigheden</a>
+      <a href="{{ url_for('records') }}">Records</a>
+      <a href="{{ url_for('versies') }}">Versies</a>
+      <a href="{{ url_for('vergelijk') }}">Vergelijk</a>
+      <a href="{{ url_for('gastenboek') }}">Gastenboek</a>
+      {% if is_aangemeld() %}
+        <span class="scheiding" aria-hidden="true">|</span>
+        <a href="{{ url_for('berichten') }}">Berichten</a>
+        <a href="{{ url_for('aliassen') }}">Aliassen</a>
+        <a href="{{ url_for('uitzonderingen') }}">Uitzonderingen</a>
+        <a href="{{ url_for('query') }}">Query</a>
+        <a href="{{ url_for('beheer') }}">Beheer</a>
+        <a href="{{ url_for('wijzigingen') }}">Logboek</a>
+      {% endif %}
+    </nav>
   </div>
 </header>
 <main>
