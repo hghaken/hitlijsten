@@ -1,5 +1,6 @@
 {% extends "basis.html" %}
 {% from "_zoeklinks.html" import zoeklinks %}
+{% from "_vlag.html" import nl_vlag, nl_filter %}
 {% block titel %}{{ lijst_namen.get(lijst, lijst) }} {{ jaar }} — Hitlijsten{% endblock %}
 {% block beschrijving %}De complete {{ lijst_namen.get(lijst, lijst) }} van {{ jaar }}, met per nummer de positie van vorig jaar en het verloop over alle edities.{% endblock %}
 {% block inhoud %}
@@ -123,7 +124,7 @@
         <td class="getal {% if n.positie == 1 %}top1{% elif n.positie <= 3 %}top3{% endif %}">
           {{ n.positie }}</td>
         <td class="breed klikbaar" title="Klik voor het verloop">{{ n.artiest }}</td>
-        <td class="breed klikbaar" title="Klik voor het verloop">{{ n.titel }}{{ zoeklinks(n.artiest, n.titel) }}</td>
+        <td class="breed klikbaar" title="Klik voor het verloop">{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}{{ n.titel }}{{ zoeklinks(n.artiest, n.titel) }}</td>
         <td class="getal hint">{{ n.uitjaar or '' }}</td>
         <td class="getal">{{ n.vorige or '' }}</td>
         {# Een lagere positie is beter, dus vorige - nu: positief = gestegen. #}

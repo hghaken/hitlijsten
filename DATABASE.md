@@ -35,6 +35,7 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 | [`wijzigingen`](#wijzigingen) | 11.437 | logboek van elke correctie |
 | [`taak`](#taak) | 0–1 | de lopende (of laatst gedraaide) achtergrondtaak |
 | [`berichten`](#berichten) | groeit | bezoekersberichten voor gastenboek en postbus |
+| [`taal`](#taal) | ±7.000 | welke nummers Nederlandstalig zijn, met de bewijsgrond |
 
 Peildatum 3 augustus 2026.
 
@@ -355,6 +356,22 @@ gastenboek), houdt privé (→ `prive`) of verwijdert (spam laat geen rij achter
 | `status` | TEXT | `nieuw`, `gepubliceerd` of `prive` |
 | `antwoord` | TEXT | korte reactie van de beheerder, onder het bericht |
 | `ip` | TEXT | voor de limiet van vijf berichten per adres per dag |
+
+## taal
+
+Welke nummers Nederlandstalig zijn. Gevuld door `taal.herken_alles()` in drie
+trappen: `lijst` (stond in de Oranje Top 30 of Sterren NL Top 25 — hard
+bewijs), `artiest` (artiest met vrijwel alleen Nederlandstalig werk),
+`titel` (overtuigend Nederlandse woorden/patronen in de titel). `hand` is
+een handmatige beslissing via de nummerpagina en wint altijd; de rest wordt
+bij elke run opnieuw bepaald. De vrijdagrun draait de herkenning mee.
+
+| Kolom | Type | Betekenis |
+|---|---|---|
+| `sleutel` | TEXT | het nummer |
+| `nederlandstalig` | INTEGER | 1 of (alleen bij `hand`) 0 |
+| `bron` | TEXT | `lijst`, `artiest`, `titel` of `hand` |
+| `aangemaakt` | TEXT | lokale tijd, ISO |
 
 ## taak
 

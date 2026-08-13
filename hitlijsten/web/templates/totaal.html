@@ -1,5 +1,6 @@
 {% extends "basis.html" %}
 {% from "_zoeklinks.html" import zoeklinks %}
+{% from "_vlag.html" import nl_vlag, nl_filter %}
 {% block titel %}Totaal lijst Top 40 {{ van }}–{{ tot }} — Hitlijsten{% endblock %}
 {% block beschrijving %}Het totaalklassement over alle jaargangen Nederlandse Top 40, 1965 tot nu.{% endblock %}
 {% block inhoud %}
@@ -23,6 +24,7 @@
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
+  {{ nl_filter() }}
   {% set top = toon if toon != totaal else None %}
   <a class="knop" href="{{ url_for('download_totaal', toon=top) }}"
      title="{% if top %}De top {{ top }}{% else %}De volledige lijst van {{ totaal }} nummers{% endif %} als werkboek">⤓ Excel</a>
@@ -88,7 +90,7 @@
         <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
           {{ loop.index }}</td>
         <td class="breed"><a class="stil" href="{{ doel }}">{{ n.artiest }}</a></td>
-        <td class="breed"><a class="stil" href="{{ doel }}">{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
+        <td class="breed"><a class="stil" href="{{ doel }}">{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
         <td class="getal">{{ n.punten }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
         <td class="getal">{{ n.weken }}</td>

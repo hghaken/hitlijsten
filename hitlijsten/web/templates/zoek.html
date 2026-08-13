@@ -1,5 +1,6 @@
 {% extends "basis.html" %}
 {% from "_zoeklinks.html" import zoeklinks %}
+{% from "_vlag.html" import nl_vlag, nl_filter %}
 {% block titel %}Zoeken — Hitlijsten{% endblock %}
 {% block inhoud %}
 <h1>Noteringen zoeken</h1>
@@ -19,6 +20,7 @@
     {% endfor %}
   </select>
   <button class="hoofd" type="submit">Zoeken</button>
+  {{ nl_filter() }}
 </form>
 
 {% if term %}
@@ -47,7 +49,7 @@
       <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=r['lijst'],
              jaar=r['piekjaar'], markeer=r['sleutel']) }}"
              title="naar {{ r['piekjaar'] }}, waar dit nummer op {{ r['hoogste'] }} stond"
-             >{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
+             >{% if is_nl(r['sleutel']) %}{{ nl_vlag() }} {% endif %}{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
       <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
       <td class="getal">{{ r['van'] }}</td>
       <td class="getal">{{ r['tot'] }}</td>

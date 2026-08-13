@@ -1,5 +1,6 @@
 {% extends "basis.html" %}
 {% from "_zoeklinks.html" import zoeklinks %}
+{% from "_vlag.html" import nl_vlag, nl_filter %}
 {% block titel %}{{ decennium }}'s Top 40 — Hitlijsten{% endblock %}
 {% block inhoud %}
 
@@ -17,6 +18,7 @@
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
   {% if nummers %}
+  {{ nl_filter() }}
   <a class="knop" href="{{ url_for('download_decennium', decennium=decennium) }}"
      title="Het puntenklassement van {{ decennium }}–{{ decennium + 9 }} als werkboek">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download_decennium_pdf', decennium=decennium) }}"
@@ -87,7 +89,7 @@
         <td class="breed"><a class="stil" href="{{ doel }}"
             title="Naar {{ n.beste_jaar }}">{{ n.artiest }}</a></td>
         <td class="breed"><a class="stil" href="{{ doel }}"
-            title="Naar {{ n.beste_jaar }}">{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
+            title="Naar {{ n.beste_jaar }}">{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
         <td class="getal">{{ n.punten }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
         <td class="getal">{{ n.weken }}</td>

@@ -1,5 +1,6 @@
 {% extends "basis.html" %}
 {% from "_zoeklinks.html" import zoeklinks %}
+{% from "_vlag.html" import nl_vlag, nl_filter %}
 {% block titel %}Week {{ week }}, {{ jaar }} {{ lijst_namen.get(lijst, lijst) }} — Hitlijsten{% endblock %}
 {% block inhoud %}
 
@@ -26,6 +27,7 @@
     {% endfor %}
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+  {{ nl_filter() }}
 
   {# Bladeren langs de kalender van uitgezonden weken, over de jaargrens heen:
      na week 52 komt week 1 van het jaar erop, en een overgeslagen kerstweek
@@ -77,7 +79,7 @@
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar,
            markeer=r['sleutel']) }}">{# Het belletje alleen in de Top 40 zelf,
            vóór de titel — zoals top40.nl het ook toont. #}{% if lijst == 'top40' and r['alarmschijf'] %}<span
-           title="Alarmschijf" style="color:#ED1C24">🔔</span> {% endif %}{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
+           title="Alarmschijf" style="color:#ED1C24">🔔</span> {% endif %}{% if is_nl(r['sleutel']) %}{{ nl_vlag() }} {% endif %}{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
     {% if heeft_label %}<td class="hint">{{ r['label'] or '' }}</td>{% endif %}
     <td class="getal hint">{{ r['weken_genoteerd'] or '' }}</td>
   </tr>

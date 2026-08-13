@@ -247,6 +247,55 @@ def _registreer(app: Flask) -> None:
         session.clear()
         return redirect(url_for("aanmelden"))
 
+    # --- Nederlandstalig ---------------------------------------------------
+
+    _taal_cache: dict = {}
+
+    def _nl_sleutels() -> set:
+        """Alle Nederlandstalige sleutels, gecachet tot de tabel verandert."""
+        from ..taal import SCHEMA, nederlandstalige_sleutels
+
+        con = verbinding()
+        con.executescript(SCHEMA)
+        stempel = tuple(con.execute(
+            "SELECT COUNT(*), MAX(aangemaakt) FROM taal").fetchone())
+        if _taal_cache.get("stempel") != stempel:
+            _taal_cache["stempel"] = stempel
+            _taal_cache["sleutels"] = nederlandstalige_sleutels(con)
+        return _taal_cache["sleutels"]
+
+    def _is_nl(sleutel: str) -> bool:
+        return sleutel in _nl_sleutels()
+
+    app.jinja_env.globals["is_nl"] = _is_nl
+
+    @app.context_processor
+    def _nl_filter_stand():
+        # Elke lijstpagina kent hetzelfde filter; de templates lezen de stand
+        # hieruit zodat niet elke render-aanroep hem hoeft door te geven.
+        return {"nl_filter_aan": bool(request.args.get("nl"))}
+
+    def _alleen_nl(rijen, sleutel_van=lambda r: r["sleutel"]):
+        """Pas het Nederlandstalig-filter toe als dat aan staat."""
+        if not request.args.get("nl"):
+            return rijen
+        nlset = _nl_sleutels()
+        return [r for r in rijen if sleutel_van(r) in nlset]
+
+    @app.route("/taal/zet", methods=["POST"])
+    @vereist_aanmelding
+    def taal_zet():
+        """Handmatig markeren of ontmarkeren; wint van de automatiek."""
+        from ..taal import zet_hand
+
+        sleutel = request.form.get("sleutel", "")
+        if not sleutel:
+            abort(400)
+        zet_hand(verbinding(), sleutel,
+                 request.form.get("nederlandstalig") == "1")
+        _taal_cache.clear()
+        return redirect(request.referrer or url_for("overzicht"))
+
     # --- overzicht ---------------------------------------------------------
 
     @app.route("/")
@@ -353,6 +402,7 @@ def _registreer(app: Flask) -> None:
             " weken_genoteerd, site_status, sleutel, alarmschijf FROM noteringen"
             " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie, artiest",
             (lijst, jaar, week)))
+        rijen = _alleen_nl(rijen)
         try:
             datum = als_tekst(vrijdag_van(jaar, week))
         except Exception:
@@ -600,6 +650,7 @@ def _registreer(app: Flask) -> None:
             # Een editie van vierduizend regels is 2,9 MB HTML. Korte lijsten
             # blijven compleet; pas boven de grens wordt er afgetopt, met een
             # keuze om alsnog alles te tonen.
+            alle_nummers = _alleen_nl(alle_nummers)
             toon = (len(alle_nummers)
                     if request.args.get("toon") == "alles"
                     else min(EDITIE_DREMPEL, len(alle_nummers)))
@@ -684,6 +735,7 @@ def _registreer(app: Flask) -> None:
         gesorteerd = sorted(nummers.values(),
                             key=lambda n: (-n["punten"], n["hoogste"], n["eerste_week"]))
 
+        gesorteerd = _alleen_nl(gesorteerd)
         nummer_ees = [n for n in gesorteerd if n["hoogste"] == 1]
         hoogtepunten = {
             "nummers": len(gesorteerd),
@@ -729,7 +781,8 @@ def _registreer(app: Flask) -> None:
         gevraagd = request.args.get("decennium", "")
         gekozen = (int(gevraagd) if gevraagd.isdigit() and int(gevraagd) in decennia
                    else decennia[0])
-        nummers = db.decennium_totalen(con, DECENNIUM_LIJST, gekozen)
+        nummers = _alleen_nl(db.decennium_totalen(con, DECENNIUM_LIJST,
+                                                  gekozen))
         return render_template(
             "decennium.html", decennia=decennia, decennium=gekozen, nummers=nummers,
             jaren=[j for j in jaren if gekozen <= j <= gekozen + 9],
@@ -769,7 +822,7 @@ def _registreer(app: Flask) -> None:
                                    aantallen=AANTALLEN, toon=0, totaal=0,
                                    nummer1s=0, markeer="")
 
-        nummers = _totaal_lijst(con, DECENNIUM_LIJST, van, tot)
+        nummers = _alleen_nl(_totaal_lijst(con, DECENNIUM_LIJST, van, tot))
         gevraagd = request.args.get("toon", "")
         toon = (len(nummers) if gevraagd == "alles"
                 else int(gevraagd) if gevraagd.isdigit() and int(gevraagd) in AANTALLEN
@@ -803,7 +856,7 @@ def _registreer(app: Flask) -> None:
         if _jaarlijksen_cache.get("stempel") != (stempel, wijzig):
             _jaarlijksen_cache["stempel"] = (stempel, wijzig)
             _jaarlijksen_cache["nummers"] = db.jaarlijkse_totalen(con)
-        nummers = _jaarlijksen_cache["nummers"]
+        nummers = _alleen_nl(_jaarlijksen_cache["nummers"])
 
         gevraagd = request.args.get("toon", "")
         toon = (len(nummers) if gevraagd == "alles"
@@ -1162,7 +1215,8 @@ def _registreer(app: Flask) -> None:
                 for i in range(1, len(woorden))
             ]
         return render_template("zoek.html", term=term, lijst=lijst, waar=waar,
-                               resultaten=resultaten, suggesties=suggesties)
+                               resultaten=_alleen_nl(resultaten),
+                               suggesties=suggesties)
 
     @app.route("/nummer/<path:sleutel>")
     def nummer(sleutel: str):

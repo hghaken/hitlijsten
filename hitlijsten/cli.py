@@ -180,6 +180,15 @@ def opdracht_bijwerken(
 
             if not any(l == lijst for l, _ in nieuw):
                 log(f"{lijst}: niets nieuws (t/m {site_jaar} week {laatste})")
+    # De taalindeling meteen bijwerken: nieuwe nummers krijgen hun
+    # NL-vlaggetje zonder aparte stap, en een nummer dat deze week alsnog
+    # de Oranje Top 30 haalde, wordt gepromoveerd tot hard bewijs.
+    from . import taal
+    with db.verbinding() as con:
+        telling = taal.herken_alles(con)
+    log(f"taal: {telling['lijst'] + telling['artiest'] + telling['titel']}"
+        f" Nederlandstalige nummers gemarkeerd")
+
     return nieuw, mislukt
 
 
