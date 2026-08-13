@@ -861,9 +861,10 @@ def _registreer(app: Flask) -> None:
         nummers = _alleen_nl(_jaarlijksen_cache["nummers"])
 
         gevraagd = request.args.get("toon", "")
+        # Net als de totaallijst: standaard de top 100.
         toon = (len(nummers) if gevraagd == "alles"
                 else int(gevraagd) if gevraagd.isdigit() and int(gevraagd) in AANTALLEN
-                else AANTALLEN[2])
+                else AANTALLEN[0])
         edities = con.execute(
             f"SELECT COUNT(DISTINCT lijst || '-' || jaar) FROM noteringen"
             f" WHERE lijst IN ({plek})", namen).fetchone()[0]
