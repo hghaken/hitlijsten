@@ -132,6 +132,10 @@
     border: 1px solid var(--rand); border-radius: 14px; overflow: auto;
     background: var(--glas2); max-height: 78vh;
   }
+  /* Tot honderd rijen krijgt de tabel zijn volle hoogte en scrolt alleen de
+     pagina; de klasse zet het scriptje onderaan. Daarboven blijft de vaste
+     hoogte, anders wordt een editie van vierduizend rijen onhandelbaar. */
+  .tabelvak.past { max-height: none; }
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
   th, td { padding: .45rem .7rem; text-align: left; white-space: nowrap; }
   thead th {
@@ -498,6 +502,15 @@
 })();
 </script>
 <script>
+  // Korte tabellen (tot 100 rijen) hoeven niet in een eigen scrollvak.
+  document.querySelectorAll(".tabelvak").forEach(function (vak) {
+    const tabel = vak.querySelector("table");
+    if (tabel && tabel.tBodies.length
+        && tabel.tBodies[0].rows.length <= 100) {
+      vak.classList.add("past");
+    }
+  });
+
   // De menubalk: doorzichtig op de banner, dicht zodra er gescrold is.
   (() => {
     const kop = document.querySelector("header");
