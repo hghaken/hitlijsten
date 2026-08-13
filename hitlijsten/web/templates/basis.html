@@ -54,7 +54,7 @@
     position: sticky; top: 0; z-index: 20;
     /* Doorzichtig genoeg om de banner erachter te laten schijnen; de blur
        houdt de menuteksten leesbaar op elke ondergrond. */
-    background: rgba(9,12,24,.35); backdrop-filter: blur(10px);
+    background: rgba(9,12,24,.18); backdrop-filter: blur(7px);
     border-bottom: 1px solid var(--rand);
   }
   header .binnen {
@@ -85,8 +85,10 @@
   body::before {
     content: ""; position: fixed; top: 0; left: 0; right: 0; z-index: -1;
     height: min(22vw, 380px);
-    background: url("{{ url_for('static', filename='banner.jpg') }}") top center/cover no-repeat;
-    opacity: .35;
+    /* Positie center: zo ligt het felle golvengedeelte van de afbeelding
+       bovenin, zichtbaar achter de menubalk, in plaats van de donkere rand. */
+    background: url("{{ url_for('static', filename='banner.jpg') }}") center/cover no-repeat;
+    opacity: .4;
     -webkit-mask-image: linear-gradient(180deg, #000 25%, transparent 97%);
     mask-image: linear-gradient(180deg, #000 25%, transparent 97%);
   }
