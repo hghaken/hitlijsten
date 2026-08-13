@@ -118,11 +118,32 @@ def _kort(pdf: FPDF, tekst: str, breedte: float) -> str:
     return tekst.rstrip() + "…"
 
 
-def _kopregel(pdf: _Blad, y: float) -> float:
+def _pas_nummerkolom(kolommen: list, aantal: int) -> list:
+    """Maak de #-kolom breed genoeg voor het hoogste nummer.
+
+    Negen millimeter past tot 999; de Top 4000 en de totaallijsten komen
+    daarboven en werden "10…". Elke cijfer extra kost 2,2 mm, en die ruimte
+    gaat af van de titelkolom -- de breedste, en de enige waar een puntje
+    niemand stoort.
+    """
+    extra = max(0, (len(str(aantal)) - 3) * 2.2)
+    if not extra:
+        return kolommen
+    uit = []
+    for kop, breedte, uitlijning in kolommen:
+        if kop == "#":
+            breedte += extra
+        elif kop == "Titel":
+            breedte -= extra
+        uit.append((kop, breedte, uitlijning))
+    return uit
+
+
+def _kopregel(pdf: _Blad, y: float, kolommen: list = KOLOMMEN) -> float:
     pdf.set_font("dejavu", "B", 7.5)
     pdf.set_text_color(*GRIJS)
     x = KANTLIJN
-    for naam, breedte, uitlijning in KOLOMMEN:
+    for naam, breedte, uitlijning in kolommen:
         pdf.set_xy(x, y)
         pdf.cell(breedte, 5, naam.upper(), align=uitlijning)
         x += breedte
@@ -153,10 +174,11 @@ def bouw_jaaroverzicht(
 
     pdf = _Blad(naam, jaar, ondertitel)
     pdf.alias_nb_pages()
+    kolommen = _pas_nummerkolom(KOLOMMEN, len(nummers))
 
     for begin in range(0, len(nummers), REGELS_PER_PAGINA):
         pdf.add_page()
-        y = _kopregel(pdf, BANNER + 9)
+        y = _kopregel(pdf, BANNER + 9, kolommen)
         for nr, n in enumerate(nummers[begin:begin + REGELS_PER_PAGINA],
                                start=begin + 1):
             lt = loop.get(n.sleutel)
@@ -176,7 +198,7 @@ def bouw_jaaroverzicht(
                        str(n.hoogste_positie), str(n.aantal_weken),
                        eerste, laatste]
             x = KANTLIJN
-            for (kop, breedte, uitlijning), waarde in zip(KOLOMMEN, waarden):
+            for (kop, breedte, uitlijning), waarde in zip(kolommen, waarden):
                 pdf.set_font("dejavu", "B" if kop in ("#", "Punten") else "", 8)
                 pdf.set_xy(x, y)
                 pdf.cell(breedte, REGEL - 0.6,
@@ -200,6 +222,7 @@ def _tabel_pdf(naam: str, jaartekst, ondertitel: str, kolommen: list,
     """Een klassement als PDF: kolommen (kop, mm, uitlijning) en rijen."""
     pdf = _Blad(naam, jaartekst, ondertitel)
     pdf.alias_nb_pages()
+    kolommen = _pas_nummerkolom(kolommen, len(rijen))
     breed = sum(k[1] for k in kolommen)
 
     for begin in range(0, len(rijen), REGELS_PER_PAGINA):
