@@ -824,9 +824,11 @@ def _registreer(app: Flask) -> None:
 
         nummers = _alleen_nl(_totaal_lijst(con, DECENNIUM_LIJST, van, tot))
         gevraagd = request.args.get("toon", "")
+        # Standaard de top 100: dat laadt vlot en is wat je meestal zoekt;
+        # wie meer wil, kiest het in de keuzelijst.
         toon = (len(nummers) if gevraagd == "alles"
                 else int(gevraagd) if gevraagd.isdigit() and int(gevraagd) in AANTALLEN
-                else AANTALLEN[2])
+                else AANTALLEN[0])
         return render_template(
             "totaal.html", nummers=nummers[:toon], van=van, tot=tot,
             aantallen=AANTALLEN, toon=toon, totaal=len(nummers),
