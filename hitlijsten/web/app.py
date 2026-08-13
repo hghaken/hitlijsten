@@ -1665,6 +1665,54 @@ def _registreer(app: Flask) -> None:
             return redirect(url_for("vdj_playlist"))
 
         con = verbinding()
+        soort = request.args.get("soort", "")
+
+        # De drie klassementen: het decennium, Top 40 totaal en de
+        # gecombineerde jaarlijst. De positie in het rapport is daar de
+        # klassementsplek, want "hoogste positie ooit" zegt over de
+        # playlistvolgorde niets.
+        if soort in ("decennium", "totaal", "jaarlijksen"):
+            if soort == "jaarlijksen":
+                regels = db.jaarlijkse_totalen(con)
+                naam = "JaarlijstenTotaal"
+            else:
+                if soort == "decennium":
+                    try:
+                        van = int(request.args.get("decennium", ""))
+                    except ValueError:
+                        abort(404)
+                    tot = van + 9
+                    naam = (f"{LIJSTEN[DECENNIUM_LIJST]['bestand']}"
+                            f"_Decennium_{van}-{tot}")
+                else:
+                    van, tot = db.alle_jaren(con, DECENNIUM_LIJST)
+                    naam = (f"{LIJSTEN[DECENNIUM_LIJST]['bestand']}"
+                            f"_Totaal_{van}-{tot}")
+                regels = db.totalen_over(con, DECENNIUM_LIJST, van, tot)
+            if not regels:
+                abort(404)
+            regels = [dict(r) for r in _alleen_nl(regels)]
+            top = _gekozen_top()
+            if top:
+                regels = regels[:top]
+                naam += f"_top{top}"
+            _, staartje = _nl_keuze()
+            naam += staartje
+            for plek, regel in enumerate(regels, 1):
+                regel["hoogste"] = plek
+            koppels = vdjmodule.match(regels, kaart["bestanden"],
+                                      kaart["niveau"])
+            paden = [k["bestand"].pad for k in koppels if k["bestand"]]
+            return render_template(
+                "vdj_rapport.html", niveaus=vdjmodule.NIVEAUS,
+                terug=request.referrer, uitkomst={
+                    "koppels": koppels, "gevonden": len(paden),
+                    "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
+                    "bibliotheek": len(kaart["bestanden"]),
+                    "vdjfolder": vdjmodule.bouw_vdjfolder(paden),
+                    "bestandsnaam": naam + ".vdjfolder",
+                })
+
         lijst = request.args.get("lijst") or "top40"
         if lijst not in LIJSTEN:
             abort(404)
