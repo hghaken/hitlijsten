@@ -52,7 +52,9 @@
 
   header {
     position: sticky; top: 0; z-index: 20;
-    background: rgba(9,12,24,.72); backdrop-filter: blur(14px);
+    /* Doorzichtig genoeg om de banner erachter te laten schijnen; de blur
+       houdt de menuteksten leesbaar op elke ondergrond. */
+    background: rgba(9,12,24,.35); backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--rand);
   }
   header .binnen {
