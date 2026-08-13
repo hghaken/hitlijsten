@@ -5,7 +5,7 @@ import configparser
 import io
 import secrets
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 from functools import wraps
 from pathlib import Path
 
@@ -317,6 +317,29 @@ def _registreer(app: Flask) -> None:
     @app.route("/")
     def overzicht():
         con = verbinding()
+        # "Vandaag X jaar geleden": de nummer 1 van deze week door de decennia
+        # heen. Maakt de voorpagina elke week anders, en wijst meteen naar de
+        # datumprikker.
+        terugblik = []
+        vandaag = date.today()
+        for terug in (10, 20, 30, 40, 50):
+            try:
+                toen = vandaag.replace(year=vandaag.year - terug)
+            except ValueError:            # 29 februari
+                toen = vandaag.replace(year=vandaag.year - terug, day=28)
+            uitkomst = _week_bij_datum(con, "top40", toen)
+            if uitkomst is None:
+                continue
+            tjaar, tweek = uitkomst
+            rij = con.execute(
+                "SELECT artiest, titel, sleutel FROM noteringen"
+                " WHERE lijst='top40' AND jaar=? AND week=? AND positie=1"
+                " LIMIT 1", (tjaar, tweek)).fetchone()
+            if rij:
+                terugblik.append({"terug": terug, "jaar": tjaar,
+                                  "week": tweek, "artiest": rij["artiest"],
+                                  "titel": rij["titel"],
+                                  "sleutel": rij["sleutel"]})
         lijsten = list(con.execute(
             "SELECT lijst, MIN(jaar) van, MAX(jaar) tot, COUNT(DISTINCT jaar) jaren,"
             " COUNT(DISTINCT jaar || '-' || week) weken, COUNT(*) noteringen"
@@ -365,7 +388,7 @@ def _registreer(app: Flask) -> None:
         # Groeperen gebeurt hier en niet in het sjabloon: een sqlite3.Row kent
         # geen attributen, dus selectattr() vindt er niets in.
         return render_template(
-            "overzicht.html", cijfers=cijfers, laatste=laatste,
+            "overzicht.html", terugblik=terugblik, cijfers=cijfers, laatste=laatste,
             taak=taken.huidige(),
             week_rijen=[r for r in lijsten if not is_jaarlijks(r["lijst"])],
             jaar_rijen=[r for r in lijsten if is_jaarlijks(r["lijst"])],
@@ -433,45 +456,73 @@ def _registreer(app: Flask) -> None:
 
     _sitemap_cache: dict = {}
 
-    @app.route("/sitemap.xml")
-    def sitemap():
-        """Alle openbare pagina's voor de zoekmachines.
+    def _sitemap_delen(con) -> list:
+        """De openbare URL's, verdeeld in delen van maximaal 50.000.
 
-        Verreweg de meeste regels zijn nummerpagina's: elke unieke sleutel is
-        een landingspagina voor een zoekopdracht als "hoogste positie Radar
-        Love". De limiet van het sitemap-formaat is 50.000 regels; met zo'n
-        45.000 nummers past alles nu in een bestand, en de teller hieronder
-        maakt er lawaai van als dat ooit niet meer zo is.
+        Het sitemap-formaat kapt op 50.000 regels per bestand; met ruim
+        36.000 nummers en 13.600 artiesten zijn we daar overheen. Deel 1 is
+        de site zelf plus de nummers, deel 2 de artiesten.
         """
+        deel1 = ["/", "/jaar", "/week", "/dag", "/decennium", "/totaal",
+                 "/jaarlijksen", "/wetenswaardigheden", "/zoek",
+                 "/gastenboek", "/feedback", "/disclaimer"]
+        for r in con.execute(
+                "SELECT DISTINCT lijst, jaar FROM noteringen"
+                " ORDER BY lijst, jaar"):
+            deel1.append(url_for("jaaroverzicht", lijst=r["lijst"],
+                                 jaar=r["jaar"]))
+        for r in con.execute(
+                "SELECT DISTINCT sleutel FROM noteringen ORDER BY sleutel"):
+            deel1.append(url_for("nummer", sleutel=r["sleutel"]))
+        deel2 = []
+        for r in con.execute(
+                "SELECT DISTINCT substr(sleutel, 1,"
+                " instr(sleutel, '|') - 1) a FROM noteringen ORDER BY a"):
+            if r["a"]:
+                deel2.append(url_for("artiest", artiestsleutel=r["a"]))
+        delen = [deel1, deel2]
+        for nr, deel in enumerate(delen, 1):
+            if len(deel) > 50000:
+                app.logger.warning("sitemap deel %d: %d regels, boven de"
+                                   " limiet -- opsplitsen", nr, len(deel))
+        return delen
+
+    def _sitemap_xml(nr: int) -> str:
         con = verbinding()
         stempel = tuple(con.execute(
             "SELECT COUNT(*), MAX(tijdstip) FROM wijzigingen").fetchone()) + (
             con.execute("SELECT COUNT(*) FROM noteringen").fetchone()[0],)
         if _sitemap_cache.get("stempel") != stempel:
-            regels = ["/", "/jaar", "/week", "/decennium", "/totaal",
-                      "/jaarlijksen", "/wetenswaardigheden", "/zoek",
-                      "/gastenboek", "/feedback", "/disclaimer"]
-            for r in con.execute(
-                    "SELECT DISTINCT lijst, jaar FROM noteringen"
-                    " ORDER BY lijst, jaar"):
-                regels.append(url_for("jaaroverzicht", lijst=r["lijst"],
-                                      jaar=r["jaar"]))
-            for r in con.execute(
-                    "SELECT DISTINCT sleutel FROM noteringen ORDER BY sleutel"):
-                regels.append(url_for("nummer", sleutel=r["sleutel"]))
-            if len(regels) > 50000:
-                app.logger.warning("sitemap: %d regels, boven de limiet van"
-                                   " 50.000 -- opsplitsen", len(regels))
-            stukken = ['<?xml version="1.0" encoding="UTF-8"?>',
-                       '<urlset xmlns="http://www.sitemaps.org/schemas/'
-                       'sitemap/0.9">']
-            # XML-escape: de jaargang-URL's dragen een & in de query.
-            stukken += [f"<url><loc>{HOOFD_URL}{pad.replace('&', '&amp;')}"
-                        f"</loc></url>" for pad in regels[:50000]]
-            stukken.append("</urlset>")
+            _sitemap_cache.clear()
             _sitemap_cache["stempel"] = stempel
-            _sitemap_cache["xml"] = "\n".join(stukken)
-        return app.response_class(_sitemap_cache["xml"],
+            _sitemap_cache["delen"] = _sitemap_delen(con)
+        delen = _sitemap_cache["delen"]
+        if not 1 <= nr <= len(delen):
+            abort(404)
+        stukken = ['<?xml version="1.0" encoding="UTF-8"?>',
+                   '<urlset xmlns="http://www.sitemaps.org/schemas/'
+                   'sitemap/0.9">']
+        stukken += [f"<url><loc>{HOOFD_URL}{pad.replace('&', '&amp;')}"
+                    f"</loc></url>" for pad in delen[nr - 1][:50000]]
+        stukken.append("</urlset>")
+        return "\n".join(stukken)
+
+    @app.route("/sitemap.xml")
+    def sitemap():
+        """De index die naar de delen wijst; zoekmachines volgen hem zelf."""
+        stukken = ['<?xml version="1.0" encoding="UTF-8"?>',
+                   '<sitemapindex xmlns="http://www.sitemaps.org/schemas/'
+                   'sitemap/0.9">']
+        for nr in (1, 2):
+            stukken.append(f"<sitemap><loc>{HOOFD_URL}/sitemap-{nr}.xml"
+                           f"</loc></sitemap>")
+        stukken.append("</sitemapindex>")
+        return app.response_class("\n".join(stukken),
+                                  mimetype="application/xml")
+
+    @app.route("/sitemap-<int:nr>.xml")
+    def sitemap_deel(nr: int):
+        return app.response_class(_sitemap_xml(nr),
                                   mimetype="application/xml")
 
     @app.route("/robots.txt")
@@ -1353,6 +1404,122 @@ def _registreer(app: Flask) -> None:
         return render_template("zoek.html", term=term, lijst=lijst, waar=waar,
                                resultaten=_alleen_nl(resultaten),
                                suggesties=suggesties)
+
+    _dag_cache: dict = {}
+
+    def _week_bij_datum(con, lijst, wanneer):
+        """De (jaar, week) van de lijst die op die datum gold.
+
+        De kalender van uitgezonden weken wordt één keer opgebouwd (elke week
+        zijn vrijdag) en gecachet; daarna is het een binaire zoektocht naar
+        de laatste uitzending op of vóór de datum.
+        """
+        import bisect
+
+        # Goedkoop stempel: de opgehaald-tabel is klein, en elke nieuwe week
+        # staat er per definitie in.
+        stempel = con.execute(
+            "SELECT COUNT(*) FROM opgehaald WHERE lijst=?",
+            (lijst,)).fetchone()[0]
+        kaart = _dag_cache.get(lijst)
+        if not kaart or kaart[0] != stempel:
+            paren = []
+            for r in con.execute(
+                    "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst=?"
+                    " ORDER BY jaar, week", (lijst,)):
+                try:
+                    paren.append((vrijdag_van(r["jaar"], r["week"]),
+                                  r["jaar"], r["week"]))
+                except Exception:
+                    continue
+            paren.sort()
+            _dag_cache[lijst] = (stempel, paren, [p[0] for p in paren])
+        _, paren, datums = _dag_cache[lijst]
+        plek = bisect.bisect_right(datums, wanneer) - 1
+        if plek < 0:
+            return None
+        return paren[plek][1], paren[plek][2]
+
+    @app.route("/dag")
+    def jouw_dag():
+        """De hits van één datum: welke Top 40 gold er toen?
+
+        Voor een geboortedag, trouwdag of gewoon nieuwsgierigheid. De lijst
+        van "jouw dag" is de laatst uitgezonden week op of vóór die datum --
+        precies wat er die dag op de radio gold.
+        """
+        con = verbinding()
+        ruw = request.args.get("datum", "")
+        gekozen = None
+        try:
+            gekozen = date.fromisoformat(ruw)
+        except ValueError:
+            pass
+
+        jaar = week = None
+        top10 = []
+        te_vroeg = False
+        if gekozen:
+            uitkomst = _week_bij_datum(con, "top40", gekozen)
+            if uitkomst is None:
+                te_vroeg = True
+            else:
+                jaar, week = uitkomst
+                top10 = list(con.execute(
+                    "SELECT positie, artiest, titel, sleutel, alarmschijf"
+                    " FROM noteringen WHERE lijst='top40' AND jaar=? AND"
+                    " week=? AND positie <= 10 ORDER BY positie, artiest",
+                    (jaar, week)))
+        try:
+            uitgezonden = als_tekst(vrijdag_van(jaar, week)) if jaar else None
+        except Exception:
+            uitgezonden = None
+        return render_template(
+            "dag.html", datum=ruw if gekozen else "", gekozen=gekozen,
+            jaar=jaar, week=week, top10=top10, te_vroeg=te_vroeg,
+            uitgezonden=uitgezonden, vandaag=date.today().isoformat())
+
+    @app.route("/artiest/<path:artiestsleutel>")
+    def artiest(artiestsleutel: str):
+        """Alles van één artiest: alle nummers, over alle lijsten heen.
+
+        De sleutel is artiest|titel, dus alles van een artiest is een
+        prefix-zoektocht. De schrijfwijze komt uit `artiestnamen` (de
+        vastgestelde vorm) en anders uit de meest voorkomende schrijfwijze
+        in de noteringen zelf.
+        """
+        con = verbinding()
+        patroon = (artiestsleutel.replace("\\", "\\\\")
+                   .replace("%", "\\%").replace("_", "\\_")) + "|%"
+        nummers = list(con.execute(
+            "SELECT sleutel, MAX(titel) titel, COUNT(*) noteringen,"
+            " MIN(jaar) van, MAX(jaar) tot, MIN(positie) hoogste,"
+            " COUNT(DISTINCT lijst) lijsten,"
+            " GROUP_CONCAT(DISTINCT lijst) lijst_namen,"
+            " MAX(alarmschijf) alarmschijf"
+            " FROM noteringen WHERE sleutel LIKE ? ESCAPE '\\'"
+            " GROUP BY sleutel ORDER BY van, sleutel", (patroon,)))
+        if not nummers:
+            abort(404)
+
+        rij = con.execute("SELECT naam FROM artiestnamen WHERE sleutel=?",
+                          (artiestsleutel,)).fetchone()
+        if rij:
+            naam = rij["naam"]
+        else:
+            naam = con.execute(
+                "SELECT artiest FROM noteringen WHERE sleutel LIKE ?"
+                " ESCAPE '\\' GROUP BY artiest ORDER BY COUNT(*) DESC"
+                " LIMIT 1", (patroon,)).fetchone()[0]
+
+        totalen = con.execute(
+            "SELECT COUNT(*), MIN(jaar), MAX(jaar) FROM noteringen"
+            " WHERE sleutel LIKE ? ESCAPE '\\'", (patroon,)).fetchone()
+        return render_template(
+            "artiest.html", naam=naam, artiestsleutel=artiestsleutel,
+            nummers=nummers, noteringen=totalen[0], van=totalen[1],
+            tot=totalen[2],
+            nummer1s=sum(1 for n in nummers if n["hoogste"] == 1))
 
     @app.route("/nummer/<path:sleutel>")
     def nummer(sleutel: str):

@@ -6,6 +6,20 @@
 <div class="kaarten">
   <div class="kaart"><div class="cijfer">{{ "{:,}".format(cijfers.noteringen).replace(",", ".") }}</div>
     <div class="naam">noteringen</div></div>
+  {% for t in terugblik %}
+  <div class="kaart">
+    <div class="naam">{{ t.terug }} JAAR GELEDEN OP 1</div>
+    <div style="font-weight:650; margin:.15rem 0">
+      <a class="stil" href="{{ url_for('weeklijst', lijst='top40', jaar=t.jaar, week=t.week) }}"
+         title="Naar de Top 40 van week {{ t.week }}, {{ t.jaar }}">{{ t.titel }}</a></div>
+    <div class="hint">{{ t.artiest }} · {{ t.jaar }}</div>
+  </div>
+  {% endfor %}
+  <div class="kaart">
+    <div class="naam">EN OP JOUW DAG?</div>
+    <div style="margin:.3rem 0"><a class="knop" href="{{ url_for('jouw_dag') }}">kies een datum ›</a></div>
+    <div class="hint">je geboortedag, je trouwdag…</div>
+  </div>
   {% if is_aangemeld() %}
   <div class="kaart"><div class="cijfer">{{ cijfers.aliassen }}</div>
     <div class="naam">aliassen</div></div>

@@ -309,6 +309,8 @@ op de NAS, achter een reverse proxy.
 | Decennium | het puntenklassement over tien jaargangen Top 40 |
 | Totaal lijst | hetzelfde over alle jaargangen 1965–nu |
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; `artiest \| titel` zoekt op allebei tegelijk (bij nul treffers met meerdere woorden stelt de pagina die schrijfwijze klikbaar voor); klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
+| Artiest | eigen pagina per artiest (±13.600): alle nummers over alle lijsten heen, met carrière-spanne, hoogste posities en nummer-1-teller; bereikbaar via artiestnamen op de nummer- en zoekpagina's |
+| Jouw dag | datumprikker: kies je geboortedag of trouwdag en zie de Top 40 die toen gold, met de nummer 1 groot in beeld; op de homepage staat "X jaar geleden op 1" voor deze week door de decennia heen |
 | Weeklijst | één week zoals uitgezonden, met week-keuzelijst, bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en de nieuw/terug-spelden |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
 | Alarmschijf | rood belletje 🔔 vóór de titel op de Top 40-weeklijsten; het belletje van top40.nl zelf (klasse `hitrecord`), per plaat vastgelegd in `noteringen.alarmschijf` en elke vrijdagrun bijgehouden; michajans.nl blijft de bron voor de toekenningsdatum |
@@ -322,7 +324,7 @@ op de NAS, achter een reverse proxy.
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
 | Vormgeving | tabellen tot 100 rijen krijgen hun volle hoogte (geen binnenste scrollbalk); daarboven een scrollvak van 78vh |
 | Banner | eigen ontwerp, vast aan de bovenrand achter de doorzichtige menubalk (die dichtgaat na scrollen); dezelfde banner siert de kop van elke PDF en is de og:image van gedeelde links |
-| Vindbaarheid | `sitemap.xml` (±36.000 pagina's, gecachet), `robots.txt`, meta-descriptions, canonical-links en Open Graph-tags op elke pagina |
+| Vindbaarheid | sitemap-index in twee delen (±50.000 pagina's incl. artiesten, gecachet), `robots.txt`, meta-descriptions, canonical-links, Open Graph-tags en JSON-LD structured data (MusicRecording, MusicGroup, ItemList) |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
 aliassen, uitzonderingen, vrije SELECT-query's, beheer (opnieuw ophalen, Excel

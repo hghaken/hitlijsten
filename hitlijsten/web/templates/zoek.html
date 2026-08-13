@@ -40,11 +40,11 @@
         <th class="getal">Hoogste</th><th></th></tr></thead><tbody>
     {% for r in resultaten %}
     <tr>
-      {# Klikken op de artiest of de titel springt naar de jaargang waarin het
-         nummer zijn hoogste plek haalde, met de regel opgelicht. #}
-      <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=r['lijst'],
-             jaar=r['piekjaar'], markeer=r['sleutel']) }}"
-             title="naar {{ r['piekjaar'] }}, waar dit nummer op {{ r['hoogste'] }} stond"
+      {# De artiest gaat naar zijn eigen pagina; de titel springt naar de
+         jaargang waarin het nummer zijn hoogste plek haalde. #}
+      <td><a class="stil" href="{{ url_for('artiest',
+             artiestsleutel=r['sleutel'].split('|')[0]) }}"
+             title="Alle hits van {{ r['artiest'] }}"
              >{{ r['artiest'] }}</a></td>
       <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=r['lijst'],
              jaar=r['piekjaar'], markeer=r['sleutel']) }}"

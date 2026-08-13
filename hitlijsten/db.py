@@ -53,6 +53,11 @@ CREATE INDEX IF NOT EXISTS idx_noteringen_sleutel
     ON noteringen (lijst, jaar, sleutel);
 CREATE INDEX IF NOT EXISTS idx_noteringen_week
     ON noteringen (lijst, jaar, week);
+-- Voor de artiestpagina: alles van één artiest is een prefix-zoektocht op de
+-- sleutel (artiest|titel), en die wil je niet over een half miljoen rijen
+-- laten schuiven.
+CREATE INDEX IF NOT EXISTS idx_noteringen_sleutel_prefix
+    ON noteringen (sleutel);
 
 CREATE TABLE IF NOT EXISTS opgehaald (
     lijst        TEXT    NOT NULL,

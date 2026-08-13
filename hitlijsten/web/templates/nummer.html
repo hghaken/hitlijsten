@@ -4,7 +4,9 @@
 {% block titel %}{{ rijen[-1]['titel'] }} — {{ rijen[-1]['artiest'] }} — Hitlijsten{% endblock %}
 {% block beschrijving %}Alle {{ rijen|length }} noteringen van {{ rijen[-1]['titel'] }} van {{ rijen[-1]['artiest'] }} in de Nederlandse hitlijsten, met hoogste positie en verloop per week.{% endblock %}
 {% block inhoud %}
-<h1>{% if is_nl(sleutel) %}{{ nl_vlag() }} {% endif %}{{ rijen[-1]['titel'] }} <span class="hint">— {{ rijen[-1]['artiest'] }}</span>{{ zoeklinks(rijen[-1]['artiest'], rijen[-1]['titel']) }}{% if rijen | selectattr('alarmschijf') | list %}
+<h1>{% if is_nl(sleutel) %}{{ nl_vlag() }} {% endif %}{{ rijen[-1]['titel'] }} <span class="hint">— <a class="stil"
+  href="{{ url_for('artiest', artiestsleutel=sleutel.split('|')[0]) }}"
+  title="Alle hits van {{ rijen[-1]['artiest'] }}">{{ rijen[-1]['artiest'] }}</a></span>{{ zoeklinks(rijen[-1]['artiest'], rijen[-1]['titel']) }}{% if rijen | selectattr('alarmschijf') | list %}
   <span title="Alarmschijf van de Nederlandse Top 40 (bron: top40.nl)"
         style="font-size:.55em; vertical-align:middle; color:#ED1C24">🔔 Alarmschijf</span>{% endif %}</h1>
 {% if is_aangemeld() %}<p class="sleutel">{{ sleutel }}</p>
@@ -58,4 +60,14 @@
   </tr>
   {% endfor %}
 </tbody></table></div>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MusicRecording",
+  "name": {{ rijen[-1]['titel'] | tojson }},
+  "byArtist": {"@type": "MusicGroup", "name": {{ rijen[-1]['artiest'] | tojson }},
+               "url": {{ (hoofd_url + url_for('artiest', artiestsleutel=sleutel.split('|')[0])) | tojson }}},
+  "url": {{ (hoofd_url + url_for('nummer', sleutel=sleutel)) | tojson }}
+}
+</script>
 {% endblock %}

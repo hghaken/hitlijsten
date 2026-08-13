@@ -87,4 +87,19 @@
 </tbody></table></div>
 
 {% endif %}
+{% if rijen %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": {{ (lijst_namen.get(lijst, lijst) ~ ' week ' ~ week ~ ', ' ~ jaar) | tojson }},
+  "itemListElement": [
+    {% for r in rijen[:10] %}
+    {"@type": "ListItem", "position": {{ r['positie'] }},
+     "name": {{ (r['artiest'] ~ ' - ' ~ r['titel']) | tojson }}}{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,63 @@
+{% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
+{% from "_vlag.html" import nl_vlag %}
+{% block titel %}{% if gekozen %}De hits van {{ datum }} — {% endif %}Jouw dag — Hitlijsten{% endblock %}
+{% block beschrijving %}Wat stond er op nummer 1 op jouw geboortedag, trouwdag of een andere datum? Kies een dag en zie de Top 40 die toen gold.{% endblock %}
+{% block inhoud %}
+
+<h1>Jouw dag</h1>
+<p class="onder">Kies een datum — je geboortedag, je trouwdag, zomaar een
+  dinsdag — en zie welke Top 40 er toen gold.</p>
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem;
+      align-items:center; flex-wrap:wrap; margin-bottom:1.6rem">
+  <input type="date" name="datum" value="{{ datum }}"
+         min="1965-01-02" max="{{ vandaag }}" required>
+  <button class="hoofd" type="submit">Toon mijn dag</button>
+  <span class="hint" style="margin-left:auto">De Top 40 bestaat sinds
+    2 januari 1965 — alles daarna is een geldige dag.</span>
+</form>
+
+{% if te_vroeg %}
+<div class="melding fout">Vóór 2 januari 1965 was er nog geen Top 40 —
+  kies een latere datum.</div>
+{% endif %}
+
+{% if top10 %}
+{% set een = top10[0] %}
+<div class="kaarten">
+  <div class="kaart" style="flex: 2 1 22rem">
+    <div class="naam">NUMMER 1 OP {{ datum }}</div>
+    <div class="cijfer" style="font-size:1.6rem; line-height:1.25">
+      {% if is_nl(een.sleutel) %}{{ nl_vlag() }} {% endif %}{{ een.titel }}</div>
+    <div style="color:var(--gedempt)">{{ een.artiest }}
+      {{ zoeklinks(een.artiest, een.titel) }}</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">week {{ week }}</div>
+    <div class="naam">{{ jaar }}{% if uitgezonden %} · uitgezonden op {{ uitgezonden }}{% endif %}</div>
+  </div>
+</div>
+
+<h2>De top 10 van die week</h2>
+<div class="tabelvak"><table>
+  <thead><tr><th class="getal">Positie</th><th>Artiest</th><th>Titel</th></tr></thead>
+  <tbody>
+  {% for r in top10 %}
+  <tr>
+    <td class="getal {% if r.positie == 1 %}top1{% elif r.positie <= 3 %}top3{% endif %}">{{ r.positie }}</td>
+    <td><a class="stil" href="{{ url_for('artiest', artiestsleutel=r.sleutel.split('|')[0]) }}"
+        title="Alle hits van {{ r.artiest }}">{{ r.artiest }}</a></td>
+    <td><a class="stil" href="{{ url_for('nummer', sleutel=r.sleutel) }}"
+        >{% if r.alarmschijf %}<span title="Alarmschijf" style="color:#ED1C24">🔔</span> {% endif %}{% if is_nl(r.sleutel) %}{{ nl_vlag() }} {% endif %}{{ r.titel }}</a>{{ zoeklinks(r.artiest, r.titel) }}</td>
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+
+<p style="margin-top:1rem">
+  <a class="knop" href="{{ url_for('weeklijst', lijst='top40', jaar=jaar, week=week) }}">De
+    volledige lijst van die week ›</a>
+</p>
+{% endif %}
+
+{% endblock %}

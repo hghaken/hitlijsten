@@ -1,0 +1,63 @@
+{% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
+{% from "_vlag.html" import nl_vlag %}
+{% block titel %}{{ naam }} — alle hits — Hitlijsten{% endblock %}
+{% block beschrijving %}Alle {{ nummers|length }} nummers van {{ naam }} in de Nederlandse hitlijsten, van {{ van }} tot {{ tot }}, met hoogste posities en het verloop per nummer.{% endblock %}
+{% block inhoud %}
+
+<h1>{{ naam }}</h1>
+<p class="onder">Alle nummers, over alle lijsten heen.</p>
+
+<div class="kaarten">
+  <div class="kaart">
+    <div class="cijfer">{{ nummers|length }}</div>
+    <div class="naam">nummers</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ '{:,}'.format(noteringen).replace(',', '.') }}</div>
+    <div class="naam">noteringen</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ van }}{% if tot != van %}–{{ tot }}{% endif %}</div>
+    <div class="naam">actief in de lijsten</div>
+  </div>
+  <div class="kaart">
+    <div class="cijfer">{{ nummer1s }}</div>
+    <div class="naam">nummer-1-hit{{ 's' if nummer1s != 1 }}</div>
+  </div>
+</div>
+
+<div class="tabelvak"><table>
+  <thead><tr>
+    <th>Titel</th><th class="getal">Eerste jaar</th><th class="getal">Laatste jaar</th>
+    <th class="getal">Hoogste</th><th class="getal">Noteringen</th>
+    <th class="getal">Lijsten</th>
+  </tr></thead><tbody>
+  {% for n in nummers %}
+  <tr data-sleutel="{{ n.sleutel }}">
+    <td class="breed"><a class="stil" href="{{ url_for('nummer', sleutel=n.sleutel) }}"
+        title="Alle noteringen en de grafiek">{% if n.alarmschijf %}<span
+        title="Alarmschijf" style="color:#ED1C24">🔔</span> {% endif %}{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}{{ n.titel }}</a>{{ zoeklinks(naam, n.titel) }}</td>
+    <td class="getal">{{ n.van }}</td>
+    <td class="getal hint">{{ n.tot if n.tot != n.van else '' }}</td>
+    <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
+    <td class="getal">{{ n.noteringen }}</td>
+    <td class="getal hint" title="{% for lk in n.lijst_namen.split(',') %}{{ lijst_namen.get(lk, lk) }}{% if not loop.last %} · {% endif %}{% endfor %}">{{ n.lijsten }}</td>
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+
+<p class="hint">Klik op een titel voor alle noteringen en de grafiek van het
+  verloop. De jaartallen zijn het eerste en laatste jaar waarin het nummer
+  ergens genoteerd stond — jaarlijkse lijsten tellen mee.</p>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MusicGroup",
+  "name": {{ naam | tojson }},
+  "url": {{ (hoofd_url + url_for('artiest', artiestsleutel=artiestsleutel)) | tojson }}
+}
+</script>
+
+{% endblock %}
