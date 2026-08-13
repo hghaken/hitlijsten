@@ -313,6 +313,8 @@ op de NAS, achter een reverse proxy.
 | Jouw dag | datumprikker: kies je geboortedag of trouwdag en zie de Top 40 die toen gold, met de nummer 1 groot in beeld; op de homepage staat "X jaar geleden op 1" voor deze week door de decennia heen |
 | Records | de klappers over alle lijsten en jaargangen heen: meeste weken genoteerd, meeste weken op 1, grootste sprong en diepste val, langste terugkeer, eenhitwonders op 1, langste carrière, meeste hits en de trouwste jaarlijst-klanten |
 | Versies | dezelfde titel door verschillende artiesten — covers, heropnames en soms naamgenoten, gesorteerd op aantal uitvoeringen |
+| Vergelijk | twee jaargangen van dezelfde lijst naast elkaar: kerngetallen (incl. het Nederlandstalig-aandeel), de hoogst genoteerde nummers van elk jaar, en wat er in allebei stond |
+| Verras me | het dobbelsteentje in de menubalk: een willekeurig nummer, gewogen naar noteringen |
 | Weekbericht | de nieuwste Top 40 samengevat (nummer 1, binnenkomers, grootste stijger/daler, terugkeerders, uitvallers), bladerbaar per week en te volgen via de **RSS-feed** `/weekbericht.rss` — schrijft zichzelf uit de vrijdagrun |
 | Weeklijst | één week zoals uitgezonden, met week-keuzelijst, bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en de nieuw/terug-spelden |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |

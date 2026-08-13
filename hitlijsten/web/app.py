@@ -464,7 +464,7 @@ def _registreer(app: Flask) -> None:
         de site zelf plus de nummers, deel 2 de artiesten.
         """
         deel1 = ["/", "/jaar", "/week", "/dag", "/weekbericht",
-                 "/decennium", "/totaal",
+                 "/vergelijk", "/decennium", "/totaal",
                  "/jaarlijksen", "/wetenswaardigheden", "/records",
                  "/versies", "/zoek", "/gastenboek", "/feedback",
                  "/disclaimer"]
@@ -1485,6 +1485,87 @@ def _registreer(app: Flask) -> None:
                 "nummer1": rijen[0], "binnen": binnen, "terug": terug,
                 "stijger": stijger, "daler": daler, "uitvallers": uitvallers,
                 "vorige": vorige, "volgende": volgende, "datum": datum}
+
+    def _jaarprofiel(con, lijst: str, jaar: int) -> dict:
+        """De kerngetallen van één jaargang, voor de vergelijker."""
+        basis = con.execute(
+            "SELECT COUNT(DISTINCT sleutel), COUNT(*) FROM noteringen"
+            " WHERE lijst=? AND jaar=?", (lijst, jaar)).fetchone()
+        nummer1s = con.execute(
+            "SELECT COUNT(DISTINCT sleutel) FROM noteringen"
+            " WHERE lijst=? AND jaar=? AND positie=1",
+            (lijst, jaar)).fetchone()[0]
+        binnen = con.execute(
+            "SELECT COUNT(*) FROM (SELECT sleutel FROM noteringen WHERE"
+            " lijst=? GROUP BY sleutel HAVING MIN(jaar)=?)",
+            (lijst, jaar)).fetchone()[0]
+        nl = con.execute(
+            "SELECT COUNT(DISTINCT n.sleutel) FROM noteringen n"
+            " JOIN taal t ON t.sleutel=n.sleutel AND t.nederlandstalig=1"
+            " WHERE n.lijst=? AND n.jaar=?", (lijst, jaar)).fetchone()[0]
+        top = list(con.execute(
+            "SELECT sleutel, MAX(artiest) artiest, MAX(titel) titel,"
+            " MIN(positie) hoogste, COUNT(*) weken FROM noteringen"
+            " WHERE lijst=? AND jaar=? GROUP BY sleutel"
+            " ORDER BY hoogste, weken DESC LIMIT 5", (lijst, jaar)))
+        return {"jaar": jaar, "nummers": basis[0], "noteringen": basis[1],
+                "nummer1s": nummer1s, "binnen": binnen, "nl": nl,
+                "top": top}
+
+    @app.route("/vergelijk")
+    def vergelijk():
+        """Twee jaargangen van dezelfde lijst naast elkaar.
+
+        De kerngetallen, de hoogst genoteerde nummers van elk jaar, en wat
+        er in allebei stond -- bij verre jaren zijn dat de evergreens en de
+        terugkeerders, bij buren de overlappers.
+        """
+        con = verbinding()
+        lijst = request.args.get("lijst") or "top40"
+        if lijst not in LIJSTEN:
+            lijst = "top40"
+        jaren = [r[0] for r in con.execute(
+            "SELECT DISTINCT jaar FROM noteringen WHERE lijst=?"
+            " ORDER BY jaar DESC", (lijst,))]
+        if not jaren:
+            abort(404)
+
+        def _jaar(naam, terugval):
+            ruw = request.args.get(naam, "")
+            return (int(ruw) if ruw.isdigit() and int(ruw) in jaren
+                    else terugval)
+
+        a = _jaar("a", jaren[-1])
+        b = _jaar("b", jaren[0])
+        links = _jaarprofiel(con, lijst, a)
+        rechts = _jaarprofiel(con, lijst, b)
+
+        beide = list(con.execute(
+            """SELECT x.sleutel, MAX(x.artiest) artiest, MAX(x.titel) titel,
+                      MIN(x.positie) hoogste_a, MIN(y.positie) hoogste_b
+               FROM noteringen x JOIN noteringen y ON y.sleutel = x.sleutel
+                AND y.lijst = x.lijst AND y.jaar = ?
+               WHERE x.lijst = ? AND x.jaar = ?
+               GROUP BY x.sleutel ORDER BY hoogste_a, hoogste_b""",
+            (b, lijst, a)))
+        return render_template(
+            "vergelijk.html", lijst=lijst, jaren=jaren, a=a, b=b,
+            links=links, rechts=rechts, beide=beide)
+
+    @app.route("/verras")
+    def verras():
+        """Een willekeurig nummer -- verrassend verslavend.
+
+        Gewogen naar noteringen: wie vaker in de lijsten stond, komt vaker
+        langs. Dat is geen zwakte maar de bedoeling: de kans dat er iets
+        herkenbaars voorbijkomt blijft groot genoeg om door te klikken.
+        """
+        con = verbinding()
+        rij = con.execute("SELECT sleutel FROM noteringen"
+                          " ORDER BY RANDOM() LIMIT 1").fetchone()
+        if rij is None:
+            abort(404)
+        return redirect(url_for("nummer", sleutel=rij["sleutel"]))
 
     @app.route("/weekbericht")
     def weekbericht():

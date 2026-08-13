@@ -405,6 +405,7 @@
       <a href="{{ url_for('wetenswaardigheden') }}">Wetenswaardigheden</a>
       <a href="{{ url_for('records') }}">Records</a>
       <a href="{{ url_for('versies') }}">Versies</a>
+      <a href="{{ url_for('vergelijk') }}">Vergelijk</a>
       <a href="{{ url_for('zoek') }}">Zoeken</a>
       <a href="{{ url_for('gastenboek') }}">Gastenboek</a>
       {% if is_aangemeld() %}
@@ -417,6 +418,7 @@
       {% endif %}
     </nav>
     <span class="rechts">
+      <a href="{{ url_for('verras') }}" title="Verras me: een willekeurig nummer">🎲</a>
       <a href="{{ url_for('disclaimer') }}">Disclaimer</a>
       {% if is_aangemeld() %}
         <a href="{{ url_for('afmelden') }}">Afmelden</a>
