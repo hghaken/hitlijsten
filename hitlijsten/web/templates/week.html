@@ -70,8 +70,8 @@
       {{ r['positie'] }}</td>
     <td class="getal hint">
       {% if r['vorige_positie'] %}{{ r['vorige_positie'] }}
-      {% elif r['site_status'] == 'terug' %}terug
-      {% else %}<b>nieuw</b>{% endif %}</td>
+      {% elif r['site_status'] == 'terug' %}<span class="speld terug">terug</span>
+      {% else %}<span class="speld nieuw">nieuw</span>{% endif %}</td>
     {# Klikken springt naar het jaaroverzicht met dit nummer opgelicht — daar
        staat de grafiek van het hele verloop binnen handbereik. #}
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar,
