@@ -1,6 +1,6 @@
 {% extends "basis.html" %}
 {% from "_zoeklinks.html" import zoeklinks %}
-{% from "_vlag.html" import nl_vlag, nl_filter %}
+{% from "_vlag.html" import nl_vlag, nl_filter with context %}
 {% block titel %}{{ jaar or '' }} {{ lijst_namen.get(lijst, lijst) }} — Hitlijsten{% endblock %}
 {% block beschrijving %}De complete {{ lijst_namen.get(lijst, lijst) }} van {{ jaar }}: elke notering met punten, hoogste positie en het verloop per week.{% endblock %}
 {% block inhoud %}

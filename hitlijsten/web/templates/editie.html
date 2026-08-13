@@ -1,6 +1,6 @@
 {% extends "basis.html" %}
 {% from "_zoeklinks.html" import zoeklinks %}
-{% from "_vlag.html" import nl_vlag, nl_filter %}
+{% from "_vlag.html" import nl_vlag, nl_filter with context %}
 {% block titel %}{{ lijst_namen.get(lijst, lijst) }} {{ jaar }} — Hitlijsten{% endblock %}
 {% block beschrijving %}De complete {{ lijst_namen.get(lijst, lijst) }} van {{ jaar }}, met per nummer de positie van vorig jaar en het verloop over alle edities.{% endblock %}
 {% block inhoud %}

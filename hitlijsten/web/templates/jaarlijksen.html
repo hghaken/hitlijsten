@@ -1,6 +1,6 @@
 {% extends "basis.html" %}
 {% from "_zoeklinks.html" import zoeklinks %}
-{% from "_vlag.html" import nl_vlag, nl_filter %}
+{% from "_vlag.html" import nl_vlag, nl_filter with context %}
 {% block titel %}Jaarlijsten totaal — Hitlijsten{% endblock %}
 {% block beschrijving %}Alle {{ aantal_lijsten }} jaarlijkse lijsten samen — van de Top 2000 tot de Rock Top 500 — eerlijk opgeteld tot een lijst allertijden.{% endblock %}
 {% block inhoud %}
