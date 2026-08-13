@@ -932,6 +932,17 @@ def _registreer(app: Flask) -> None:
             markeer=request.args.get("markeer") or "",
         )
 
+    def _met_binnenkomers(con, lijst, jaar, alleen, staartje):
+        """Verklein `alleen` tot de binnenkomers van dit jaar, als dat
+        filter aan staat. Geeft (alleen, staartje) terug."""
+        if not request.args.get("nieuw"):
+            return alleen, staartje
+        binnen = {r[0] for r in con.execute(
+            "SELECT sleutel FROM noteringen WHERE lijst=? GROUP BY sleutel"
+            " HAVING MIN(jaar)=?", (lijst, jaar))}
+        alleen = binnen if alleen is None else (alleen & binnen)
+        return alleen, staartje + "_nieuw"
+
     def _nl_keuze():
         """(set of None, naamdeel) voor de downloadroutes."""
         if request.args.get("nl"):
@@ -1164,6 +1175,8 @@ def _registreer(app: Flask) -> None:
         naam = LIJSTEN[lijst]["bestand"]
         top = _gekozen_top()
         alleen, staartje = _nl_keuze()
+        alleen, staartje = _met_binnenkomers(verbinding(), lijst, jaar,
+                                             alleen, staartje)
         if soort != "matrix" and (top or alleen is not None):
             # Het scherm toont een selectie (top of Nederlandstalig); dan
             # hoort de download die selectie te zijn: het puntenklassement
@@ -1230,6 +1243,8 @@ def _registreer(app: Flask) -> None:
         naam = LIJSTEN[lijst]["bestand"]
         top = _gekozen_top()
         alleen, staartje = _nl_keuze()
+        alleen, staartje = _met_binnenkomers(con, lijst, jaar,
+                                             alleen, staartje)
         if top or alleen is not None:
             # Zelfde spelregel als bij de Excel: de selectie op het scherm
             # is de selectie in het bestand.

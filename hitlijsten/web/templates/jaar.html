@@ -60,12 +60,13 @@
   {% if jaar %}
   {% set top = toon if toon != totaal else None %}
   {% set nl = '1' if nl_filter_aan else None %}
-  <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, toon=top, nl=nl) }}"
-     title="{% if top or nl %}De getoonde selectie als klassement-werkboek{% else %}Werkboek met een tab per week en het puntenklassement{% endif %}">⤓ Excel</a>
+  {% set nw = '1' if nieuw_filter_aan else None %}
+  <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, toon=top, nl=nl, nieuw=nw) }}"
+     title="{% if top or nl or nw %}De getoonde selectie als klassement-werkboek{% else %}Werkboek met een tab per week en het puntenklassement{% endif %}">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, soort='matrix') }}"
      title="Werkboek met de matrix nummer x week, altijd de volledige jaargang">⤓ jaarmatrix</a>
-  <a class="knop" href="{{ url_for('download_pdf', lijst=lijst, jaar=jaar, toon=top, nl=nl) }}"
-     title="{% if top or nl %}De getoonde selectie als PDF{% else %}Het puntenklassement als PDF, veertig regels per pagina{% endif %}">⤓ PDF</a>
+  <a class="knop" href="{{ url_for('download_pdf', lijst=lijst, jaar=jaar, toon=top, nl=nl, nieuw=nw) }}"
+     title="{% if top or nl or nw %}De getoonde selectie als PDF{% else %}Het puntenklassement als PDF, veertig regels per pagina{% endif %}">⤓ PDF</a>
   {% endif %}
 
   <span class="hint" style="margin-left:auto">
