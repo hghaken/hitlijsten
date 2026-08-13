@@ -43,6 +43,15 @@
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
   {{ nl_filter() }}
 
+  {% if jaar %}
+  <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar) }}"
+     title="Werkboek met de complete editie en de kerngetallen">⤓ Excel</a>
+  <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, soort='matrix') }}"
+     title="Werkboek met de matrix nummer x editie">⤓ editiematrix</a>
+  <a class="knop" href="{{ url_for('download_pdf', lijst=lijst, jaar=jaar) }}"
+     title="De complete editie als PDF, veertig regels per pagina">⤓ PDF</a>
+  {% endif %}
+
   {# Geen Excel- of PDF-knop: die bouwers gaan uit van weken en punten, en die
      zeggen bij een jaarlijkse lijst niets. Die krijgen een eigen vorm. #}
 
