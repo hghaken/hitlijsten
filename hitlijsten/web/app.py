@@ -1569,87 +1569,151 @@ def _registreer(app: Flask) -> None:
             abort(404)
         return redirect(url_for("nummer", sleutel=rij["sleutel"]))
 
+    # De geüploade VirtualDJ-databases, per bezoeker, alleen in het
+    # geheugen: token in de sessie-cookie, gegevens hier. Na vier uur of bij
+    # meer dan acht gelijktijdige bezoekers schuiven de oudste eruit.
+    _vdj_sessies: dict = {}
+
+    def _vdj_bibliotheek():
+        """De geladen bibliotheek van deze bezoeker, of None."""
+        token = session.get("vdj")
+        kaart = _vdj_sessies.get(token)
+        if kaart:
+            kaart["tijd"] = datetime.now()
+        return kaart
+
+    def _vdj_opruimen() -> None:
+        nu = datetime.now()
+        for token in [t for t, k in _vdj_sessies.items()
+                      if (nu - k["tijd"]).total_seconds() > 4 * 3600]:
+            del _vdj_sessies[token]
+        while len(_vdj_sessies) > 8:
+            oudste = min(_vdj_sessies, key=lambda t: _vdj_sessies[t]["tijd"])
+            del _vdj_sessies[oudste]
+
+    @app.context_processor
+    def _vdj_stand():
+        # De VDJ-knop op de lijstpagina's verschijnt alleen met een geladen
+        # bibliotheek; zonder is hij ruis.
+        return {"vdj_geladen": session.get("vdj") in _vdj_sessies}
+
     @app.route("/vdj", methods=["GET", "POST"])
     def vdj_playlist():
-        """VirtualDJ-database erin, playlist eruit.
+        """VirtualDJ: laad hier je database, oogst op de lijstpagina's.
 
-        Upload je database.xml, kies een lijst en jaargang, en krijg een
-        .vdjfolder met de nummers die je zelf in je bibliotheek hebt -- in
-        klassementvolgorde -- plus de lijst van wat je mist. Er wordt niets
-        bewaard: de database wordt in het geheugen gelezen en vergeten.
+        De database blijft alleen tijdens je bezoek in het geheugen (nooit
+        op schijf) en elke lijstpagina krijgt er een VDJ-knop bij die de
+        getoonde selectie als .vdjfolder oplevert.
         """
         from .. import vdj as vdjmodule
 
-        con = verbinding()
-        keuzelijsten = list(LIJSTEN)
-        uitkomst = None
         fout = None
-        lijst = request.form.get("lijst") or "top40"
-        if lijst not in LIJSTEN:
-            lijst = "top40"
-        jaar = request.form.get("jaar", "")
-        top = request.form.get("top", "100")
-        niveau = request.form.get("niveau", "2")
-
         if request.method == "POST":
+            if request.form.get("vergeet"):
+                _vdj_sessies.pop(session.pop("vdj", None), None)
+                return redirect(url_for("vdj_playlist"))
             bestanden = []
             try:
                 for upload in request.files.getlist("database"):
                     if upload and upload.filename:
                         bestanden += vdjmodule.lees_upload(upload.stream,
                                                            upload.filename)
-                if not request.form.get("streaming"):
-                    bestanden = [b for b in bestanden if not b.streaming]
             except Exception:
-                fout = ("Dit lijkt geen VirtualDJ-database: het bestand is"
-                        " niet te lezen als database.xml.")
+                fout = ("Dit is niet te lezen als VirtualDJ-database of"
+                        " -backup.")
+            if not fout and not request.form.get("streaming"):
+                bestanden = [b for b in bestanden if not b.streaming]
             if not fout and not bestanden:
                 fout = ("Geen draaibare nummers gevonden -- is dit de"
-                        " database.xml uit je VirtualDJ-map?")
-
-            regels = []
+                        " database.xml of de backup-zip uit VirtualDJ?")
             if not fout:
-                if not (jaar.isdigit()):
-                    fout = "Kies een jaargang."
-                else:
-                    regels = list(con.execute(
-                        "SELECT sleutel, MAX(artiest) artiest,"
-                        " MAX(titel) titel, MIN(positie) hoogste,"
-                        " COUNT(*) weken FROM noteringen"
-                        " WHERE lijst=? AND jaar=? GROUP BY sleutel"
-                        " ORDER BY hoogste, weken DESC, sleutel",
-                        (lijst, int(jaar))))
-                    regels = [dict(r) for r in regels]
-                    if not regels:
-                        fout = (f"Van de {LIJSTEN[lijst]['naam']} staat er"
-                                f" geen jaargang {jaar} in de database.")
-            if not fout:
-                grens = (int(top) if top.isdigit() else len(regels))
-                regels = regels[:grens]
-                trap = int(niveau) if niveau in ("1", "2", "3", "4") else 2
-                koppels = vdjmodule.match(regels, bestanden, trap)
-                paden = [k["bestand"].pad for k in koppels
-                         if k["bestand"] is not None]
-                naam = (f"{LIJSTEN[lijst]['bestand']}_{jaar}"
-                        f"_top{grens}" if top.isdigit() else
-                        f"{LIJSTEN[lijst]['bestand']}_{jaar}")
-                uitkomst = {
-                    "koppels": koppels,
-                    "gevonden": sum(1 for k in koppels if k["bestand"]),
-                    "twijfel": sum(1 for k in koppels
-                                   if k["niveau"] == 4),
-                    "bibliotheek": len(bestanden),
-                    "vdjfolder": vdjmodule.bouw_vdjfolder(paden),
-                    "bestandsnaam": naam + ".vdjfolder",
+                _vdj_opruimen()
+                token = secrets.token_hex(16)
+                niveau = request.form.get("niveau", "2")
+                _vdj_sessies[token] = {
+                    "bestanden": bestanden,
+                    "streaming": bool(request.form.get("streaming")),
+                    "niveau": int(niveau) if niveau in "1234" else 2,
+                    "tijd": datetime.now(),
                 }
+                session["vdj"] = token
+                return redirect(url_for("vdj_playlist"))
 
-        jaren = {l: [r[0] for r in con.execute(
-            "SELECT DISTINCT jaar FROM noteringen WHERE lijst=?"
-            " ORDER BY jaar DESC", (l,))] for l in keuzelijsten}
-        return render_template(
-            "vdj.html", lijst=lijst, jaar=jaar, top=top, niveau=niveau,
-            jaren=jaren, niveaus=vdjmodule.NIVEAUS, uitkomst=uitkomst,
-            fout=fout, streaming_aan=bool(request.form.get("streaming")))
+        kaart = _vdj_bibliotheek()
+        stand = None
+        if kaart:
+            stand = {
+                "aantal": len(kaart["bestanden"]),
+                "lokaal": sum(1 for b in kaart["bestanden"]
+                              if not b.streaming),
+                "streaming": kaart["streaming"],
+                "niveau": vdjmodule.NIVEAUS[kaart["niveau"]],
+            }
+        return render_template("vdj.html", fout=fout, stand=stand,
+                               niveaus=vdjmodule.NIVEAUS)
+
+    @app.route("/vdj/maak")
+    def vdj_maak():
+        """De VDJ-knop op een lijstpagina: de getoonde selectie als
+        playlist, gematcht tegen de geladen bibliotheek."""
+        from .. import vdj as vdjmodule
+
+        kaart = _vdj_bibliotheek()
+        if kaart is None:
+            flash("Laad eerst je VirtualDJ-database; daarna werkt de"
+                  " VDJ-knop op elke lijstpagina.", "fout")
+            return redirect(url_for("vdj_playlist"))
+
+        con = verbinding()
+        lijst = request.args.get("lijst") or "top40"
+        if lijst not in LIJSTEN:
+            abort(404)
+        try:
+            jaar = int(request.args.get("jaar", ""))
+        except ValueError:
+            abort(404)
+        week = request.args.get("week", "")
+
+        naam = f"{LIJSTEN[lijst]['bestand']}_{jaar}"
+        if week.isdigit():
+            regels = [dict(r) for r in con.execute(
+                "SELECT sleutel, artiest, titel, positie hoogste"
+                " FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
+                " ORDER BY positie, artiest", (lijst, jaar, int(week)))]
+            naam += f"_Week{int(week):02d}"
+        else:
+            regels = [dict(r) for r in con.execute(
+                "SELECT sleutel, MAX(artiest) artiest, MAX(titel) titel,"
+                " MIN(positie) hoogste, COUNT(*) weken FROM noteringen"
+                " WHERE lijst=? AND jaar=? GROUP BY sleutel"
+                " ORDER BY hoogste, weken DESC, sleutel", (lijst, jaar))]
+        if not regels:
+            abort(404)
+
+        regels = _alleen_binnenkomers(con, lijst, jaar, _alleen_nl(regels))
+        top = _gekozen_top()
+        if top:
+            regels = regels[:top]
+            naam += f"_top{top}"
+        _, staartje = _nl_keuze()
+        if request.args.get("nieuw"):
+            staartje += "_nieuw"
+        naam += staartje
+
+        koppels = vdjmodule.match(regels, kaart["bestanden"],
+                                  kaart["niveau"])
+        paden = [k["bestand"].pad for k in koppels if k["bestand"]]
+        uitkomst = {
+            "koppels": koppels,
+            "gevonden": len(paden),
+            "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
+            "bibliotheek": len(kaart["bestanden"]),
+            "vdjfolder": vdjmodule.bouw_vdjfolder(paden),
+            "bestandsnaam": naam + ".vdjfolder",
+        }
+        return render_template("vdj_rapport.html", uitkomst=uitkomst,
+                               niveaus=vdjmodule.NIVEAUS,
+                               terug=request.referrer)
 
     @app.route("/weekbericht")
     def weekbericht():

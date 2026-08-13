@@ -56,6 +56,10 @@
      title="Werkboek met de matrix nummer x editie, altijd de volledige editie">⤓ editiematrix</a>
   <a class="knop" href="{{ url_for('download_pdf', lijst=lijst, jaar=jaar, toon=top, nl=nl, nieuw=nw) }}"
      title="{% if top or nl or nw %}De getoonde selectie als PDF{% else %}De complete editie als PDF, veertig regels per pagina{% endif %}">⤓ PDF</a>
+  {% if vdj_geladen %}
+  <a class="knop" href="{{ url_for('vdj_maak', lijst=lijst, jaar=jaar, toon=top, nl=nl, nieuw=nw) }}"
+     title="De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek">⤓ VDJ</a>
+  {% endif %}
   {% endif %}
 
   {# Geen Excel- of PDF-knop: die bouwers gaan uit van weken en punten, en die

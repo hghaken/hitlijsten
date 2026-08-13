@@ -47,6 +47,10 @@
      title="Deze weeklijst als werkboek">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download_week_pdf', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None)) }}"
      title="Deze weeklijst als PDF">⤓ PDF</a>
+  {% if vdj_geladen %}
+  <a class="knop" href="{{ url_for('vdj_maak', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None)) }}"
+     title="Deze weeklijst als VirtualDJ-playlist uit je eigen bibliotheek (laad eerst je database op de VirtualDJ-pagina)">⤓ VDJ</a>
+  {% endif %}
   {% endif %}
 
   <span class="hint" style="margin-left:auto">

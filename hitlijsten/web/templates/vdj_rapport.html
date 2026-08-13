@@ -1,0 +1,52 @@
+{% extends "basis.html" %}
+{% block titel %}{{ uitkomst.bestandsnaam }} — VirtualDJ — Hitlijsten{% endblock %}
+{% block inhoud %}
+
+<h1>Je playlist staat klaar</h1>
+<p class="onder">Gematcht tegen je geladen bibliotheek.
+  {% if terug %}<a href="{{ terug }}">‹ terug naar de lijst</a>{% endif %}</p>
+
+<div class="kaarten">
+  <div class="kaart"><div class="cijfer">{{ uitkomst.gevonden }} van {{ uitkomst.koppels|length }}</div>
+    <div class="naam">gevonden in je bibliotheek</div></div>
+  <div class="kaart"><div class="cijfer">{{ uitkomst.koppels|length - uitkomst.gevonden }}</div>
+    <div class="naam">ontbreekt (je boodschappenlijst)</div></div>
+  {% if uitkomst.twijfel %}
+  <div class="kaart"><div class="cijfer">{{ uitkomst.twijfel }}</div>
+    <div class="naam">twijfelgevallen (zeer soepel gematcht)</div></div>
+  {% endif %}
+  <div class="kaart"><div class="cijfer">{{ '{:,}'.format(uitkomst.bibliotheek).replace(',', '.') }}</div>
+    <div class="naam">nummers in je bibliotheek</div></div>
+</div>
+
+<p style="margin-top:1rem">
+  <a class="knop" id="vdjknop" download="{{ uitkomst.bestandsnaam }}">⤓ {{ uitkomst.bestandsnaam }}</a>
+  <span class="hint">zet hem in je VirtualDJ-map onder <code>MyLists</code></span>
+</p>
+<textarea id="vdjinhoud" style="display:none">{{ uitkomst.vdjfolder }}</textarea>
+<script>
+  (() => {
+    const blob = new Blob([document.getElementById("vdjinhoud").value],
+                          {type: "application/xml"});
+    document.getElementById("vdjknop").href = URL.createObjectURL(blob);
+  })();
+</script>
+
+<h2>Het rapport</h2>
+<div class="tabelvak"><table>
+  <thead><tr><th class="getal">Positie</th><th>Artiest</th><th>Titel</th>
+    <th>Status</th><th>Bestand</th></tr></thead><tbody>
+  {% for k in uitkomst.koppels %}
+  <tr>
+    <td class="getal">{{ k.hoogste }}</td>
+    <td>{{ k.artiest }}</td>
+    <td><a class="stil" href="{{ url_for('nummer', sleutel=k.sleutel) }}">{{ k.titel }}</a></td>
+    <td>{% if k.bestand %}<span class="speld nieuw">{{ niveaus[k.niveau] }}</span>
+        {% else %}<span class="speld terug">ontbreekt</span>{% endif %}</td>
+    <td class="hint" style="max-width:26rem; overflow:hidden; text-overflow:ellipsis">
+      {{ k.bestand.pad if k.bestand else '' }}</td>
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+
+{% endblock %}
