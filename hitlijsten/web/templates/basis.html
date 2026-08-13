@@ -472,6 +472,9 @@
   <a href="https://www.datastats.nl/" rel="noopener">datastats.nl</a>.
   <br>Deze pagina toont hun gegevens; de rechten liggen bij hen. Zie de
   <a href="{{ url_for('disclaimer') }}">disclaimer</a>.
+  Nieuw hier? Download de
+  <a href="{{ url_for('static', filename='handleiding.pdf') }}">handleiding
+  (PDF)</a>.
   Iets gezien dat niet klopt?
   <a href="{{ url_for('feedback', soort='aanvulling', pagina=request.path) }}">Meld
   het</a> — of laat een bericht achter in het
