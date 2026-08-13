@@ -736,6 +736,23 @@ def _registreer(app: Flask) -> None:
                             key=lambda n: (-n["punten"], n["hoogste"], n["eerste_week"]))
 
         gesorteerd = _alleen_nl(gesorteerd)
+
+        # Standaard de top 100 -- een compleet jaar is honderden rijen plus
+        # de weekmatrix, en dat maakt de pagina traag. De hoogtepunten
+        # blijven over het volledige jaar gerekend. Wie via een verwijzing op
+        # een nummer buiten de top landt, krijgt alsnog alles: anders wijst
+        # de markering naar een rij die er niet is.
+        markeer = request.args.get("markeer") or ""
+        gevraagd = request.args.get("toon", "")
+        toon = (len(gesorteerd) if gevraagd == "alles"
+                else int(gevraagd) if gevraagd.isdigit()
+                and int(gevraagd) in AANTALLEN else AANTALLEN[0])
+        if markeer:
+            plek = next((i for i, n in enumerate(gesorteerd, 1)
+                         if n["sleutel"] == markeer), 0)
+            if plek > toon:
+                toon = len(gesorteerd)
+
         nummer_ees = [n for n in gesorteerd if n["hoogste"] == 1]
         hoogtepunten = {
             "nummers": len(gesorteerd),
@@ -746,8 +763,9 @@ def _registreer(app: Flask) -> None:
         }
         return render_template(
             "jaar.html", lijst=lijst, jaren=jaren, jaar=jaar,
-            nummers=gesorteerd, weken=weken, hoogtepunten=hoogtepunten,
-            markeer=markeer,
+            nummers=gesorteerd[:toon], weken=weken, hoogtepunten=hoogtepunten,
+            markeer=markeer, aantallen=AANTALLEN, toon=toon,
+            totaal=len(gesorteerd),
         )
 
     # --- decennium ---------------------------------------------------------
@@ -783,11 +801,23 @@ def _registreer(app: Flask) -> None:
                    else decennia[0])
         nummers = _alleen_nl(db.decennium_totalen(con, DECENNIUM_LIJST,
                                                   gekozen))
+        markeer = request.args.get("markeer") or ""
+        gevraagd = request.args.get("toon", "")
+        toon = (len(nummers) if gevraagd == "alles"
+                else int(gevraagd) if gevraagd.isdigit()
+                and int(gevraagd) in AANTALLEN else AANTALLEN[0])
+        if markeer:
+            plek = next((i for i, n in enumerate(nummers, 1)
+                         if n["sleutel"] == markeer), 0)
+            if plek > toon:
+                toon = len(nummers)
         return render_template(
-            "decennium.html", decennia=decennia, decennium=gekozen, nummers=nummers,
+            "decennium.html", decennia=decennia, decennium=gekozen,
+            nummers=nummers[:toon],
             jaren=[j for j in jaren if gekozen <= j <= gekozen + 9],
             nummer1s=sum(1 for n in nummers if n["hoogste"] == 1),
-            markeer=request.args.get("markeer") or "",
+            markeer=markeer, aantallen=AANTALLEN, toon=toon,
+            totaal=len(nummers),
         )
 
     # --- totaal lijst (alle jaargangen) ------------------------------------
