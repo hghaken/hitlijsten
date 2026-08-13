@@ -1,0 +1,43 @@
+{% extends "basis.html" %}
+{% from "_zoeklinks.html" import zoeklinks %}
+{% block titel %}Versies — Hitlijsten{% endblock %}
+{% block beschrijving %}Dezelfde titel door verschillende artiesten in de Nederlandse hitlijsten: covers, heropnames en soms gewoon naamgenoten.{% endblock %}
+{% block inhoud %}
+
+<h1>Versies</h1>
+<p class="onder">Dezelfde titel, andere artiest: vaak een cover of heropname —
+  en soms puur toeval, want een titel bewijst niets.</p>
+
+<form method="get" class="kaart" style="display:flex; gap:.7rem;
+      align-items:center; flex-wrap:wrap; margin-bottom:1.4rem">
+  <select name="toon" onchange="this.form.submit()">
+    {% for a in aantallen %}
+      <option value="{{ a }}" {% if toon == a %}selected{% endif %}>top {{ a }}</option>
+    {% endfor %}
+    <option value="alles" {% if toon == totaal %}selected{% endif %}>
+      alle {{ '{:,}'.format(totaal).replace(',', '.') }} — traag</option>
+  </select>
+  <noscript><button class="hoofd" type="submit">Toon</button></noscript>
+  <span class="hint" style="margin-left:auto">{{ '{:,}'.format(totaal).replace(',', '.') }}
+    titels met twee of meer uitvoeringen · gesorteerd op aantal</span>
+</form>
+
+<div class="tabelvak"><table>
+  <thead><tr><th>Titel</th><th class="getal">Versies</th>
+    <th>Uitvoeringen</th><th class="getal">Periode</th></tr></thead><tbody>
+  {% for f in families %}
+  <tr>
+    <td class="breed"><b>{{ f.titel }}</b></td>
+    <td class="getal">{{ f.aantal }}</td>
+    <td class="breed">
+      {% for l in f.leden %}<a class="stil"
+        href="{{ url_for('nummer', sleutel=l.sleutel) }}"
+        title="{{ l.artiest }} ({{ l.van }}{% if l.tot != l.van %}–{{ l.tot }}{% endif %})"
+        >{{ l.artiest }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+    </td>
+    <td class="getal hint">{{ f.van }}{% if f.tot != f.van %}–{{ f.tot }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+
+{% endblock %}

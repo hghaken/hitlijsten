@@ -1,0 +1,41 @@
+{% extends "basis.html" %}
+{% block titel %}Records — Hitlijsten{% endblock %}
+{% block beschrijving %}De records over zestig jaar Nederlandse hitlijsten: meeste weken genoteerd, meeste weken op 1, de grootste sprongen, eenhitwonders en de langste carrières.{% endblock %}
+{% block inhoud %}
+
+<h1>Records</h1>
+<p class="onder">De uitersten over alle lijsten en alle jaargangen heen —
+  de wetenswaardigheden per lijst staan
+  <a href="{{ url_for('wetenswaardigheden') }}">hier</a>.</p>
+
+{% for blok in blokken %}
+<h2>{{ blok.titel }}</h2>
+<p class="hint" style="margin-top:-.3rem">{{ blok.uitleg }}</p>
+<div class="tabelvak"><table>
+  <thead><tr><th class="getal">#</th>
+    {% for kop in blok.kolommen %}<th>{{ kop }}</th>{% endfor %}
+  </tr></thead><tbody>
+  {% for regel in blok.regels %}
+  <tr>
+    <td class="getal {% if loop.index == 1 %}top1{% endif %}">{{ loop.index }}</td>
+    {% for cel in regel %}
+      {% if cel is sequence and cel is not string %}
+        {% if cel | length == 3 %}
+          <td><a class="stil" href="{{ url_for('artiest', artiestsleutel=cel[2]) }}"
+              title="Alle hits van {{ cel[0] }}">{{ cel[0] }}</a></td>
+        {% else %}
+          <td><a class="stil" href="{{ url_for('nummer', sleutel=cel[1]) }}"
+              title="Alle noteringen en de grafiek">{{ cel[0] }}</a></td>
+        {% endif %}
+      {% elif cel in lijst_namen %}
+        <td class="hint">{{ lijst_namen.get(cel, cel) }}</td>
+      {% else %}
+        <td>{{ cel }}</td>
+      {% endif %}
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</tbody></table></div>
+{% endfor %}
+
+{% endblock %}

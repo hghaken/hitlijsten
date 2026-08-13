@@ -463,9 +463,11 @@ def _registreer(app: Flask) -> None:
         36.000 nummers en 13.600 artiesten zijn we daar overheen. Deel 1 is
         de site zelf plus de nummers, deel 2 de artiesten.
         """
-        deel1 = ["/", "/jaar", "/week", "/dag", "/decennium", "/totaal",
-                 "/jaarlijksen", "/wetenswaardigheden", "/zoek",
-                 "/gastenboek", "/feedback", "/disclaimer"]
+        deel1 = ["/", "/jaar", "/week", "/dag", "/weekbericht",
+                 "/decennium", "/totaal",
+                 "/jaarlijksen", "/wetenswaardigheden", "/records",
+                 "/versies", "/zoek", "/gastenboek", "/feedback",
+                 "/disclaimer"]
         for r in con.execute(
                 "SELECT DISTINCT lijst, jaar FROM noteringen"
                 " ORDER BY lijst, jaar"):
@@ -1439,6 +1441,189 @@ def _registreer(app: Flask) -> None:
         if plek < 0:
             return None
         return paren[plek][1], paren[plek][2]
+
+    def _weekbericht_gegevens(con, jaar: int, week: int) -> dict:
+        """Alles wat het weekbericht over één Top 40-week vertelt."""
+        rijen = list(con.execute(
+            "SELECT positie, vorige_positie, artiest, titel, sleutel,"
+            " site_status, weken_genoteerd, alarmschijf FROM noteringen"
+            " WHERE lijst='top40' AND jaar=? AND week=? ORDER BY positie",
+            (jaar, week)))
+        if not rijen:
+            return {}
+
+        kalender = [(r[0], r[1]) for r in con.execute(
+            "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst='top40'"
+            " ORDER BY jaar, week")]
+        plek = kalender.index((jaar, week))
+        vorige = kalender[plek - 1] if plek > 0 else None
+        volgende = kalender[plek + 1] if plek + 1 < len(kalender) else None
+
+        binnen = [r for r in rijen if r["vorige_positie"] is None
+                  and r["site_status"] != "terug"]
+        terug = [r for r in rijen if r["vorige_positie"] is None
+                 and r["site_status"] == "terug"]
+        met_vorige = [r for r in rijen if r["vorige_positie"] is not None]
+        stijger = max(met_vorige, default=None,
+                      key=lambda r: r["vorige_positie"] - r["positie"])
+        daler = min(met_vorige, default=None,
+                    key=lambda r: r["vorige_positie"] - r["positie"])
+
+        uitvallers = []
+        if vorige:
+            nu = {r["sleutel"] for r in rijen}
+            uitvallers = list(con.execute(
+                f"SELECT positie, artiest, titel, sleutel FROM noteringen"
+                f" WHERE lijst='top40' AND jaar=? AND week=? AND sleutel"
+                f" NOT IN ({','.join('?' for _ in nu)}) ORDER BY positie",
+                (vorige[0], vorige[1], *nu)))
+        try:
+            datum = als_tekst(vrijdag_van(jaar, week))
+        except Exception:
+            datum = None
+        return {"jaar": jaar, "week": week, "rijen": rijen,
+                "nummer1": rijen[0], "binnen": binnen, "terug": terug,
+                "stijger": stijger, "daler": daler, "uitvallers": uitvallers,
+                "vorige": vorige, "volgende": volgende, "datum": datum}
+
+    @app.route("/weekbericht")
+    def weekbericht():
+        """De week samengevat: binnenkomers, stijgers, dalers, uitvallers.
+
+        Schrijft zichzelf: alles komt uit de gegevens van de vrijdagrun.
+        Zonder parameters de nieuwste week.
+        """
+        con = verbinding()
+        try:
+            jaar = int(request.args.get("jaar", ""))
+            week = int(request.args.get("week", ""))
+        except ValueError:
+            rij = con.execute(
+                "SELECT jaar, week FROM noteringen WHERE lijst='top40'"
+                " ORDER BY jaar DESC, week DESC LIMIT 1").fetchone()
+            if rij is None:
+                abort(404)
+            jaar, week = rij
+        gegevens = _weekbericht_gegevens(con, jaar, week)
+        if not gegevens:
+            abort(404)
+        return render_template("weekbericht.html", **gegevens)
+
+    @app.route("/weekbericht.rss")
+    def weekbericht_rss():
+        """De laatste tien weken als feed, voor wie het wil volgen."""
+        from xml.sax.saxutils import escape
+
+        con = verbinding()
+        weken = [tuple(r) for r in con.execute(
+            "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst='top40'"
+            " ORDER BY jaar DESC, week DESC LIMIT 10")]
+        stukken = ['<?xml version="1.0" encoding="UTF-8"?>',
+                   '<rss version="2.0"><channel>',
+                   "<title>Hitlijsten — weekbericht</title>",
+                   f"<link>{HOOFD_URL}/weekbericht</link>",
+                   "<description>Elke week de Nederlandse Top 40 samengevat:"
+                   " de nummer 1, de binnenkomers en de grootste sprongen."
+                   "</description>",
+                   "<language>nl</language>"]
+        for jaar, week in weken:
+            g = _weekbericht_gegevens(con, jaar, week)
+            if not g:
+                continue
+            een = g["nummer1"]
+            titel = (f"Top 40 week {week}, {jaar} — op 1: "
+                     f"{een['artiest']} - {een['titel']}")
+            delen = []
+            if g["binnen"]:
+                delen.append("Nieuw: " + "; ".join(
+                    f"{r['artiest']} - {r['titel']} ({r['positie']})"
+                    for r in g["binnen"]))
+            if g["stijger"] is not None:
+                r = g["stijger"]
+                delen.append(f"Grootste stijger: {r['artiest']} -"
+                             f" {r['titel']} ({r['vorige_positie']} naar"
+                             f" {r['positie']})")
+            verwijzing = (f"{HOOFD_URL}/weekbericht?jaar={jaar}"
+                          f"&amp;week={week}")
+            try:
+                datum = vrijdag_van(jaar, week).strftime(
+                    "%a, %d %b %Y 08:00:00 +0100")
+            except Exception:
+                datum = ""
+            stukken += ["<item>",
+                        f"<title>{escape(titel)}</title>",
+                        f"<link>{verwijzing}</link>",
+                        f"<guid>{verwijzing}</guid>",
+                        f"<pubDate>{datum}</pubDate>",
+                        f"<description>{escape('. '.join(delen))}"
+                        f"</description>",
+                        "</item>"]
+        stukken.append("</channel></rss>")
+        return app.response_class("\n".join(stukken),
+                                  mimetype="application/rss+xml")
+
+    _records_cache: dict = {}
+
+    @app.route("/records")
+    def records():
+        """De klappers over alle lijsten heen; gecachet op het stempel."""
+        from .. import records as recordsmodule
+
+        con = verbinding()
+        stempel = tuple(con.execute(
+            "SELECT COUNT(*), MAX(opgehaald_op) FROM opgehaald").fetchone()
+        ) + tuple(con.execute(
+            "SELECT COUNT(*) FROM wijzigingen").fetchone())
+        if _records_cache.get("stempel") != stempel:
+            _records_cache["stempel"] = stempel
+            _records_cache["blokken"] = recordsmodule.verzamel(con)
+        return render_template("records.html",
+                               blokken=_records_cache["blokken"])
+
+    _versies_cache: dict = {}
+
+    @app.route("/versies")
+    def versies():
+        """Zelfde titel, andere artiest: covers, heropnames en naamgenoten.
+
+        De sleutel is artiest|titel, dus een titelfamilie is een groepering
+        op het titeldeel. Zelfde titel bewijst geen cover -- "Angel" is vaak
+        gewoon toeval -- en dat zegt de pagina er eerlijk bij.
+        """
+        con = verbinding()
+        stempel = con.execute("SELECT COUNT(*) FROM noteringen").fetchone()[0]
+        if _versies_cache.get("stempel") != stempel:
+            families: dict[str, list] = {}
+            for r in con.execute(
+                    "SELECT sleutel, MAX(artiest) artiest, MAX(titel) titel,"
+                    " MIN(jaar) van, MAX(jaar) tot FROM noteringen"
+                    " GROUP BY sleutel"):
+                titeldeel = r["sleutel"].split("|", 1)[-1]
+                families.setdefault(titeldeel, []).append(dict(r))
+            uit = []
+            for titeldeel, leden in families.items():
+                if len(leden) < 2:
+                    continue
+                leden.sort(key=lambda l: l["van"])
+                uit.append({
+                    "titel": leden[0]["titel"],
+                    "aantal": len(leden),
+                    "van": min(l["van"] for l in leden),
+                    "tot": max(l["tot"] for l in leden),
+                    "leden": leden,
+                })
+            uit.sort(key=lambda f: (-f["aantal"], f["titel"].lower()))
+            _versies_cache["stempel"] = stempel
+            _versies_cache["families"] = uit
+        families = _versies_cache["families"]
+
+        gevraagd = request.args.get("toon", "")
+        toon = (len(families) if gevraagd == "alles"
+                else int(gevraagd) if gevraagd.isdigit()
+                and int(gevraagd) in AANTALLEN else AANTALLEN[0])
+        return render_template(
+            "versies.html", families=families[:toon], totaal=len(families),
+            aantallen=AANTALLEN, toon=toon)
 
     @app.route("/dag")
     def jouw_dag():
