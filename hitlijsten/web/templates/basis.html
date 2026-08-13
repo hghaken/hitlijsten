@@ -76,14 +76,14 @@
   .rechts { margin-left: auto; }
 
   main { max-width: 1600px; margin: 0 auto; padding: 1.6rem 1.4rem 4rem; }
-  /* De banner zit vast aan de bovenrand van de pagina, ACHTER alles -- ook
-     de menubalk projecteert eroverheen (die heeft zijn eigen halfdoorzichtige
-     donkere laag). Laag in dekking zodat hij subtiel meekleurt in plaats van
+  /* De banner zit vast aan de bovenrand van het SCHERM (position: fixed):
+     hij scrolt niet mee, de inhoud schuift eroverheen. Hij ligt achter alles,
+     ook de menubalk (die zijn eigen halfdoorzichtige laag heeft).
+     Laag in dekking zodat hij subtiel meekleurt in plaats van
      schreeuwt, en met een lang masker zodat hij zonder rand oplost in de
      pagina-achtergrond. */
-  body { position: relative; }
   body::before {
-    content: ""; position: absolute; top: 0; left: 0; right: 0; z-index: -1;
+    content: ""; position: fixed; top: 0; left: 0; right: 0; z-index: -1;
     height: min(22vw, 380px);
     background: url("{{ url_for('static', filename='banner.jpg') }}") top center/cover no-repeat;
     opacity: .35;
