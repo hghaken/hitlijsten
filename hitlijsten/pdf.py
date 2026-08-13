@@ -267,12 +267,14 @@ def _tabel_pdf(naam: str, jaartekst, ondertitel: str, kolommen: list,
 
 
 def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
-                   week: int) -> Optional[bytes]:
+                   week: int, alleen: Optional[set] = None) -> Optional[bytes]:
     """Eén week zoals uitgezonden."""
     rijen_db = list(con.execute(
         "SELECT positie, vorige_positie, artiest, titel, weken_genoteerd,"
-        " site_status FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
-        " ORDER BY positie", (lijst, jaar, week)))
+        " site_status, sleutel FROM noteringen WHERE lijst=? AND jaar=?"
+        " AND week=? ORDER BY positie", (lijst, jaar, week)))
+    if alleen is not None:
+        rijen_db = [r for r in rijen_db if r["sleutel"] in alleen]
     if not rijen_db:
         return None
 
@@ -292,11 +294,14 @@ def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
 
 
 def bouw_klassement(con: sqlite3.Connection, lijst: str, van: int,
-                    tot: int, top: Optional[int] = None) -> Optional[bytes]:
+                    tot: int, top: Optional[int] = None,
+                    alleen: Optional[set] = None) -> Optional[bytes]:
     """Het puntenklassement over een reeks jaargangen (decennium of alles)."""
     from .db import totalen_over
 
     nummers = totalen_over(con, lijst, van, tot)
+    if alleen is not None:
+        nummers = [n for n in nummers if n["sleutel"] in alleen]
     if not nummers:
         return None
     if top:
@@ -320,12 +325,14 @@ def bouw_klassement(con: sqlite3.Connection, lijst: str, van: int,
                       f"{tot - van + 1} jaargangen", kolommen, rijen)
 
 
-def bouw_jaarlijksen(con: sqlite3.Connection,
-                     top: Optional[int] = None) -> Optional[bytes]:
+def bouw_jaarlijksen(con: sqlite3.Connection, top: Optional[int] = None,
+                     alleen: Optional[set] = None) -> Optional[bytes]:
     """De gecombineerde lijst over alle jaarlijkse lijsten."""
     from .db import jaarlijkse_totalen
 
     nummers = jaarlijkse_totalen(con)
+    if alleen is not None:
+        nummers = [n for n in nummers if n["sleutel"] in alleen]
     if not nummers:
         return None
     if top:

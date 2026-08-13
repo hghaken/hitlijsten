@@ -27,9 +27,9 @@
 
   {{ nl_filter() }}
   {% set top = toon if toon != totaal else None %}
-  <a class="knop" href="{{ url_for('download_jaarlijksen', toon=top) }}"
+  <a class="knop" href="{{ url_for('download_jaarlijksen', toon=top, nl=('1' if nl_filter_aan else None)) }}"
      title="{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als werkboek">⤓ Excel</a>
-  <a class="knop" href="{{ url_for('download_jaarlijksen_pdf', toon=top) }}"
+  <a class="knop" href="{{ url_for('download_jaarlijksen_pdf', toon=top, nl=('1' if nl_filter_aan else None)) }}"
      title="{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}">⤓ PDF</a>
 
   <span class="hint" style="margin-left:auto">

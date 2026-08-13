@@ -875,6 +875,12 @@ def _registreer(app: Flask) -> None:
             markeer=request.args.get("markeer") or "",
         )
 
+    def _nl_keuze():
+        """(set of None, naamdeel) voor de downloadroutes."""
+        if request.args.get("nl"):
+            return _nl_sleutels(), "_NL"
+        return None, ""
+
     def _gekozen_top():
         """De top uit de keuzelijst, of None voor alles.
 
@@ -905,11 +911,13 @@ def _registreer(app: Flask) -> None:
         """Eén weeklijst als Excel."""
         if lijst not in LIJSTEN or is_jaarlijks(lijst):
             abort(404)
-        wb = excel.bouw_week_werkboek(verbinding(), lijst, jaar, week)
+        alleen, staartje = _nl_keuze()
+        wb = excel.bouw_week_werkboek(verbinding(), lijst, jaar, week,
+                                      alleen=alleen)
         if wb is None:
             abort(404)
         naam = LIJSTEN[lijst]["bestand"]
-        return _stuur_excel(wb, f"{naam}_{jaar}_Week{week:02d}.xlsx")
+        return _stuur_excel(wb, f"{naam}_{jaar}_Week{week:02d}{staartje}.xlsx")
 
     @app.route("/download/pdf/week/<lijst>/<int:jaar>/<int:week>")
     def download_week_pdf(lijst: str, jaar: int, week: int):
@@ -917,48 +925,57 @@ def _registreer(app: Flask) -> None:
         if lijst not in LIJSTEN or is_jaarlijks(lijst):
             abort(404)
         from .. import pdf as pdfbouwer
-        inhoud = pdfbouwer.bouw_weeklijst(verbinding(), lijst, jaar, week)
+        alleen, staartje = _nl_keuze()
+        inhoud = pdfbouwer.bouw_weeklijst(verbinding(), lijst, jaar, week,
+                                          alleen=alleen)
         if inhoud is None:
             abort(404)
         naam = LIJSTEN[lijst]["bestand"]
-        return _stuur_pdf(inhoud, f"{naam}_{jaar}_Week{week:02d}.pdf")
+        return _stuur_pdf(inhoud, f"{naam}_{jaar}_Week{week:02d}{staartje}.pdf")
 
     @app.route("/download/jaarlijksen")
     def download_jaarlijksen():
         """De gecombineerde jaarlijst als Excel, alle nummers."""
         top = _gekozen_top()
-        wb = excel.bouw_jaarlijksen_werkboek(verbinding(), top=top)
+        alleen, staartje = _nl_keuze()
+        wb = excel.bouw_jaarlijksen_werkboek(verbinding(), top=top,
+                                             alleen=alleen)
         if wb is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("jaarlijksen_lijst"))
         naam = f"JaarlijstenTotaal_top{top}" if top else "JaarlijstenTotaal"
-        return _stuur_excel(wb, f"{naam}.xlsx")
+        return _stuur_excel(wb, f"{naam}{staartje}.xlsx")
 
     @app.route("/download/pdf/jaarlijksen")
     def download_jaarlijksen_pdf():
         """De gecombineerde jaarlijst als PDF, alle nummers."""
         from .. import pdf as pdfbouwer
         top = _gekozen_top()
-        inhoud = pdfbouwer.bouw_jaarlijksen(verbinding(), top=top)
+        alleen, staartje = _nl_keuze()
+        inhoud = pdfbouwer.bouw_jaarlijksen(verbinding(), top=top,
+                                            alleen=alleen)
         if inhoud is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("jaarlijksen_lijst"))
         naam = f"JaarlijstenTotaal_top{top}" if top else "JaarlijstenTotaal"
-        return _stuur_pdf(inhoud, f"{naam}.pdf")
+        return _stuur_pdf(inhoud, f"{naam}{staartje}.pdf")
 
     @app.route("/download/pdf/decennium/<int:decennium>")
     def download_decennium_pdf(decennium: int):
         """Het decenniumklassement als PDF."""
         from .. import pdf as pdfbouwer
+        alleen, staartje = _nl_keuze()
         inhoud = pdfbouwer.bouw_klassement(
-            verbinding(), DECENNIUM_LIJST, decennium, decennium + 9)
+            verbinding(), DECENNIUM_LIJST, decennium, decennium + 9,
+            alleen=alleen)
         if inhoud is None:
             flash(f"Voor de {decennium}'s staat er niets in de database.",
                   "fout")
             return redirect(url_for("decennium_overzicht"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
         return _stuur_pdf(
-            inhoud, f"{naam}_Decennium_{decennium}-{decennium + 9}.pdf")
+            inhoud,
+            f"{naam}_Decennium_{decennium}-{decennium + 9}{staartje}.pdf")
 
     @app.route("/download/pdf/totaal")
     def download_totaal_pdf():
@@ -967,14 +984,16 @@ def _registreer(app: Flask) -> None:
         con = verbinding()
         van, tot = db.alle_jaren(con, DECENNIUM_LIJST)
         top = _gekozen_top()
+        alleen, staartje = _nl_keuze()
         inhoud = pdfbouwer.bouw_klassement(con, DECENNIUM_LIJST, van, tot,
-                                           top=top)
+                                           top=top, alleen=alleen)
         if inhoud is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("totaal_lijst"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
         staart = f"_top{top}" if top else ""
-        return _stuur_pdf(inhoud, f"{naam}_Totaal_{van}-{tot}{staart}.pdf")
+        return _stuur_pdf(
+            inhoud, f"{naam}_Totaal_{van}-{tot}{staart}{staartje}.pdf")
 
     @app.route("/download/totaal")
     def download_totaal():
@@ -982,14 +1001,15 @@ def _registreer(app: Flask) -> None:
         con = verbinding()
         van, tot = db.alle_jaren(con, DECENNIUM_LIJST)
         top = _gekozen_top()
+        alleen, staartje = _nl_keuze()
         wb = excel.bouw_totalen_werkboek(con, DECENNIUM_LIJST, van, tot,
-                                         top=top)
+                                         top=top, alleen=alleen)
         if wb is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("totaal_lijst"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
         staart = f"_top{top}" if top else ""
-        bestand = f"{naam}_Totaal_{van}-{tot}{staart}.xlsx"
+        bestand = f"{naam}_Totaal_{van}-{tot}{staart}{staartje}.xlsx"
         buffer = io.BytesIO()
         wb.save(buffer)
         buffer.seek(0)
@@ -1100,12 +1120,14 @@ def _registreer(app: Flask) -> None:
         decenniumbestand dat na de vrijdagrun een week oud is zou stilletjes
         verkeerde totalen laten zien.
         """
-        wb = excel.bouw_decennium_werkboek(verbinding(), DECENNIUM_LIJST, decennium)
+        alleen, staartje = _nl_keuze()
+        wb = excel.bouw_decennium_werkboek(verbinding(), DECENNIUM_LIJST,
+                                           decennium, alleen=alleen)
         if wb is None:
             flash(f"Voor de {decennium}'s staat er niets in de database.", "fout")
             return redirect(url_for("decennium_overzicht"))
         naam = LIJSTEN[DECENNIUM_LIJST]["bestand"]
-        bestand = f"{naam}_Decennium_{decennium}-{decennium + 9}.xlsx"
+        bestand = f"{naam}_Decennium_{decennium}-{decennium + 9}{staartje}.xlsx"
         buffer = io.BytesIO()
         wb.save(buffer)
         buffer.seek(0)

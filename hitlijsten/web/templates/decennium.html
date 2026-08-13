@@ -19,9 +19,9 @@
 
   {% if nummers %}
   {{ nl_filter() }}
-  <a class="knop" href="{{ url_for('download_decennium', decennium=decennium) }}"
+  <a class="knop" href="{{ url_for('download_decennium', decennium=decennium, nl=('1' if nl_filter_aan else None)) }}"
      title="Het puntenklassement van {{ decennium }}–{{ decennium + 9 }} als werkboek">⤓ Excel</a>
-  <a class="knop" href="{{ url_for('download_decennium_pdf', decennium=decennium) }}"
+  <a class="knop" href="{{ url_for('download_decennium_pdf', decennium=decennium, nl=('1' if nl_filter_aan else None)) }}"
      title="Het puntenklassement van {{ decennium }}–{{ decennium + 9 }} als PDF">⤓ PDF</a>
   {% endif %}
 

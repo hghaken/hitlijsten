@@ -526,15 +526,17 @@ GECENTREERD_DECENNIUM = (
 
 
 def bouw_decennium_werkboek(
-    con: sqlite3.Connection, lijst: str, decennium: int
+    con: sqlite3.Connection, lijst: str, decennium: int,
+    alleen: Optional[set] = None,
 ) -> Optional[Workbook]:
     """Eén tab met het puntenklassement over tien jaargangen."""
-    return bouw_totalen_werkboek(con, lijst, decennium, decennium + 9)
+    return bouw_totalen_werkboek(con, lijst, decennium, decennium + 9,
+                                 alleen=alleen)
 
 
 def bouw_totalen_werkboek(
     con: sqlite3.Connection, lijst: str, van: int, tot: int,
-    top: Optional[int] = None,
+    top: Optional[int] = None, alleen: Optional[set] = None,
 ) -> Optional[Workbook]:
     """Eén tab met het puntenklassement over de jaargangen `van` t/m `tot`.
 
@@ -544,6 +546,9 @@ def bouw_totalen_werkboek(
     ook uit te komen.
     """
     nummers = totalen_over(con, lijst, van, tot)
+    if alleen is not None:
+        # Het scherm-filter (Nederlandstalig) telt ook in de download.
+        nummers = [n for n in nummers if n["sleutel"] in alleen]
     if not nummers:
         return None
     if top:
@@ -612,12 +617,20 @@ def bouw_totalen_werkboek(
 
 
 def bouw_week_werkboek(
-    con: sqlite3.Connection, lijst: str, jaar: int, week: int
+    con: sqlite3.Connection, lijst: str, jaar: int, week: int,
+    alleen: Optional[set] = None,
 ) -> Optional[Workbook]:
     """Eén weeklijst als los werkboek -- dezelfde tab als in het jaarbestand."""
     gegevens = verzamel_lijst(con, lijst, jaar)
     if gegevens is None or week not in gegevens.alle_per_week:
         return None
+    if alleen is not None:
+        gegevens.alle_per_week[week] = [
+            r for r in gegevens.alle_per_week[week] if r["sleutel"] in alleen]
+        gegevens.nieuw_per_week[week] = [
+            r for r in gegevens.nieuw_per_week[week] if r["sleutel"] in alleen]
+        if not gegevens.alle_per_week[week]:
+            return None
     wb = Workbook()
     wb.remove(wb.active)
     _weektab(wb, gegevens, week)
@@ -625,12 +638,15 @@ def bouw_week_werkboek(
 
 
 def bouw_jaarlijksen_werkboek(
-    con: sqlite3.Connection, top: Optional[int] = None
+    con: sqlite3.Connection, top: Optional[int] = None,
+    alleen: Optional[set] = None,
 ) -> Optional[Workbook]:
     """De gecombineerde lijst over alle jaarlijkse lijsten, één tab."""
     from .db import jaarlijkse_totalen
 
     nummers = jaarlijkse_totalen(con)
+    if alleen is not None:
+        nummers = [n for n in nummers if n["sleutel"] in alleen]
     if not nummers:
         return None
     if top:
