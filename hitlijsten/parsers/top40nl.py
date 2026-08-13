@@ -313,6 +313,12 @@ def parse(html: str, lijst: str, jaar: int, week: int) -> list[Notering]:
                 weken_genoteerd=weken,
                 vorige_positie=vorige,
                 site_status=status,
+                # De klasse `hitrecord` op het lijst-item is wat het rode
+                # belletje zichtbaar maakt (CSS: .top40-list__item.hitrecord
+                # .alarmschijf-icon {display:flex}). Het zegt "dit nummer is
+                # ooit Alarmschijf geweest" -- het staat er ook nog weken na
+                # de toekenning, en in elke lijst waar het nummer in staat.
+                alarmschijf="hitrecord" in (rij.get("class") or []),
             )
         )
 

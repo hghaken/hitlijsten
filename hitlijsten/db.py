@@ -42,7 +42,11 @@ CREATE TABLE IF NOT EXISTS noteringen (
     sleutel          TEXT    NOT NULL,
     -- Alleen de Top 2000 vult dit: het jaar waarin het nummer uitkwam. De
     -- weeklijsten kennen dat gegeven niet en laten het leeg.
-    uitjaar          INTEGER
+    uitjaar          INTEGER,
+    -- Het belletje van top40.nl: dit nummer is (ooit) Alarmschijf geweest.
+    -- Per notering vastgelegd zoals de bron het toont; een nummer is
+    -- Alarmschijf zodra één van zijn noteringen de vlag draagt.
+    alarmschijf      INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_noteringen_sleutel
@@ -225,6 +229,15 @@ def _voeg_uitjaar_toe(con: sqlite3.Connection) -> None:
         con.commit()
 
 
+def _voeg_alarmschijf_toe(con: sqlite3.Connection) -> None:
+    """Voeg de kolom `alarmschijf` toe aan een database die hem nog mist."""
+    kolommen = {r[1] for r in con.execute("PRAGMA table_info(noteringen)")}
+    if kolommen and "alarmschijf" not in kolommen:
+        con.execute("ALTER TABLE noteringen ADD COLUMN alarmschijf INTEGER"
+                    " NOT NULL DEFAULT 0")
+        con.commit()
+
+
 def _stel_in(con: sqlite3.Connection) -> None:
     """De instellingen die gelijktijdig gebruik mogelijk maken.
 
@@ -263,6 +276,7 @@ def verbinding() -> Iterator[sqlite3.Connection]:
         con.executescript(SCHEMA)
         _migreer_primaire_sleutel(con)
         _voeg_uitjaar_toe(con)
+        _voeg_alarmschijf_toe(con)
         yield con
         con.commit()
     finally:
@@ -331,7 +345,7 @@ def bewaar_week(
             rijen.append((
                 n.lijst, n.jaar, n.week, n.positie, titel, artiest, n.label,
                 n.weken_genoteerd, n.vorige_positie, n.site_status,
-                sleutel_van(artiest, titel),
+                sleutel_van(artiest, titel), 1 if n.alarmschijf else 0,
             ))
     # Alles of niets: gaat er halverwege iets mis, dan mag er geen halve week
     # blijven staan. Die zou daarna als "al opgehaald" gelden en stil verkeerde
@@ -344,8 +358,8 @@ def bewaar_week(
         )
         con.executemany(
             "INSERT INTO noteringen (lijst, jaar, week, positie, titel, artiest, label,"
-            " weken_genoteerd, vorige_positie, site_status, sleutel)"
-            " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            " weken_genoteerd, vorige_positie, site_status, sleutel, alarmschijf)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             rijen,
         )
         con.execute(

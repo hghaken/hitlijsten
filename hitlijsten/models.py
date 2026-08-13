@@ -38,6 +38,9 @@ class Notering:
     weken_genoteerd: Optional[int] = None
     vorige_positie: Optional[int] = None   # None bij binnenkomers
     site_status: str = "onbekend"
+    # top40.nl zet een belletje bij elk nummer dat ooit Alarmschijf was; dat
+    # is een eigenschap van de plaat, niet van de week.
+    alarmschijf: bool = False
 
     def __post_init__(self) -> None:
         self.titel = (self.titel or "").strip()

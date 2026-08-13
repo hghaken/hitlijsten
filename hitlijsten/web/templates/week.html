@@ -75,7 +75,8 @@
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar,
            markeer=r['sleutel']) }}">{{ r['artiest'] }}</a></td>
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar,
-           markeer=r['sleutel']) }}">{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
+           markeer=r['sleutel']) }}">{{ r['titel'] }}</a>{% if r['alarmschijf'] %}
+      <span title="Alarmschijf" style="color:#ED1C24">🔔</span>{% endif %}{{ zoeklinks(r['artiest'], r['titel']) }}</td>
     {% if heeft_label %}<td class="hint">{{ r['label'] or '' }}</td>{% endif %}
     <td class="getal hint">{{ r['weken_genoteerd'] or '' }}</td>
   </tr>
