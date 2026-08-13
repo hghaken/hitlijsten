@@ -1596,7 +1596,8 @@ def _registreer(app: Flask) -> None:
             try:
                 for upload in request.files.getlist("database"):
                     if upload and upload.filename:
-                        bestanden += vdjmodule.lees_database(upload.stream)
+                        bestanden += vdjmodule.lees_upload(upload.stream,
+                                                           upload.filename)
                 if not request.form.get("streaming"):
                     bestanden = [b for b in bestanden if not b.streaming]
             except Exception:

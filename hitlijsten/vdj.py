@@ -31,7 +31,8 @@ from xml.sax.saxutils import quoteattr
 
 from .normalize import sleutel_van
 
-__all__ = ["lees_database", "match", "bouw_vdjfolder", "NIVEAUS"]
+__all__ = ["lees_database", "lees_upload", "match", "bouw_vdjfolder",
+           "NIVEAUS"]
 
 NIVEAUS = {
     1: "zeer strak",
@@ -102,6 +103,27 @@ def lees_database(bron) -> list[Bestand]:
     for b in uit:
         b.sleutel = sleutel_van(b.artiest, b.titel)
         b.kern = _kernsleutel(b.artiest, b.titel)
+    return uit
+
+
+def lees_upload(stroom, naam: str) -> list[Bestand]:
+    """Een upload lezen: een kale database.xml of de backup-zip van
+    VirtualDJ (Instellingen -> Backup) -- daar zit de database in, samen
+    met de history en de playlists. We vissen elke database.xml eruit."""
+    import zipfile
+
+    kop = stroom.read(4)
+    stroom.seek(0)
+    if kop != b"PK\x03\x04":
+        return lees_database(stroom)
+    uit: list[Bestand] = []
+    with zipfile.ZipFile(stroom) as zak:
+        for info in zak.infolist():
+            if info.filename.lower().endswith("database.xml"):
+                with zak.open(info) as binnen:
+                    uit += lees_database(binnen)
+    if not uit:
+        raise ValueError(f"{naam}: geen database.xml in de zip gevonden")
     return uit
 
 
