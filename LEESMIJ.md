@@ -1131,6 +1131,24 @@ geheugen, dus dat probleem bestaat niet. Met `--debug` start nog steeds de
 Flask-server, en die zet dan ook `Secure` van het sessiecookie uit, want
 zonder HTTPS kun je je lokaal anders niet aanmelden.
 
+**HTTP stuurt door naar HTTPS.** In de reverse proxy staat voor
+hitlijsten.hhaken.nl alleen een HTTPS-regel (443 naar 10.10.8.20:8642). Wie
+`http://` intikte viel daardoor door naar de standaard-site van Web Station en
+kreeg de persoonlijke startpagina van hhaken.nl te zien — met een keurige 200,
+dus zonder enig teken dat hij verkeerd zat, en onversleuteld. Opgelost met een
+`.htaccess` in `/volume1/web/` die alléén dit hostname 301't naar https, met
+behoud van pad en queryreeks; de voorwaarde kijkt naar de Host-kop, dus
+www.hhaken.nl en de andere sites in die docroot merken er niets van. Een lus
+kan niet ontstaan: HTTPS voor dit hostname eindigt in de proxy en bereikt
+Apache nooit.
+
+> Dezelfde blinde vlek geldt voor **keepass**, **console** en **has** — die
+> geven over http óók gewoon de startpagina. Niet aangeraakt: daar hangen
+> clients aan (WebDAV, Home Assistant) waarvan ik niet weet hoe ze op een
+> omleiding reageren. Netter dan drie losse .htaccess-regels zou zijn: in DSM
+> per subdomein een HTTP-regel toevoegen, of één nginx-serverblok dat alles
+> doorstuurt.
+
 **Wie mag zeggen namens wie hij spreekt.** `_bezoeker_ip()` gelooft
 `X-Forwarded-For` en `X-Real-IP` alleen van `VERTROUWDE_PROXIES` (de
 DSM-proxy en de machine zelf). Van buitenaf was dit nooit een probleem — nginx
