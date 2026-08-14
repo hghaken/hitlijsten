@@ -44,7 +44,7 @@ Wat je moet weten om de code te begrijpen:
 | Webapplicatie | Flask op **waitress** (één proces, acht draden), achter een reverse proxy |
 | Wekelijkse run | een systemd-timer, vrijdagavond |
 | Paden | via `HITLIJSTEN_DATA`, `HITLIJSTEN_CACHE` en `HITLIJSTEN_EXCEL` |
-| Pakketten | requests, beautifulsoup4, lxml, openpyxl, Flask, waitress, fpdf2 |
+| Pakketten | requests, beautifulsoup4, lxml, openpyxl, Flask, waitress, defusedxml, fpdf2 |
 
 De code staat los van de gegevens: de database, de cache en de Excel-bestanden
 liggen naast de broncode, niet erin. Zo kun je de code in zijn geheel vervangen
@@ -1062,15 +1062,30 @@ Augustus 2026 nagelopen (code-review plus proeven op de eigen site). Wat er
 sindsdien vastligt, van meest naar minst blootgesteld:
 
 **De upload van DJ Export** is het enige dat een vreemde zonder wachtwoord kan
-aanspreken, dus daar zit de meeste wering. `vdj._Bewaakt` telt de
-**uitgepakte** bytes tijdens het lezen (plafond 512 MB per bestand) en weigert
-elk bestand met een **DTD**. Dat laatste is geen preutsheid: gemeten blies een
-DTD van 400 bytes op tot een miljoen tekens ("billion laughs"), en het sluit
-meteen XXE af. Een zip comprimeerde in de test met factor 294, dus de grens
-moet op de uitgepakte kant liggen en niet op de bestandsgrootte. Daarnaast een
-bovengrens van twee miljoen nummers, een uploadplafond van 256 MB en
-`MemoryLimit=2G` op de dienst — DSM draait systemd 219, dus `MemoryMax` werkt
-daar níét, het moet `MemoryLimit` heten met `MemoryAccounting=yes` erbij.
+aanspreken, dus daar zit de meeste wering. Twee dingen, elk op zijn eigen plek:
+
+- **De omvang** bewaakt `vdj._Bewaakt`: die telt de **uitgepakte** bytes
+  tijdens het lezen (plafond 512 MB per bestand). Een zip comprimeerde in de
+  test met factor 294, dus de grens moet op de uitgepakte kant liggen en niet
+  op de bestandsgrootte. Daarnaast een bovengrens van twee miljoen nummers —
+  óók opgeteld over meerdere bestanden in één upload, want het formulier
+  accepteert er meerdere en anders begint de teller telkens opnieuw — een
+  uploadplafond van 256 MB en `MemoryLimit=2G` op de dienst. Let op: DSM
+  draait systemd 219, dus `MemoryMax` werkt daar níét; het moet
+  `MemoryLimit` heten met `MemoryAccounting=yes` erbij.
+- **DTD's en entiteiten** weigert **defusedxml** (`veilig_iterparse`), niet
+  wijzelf. Dat is een geleerde les: de eerste versie zocht in de bytes naar
+  `<!DOCTYPE`, en dat leek te werken tot de hercontrole een **UTF-16**-bestand
+  probeerde. Daar staat `< ! D ...` en zag het patroon niets,
+  terwijl de entiteit gewoon werd uitgevouwen — een DTD van 400 bytes werd een
+  miljoen tekens ("billion laughs"). Een bibliotheek die de tekstcodering kent
+  doet dit beter dan een patroon dat wij verzinnen; het sluit meteen XXE mee
+  af. Geverifieerd tegen ascii, hoofdletters, UTF-16 met BOM, UTF-16BE en een
+  externe entiteit.
+
+Wat een zip-in-zip betreft: die wordt niet uitgepakt (alleen een
+`database.xml` op het eerste niveau telt), dus daar zit geen tweede
+versterkingstrap.
 
 **CSRF**: elke route met `@vereist_aanmelding` zet zichzelf in `BEHEERROUTES`,
 en `_csrf_bewaking` eist voor die routes een sessietoken (`{{ csrf_teken() }}`
@@ -1084,7 +1099,9 @@ met een authorizer, niet doordat er woorden gefilterd worden. Die woordenlijst
 was te omzeilen: `WITH x AS (SELECT 1)DELETE FROM ...` — zonder spatie, of met
 een newline of `/**/` ertussen — kwam er gewoon doorheen en wiste rijen.
 
-**Verder**: sessiecookie met `Secure`, `SameSite=Lax` en zeven dagen
+**Verder**: het CSRF-token wordt vernieuwd zodra je je aanmeldt (een token dat
+iemand daarvóór bemachtigde is dan niets meer waard); sessiecookie met
+`Secure`, `SameSite=Lax` en zeven dagen
 levensduur (let op: aanmelden kan daardoor **alleen nog via HTTPS**, niet meer
 rechtstreeks op `http://<nas>:8642`); beveiligingsheaders op elk antwoord
 (CSP met `unsafe-inline` omdat de sjablonen hun stijl en scriptjes inline
@@ -1092,7 +1109,11 @@ dragen — de winst is dat er van geen enkele andere herkomst iets geladen mag
 worden); vijf mislukte aanmeldpogingen per kwartier per IP mét logregel; geen
 open redirect meer via `?volgende=`; en `_eigen_pad()` op het pagina-veld van
 feedback en de terug-link van het DJ Export-rapport, zodat daar geen
-`javascript:`-link kan wachten op een klik van de beheerder.
+`javascript:`-link kan wachten op een klik van de beheerder. Die laatste
+controle moet wél twee soorten invoer aankunnen: een kaal pad (het verborgen
+formulierveld) én een volledige URL (de Referer-kop). De eerste versie kende
+alleen paden en liet daarmee de terug-link op het DJ Export-rapport
+verdwijnen — een eigen URL wordt nu herkend en teruggebracht tot zijn pad.
 
 **De server**: `python -m hitlijsten.web` draait sinds augustus 2026 op
 **waitress** in plaats van de ontwikkelserver van Flask (die is niet gebouwd
@@ -1104,6 +1125,12 @@ proces laden en bij de volgende klik in het andere belanden. Draden delen hun
 geheugen, dus dat probleem bestaat niet. Met `--debug` start nog steeds de
 Flask-server, en die zet dan ook `Secure` van het sessiecookie uit, want
 zonder HTTPS kun je je lokaal anders niet aanmelden.
+
+**Nagemeten en niet te breken** (hercontrole augustus 2026): `X-Forwarded-For`
+is niet te vervalsen — de reverse proxy van DSM overschrijft die kop, dus de
+aanmeldrem telt per echte bezoeker en is niet te ontwijken; een zip-in-zip
+levert geen extra versterking; en meerdere `database.xml` in één zip tellen
+correct op tegen de grens.
 
 Wat al goed zat en zo moet blijven: geparametriseerde SQL overal (de
 zoekfunctie plakt wel SQL aan elkaar, maar uitsluitend uit vaste fragmenten),
