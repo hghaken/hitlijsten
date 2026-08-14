@@ -5,14 +5,14 @@
 {% block beschrijving %}De complete {{ lijst_namen.get(lijst, lijst) }} van {{ jaar }}, met per nummer de positie van vorig jaar en het verloop over alle edities.{% endblock %}
 {% block inhoud %}
 
-<h1>Jaaroverzichten</h1>
-<p class="onder">Kies een lijst en een editie.</p>
+<h1>{{ _("Jaaroverzichten") }}</h1>
+<p class="onder">{{ _("Kies een lijst en een editie.") }}</p>
 
 <form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
       flex-wrap:wrap; margin-bottom:1.4rem">
   <select name="lijst" onchange="this.form.submit()">
     {# Twee soorten lijst uit elkaar houden: een week is geen editie. #}
-    <optgroup label="Weeklijsten">
+    <optgroup label="{{ _("Weeklijsten") }}">
       {% for sleutel in weeklijsten %}
         <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}
           >{{ lijst_namen.get(sleutel, sleutel) }}</option>
@@ -38,25 +38,25 @@
       <option value="{{ a }}" {% if toon == a %}selected{% endif %}>top {{ a }}</option>
     {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      alle {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — traag{% endif %}</option>
+      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
   </select>
   {% endif %}
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
   {{ nl_filter() }}
-  <label class="nlfilter" title="Alleen de nummers die in dit jaar voor het eerst in deze lijst verschenen">
+  <label class="nlfilter" title="{{ _("Alleen de nummers die in dit jaar voor het eerst in deze lijst verschenen") }}">
     <input type="checkbox" name="nieuw" value="1" onchange="this.form.submit()"
            {% if nieuw_filter_aan %}checked{% endif %}>
-    <span class="speld nieuw">nieuw</span></label>
+    <span class="speld nieuw">{{ _("nieuw") }}</span></label>
 
   {% if jaar and jaar in jaren %}
   {% set plek = jaren.index(jaar) %}
   {% if plek + 1 < jaren|length %}
     <a class="knop" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaren[plek + 1]) }}"
-       title="{{ jaren[plek + 1] }}">‹ vorige</a>
+       title="{{ jaren[plek + 1] }}">‹ {{ _('vorige') }}</a>
   {% endif %}
   {% if plek > 0 %}
     <a class="knop" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaren[plek - 1]) }}"
-       title="{{ jaren[plek - 1] }}">volgende ›</a>
+       title="{{ jaren[plek - 1] }}">{{ _('volgende') }} ›</a>
   {% endif %}
   {% endif %}
 
@@ -65,14 +65,14 @@
   {% set nl = '1' if nl_filter_aan else None %}
   {% set nw = '1' if nieuw_filter_aan else None %}
   <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, toon=top, nl=nl, nieuw=nw) }}"
-     title="{% if top or nl or nw %}De getoonde selectie als werkboek{% else %}Werkboek met de complete editie en de kerngetallen{% endif %}">⤓ Excel</a>
+     title="{% if top or nl or nw %}{{ _("De getoonde selectie als werkboek") }}{% else %}{{ _("Werkboek met de complete editie en de kerngetallen") }}{% endif %}">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download', lijst=lijst, jaar=jaar, soort='matrix') }}"
-     title="Werkboek met de matrix nummer x editie, altijd de volledige editie">⤓ editiematrix</a>
+     title="{{ _("Werkboek met de matrix nummer x editie, altijd de volledige editie") }}">⤓ {{ _("editiematrix") }}</a>
   <a class="knop" href="{{ url_for('download_pdf', lijst=lijst, jaar=jaar, toon=top, nl=nl, nieuw=nw) }}"
-     title="{% if top or nl or nw %}De getoonde selectie als PDF{% else %}De complete editie als PDF, veertig regels per pagina{% endif %}">⤓ PDF</a>
+     title="{% if top or nl or nw %}{{ _("De getoonde selectie als PDF") }}{% else %}{{ _("De complete editie als PDF, veertig regels per pagina") }}{% endif %}">⤓ PDF</a>
   {% if vdj_geladen %}
   <a class="knop" href="{{ url_for('vdj_maak', lijst=lijst, jaar=jaar, toon=top, nl=nl, nieuw=nw) }}"
-     title="De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek">⤓ DJ Export</a>
+     title="{{ _("De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek") }}">⤓ DJ Export</a>
   {% endif %}
   {% endif %}
 
@@ -80,14 +80,14 @@
      zeggen bij een jaarlijkse lijst niets. Die krijgen een eigen vorm. #}
 
   <span class="hint" style="margin-left:auto">
-    {{ jaren|length }} edities beschikbaar{% if jaren %}
+    {{ jaren|length }} {{ _("edities beschikbaar") }}{% if jaren %}
       ({{ jaren[-1] }}–{{ jaren[0] }}){% endif %} ·
-    gegevens via <a href="https://www.datastats.nl/" target="_blank" rel="noopener">datastats.nl</a>
+    {{ _('gegevens via') }} <a href="https://www.datastats.nl/" target="_blank" rel="noopener">datastats.nl</a>
   </span>
 </form>
 
 {% if not nummers %}
-  <div class="melding fout">Voor deze editie staat er nog niets in de database.</div>
+  <div class="melding fout">{{ _("Voor deze editie staat er nog niets in de database.") }}</div>
 {% else %}
 
 {# De kaartjes tellen over wat er getoond wordt; bij een afgetopte
@@ -99,33 +99,47 @@
 <div class="kaarten">
   <div class="kaart">
     <div class="cijfer">{{ totaal }}</div>
-    <div class="naam">noteringen</div>
+    <div class="naam">{{ _("noteringen") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ edities|length }}</div>
-    <div class="naam">edities in de database</div>
+    <div class="naam">{{ _("edities in de database") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ altijd|length }}</div>
-    <div class="naam">elk jaar genoteerd</div>
+    <div class="naam">{{ _("elk jaar genoteerd") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ (binnen|length) - (terug|length) }}<span
       style="font-size:1rem; color:var(--gedempt)"> + {{ terug|length }}</span></div>
-    <div class="naam">nieuw + terug</div>
+    <div class="naam">{{ _("nieuw + terug") }}</div>
   </div>
   <div class="kaart" style="min-width:20rem">
-    <div class="naam">nummer 1 van {{ jaar }}</div>
+    <div class="naam">{{ _("nummer 1 van") }} {{ jaar }}</div>
     <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
       {{ nummers[0].titel }}</div>
     <div class="hint">{{ nummers[0].artiest }}{% if nummers[0].uitjaar %}
-      — uit {{ nummers[0].uitjaar }}{% endif %}</div>
+      — {{ _("uit") }} {{ nummers[0].uitjaar }}{% endif %}</div>
   </div>
 </div>
 
-<h2>De editie van {{ jaar }}</h2>
+<h2>{{ _("De editie van") }} {{ jaar }}</h2>
 <p class="hint" style="margin-top:-.3rem">
-  De Top 2000 is één uitzending per jaar, tussen kerst en oud en nieuw, dus geen
+  {% if taal == 'en' %}This is one broadcast per year, so no weeks and no
+  points — just the position. <b>Previous edition</b> is last year's
+  spot, <b>editions</b> the number of years the song charted, and
+  <b>peak</b> its best position ever.
+  {% if toon < totaal %}
+    Below are the first {{ toon }} of {{ totaal }}; showing everything at
+    once makes the page unworkably heavy. Pick <b>all {{ totaal }}</b>
+    above to see the whole edition.
+  {% endif %}
+  <b>Back since</b> means the song missed last year's chart but did
+  appear before — hover it to see how many editions it missed.
+  Click an artist or title for the graph across all
+  {{ edities|length }} editions; skipped years stay visible as an empty
+  column with a dotted line across the gap.
+  {% else %}De Top 2000 is één uitzending per jaar, tussen kerst en oud en nieuw, dus geen
   weken en geen punten — alleen de positie. <b>Vorige editie</b> is de plek van
   vorig jaar, <b>edities</b> het aantal jaren waarin het nummer stond, en
   <b>hoogste</b> de beste positie ooit.
@@ -138,7 +152,7 @@
   maar daarvoor wél — wijs het aan om te zien hoeveel edities het miste.
   Klik op een artiest of titel voor de grafiek van het verloop over alle
   {{ edities|length }} edities; overgeslagen jaren blijven daar als lege kolom
-  staan, met een stippellijn over het gat.
+  staan, met een stippellijn over het gat.{% endif %}
 </p>
 
 <div class="tabelvak">
@@ -146,10 +160,10 @@
          data-markeer="{{ markeer or '' }}">
     <thead>
       <tr>
-        <th class="getal">#</th><th class="breed">Artiest</th><th class="breed">Titel</th>
-        <th class="getal">Uit</th><th class="getal">Vorige editie</th>
-        <th class="getal">Verschil</th><th class="getal">Edities</th>
-        <th class="getal">Hoogste</th>
+        <th class="getal">#</th><th class="breed">{{ _("Artiest") }}</th><th class="breed">{{ _("Titel") }}</th>
+        <th class="getal">{{ _("Uit") }}</th><th class="getal">{{ _("Vorige editie") }}</th>
+        <th class="getal">{{ _("Verschil") }}</th><th class="getal">{{ _("Edities") }}</th>
+        <th class="getal">{{ _("Hoogste") }}</th>
       </tr>
     </thead>
     <tbody>
@@ -157,8 +171,8 @@
       <tr data-sleutel="{{ n.sleutel }}">
         <td class="getal {% if n.positie == 1 %}top1{% elif n.positie <= 3 %}top3{% endif %}">
           {{ n.positie }}</td>
-        <td class="breed klikbaar" title="Klik voor het verloop">{{ n.artiest }}</td>
-        <td class="breed klikbaar" title="Klik voor het verloop">{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}{{ n.titel }}{{ zoeklinks(n.artiest, n.titel) }}</td>
+        <td class="breed klikbaar" title="{{ _("Klik voor het verloop") }}">{{ n.artiest }}</td>
+        <td class="breed klikbaar" title="{{ _("Klik voor het verloop") }}">{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}{{ n.titel }}{{ zoeklinks(n.artiest, n.titel) }}</td>
         <td class="getal hint">{{ n.uitjaar or '' }}</td>
         <td class="getal">{{ n.vorige or '' }}</td>
         {# Een lagere positie is beter, dus vorige - nu: positief = gestegen. #}
@@ -171,9 +185,9 @@
               >{{ '+' ~ verschil if verschil > 0 else verschil }}</span>
           {% elif n.eerder %}
             <span class="speld terug"
-                  title="Stond er in {{ n.eerder }} voor het laatst in, dus {{ jaar - n.eerder - 1 }} editie{{ 's' if jaar - n.eerder - 1 != 1 else '' }} gemist"
-              >terug sinds {{ n.eerder }}</span>
-          {% else %}<span class="speld nieuw">nieuw</span>{% endif %}
+                  title="{% if taal == 'en' %}Last appeared in {{ n.eerder }}, so it missed {{ jaar - n.eerder - 1 }} edition{{ 's' if jaar - n.eerder - 1 != 1 else '' }}{% else %}Stond er in {{ n.eerder }} voor het laatst in, dus {{ jaar - n.eerder - 1 }} editie{{ 's' if jaar - n.eerder - 1 != 1 else '' }} gemist{% endif %}"
+              >{{ _("terug sinds") }} {{ n.eerder }}</span>
+          {% else %}<span class="speld nieuw">{{ _("nieuw") }}</span>{% endif %}
         </td>
         <td class="getal">{{ n.edities }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
@@ -183,26 +197,33 @@
   </table>
 </div>
 
-<h2>Positie per editie</h2>
+<h2>{{ _("Positie per editie") }}</h2>
 <p class="hint" style="margin-top:-.3rem">
-  Een rij per nummer uit deze editie, een kolom per jaargang. Goud is nummer 1.
+  {% if taal == 'en' %}One row per song from this edition, one column per
+  year. Gold is number 1. A <b>–</b> means the song skipped that edition
+  but charted before and after it; an empty cell that it was not in the
+  chart yet (or anymore). Scroll sideways for the older editions.
+  Below is the top {{ matrix_tot }}; two thousand rows times
+  {{ edities|length }} columns would make the page unworkably heavy.
+  {% else %}Een rij per nummer uit deze editie, een kolom per jaargang. Goud is nummer 1.
   Een <b>–</b> betekent dat het nummer die editie oversloeg maar er ervoor én
   erna wel in stond; een lege cel dat het er toen nog niet (of niet meer) in
   hoorde.
   Horizontaal scrollen voor de oudere edities.
   Hieronder staat de top {{ matrix_tot }}; tweeduizend rijen maal
   {{ edities|length }} kolommen maakt de pagina anders onwerkbaar zwaar.
-  <span style="white-space:nowrap">Toon
+  {% endif %}
+  <span style="white-space:nowrap">{{ _("Toon") }}
     {% for k in matrix_keuzes %}<a href="{{ url_for('jaaroverzicht', lijst=lijst,
        jaar=jaar, matrix=k) }}">{{ k }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
-    · <a href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar, matrix='alles') }}">alle
+    · <a href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaar, matrix='alles') }}">{{ _("alle") }}
     {{ nummers|length }}</a>.</span>
 </p>
 <div class="tabelvak">
   <table>
     <thead>
       <tr>
-        <th class="breed" style="position:sticky; left:0; z-index:3; background:#131a2b">Artiest — titel</th>
+        <th class="breed" style="position:sticky; left:0; z-index:3; background:#131a2b">{{ _("Artiest — titel") }}</th>
         {% for e in edities %}<th class="getal">{{ e }}</th>{% endfor %}
       </tr>
     </thead>
@@ -211,7 +232,7 @@
       {# data-sleutel + klikbaar: daarmee haakt _grafiek.html aan, net als in
          het klassement hierboven. #}
       <tr data-sleutel="{{ n.sleutel }}">
-        <td class="breed klikbaar" title="Klik voor het verloop"
+        <td class="breed klikbaar" title="{{ _("Klik voor het verloop") }}"
             style="position:sticky; left:0; background:#0f1626">
           {{ n.artiest }} <span class="hint">— {{ n.titel }}</span>
         </td>
@@ -224,7 +245,7 @@
           <td class="getal {% if p == 1 %}top1{% elif p and p <= 10 %}top3{% endif %}">
             {% if p %}{{ p }}{% elif n.posities and e > n.posities.keys()|min
               and e < n.posities.keys()|max %}<span class="gat"
-              title="in {{ e }} niet genoteerd">–</span>{% endif %}</td>
+              title="{% if taal == 'en' %}not charting in {{ e }}{% else %}in {{ e }} niet genoteerd{% endif %}">–</span>{% endif %}</td>
         {% endfor %}
       </tr>
       {% endfor %}

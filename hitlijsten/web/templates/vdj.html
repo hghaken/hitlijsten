@@ -4,92 +4,114 @@
 {% block inhoud %}
 
 <h1>DJ Export</h1>
-<p class="onder">Laad hier één keer je database (VirtualDJ of rekordbox);
+<p class="onder">{% if taal == 'en' %}Load your database once
+  (VirtualDJ or rekordbox); every weekly chart and year chart then gets
+  a <b>DJ Export button</b> that turns the shown selection — top choice
+  and filters included — into a playlist, in the format that matches
+  your source: <code>.vdjfolder</code> for VirtualDJ, <code>.m3u8</code>
+  for rekordbox.{% else %}Laad hier één keer je database (VirtualDJ of rekordbox);
   daarna staat er op elke weeklijst en elk jaaroverzicht een
   <b>DJ Export knop</b> die de getoonde selectie — inclusief je top-keuze en filters — als
   playlist oplevert, in het formaat dat bij je bron past:
   <code>.vdjfolder</code> voor VirtualDJ, <code>.m3u8</code> voor
-  rekordbox.</p>
+  rekordbox.{% endif %}</p>
 
 {% if stand %}
 <div class="kaarten">
   <div class="kaart"><div class="cijfer">{{ stand.soort }}</div>
-    <div class="naam">bron</div></div>
+    <div class="naam">{{ _("bron") }}</div></div>
   <div class="kaart"><div class="cijfer">{{ '{:,}'.format(stand.aantal).replace(',', '.') }}</div>
-    <div class="naam">nummers geladen ({{ '{:,}'.format(stand.lokaal).replace(',', '.') }} lokaal)</div></div>
-  <div class="kaart"><div class="cijfer">{{ 'aan' if stand.streaming else 'uit' }}</div>
-    <div class="naam">streaming (netsearch)</div></div>
-  <div class="kaart"><div class="cijfer">{{ stand.media }}</div>
-    <div class="naam">bestandssoort</div></div>
-  <div class="kaart"><div class="cijfer">{{ stand.niveau }}</div>
-    <div class="naam">matching-strengheid</div></div>
+    <div class="naam">{{ _("nummers geladen") }} ({{ '{:,}'.format(stand.lokaal).replace(',', '.') }} {{ _("lokaal") }})</div></div>
+  <div class="kaart"><div class="cijfer">{{ _('aan') if stand.streaming else _('uit') }}</div>
+    <div class="naam">{{ _("streaming (netsearch)") }}</div></div>
+  <div class="kaart"><div class="cijfer">{{ _(stand.media) }}</div>
+    <div class="naam">{{ _("bestandssoort") }}</div></div>
+  <div class="kaart"><div class="cijfer">{{ _(stand.niveau) }}</div>
+    <div class="naam">{{ _("matching-strengheid") }}</div></div>
 </div>
 <div class="kaart" style="display:flex; gap:.9rem; align-items:center; flex-wrap:wrap; margin-bottom:1.6rem">
-  <span>Je bibliotheek is geladen — ga naar de diverse lijsten en klik op
-    <b>⤓ DJ Export</b>.</span>
+  <span>{% if taal == 'en' %}Your library is loaded — go to any of the
+    charts and click <b>⤓ DJ Export</b>.{% else %}Je bibliotheek is geladen — ga naar de diverse lijsten en klik op
+    <b>⤓ DJ Export</b>.{% endif %}</span>
   <form method="post" style="margin-left:auto">
     <button name="vergeet" value="1"
-      title="Haalt je database uit het geheugen">vergeet mijn database</button>
+      title="{{ _("Haalt je database uit het geheugen") }}">{{ _("vergeet mijn database") }}</button>
   </form>
 </div>
-<p class="hint">De database blijft alleen tijdens je bezoek in het
+<p class="hint">{% if taal == 'en' %}Your database only lives in
+  working memory during your visit (four hours at most) and never
+  touches a disk. Loading again replaces the previous one.{% else %}De database blijft alleen tijdens je bezoek in het
   werkgeheugen (hooguit vier uur) en raakt nooit een schijf. Opnieuw laden
-  vervangt de vorige.</p>
+  vervangt de vorige.{% endif %}</p>
 {% endif %}
 
 <form method="post" enctype="multipart/form-data" class="kaart"
       style="display:grid; gap:.9rem; max-width:46rem">
-  <label>{% if stand %}Een andere database laden{% else %}Je muziek database{% endif %}<br>
+  <label>{% if stand %}{{ _("Een andere database laden") }}{% else %}{{ _("Je muziek database") }}{% endif %}<br>
     {# "Choose files" is browsertekst en niet te vertalen; daarom een eigen
        knop met het veld er onzichtbaar (maar focusbaar, voor de
        required-melding) achter. #}
     <span style="display:inline-flex; gap:.7rem; align-items:center; margin-top:.3rem">
-      <span class="knop">Selecteer file</span>
-      <span class="hint" id="gekozen">nog niets gekozen</span>
+      <span class="knop">{{ _("Selecteer file") }}</span>
+      <span class="hint" id="gekozen">{{ _("nog niets gekozen") }}</span>
     </span>
     <input type="file" name="database" accept=".xml,.zip" multiple required
            style="position:absolute; opacity:0; width:1px; height:1px"
            onchange="document.getElementById('gekozen').textContent =
-             [...this.files].map(f => f.name).join(', ') || 'nog niets gekozen'">
-    <span class="hint" style="display:block">Het makkelijkst: maak in
+             [...this.files].map(f => f.name).join(', ') || {{ _('nog niets gekozen') | tojson }}">
+    <span class="hint" style="display:block">{% if taal == 'en' %}The
+      easy way: make a <b>backup</b> in VirtualDJ (Settings → Backup) and
+      upload that zip — small and complete, including music on
+      disconnected drives. A bare <code>database.xml</code> works too,
+      even several at once. Running <b>rekordbox</b>? Export your
+      collection there (File → Export collection in xml format) and
+      upload that — the report then gives you an M3U8 playlist.
+      {% else %}Het makkelijkst: maak in
       VirtualDJ een <b>backup</b> (Instellingen → Backup) en upload die zip —
       klein en compleet, ook met de muziek van losse schijven erin. Een kale
       <code>database.xml</code> mag ook, en meerdere tegelijk. Draai je
       <b>rekordbox</b>? Exporteer daar je collectie
       (Bestand → Collectie exporteren in xml-formaat) en upload die —
-      het rapport geeft je dan een M3U8-playlist terug.</span>
+      het rapport geeft je dan een M3U8-playlist terug.{% endif %}</span>
   </label>
 
   <label style="display:flex; gap:.5rem; align-items:baseline">
     <input type="checkbox" name="streaming" value="1"
            {% if stand and stand.streaming %}checked{% endif %}>
-    <span>Ook streaming-nummers (netsearch) meenemen
-      <span class="hint">— een lokaal bestand wint altijd van streaming</span></span>
+    <span>{% if taal == 'en' %}Include streaming (netsearch) tracks
+      <span class="hint">— a local file always beats streaming</span>
+      {% else %}Ook streaming-nummers (netsearch) meenemen
+      <span class="hint">— een lokaal bestand wint altijd van streaming</span>{% endif %}</span>
   </label>
 
-  <label>Bestandssoort<br>
+  <label>{% if taal == 'en' %}File type{% else %}Bestandssoort{% endif %}<br>
     <select name="media" style="margin-top:.3rem">
-      <option value="audio" {% if not stand or stand.media == 'alleen audio' %}selected{% endif %}>alleen audio (mp3 e.a.)</option>
-      <option value="video" {% if stand and stand.media == 'alleen video' %}selected{% endif %}>alleen video (mp4 e.a.)</option>
-      <option value="beide" {% if stand and stand.media == 'audio én video' %}selected{% endif %}>audio én video</option>
+      <option value="audio" {% if not stand or stand.media == 'alleen audio' %}selected{% endif %}>{% if taal == 'en' %}audio only (mp3 etc.){% else %}alleen audio (mp3 e.a.){% endif %}</option>
+      <option value="video" {% if stand and stand.media == 'alleen video' %}selected{% endif %}>{% if taal == 'en' %}video only (mp4 etc.){% else %}alleen video (mp4 e.a.){% endif %}</option>
+      <option value="beide" {% if stand and stand.media == 'audio én video' %}selected{% endif %}>{{ _("audio én video") }}</option>
     </select>
-    <span class="hint" style="display:block">Standaard alleen audio: anders
-      wint de videoversie nogal eens op bestandsgrootte.</span>
+    <span class="hint" style="display:block">{% if taal == 'en' %}Audio
+      only by default: otherwise the video version tends to win on file
+      size.{% else %}Standaard alleen audio: anders
+      wint de videoversie nogal eens op bestandsgrootte.{% endif %}</span>
   </label>
 
-  <label>Matching-strengheid<br>
+  <label>{% if taal == 'en' %}Matching strictness{% else %}Matching-strengheid{% endif %}<br>
     <select name="niveau" style="margin-top:.3rem">
       {% for nr, naam in niveaus.items() %}
-        <option value="{{ nr }}" {% if (stand and stand.niveau == naam) or (not stand and nr == 2) %}selected{% endif %}>{{ naam }}</option>
+        <option value="{{ nr }}" {% if (stand and stand.niveau == naam) or (not stand and nr == 2) %}selected{% endif %}>{{ _(naam) }}</option>
       {% endfor %}
     </select>
-    <span class="hint" style="display:block">Van exacte sleutel tot fuzzy;
-      de soepelste treffers heten in het rapport "twijfel".</span>
+    <span class="hint" style="display:block">{% if taal == 'en' %}From
+      exact key to fuzzy; the loosest matches are labelled
+      "doubtful" in the report.{% else %}Van exacte sleutel tot fuzzy;
+      de soepelste treffers heten in het rapport "twijfel".{% endif %}</span>
   </label>
 
-  <div><button class="hoofd" type="submit">Laad de database</button>
-    <span class="hint">bij een grote database kan dit even duren; er wordt
-      niets bewaard</span></div>
+  <div><button class="hoofd" type="submit">{{ _("Laad de database") }}</button>
+    <span class="hint">{% if taal == 'en' %}a large database can take a
+      moment; nothing is stored{% else %}bij een grote database kan dit even duren; er wordt
+      niets bewaard{% endif %}</span></div>
 </form>
 
 {% if fout %}<div class="melding fout" style="margin-top:1rem">{{ fout }}</div>{% endif %}

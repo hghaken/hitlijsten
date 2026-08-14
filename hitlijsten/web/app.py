@@ -294,6 +294,38 @@ def _registreer(app: Flask) -> None:
     app.jinja_env.globals["is_nl"] = _is_nl
 
     @app.context_processor
+    def _taal_stand():
+        """De taalkeuze (fase 1: NL en EN) uit een cookie.
+
+        `_` vertaalt een vaste tekst; in het Nederlands is dat de tekst
+        zelf, in het Engels een woordenboek-opzoekactie met het
+        Nederlands als vangnet -- een vergeten vertaling toont dus
+        gewoon Nederlands, nooit een kale sleutel.
+        """
+        from . import vertalingen
+
+        taal = request.cookies.get("taal", "nl")
+        if taal not in ("nl", "en"):
+            taal = "nl"
+        if taal == "en":
+            vertaal = lambda tekst: vertalingen.EN.get(tekst, tekst)
+        else:
+            vertaal = lambda tekst: tekst
+        return {"taal": taal, "_": vertaal}
+
+    @app.route("/taal/<code>")
+    def taal_kies(code: str):
+        """Taalkeuze vastleggen en terug naar waar de bezoeker was."""
+        terug = request.args.get("terug", "/")
+        if not terug.startswith("/") or terug.startswith("//"):
+            terug = "/"
+        antwoord = redirect(terug)
+        if code in ("nl", "en"):
+            antwoord.set_cookie("taal", code, max_age=31536000,
+                                samesite="Lax")
+        return antwoord
+
+    @app.context_processor
     def _nl_filter_stand():
         # Elke lijstpagina kent hetzelfde filter; de templates lezen de stand
         # hieruit zodat niet elke render-aanroep hem hoeft door te geven.

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="nl">
+<html lang="{{ taal }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +8,7 @@
    een eigen verhaal overschrijven het blok. De canonical wijst altijd naar
    het publieke adres -- achter de reverse proxy is request.url_root
    onbruikbaar. #}
-<meta name="description" content="{% block beschrijving %}Zestig jaar Nederlandse hitlijsten doorzoekbaar: de Top 40 vanaf 1965, de Top 2000 en negentien andere lijsten, met het verloop van elk nummer in een grafiek.{% endblock %}">
+<meta name="description" content="{% block beschrijving %}{% if taal == 'en' %}Sixty years of Dutch music charts, fully searchable: the Top 40 since 1965, the Top 2000 and nineteen other charts, with every song's chart run in a graph.{% else %}Zestig jaar Nederlandse hitlijsten doorzoekbaar: de Top 40 vanaf 1965, de Top 2000 en negentien andere lijsten, met het verloop van elk nummer in een grafiek.{% endif %}{% endblock %}">
 <link rel="canonical" href="{{ canoniek() }}">
 <meta property="og:site_name" content="Hitlijsten">
 {# Eigenaarschapsbewijs voor Bing Webmaster Tools; moet blijven staan. #}
@@ -408,37 +408,40 @@
   <div class="binnen">
     <span class="merk"><span>Hitlijsten</span></span>
     <nav>
-      <a href="{{ url_for('overzicht') }}">Overzicht</a>
-      <a href="{{ url_for('weeklijst') }}">Weeklijsten</a>
-      <a href="{{ url_for('jaaroverzicht') }}">Jaaroverzichten</a>
-      <a href="{{ url_for('decennium_overzicht') }}">Decennia</a>
-      <a href="{{ url_for('totaal_lijst') }}">Top 40 totaal</a>
-      <a href="{{ url_for('jaarlijksen_lijst') }}">Jaarlijsten totaal</a>
+      <a href="{{ url_for('overzicht') }}">{{ _("Overzicht") }}</a>
+      <a href="{{ url_for('weeklijst') }}">{{ _("Weeklijsten") }}</a>
+      <a href="{{ url_for('jaaroverzicht') }}">{{ _("Jaaroverzichten") }}</a>
+      <a href="{{ url_for('decennium_overzicht') }}">{{ _("Decennia") }}</a>
+      <a href="{{ url_for('totaal_lijst') }}">{{ _("Top 40 totaal") }}</a>
+      <a href="{{ url_for('jaarlijksen_lijst') }}">{{ _("Jaarlijsten totaal") }}</a>
     </nav>
     <span class="rechts">
       <a href="{{ url_for('static', filename='handleiding.pdf') }}"
          target="_blank" rel="noopener"
-         title="De gebruiksaanwijzing voor bezoekers, als PDF">Handleiding</a>
-      <a href="{{ url_for('disclaimer') }}">Disclaimer</a>
+         title="{{ _("De gebruiksaanwijzing voor bezoekers, als PDF") }}">{{ _("Handleiding") }}</a>
+      <a href="{{ url_for('disclaimer') }}">{{ _("Disclaimer") }}</a>
       {% if is_aangemeld() %}
-        <a href="{{ url_for('afmelden') }}">Afmelden</a>
+        <a href="{{ url_for('afmelden') }}">{{ _("Afmelden") }}</a>
       {% else %}
-        <a href="{{ url_for('aanmelden') }}">Aanmelden</a>
+        <a href="{{ url_for('aanmelden') }}">{{ _("Aanmelden") }}</a>
       {% endif %}
+      <a href="{{ url_for('taal_kies', code=('nl' if taal == 'en' else 'en'), terug=request.full_path) }}"
+         title="{{ 'Deze site in het Nederlands' if taal == 'en' else 'This site in English' }}"
+        >{{ 'NL' if taal == 'en' else 'EN' }}</a>
     </span>
   </div>
   <div class="binnen subbalk">
     <nav class="subnav">
-      <a href="{{ url_for('zoek') }}">Zoeken</a>
-      <a href="{{ url_for('jouw_dag') }}">Jouw dag</a>
-      <a href="{{ url_for('weekbericht') }}">Weekbericht</a>
-      <a href="{{ url_for('wetenswaardigheden') }}">Wetenswaardigheden</a>
-      <a href="{{ url_for('records') }}">Records</a>
-      <a href="{{ url_for('versies') }}">Versies</a>
-      <a href="{{ url_for('vergelijk') }}">Vergelijk</a>
+      <a href="{{ url_for('zoek') }}">{{ _("Zoeken") }}</a>
+      <a href="{{ url_for('jouw_dag') }}">{{ _("Jouw dag") }}</a>
+      <a href="{{ url_for('weekbericht') }}">{{ _("Weekbericht") }}</a>
+      <a href="{{ url_for('wetenswaardigheden') }}">{{ _("Wetenswaardigheden") }}</a>
+      <a href="{{ url_for('records') }}">{{ _("Records") }}</a>
+      <a href="{{ url_for('versies') }}">{{ _("Versies") }}</a>
+      <a href="{{ url_for('vergelijk') }}">{{ _("Vergelijk") }}</a>
       <a href="{{ url_for('vdj_playlist') }}">DJ Export</a>
-      <a href="{{ url_for('gastenboek') }}">Gastenboek</a>
-      <a href="{{ url_for('verras') }}" title="Verras me: een willekeurig nummer">🎲</a>
+      <a href="{{ url_for('gastenboek') }}">{{ _("Gastenboek") }}</a>
+      <a href="{{ url_for('verras') }}" title="{{ _("Verras me: een willekeurig nummer") }}">🎲</a>
       {% if is_aangemeld() %}
         <span class="scheiding" aria-hidden="true">|</span>
         <a href="{{ url_for('berichten') }}">Berichten</a>
@@ -463,6 +466,23 @@
 <footer style="max-width:1600px; margin:0 auto; padding:1rem 1.4rem 2.5rem;
                border-top:1px solid var(--rand2); color:var(--gedempt);
                font-size:.85rem">
+  {% if taal == 'en' %}
+  <b>Weekly charts</b> compiled by
+  <a href="https://www.top40.nl/" target="_blank" rel="noopener">top40.nl</a>
+  (Dutch Top&nbsp;40, Tipparade, Sterren&nbsp;NL Top&nbsp;25) and
+  <a href="https://www.oranjetop30.nl/" target="_blank" rel="noopener">oranjetop30.nl</a>.
+  Alarmschijf markings via top40.nl.
+  <br><b>Annual charts</b> compiled by NPO&nbsp;Radio&nbsp;2,
+  NPO&nbsp;3FM, NPO&nbsp;Radio&nbsp;5, Radio&nbsp;10, Veronica, Qmusic,
+  Sublime, Arrow Classic Rock and KINK, collected via
+  <a href="https://www.datastats.nl/" target="_blank" rel="noopener">datastats.nl</a>.
+  <br>This site shows their data; the rights remain theirs. See the
+  <a href="{{ url_for('disclaimer') }}">disclaimer</a> (in Dutch).
+  Spotted something wrong?
+  <a href="{{ url_for('feedback', soort='aanvulling', pagina=request.path) }}">Report
+  it</a> — or leave a message in the
+  <a href="{{ url_for('gastenboek') }}">guestbook</a>.
+  {% else %}
   <b>Weeklijsten</b> samengesteld door
   <a href="https://www.top40.nl/" target="_blank" rel="noopener">top40.nl</a>
   (Nederlandse Top&nbsp;40, Tipparade, Sterren&nbsp;NL Top&nbsp;25) en
@@ -478,6 +498,7 @@
   <a href="{{ url_for('feedback', soort='aanvulling', pagina=request.path) }}">Meld
   het</a> — of laat een bericht achter in het
   <a href="{{ url_for('gastenboek') }}">gastenboek</a>.
+  {% endif %}
 </footer>
 
 <script>

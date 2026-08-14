@@ -5,12 +5,14 @@
 {% block beschrijving %}Alle {{ aantal_lijsten }} jaarlijkse lijsten samen — van de Top 2000 tot de Rock Top 500 — eerlijk opgeteld tot een lijst allertijden.{% endblock %}
 {% block inhoud %}
 
-<h1>Jaarlijsten totaal</h1>
-<p class="onder">Alle {{ aantal_lijsten }} jaarlijkse lijsten samen — van de
-  Top 2000 tot de Rock Top 500 — eerlijk geteld.</p>
+<h1>{{ _("Jaarlijsten totaal") }}</h1>
+<p class="onder">{% if taal == 'en' %}All {{ aantal_lijsten }} annual charts
+  combined — from the Top 2000 to the Rock Top 500 — counted fairly.
+  {% else %}Alle {{ aantal_lijsten }} jaarlijkse lijsten samen — van de
+  Top 2000 tot de Rock Top 500 — eerlijk geteld.{% endif %}</p>
 
 {% if not nummers %}
-  <div class="melding fout">Er staat nog niets in de database.</div>
+  <div class="melding fout">{{ _("Er staat nog niets in de database.") }}</div>
 {% else %}
 
 <form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
@@ -21,60 +23,68 @@
         top {{ a }}</option>
     {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      alle {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — traag{% endif %}</option>
+      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
   {{ nl_filter() }}
   {% set top = toon if toon != totaal else None %}
   <a class="knop" href="{{ url_for('download_jaarlijksen', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als werkboek">⤓ Excel</a>
+     title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}All {{ '{:,}'.format(totaal).replace(',', '.') }} songs{% endif %} as a workbook{% else %}{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als werkboek{% endif %}">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download_jaarlijksen_pdf', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}">⤓ PDF</a>
+     title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}All {{ '{:,}'.format(totaal).replace(',', '.') }} songs{% endif %} as a PDF{% if not top %} — building takes a while{% endif %}{% else %}{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}{% endif %}">⤓ PDF</a>
   {% if vdj_geladen %}
   <a class="knop" href="{{ url_for('vdj_maak', soort='jaarlijksen', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek">⤓ DJ Export</a>
+     title="{{ _("De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek") }}">⤓ DJ Export</a>
   {% endif %}
 
   <span class="hint" style="margin-left:auto">
-    {{ aantal_lijsten }} lijsten · {{ edities }} edities ·
-    de Top 40 staat in <a href="{{ url_for('totaal_lijst') }}">Top 40 totaal</a>
+    {% if taal == 'en' %}{{ aantal_lijsten }} charts · {{ edities }} editions ·
+    the Top 40 lives in <a href="{{ url_for('totaal_lijst') }}">Top 40 all-time</a>
+    {% else %}{{ aantal_lijsten }} lijsten · {{ edities }} edities ·
+    de Top 40 staat in <a href="{{ url_for('totaal_lijst') }}">Top 40 totaal</a>{% endif %}
   </span>
 </form>
 
 <div class="kaarten">
   <div class="kaart">
     <div class="cijfer">{{ '{:,}'.format(totaal).replace(',', '.') }}</div>
-    <div class="naam">unieke nummers</div>
+    <div class="naam">{{ _("unieke nummers") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ aantal_lijsten }}</div>
-    <div class="naam">jaarlijkse lijsten</div>
+    <div class="naam">{{ _("jaarlijkse lijsten") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ edities }}</div>
-    <div class="naam">edities</div>
+    <div class="naam">{{ _("edities") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ nummers[0].punten }}</div>
-    <div class="naam">hoogste score ({{ nummers[0].titel[:24] }})</div>
+    <div class="naam">{{ _("hoogste score") }} ({{ nummers[0].titel[:24] }})</div>
   </div>
 </div>
 
 <p class="hint" style="max-width:62rem">
-  <b>Hoe er geteld wordt.</b> De lijsten verschillen van lengte — 500 tot
+  {% if taal == 'en' %}<b>How the counting works.</b> The charts differ in
+  length — 500 to 4,000 — so simply adding points would let the longest
+  chart win. Each entry therefore scores <b>(length − position + 1) ÷
+  length</b> points: number&nbsp;1 of ány chart is worth exactly one
+  point, the last spot almost zero. Charting high earns a lot per
+  edition; charting every year stacks up. The maximum is therefore the
+  number of editions: {{ edities }}.{% else %}<b>Hoe er geteld wordt.</b> De lijsten verschillen van lengte — 500 tot
   4.000 — dus punten optellen zou de langste lijst laten winnen. Daarom telt
   elke notering <b>(lengte − positie + 1) ÷ lengte</b> punten: de nummer&nbsp;1
   van élke lijst is precies één punt waard, de laatste plek bijna nul. Wie hoog
   staat verdient veel per editie; wie er elk jaar in staat, stapelt. Het
-  maximum is dus het aantal edities: {{ edities }}.
+  maximum is dus het aantal edities: {{ edities }}.{% endif %}
 </p>
 
 <div class="tabelvak"><table id="jaarlijksen" data-markeer="{{ markeer }}">
   <thead><tr>
-    <th class="getal">#</th><th>Artiest</th><th>Titel</th>
-    <th class="getal">Punten</th><th class="getal">Edities</th>
-    <th class="getal">Lijsten</th><th class="getal">Hoogste</th>
+    <th class="getal">#</th><th>{{ _("Artiest") }}</th><th>{{ _("Titel") }}</th>
+    <th class="getal">{{ _("Punten") }}</th><th class="getal">{{ _("Edities") }}</th>
+    <th class="getal">{{ _("Lijsten") }}</th><th class="getal">{{ _("Hoogste") }}</th>
   </tr></thead><tbody>
   {% for n in nummers %}
   {% set doel = url_for('jaaroverzicht', lijst=n.hoogste_lijst,
@@ -88,7 +98,7 @@
     <td class="getal">{{ n.edities }}</td>
     <td class="getal">{{ n.lijsten }}</td>
     <td class="getal hint {% if n.hoogste == 1 %}top1{% endif %}"
-        title="in de {{ lijst_namen.get(n.hoogste_lijst, n.hoogste_lijst) }} van {{ n.hoogste_jaar }}">
+        title="{% if taal == 'en' %}in the {{ lijst_namen.get(n.hoogste_lijst, n.hoogste_lijst) }} of {{ n.hoogste_jaar }}{% else %}in de {{ lijst_namen.get(n.hoogste_lijst, n.hoogste_lijst) }} van {{ n.hoogste_jaar }}{% endif %}">
       {{ n.hoogste }}</td>
   </tr>
   {% endfor %}

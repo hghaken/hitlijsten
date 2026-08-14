@@ -5,11 +5,11 @@
 {% block beschrijving %}Het totaalklassement over alle jaargangen Nederlandse Top 40, 1965 tot nu.{% endblock %}
 {% block inhoud %}
 
-<h1>Top 40 totaal</h1>
-<p class="onder">Alle nummers uit de Nederlandse Top 40 van {{ van }} tot nu, op punten.</p>
+<h1>{{ _("Top 40 totaal") }}</h1>
+<p class="onder">{% if taal == 'en' %}Every song from the Dutch Top 40 from {{ van }} until now, ranked by points.{% else %}Alle nummers uit de Nederlandse Top 40 van {{ van }} tot nu, op punten.{% endif %}</p>
 
 {% if not nummers %}
-  <div class="melding fout">Er staat nog niets in de database.</div>
+  <div class="melding fout">{{ _("Er staat nog niets in de database.") }}</div>
 {% else %}
 
 <form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
@@ -20,52 +20,63 @@
         top {{ a }}</option>
     {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      alle {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — traag{% endif %}</option>
+      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
   {{ nl_filter() }}
   {% set top = toon if toon != totaal else None %}
   <a class="knop" href="{{ url_for('download_totaal', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="{% if top %}De top {{ top }}{% else %}De volledige lijst van {{ totaal }} nummers{% endif %} als werkboek">⤓ Excel</a>
+     title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}The complete list of {{ totaal }} songs{% endif %} as a workbook{% else %}{% if top %}De top {{ top }}{% else %}De volledige lijst van {{ totaal }} nummers{% endif %} als werkboek{% endif %}">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download_totaal_pdf', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="{% if top %}De top {{ top }}{% else %}De volledige lijst van {{ totaal }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}">⤓ PDF</a>
+     title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}The complete list of {{ totaal }} songs{% endif %} as a PDF{% if not top %} — building takes a while{% endif %}{% else %}{% if top %}De top {{ top }}{% else %}De volledige lijst van {{ totaal }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}{% endif %}">⤓ PDF</a>
   {% if vdj_geladen %}
   <a class="knop" href="{{ url_for('vdj_maak', soort='totaal', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek">⤓ DJ Export</a>
+     title="{{ _("De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek") }}">⤓ DJ Export</a>
   {% endif %}
 
   <span class="hint" style="margin-left:auto">
-    Alleen de Nederlandse Top 40 · {{ tot - van + 1 }} jaargangen ·
-    per decennium op het <a href="{{ url_for('decennium_overzicht') }}">decenniumoverzicht</a>
+    {% if taal == 'en' %}Dutch Top 40 only · {{ tot - van + 1 }} years ·
+    per decade on the <a href="{{ url_for('decennium_overzicht') }}">decades page</a>
+    {% else %}Alleen de Nederlandse Top 40 · {{ tot - van + 1 }} jaargangen ·
+    per decennium op het <a href="{{ url_for('decennium_overzicht') }}">decenniumoverzicht</a>{% endif %}
   </span>
 </form>
 
 <div class="kaarten">
   <div class="kaart">
     <div class="cijfer">{{ '{:,}'.format(totaal).replace(',', '.') }}</div>
-    <div class="naam">unieke nummers</div>
+    <div class="naam">{{ _("unieke nummers") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ tot - van + 1 }}</div>
-    <div class="naam">jaargangen</div>
+    <div class="naam">{{ _("jaargangen") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ nummer1s }}</div>
-    <div class="naam">nummers op 1 geweest</div>
+    <div class="naam">{{ _("nummers op 1 geweest") }}</div>
   </div>
   <div class="kaart" style="min-width:22rem">
-    <div class="naam">koploper aller tijden</div>
+    <div class="naam">{{ _("koploper aller tijden") }}</div>
     <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
       {{ nummers[0].titel }}</div>
     <div class="hint">{{ nummers[0].artiest }} —
-      {{ nummers[0].punten }} punten over {{ nummers[0].weken }} weken</div>
+      {{ nummers[0].punten }} {{ _("punten over") }} {{ nummers[0].weken }} {{ _("weken") }}</div>
   </div>
 </div>
 
-<h2>Puntenklassement {{ van }}–{{ tot }}</h2>
+<h2>{{ _("Puntenklassement") }} {{ van }}–{{ tot }}</h2>
 <p class="hint" style="margin-top:-.3rem">
-  Punten per notering = 41 − positie, per jaargang gerekend en over alle
+  {% if taal == 'en' %}Points per entry = 41 − position, counted per
+  year and summed across all {{ tot - van + 1 }} years; this list is
+  exactly the sum of the decade rankings. Summing is fair here because
+  the Top 40 has been forty entries long its whole life. Click an artist
+  or title for the year in which the song scored most.
+  {% if toon < totaal %}
+    Below are the first {{ toon }} of {{ totaal }} — the rest is in the
+    Excel, or pick a longer list above.
+  {% endif %}
+  {% else %}Punten per notering = 41 − positie, per jaargang gerekend en over alle
   {{ tot - van + 1 }} jaargangen opgeteld; deze lijst is dus precies de som van
   de decenniumlijsten. Optellen mag hier omdat de Top 40 zijn hele bestaan
   veertig noteringen lang is. Klik op een artiest of titel voor de jaargang
@@ -73,17 +84,17 @@
   {% if toon < totaal %}
     Hieronder staan de eerste {{ toon }} van {{ totaal }} — de rest zit in de
     Excel, of kies hierboven een langere lijst.
-  {% endif %}
+  {% endif %}{% endif %}
 </p>
 
 <div class="tabelvak">
   <table data-markeer="{{ markeer or '' }}">
     <thead>
       <tr>
-        <th class="getal">#</th><th class="breed">Artiest</th><th class="breed">Titel</th>
-        <th class="getal">Punten</th><th class="getal">Hoogste</th>
-        <th class="getal">Weken</th><th class="getal">Jaargangen</th>
-        <th class="getal">Binnenkomst</th><th class="getal">Laatste notering</th>
+        <th class="getal">#</th><th class="breed">{{ _("Artiest") }}</th><th class="breed">{{ _("Titel") }}</th>
+        <th class="getal">{{ _("Punten") }}</th><th class="getal">{{ _("Hoogste") }}</th>
+        <th class="getal">{{ _("Weken") }}</th><th class="getal">{{ _("Jaargangen") }}</th>
+        <th class="getal">{{ _("Binnenkomst") }}</th><th class="getal">{{ _("Laatste notering") }}</th>
       </tr>
     </thead>
     <tbody>
@@ -109,10 +120,13 @@
 </div>
 
 <p class="hint" style="margin-top:.5rem">
-  Binnenkomst en laatste notering zijn de vrijdag waarop de lijst werd
+  {% if taal == 'en' %}First and last entry are the Friday the chart
+  aired. A song that re-entered years later is one row here, with the
+  whole period in between — check the Weeks column to see how many weeks
+  it actually charted.{% else %}Binnenkomst en laatste notering zijn de vrijdag waarop de lijst werd
   uitgezonden. Een nummer dat jaren later opnieuw noteerde staat hier als één
   regel, met de hele periode ertussen — kijk naar de kolom Weken om te zien
-  hoeveel weken het er werkelijk stond.
+  hoeveel weken het er werkelijk stond.{% endif %}
 </p>
 
 <script>
