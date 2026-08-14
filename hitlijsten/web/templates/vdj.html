@@ -42,8 +42,17 @@
 <form method="post" enctype="multipart/form-data" class="kaart"
       style="display:grid; gap:.9rem; max-width:46rem">
   <label>{% if stand %}Een andere database laden{% else %}Je muziek database{% endif %}<br>
+    {# "Choose files" is browsertekst en niet te vertalen; daarom een eigen
+       knop met het veld er onzichtbaar (maar focusbaar, voor de
+       required-melding) achter. #}
+    <span style="display:inline-flex; gap:.7rem; align-items:center; margin-top:.3rem">
+      <span class="knop">Selecteer file</span>
+      <span class="hint" id="gekozen">nog niets gekozen</span>
+    </span>
     <input type="file" name="database" accept=".xml,.zip" multiple required
-           style="margin-top:.3rem">
+           style="position:absolute; opacity:0; width:1px; height:1px"
+           onchange="document.getElementById('gekozen').textContent =
+             [...this.files].map(f => f.name).join(', ') || 'nog niets gekozen'">
     <span class="hint" style="display:block">Het makkelijkst: maak in
       VirtualDJ een <b>backup</b> (Instellingen → Backup) en upload die zip —
       klein en compleet, ook met de muziek van losse schijven erin. Een kale
