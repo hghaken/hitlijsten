@@ -299,9 +299,9 @@ def bouw(versie: str = "augustus 2026") -> bytes:
               "Jaaroverzichten, Decennia, Top 40 totaal en Jaarlijsten "
               "totaal. De **tweede rij** bevat de specials: Zoeken, Jouw "
               "dag, Weekbericht, Wetenswaardigheden, Records, Versies, "
-              "Vergelijk, VirtualDJ en het Gastenboek. Helemaal rechts "
-              "staat een dobbelsteen: die opent een willekeurig nummer uit "
-              "het archief — leuk om te bladeren.")
+              "Vergelijk, VirtualDJ, het Gastenboek en — helemaal "
+              "achteraan — een dobbelsteen: die opent een willekeurig "
+              "nummer uit het archief.")
         pdf.tip("De site werkt net zo goed op je telefoon als op een groot "
                 "scherm; op smalle schermen schuiven de menu's en tabellen "
                 "vanzelf in een compactere vorm.")
@@ -433,6 +433,12 @@ def bouw(versie: str = "augustus 2026") -> bytes:
         pdf.kop2("Wetenswaardigheden")
         pdf.p("Een verzameling opvallende feiten uit het archief, per "
               "lijst en met het NL-filter te verfijnen.")
+        pdf.kop2("Verras me (de dobbelsteen)")
+        pdf.p("De dobbelsteen achteraan de menubalk opent een willekeurig "
+              "nummer uit de 539.163 noteringen — met zijn complete "
+              "chartverloop erbij. Elke worp iets anders: van een "
+              "vergeten tipparadeplaatje uit 1971 tot de hit van vorige "
+              "maand. Leuk om te bladeren, en verslavender dan je denkt.")
         pdf.kop2("Gastenboek en feedback")
         pdf.p("Zie je iets dat niet klopt, of wil je gewoon iets kwijt? "
               "Onderaan elke pagina staan links naar het feedbackformulier "
