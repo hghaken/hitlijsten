@@ -467,7 +467,8 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "schrijft de site zelf een kort bericht: de nieuwe nummer 1, "
           "de hoogste binnenkomer, de grootste stijger en daler. Wil "
           "je het automatisch volgen, dan is er een **RSS-feed** "
-          "(weekbericht.rss) voor je feedlezer.")
+          "(weekbericht.rss) voor je feedlezer — de feed-link op de "
+          "pagina volgt je taalkeuze.")
     pdf.kop2("Records")
     pdf.p("De klappers over het complete archief: meeste weken "
           "genoteerd, langste tijd op 1, grootste sprong en diepste "
@@ -765,7 +766,9 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "site writes a short report of its own: the new number 1, "
           "the highest new entry, the biggest climber and faller. To "
           "follow it automatically there is an **RSS feed** "
-          "(weekbericht.rss) for your feed reader.")
+          "(weekbericht.rss) for your feed reader — the feed link on "
+          "the page follows your language choice, so you subscribe to "
+          "the English edition.")
     pdf.kop2("Records")
     pdf.p("The record books of the whole archive: most weeks on "
           "chart, longest run at number 1, biggest jump and deepest "
