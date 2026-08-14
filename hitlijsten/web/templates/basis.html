@@ -415,7 +415,6 @@
       <a href="{{ url_for('jaarlijksen_lijst') }}">Jaarlijsten totaal</a>
     </nav>
     <span class="rechts">
-      <a href="{{ url_for('verras') }}" title="Verras me: een willekeurig nummer">🎲</a>
       <a href="{{ url_for('disclaimer') }}">Disclaimer</a>
       {% if is_aangemeld() %}
         <a href="{{ url_for('afmelden') }}">Afmelden</a>
@@ -435,6 +434,7 @@
       <a href="{{ url_for('vergelijk') }}">Vergelijk</a>
       <a href="{{ url_for('vdj_playlist') }}">VirtualDJ</a>
       <a href="{{ url_for('gastenboek') }}">Gastenboek</a>
+      <a href="{{ url_for('verras') }}" title="Verras me: een willekeurig nummer">🎲</a>
       {% if is_aangemeld() %}
         <span class="scheiding" aria-hidden="true">|</span>
         <a href="{{ url_for('berichten') }}">Berichten</a>
