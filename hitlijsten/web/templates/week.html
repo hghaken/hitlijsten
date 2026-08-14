@@ -11,8 +11,8 @@
 {% else %}De complete lijst van één week, zoals hij is uitgezonden —
   kies uit {% for wk in weeklijsten %}de {{ lijst_namen.get(wk, wk) }}{% if not loop.last %}{% if loop.revindex == 2 %} en {% else %}, {% endif %}{% endif %}{% endfor %}.{% endif %}</p>
 
-<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
-      flex-wrap:wrap; margin-bottom:1.4rem">
+<form method="get" class="kaart balk">
+  <div class="rij">
   <select name="lijst" onchange="this.form.submit()">
     {# Alleen de weeklijsten: een jaarlijkse lijst heeft geen weken. #}
     {% for sleutel in weeklijsten %}
@@ -37,6 +37,8 @@
            {% if nieuw_filter_aan %}checked{% endif %}>
     <span class="speld nieuw">{{ _("nieuw") }}</span></label>
 
+  </div>
+  <div class="rij">
   {# Bladeren langs de kalender van uitgezonden weken, over de jaargrens heen:
      na week 52 komt week 1 van het jaar erop, en een overgeslagen kerstweek
      wordt overgeslagen. #}
@@ -64,6 +66,7 @@
   <span class="hint" style="margin-left:auto">
     {% if datum %}{{ _("uitgezonden op vrijdag") }} {{ datum }} · {% endif %}{{ rijen|length }} {{ _("noteringen") }}
   </span>
+  </div>
 </form>
 
 {% if not rijen %}

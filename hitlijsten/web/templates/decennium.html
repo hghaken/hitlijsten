@@ -7,8 +7,8 @@
 <h1>{{ _("Decennia") }}</h1>
 <p class="onder">{% if taal == 'en' %}Every song from {{ decennia|length }} decades of the Dutch Top 40, ranked by points.{% else %}Alle nummers uit {{ decennia|length }} decennia Nederlandse Top 40, op punten.{% endif %}</p>
 
-<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
-      flex-wrap:wrap; margin-bottom:1.4rem">
+<form method="get" class="kaart balk">
+  <div class="rij">
   <select name="decennium" onchange="this.form.submit()">
     {% for d in decennia %}
       <option value="{{ d }}" {% if decennium == d %}selected{% endif %}>
@@ -29,6 +29,8 @@
   {% if nummers %}
   {{ nl_filter() }}
 
+  </div>
+  <div class="rij">
   {% if decennium in decennia %}
   {% set plek = decennia.index(decennium) %}
   {% if plek + 1 < decennia|length %}
@@ -58,6 +60,7 @@
     {% else %}Alleen de Nederlandse Top 40; de andere lijsten staan per jaargang op het
     <a href="{{ url_for('jaaroverzicht') }}">jaaroverzicht</a>.{% endif %}
   </span>
+  </div>
 </form>
 
 {% if not nummers %}

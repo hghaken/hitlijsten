@@ -125,6 +125,11 @@
     border: 1px solid var(--rand); border-radius: 14px; padding: 1rem 1.2rem;
   }
   .kaarten { display: flex; gap: .9rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
+  /* De balk boven een lijst: keuzelijsten en filters op de eerste rij,
+     knoppen en de teksthint op de tweede -- vaste plekken in plaats van
+     willekeurig omlopen. */
+  form.balk { display: grid; gap: .65rem; margin-bottom: 1.4rem; }
+  form.balk .rij { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; }
   .kaarten .kaart { min-width: 160px; }
   .kaart .cijfer {
     font-size: 1.75rem; font-weight: 680; line-height: 1.1;

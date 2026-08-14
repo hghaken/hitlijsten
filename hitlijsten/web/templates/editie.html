@@ -8,8 +8,8 @@
 <h1>{{ _("Jaaroverzichten") }}</h1>
 <p class="onder">{{ _("Kies een lijst en een editie.") }}</p>
 
-<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
-      flex-wrap:wrap; margin-bottom:1.4rem">
+<form method="get" class="kaart balk">
+  <div class="rij">
   <select name="lijst" onchange="this.form.submit()">
     {# Twee soorten lijst uit elkaar houden: een week is geen editie. #}
     <optgroup label="{{ _("Weeklijsten") }}">
@@ -48,6 +48,8 @@
            {% if nieuw_filter_aan %}checked{% endif %}>
     <span class="speld nieuw">{{ _("nieuw") }}</span></label>
 
+  </div>
+  <div class="rij">
   {% if jaar and jaar in jaren %}
   {% set plek = jaren.index(jaar) %}
   {% if plek + 1 < jaren|length %}
@@ -84,6 +86,7 @@
       ({{ jaren[-1] }}–{{ jaren[0] }}){% endif %} ·
     {{ _('gegevens via') }} <a href="https://www.datastats.nl/" target="_blank" rel="noopener">datastats.nl</a>
   </span>
+  </div>
 </form>
 
 {% if not nummers %}

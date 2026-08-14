@@ -15,8 +15,8 @@
   <div class="melding fout">{{ _("Er staat nog niets in de database.") }}</div>
 {% else %}
 
-<form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
-      flex-wrap:wrap; margin-bottom:1.4rem">
+<form method="get" class="kaart balk">
+  <div class="rij">
   <select name="toon" onchange="this.form.submit()">
     {% for a in aantallen %}{% if a < totaal %}
       <option value="{{ a }}" {% if toon == a %}selected{% endif %}>
@@ -28,6 +28,8 @@
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
   {{ nl_filter() }}
+  </div>
+  <div class="rij">
   {% set top = toon if toon != totaal else None %}
   <a class="knop" href="{{ url_for('download_jaarlijksen', toon=top, nl=('1' if nl_filter_aan else None)) }}"
      title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}All {{ '{:,}'.format(totaal).replace(',', '.') }} songs{% endif %} as a workbook{% else %}{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als werkboek{% endif %}">⤓ Excel</a>
@@ -44,6 +46,7 @@
     {% else %}{{ aantal_lijsten }} lijsten · {{ edities }} edities ·
     de Top 40 staat in <a href="{{ url_for('totaal_lijst') }}">Top 40 totaal</a>{% endif %}
   </span>
+  </div>
 </form>
 
 <div class="kaarten">
