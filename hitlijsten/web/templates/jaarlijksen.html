@@ -16,12 +16,12 @@
 <form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
       flex-wrap:wrap; margin-bottom:1.4rem">
   <select name="toon" onchange="this.form.submit()">
-    {% for a in aantallen %}
+    {% for a in aantallen %}{% if a < totaal %}
       <option value="{{ a }}" {% if toon == a %}selected{% endif %}>
         top {{ a }}</option>
-    {% endfor %}
+    {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      alle {{ '{:,}'.format(totaal).replace(',', '.') }} — traag</option>
+      alle {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — traag{% endif %}</option>
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
