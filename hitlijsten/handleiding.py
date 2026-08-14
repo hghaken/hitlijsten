@@ -506,8 +506,8 @@ def bouw(versie: str | None = None) -> bytes:
               "Exporteer daar je collectie (Bestand → Collectie "
               "exporteren in xml-formaat) en upload dat bestand — de "
               "site herkent het vanzelf.")
-        pdf.kop2("Stap 2 · laad hem op de VirtualDJ-pagina")
-        pdf.p("Ga naar **VirtualDJ** in de menubalk, kies je zip en druk "
+        pdf.kop2("Stap 2 · laad hem op de DJ Export-pagina")
+        pdf.p("Ga naar **DJ Export** in de menubalk, kies je zip en druk "
               "op „Laad de database”. Drie keuzes bepalen wat er "
               "geladen wordt:")
         pdf.punten([
@@ -563,18 +563,21 @@ def bouw(versie: str | None = None) -> bytes:
               "meerdere keren in je bibliotheek, dan wint het lokale "
               "bestand met de hoogste bitrate.")
         pdf.kop2("Stap 5 · gebruik hem in je DJ-software")
-        pdf.p("Het rapport biedt de playlist in twee vormen aan, genoemd "
-              "naar de lijst en je selectie. Het **.vdjfolder**-bestand "
-              "is voor VirtualDJ: zet het in de map **MyLists** binnen "
-              "je VirtualDJ-map (meestal Documenten\\VirtualDJ\\MyLists) "
-              "en hij verschijnt daar als playlist, in lijstvolgorde. "
-              "Het **.m3u8**-bestand is dezelfde playlist als platte "
-              "tekst: te importeren in rekordbox, Engine DJ, Traktor, "
-              "Serato en vrijwel elke mediaspeler. Wil je hem op "
-              "**Pioneer- of Denon-apparatuur** (CDJ's, Prime-spelers), "
-              "importeer de M3U8 dan in rekordbox respectievelijk Engine "
-              "DJ en laat díe hem naar je USB-stick exporteren — de "
-              "spelers lezen alleen hun eigen formaat.")
+        pdf.p("De downloadknop past zich aan je bron aan, en het bestand "
+              "is genoemd naar de lijst en je selectie. Laadde je een "
+              "**VirtualDJ**-database, dan krijg je een "
+              "**.vdjfolder**-bestand: zet het in de map **MyLists** "
+              "binnen je VirtualDJ-map (meestal "
+              "Documenten\\VirtualDJ\\MyLists) en hij verschijnt daar "
+              "als playlist, in lijstvolgorde. Laadde je een "
+              "**rekordbox**-collectie, dan krijg je een "
+              "**.m3u8**-bestand: importeer dat in rekordbox — of in "
+              "Engine DJ, Traktor, Serato en vrijwel elke mediaspeler. "
+              "Wil je hem op **Pioneer- of Denon-apparatuur** (CDJ's, "
+              "Prime-spelers), importeer de M3U8 dan in rekordbox "
+              "respectievelijk Engine DJ en laat díe hem naar je "
+              "USB-stick exporteren — de spelers lezen alleen hun eigen "
+              "formaat.")
         pdf.tip("Staat je muziek op een externe schijf, sluit die dan aan "
                 "voordat je de playlist draait: het .vdjfolder-bestand "
                 "verwijst naar de bestandspaden zoals ze in je database "
