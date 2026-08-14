@@ -963,6 +963,15 @@ def opdracht_run(jaar: int, *, stuur_mail: bool = True) -> None:
             # De PDF van die jaargang klopt nu niet meer; meteen vernieuwen,
             # anders staat er tot de volgende run een verouderd bestand.
             bestanden += opdracht_pdf(bouwjaar, altijd=True)
+        # De handleiding toont tellerstanden (noteringen, versiemaand);
+        # elke run herbouwt hem zodat de omslag blijft kloppen.
+        try:
+            from .handleiding import schrijf as handleiding_schrijf
+
+            log(f"handleiding vernieuwd: {handleiding_schrijf()}")
+        except Exception as fout:            # nooit de run laten stranden
+            log(f"handleiding bouwen mislukt: {fout}")
+
         onderwerp, tekst = _mailtekst(nieuwe_weken, mislukt)
         tekst += "\n\nBestanden:\n" + "\n".join(f"  {p}" for p in bestanden)
         if stuur_mail:

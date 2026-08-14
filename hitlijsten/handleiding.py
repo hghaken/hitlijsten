@@ -16,11 +16,12 @@ inhoudsopgave. Dat is goedkoper dan het achteraf verschuiven van ankers.
 """
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 from fpdf import FPDF
 
-from .config import ROOT
+from .config import LIJSTEN, ROOT
 from .pdf import (ACCENT, BANNER, BANNER_AFBEELDING, GRIJS, KANTLIJN,
                   LETTERTYPEN, LIJN)
 
@@ -29,6 +30,35 @@ __all__ = ["bouw", "schrijf"]
 BREED = 210 - 2 * KANTLIJN
 DOEL = ROOT / "hitlijsten" / "web" / "static" / "handleiding.pdf"
 VLAK = (243, 243, 250)          # lichte achtergrond voor tip-kaders
+
+MAANDEN = ("januari", "februari", "maart", "april", "mei", "juni", "juli",
+           "augustus", "september", "oktober", "november", "december")
+
+
+def _cijfers() -> dict:
+    """De paar getallen in de tekst, vers uit de database.
+
+    De vrijdagrun herbouwt de handleiding; zo lopen de teller op de omslag
+    en de versiemaand vanzelf mee. Zonder database (bijvoorbeeld op de
+    ontwikkelmachine) vallen de laatst bekende aantallen in.
+    """
+    uit = {"noteringen": "539.163", "lijsten": str(len(LIJSTEN)),
+           "jaarlijks": str(len(LIJSTEN) - 4), "van": "1965"}
+    try:
+        from .db import verbinding
+        with verbinding() as con:
+            aantal = con.execute(
+                "SELECT COUNT(*) FROM noteringen").fetchone()[0]
+            van = con.execute("SELECT MIN(jaar) FROM noteringen").fetchone()[0]
+        if aantal:
+            uit["noteringen"] = f"{aantal:,}".replace(",", ".")
+        if van:
+            uit["van"] = str(van)
+    except Exception:
+        pass
+    vandaag = date.today()
+    uit["versie"] = f"{MAANDEN[vandaag.month - 1]} {vandaag.year}"
+    return uit
 
 
 class _Boek(FPDF):
@@ -178,7 +208,7 @@ class _Boek(FPDF):
         self.ln(2.5)
 
 
-def _omslag(pdf: _Boek, versie: str) -> None:
+def _omslag(pdf: _Boek, versie: str, c: dict) -> None:
     pdf.add_page()
     pdf.set_y(80)
     pdf.set_font("dejavu", "B", 34)
@@ -194,8 +224,8 @@ def _omslag(pdf: _Boek, versie: str) -> None:
     pdf.set_text_color(0, 0, 0)
 
     pdf.set_y(140)
-    kaarten = [("21", "hitlijsten"), ("539.163", "noteringen"),
-               ("1965–nu", "zes decennia"), ("gratis", "geen account")]
+    kaarten = [(c["lijsten"], "hitlijsten"), (c["noteringen"], "noteringen"),
+               (f"{c['van']}–nu", "zes decennia"), ("gratis", "geen account")]
     kaartbreed = (BREED - 3 * 6) / 4
     x = KANTLIJN
     for cijfer, naam in kaarten:
@@ -264,8 +294,10 @@ def _hoofdstuk(pdf: _Boek, toc: list, links: dict, nr: int,
     pdf.ln(5)
 
 
-def bouw(versie: str = "augustus 2026") -> bytes:
+def bouw(versie: str | None = None) -> bytes:
     """Zet de handleiding; twee rondes voor de paginanummers in de inhoud."""
+    c = _cijfers()
+    versie = versie or c["versie"]
     toc_klaar: list = []
     for ronde in (1, 2):
         pdf = _Boek()
@@ -273,7 +305,7 @@ def bouw(versie: str = "augustus 2026") -> bytes:
         toc: list = []
         links: dict = {}
 
-        _omslag(pdf, f"Versie {versie}")
+        _omslag(pdf, f"Versie {versie}", c)
         pdf.hoofdstuk = "Inhoud"
         _inhoudsopgave(pdf, toc_klaar or [], links)
 
@@ -283,16 +315,16 @@ def bouw(versie: str = "augustus 2026") -> bytes:
         h += 1
         _hoofdstuk(pdf, toc, links, h, "Welkom")
         pdf.p("hitlijsten.hhaken.nl is een doorzoekbaar archief van "
-              "Nederlandse hitlijsten: **539.163 noteringen** uit "
-              "**21 lijsten**, van de allereerste Top 40 uit 1965 tot de "
-              "lijst van afgelopen vrijdag. De site is gratis, kent geen "
-              "accounts en toont geen advertenties.")
+              f"Nederlandse hitlijsten: **{c['noteringen']} noteringen** "
+              f"uit **{c['lijsten']} lijsten**, van de allereerste Top 40 "
+              f"uit {c['van']} tot de lijst van afgelopen vrijdag. De site "
+              "is gratis, kent geen accounts en toont geen advertenties.")
         pdf.p("Er zijn twee soorten lijsten. De **vier weeklijsten** — "
               "Nederlandse Top 40, Tipparade, Oranje Top 30 en Sterren NL "
               "Top 25 — worden elke vrijdagavond automatisch bijgewerkt. "
-              "Daarnaast staan er **zeventien jaarlijkse lijsten** in het "
-              "archief, van de Top 2000 tot de Zomer Top 500: lijsten die "
-              "radiozenders één keer per jaar uitzenden.")
+              f"Daarnaast staan er **{c['jaarlijks']} jaarlijkse lijsten** "
+              "in het archief, van de Top 2000 tot de Zomer Top 500: "
+              "lijsten die radiozenders één keer per jaar uitzenden.")
         pdf.kop2("De menubalk")
         pdf.p("Bovenaan elke pagina staan twee rijen. De **bovenste rij** "
               "bevat de lijstweergaven: Overzicht, Weeklijsten, "
@@ -337,7 +369,8 @@ def bouw(versie: str = "augustus 2026") -> bytes:
               "(de jaren 60 tot en met nu) of over de **volledige Top "
               "40-geschiedenis** vanaf 1965 in één lijst.")
         pdf.kop2("Jaarlijsten totaal")
-        pdf.p("Alle zeventien jaarlijkse lijsten samengevoegd tot één "
+        pdf.p(f"Alle {c['jaarlijks']} jaarlijkse lijsten samengevoegd "
+              "tot één "
               "klassement. Omdat een 15e plek in een Top 500 iets anders "
               "waard is dan een 15e plek in een Top 2000, worden de "
               "posities **genormaliseerd** naar de lengte van de lijst; "
@@ -441,7 +474,8 @@ def bouw(versie: str = "augustus 2026") -> bytes:
               "lijst en met het NL-filter te verfijnen.")
         pdf.kop2("Verras me (de dobbelsteen)")
         pdf.p("De dobbelsteen achteraan de menubalk opent een willekeurig "
-              "nummer uit de 539.163 noteringen — met zijn complete "
+              f"nummer uit de {c['noteringen']} noteringen — met zijn "
+              "complete "
               "chartverloop erbij. Elke worp iets anders: van een "
               "vergeten tipparadeplaatje uit 1971 tot de hit van vorige "
               "maand. Leuk om te bladeren, en verslavender dan je denkt.")
