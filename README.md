@@ -40,7 +40,7 @@ gastenboek, **DJ Export** (laad je VirtualDJ- of rekordbox-database en
 download elke lijst als playlist uit je eigen bibliotheek), een
 handleiding-PDF in twee talen en een NL/EN-taalkeuze die de hele site
 dekt, van lijstpagina's tot disclaimer. Draait op een Synology NAS: een
-Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
+Flask-applicatie op waitress achter de reverse proxy, en een systemd-timer die elke vrijdag
 om 22:00 de nieuwe week ophaalt.
 
 Geschreven met hulp van **Claude Code**; alle commits dragen die
