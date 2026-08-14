@@ -37,6 +37,10 @@ HOOFD_URL = "https://hitlijsten.hhaken.nl"
 # handelingen komen langs, ongeacht hoe de tekst is opgeschreven.
 _MAG_LEZEN = frozenset({
     sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_FUNCTION,
+    # RECURSIVE hoort erbij: `WITH RECURSIVE ... SELECT` is puur lezen, en
+    # zonder deze code weigerde de authorizer precies de query's waar de
+    # pagina mee adverteert.
+    sqlite3.SQLITE_RECURSIVE,
 })
 
 
@@ -50,6 +54,29 @@ def _alleen_lezen(actie, *rest):
 # tegen geautomatiseerd raden, geen slot.
 _aanmeld_pogingen: dict[str, list] = {}
 
+# Alleen deze adressen mogen zeggen namens wie ze spreken: de reverse proxy
+# van DSM (die het verzoek van buiten doorgeeft) en de machine zelf.
+VERTROUWDE_PROXIES = frozenset({"10.10.8.20", "127.0.0.1", "::1"})
+
+
+def _rem_opruimen() -> None:
+    """Verlopen pogingen weggooien, en niet onbeperkt adressen onthouden.
+
+    Zonder dit groeit de administratie met elk nieuw adres dat het ooit
+    probeerde: een gratis geheugenlek voor wie een botnet heeft.
+    """
+    nu = datetime.now()
+    for adres in [a for a, tijden in _aanmeld_pogingen.items()
+                  if not tijden
+                  or all((nu - t).total_seconds() > 900 for t in tijden)]:
+        _aanmeld_pogingen.pop(adres, None)
+    # Harde bovengrens voor het geval iemand sneller aanklopt dan de tijd
+    # verstrijkt: de oudste sporen verdwijnen dan het eerst.
+    while len(_aanmeld_pogingen) > 5000:
+        oudste = min(_aanmeld_pogingen,
+                     key=lambda a: max(_aanmeld_pogingen[a], default=nu))
+        _aanmeld_pogingen.pop(oudste, None)
+
 
 def maak_app() -> Flask:
     app = Flask(__name__)
@@ -59,10 +86,12 @@ def maak_app() -> Flask:
     # en voor elke backup-zip; alles daarboven is geen bibliotheek meer maar
     # een poging om het werkgeheugen te vullen.
     app.config["MAX_CONTENT_LENGTH"] = 256 * 1024 * 1024
-    # Het beheerderscookie hoort niet over een onversleutelde verbinding en
-    # niet vanaf een andere site meegestuurd te worden. SECURE betekent wel
-    # dat aanmelden alleen nog via https://hitlijsten.hhaken.nl gaat, niet
-    # meer rechtstreeks op http://<nas>:8642.
+    # Het sessiecookie hoort niet over een onversleutelde verbinding en niet
+    # vanaf een andere site meegestuurd te worden. SECURE geldt voor de hele
+    # sessie, dus niet alleen het aanmelden werkt voortaan uitsluitend via
+    # https://hitlijsten.hhaken.nl: ook de DJ Export leunt erop (de verwijzing
+    # naar je geladen bibliotheek zit in dezelfde sessie). Rechtstreeks op
+    # http://<nas>:8642 werkt daarmee alleen nog het lezen van lijsten.
     app.config.update(
         SESSION_COOKIE_SECURE=True,
         SESSION_COOKIE_HTTPONLY=True,
@@ -294,6 +323,7 @@ def _registreer(app: Flask) -> None:
     @app.route("/aanmelden", methods=["GET", "POST"])
     def aanmelden():
         if request.method == "POST":
+            _rem_opruimen()
             mislukt = _aanmeld_pogingen.get(_bezoeker_ip(), [])
             mislukt = [t for t in mislukt
                        if (datetime.now() - t).total_seconds() < 900]
@@ -438,7 +468,7 @@ def _registreer(app: Flask) -> None:
         antwoord = redirect(terug)
         if code in ("nl", "en"):
             antwoord.set_cookie("taal", code, max_age=31536000,
-                                samesite="Lax")
+                                samesite="Lax", secure=True, httponly=True)
         return antwoord
 
     @app.context_processor
@@ -495,7 +525,7 @@ def _registreer(app: Flask) -> None:
         zet_hand(verbinding(), sleutel,
                  request.form.get("nederlandstalig") == "1")
         _taal_cache.clear()
-        return redirect(request.referrer or url_for("overzicht"))
+        return redirect(_eigen_pad(request.referrer) or url_for("overzicht"))
 
     # --- overzicht ---------------------------------------------------------
 
@@ -797,16 +827,32 @@ def _registreer(app: Flask) -> None:
                 return None
             pad = deel.path or "/"
             return f"{pad}?{deel.query}" if deel.query else pad
-        if not waarde.startswith("/") or waarde.startswith("//"):
+        # Een pad, maar geen protocol-relatieve verwijzing. Let op de
+        # backslash: browsers lezen `/\vreemd.example` net als `//` en
+        # sturen je dan alsnog naar een andere site.
+        if len(waarde) < 2 or waarde[0] != "/" or waarde[1] in "/\\":
             return None
         return waarde
 
     def _bezoeker_ip() -> str:
-        """Het echte adres, ook achter de reverse proxy van de NAS."""
-        doorgegeven = request.headers.get("X-Forwarded-For", "")
-        if doorgegeven:
-            return doorgegeven.split(",")[0].strip()
-        return request.headers.get("X-Real-IP") or request.remote_addr or "?"
+        """Het echte adres, ook achter de reverse proxy van de NAS.
+
+        `X-Forwarded-For` en `X-Real-IP` zijn gewone koppen: wie rechtstreeks
+        met poort 8642 praat (dat kan vanaf het thuisnetwerk) mag ze zelf
+        verzinnen. Daarmee zou iemand de aanmeldrem kunnen omzeilen -- en
+        erger, met het adres van de beheerder erin diezelfde beheerder een
+        kwartier buitensluiten. Ze tellen daarom alleen als het verzoek
+        écht van de proxy komt.
+        """
+        van = request.remote_addr or ""
+        if van in VERTROUWDE_PROXIES:
+            doorgegeven = request.headers.get("X-Forwarded-For", "")
+            if doorgegeven:
+                return doorgegeven.split(",")[0].strip()
+            echt = request.headers.get("X-Real-IP")
+            if echt:
+                return echt.strip()
+        return van or "?"
 
     def _bewaar_bericht(con: sqlite3.Connection) -> str | None:
         """Controleer en bewaar een binnengekomen bericht. Geeft de foutmelding
@@ -1846,18 +1892,15 @@ def _registreer(app: Flask) -> None:
             bestanden = []
             soort = "vdj"
             try:
+                # Eén budget voor alle bestanden samen: bytes, nummers
+                # én het aantal bestanden. Zo helpt het niet om het werk over
+                # meerdere uploads in hetzelfde formulier te verdelen.
+                budget = vdjmodule.Budget()
                 for upload in request.files.getlist("database"):
                     if upload and upload.filename:
-                        deel, soort = vdjmodule.lees_upload(upload.stream,
-                                                            upload.filename)
+                        deel, soort = vdjmodule.lees_upload(
+                            upload.stream, upload.filename, budget)
                         bestanden += deel
-                        # Elk bestand bewaakt zichzelf, maar iemand kan er
-                        # tien tegelijk sturen; dit is de grens over de hele
-                        # upload heen.
-                        if len(bestanden) > vdjmodule.MAX_NUMMERS:
-                            raise vdjmodule.TeGroot(
-                                f"meer dan {vdjmodule.MAX_NUMMERS:,} nummers"
-                                " in deze upload".replace(",", "."))
             except vdjmodule.TeGroot as grens:
                 # Een grensoverschrijding verdient een eerlijk antwoord: de
                 # bezoeker met een echt grote bibliotheek moet weten waarom.
@@ -2500,8 +2543,18 @@ def _registreer(app: Flask) -> None:
                         "de bewerkschermen, dan wordt het ook vastgelegd.")
             else:
                 con = verbinding()
+                # Een tikfout als `SELECT length(zeroblob(1e9))` mag de
+                # webapplicatie niet minutenlang bezighouden; na ongeveer
+                # tien seconden breekt sqlite de query af.
+                afbreken = [datetime.now()]
+
+                def _te_lang():
+                    return 1 if (datetime.now() - afbreken[0]
+                                 ).total_seconds() > 10 else 0
+
                 try:
                     con.set_authorizer(_alleen_lezen)
+                    con.set_progress_handler(_te_lang, 100_000)
                     cur = con.execute(sql)
                     kolommen = [k[0] for k in cur.description or []]
                     rijen = cur.fetchmany(500)
@@ -2511,6 +2564,7 @@ def _registreer(app: Flask) -> None:
                     fout = f"sqlite: {e}"
                 finally:
                     con.set_authorizer(None)
+                    con.set_progress_handler(None, 0)
         return render_template("query.html", sql=sql, kolommen=kolommen,
                                rijen=rijen, fout=fout)
 

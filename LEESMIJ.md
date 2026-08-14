@@ -44,7 +44,7 @@ Wat je moet weten om de code te begrijpen:
 | Webapplicatie | Flask op **waitress** (één proces, acht draden), achter een reverse proxy |
 | Wekelijkse run | een systemd-timer, vrijdagavond |
 | Paden | via `HITLIJSTEN_DATA`, `HITLIJSTEN_CACHE` en `HITLIJSTEN_EXCEL` |
-| Pakketten | requests, beautifulsoup4, lxml, openpyxl, Flask, waitress, defusedxml, fpdf2 |
+| Pakketten | zie [requirements.txt](requirements.txt): requests, beautifulsoup4, lxml, openpyxl, Flask, waitress, defusedxml, fpdf2 |
 
 De code staat los van de gegevens: de database, de cache en de Excel-bestanden
 liggen naast de broncode, niet erin. Zo kun je de code in zijn geheel vervangen
@@ -1064,15 +1064,20 @@ sindsdien vastligt, van meest naar minst blootgesteld:
 **De upload van DJ Export** is het enige dat een vreemde zonder wachtwoord kan
 aanspreken, dus daar zit de meeste wering. Twee dingen, elk op zijn eigen plek:
 
-- **De omvang** bewaakt `vdj._Bewaakt`: die telt de **uitgepakte** bytes
-  tijdens het lezen (plafond 512 MB per bestand). Een zip comprimeerde in de
-  test met factor 294, dus de grens moet op de uitgepakte kant liggen en niet
-  op de bestandsgrootte. Daarnaast een bovengrens van twee miljoen nummers —
-  óók opgeteld over meerdere bestanden in één upload, want het formulier
-  accepteert er meerdere en anders begint de teller telkens opnieuw — een
-  uploadplafond van 256 MB en `MemoryLimit=2G` op de dienst. Let op: DSM
-  draait systemd 219, dus `MemoryMax` werkt daar níét; het moet
-  `MemoryLimit` heten met `MemoryAccounting=yes` erbij.
+- **De omvang** bewaakt `vdj.Budget`: **één teller voor de hele upload**, niet
+  per bestand. Dat verschil is het hele punt — met een teller per bestand
+  stuurt iemand tien zip's die elk net onder de grens blijven, of vult hij één
+  zip met twintig keer dezelfde `database.xml`. Het budget telt drie dingen:
+  uitgepakte bytes (512 MB), nummers (300.000) en bestanden (20). Bytes en
+  niet bestandsgrootte, want een zip comprimeerde in de test met factor 294;
+  en bytes tellen óók als een bestand nul nummers oplevert, want het gaat om
+  het werk dat de server verzet. De twee grenzen zijn op elkaar afgestemd:
+  300.000 nummers is ruwweg 460 MB XML en kost ~160 MB geheugen, en er passen
+  er acht in `_vdj_sessies`. Ter ijking: Heyes echte backup is 172 MB
+  uitgepakt met 113.411 nummers. Daarbovenop een uploadplafond van 256 MB en
+  `MemoryLimit=2G` op de dienst — let op: DSM draait systemd 219, dus
+  `MemoryMax` werkt daar níét; het moet `MemoryLimit` heten met
+  `MemoryAccounting=yes` erbij.
 - **DTD's en entiteiten** weigert **defusedxml** (`veilig_iterparse`), niet
   wijzelf. Dat is een geleerde les: de eerste versie zocht in de bytes naar
   `<!DOCTYPE`, en dat leek te werken tot de hercontrole een **UTF-16**-bestand
@@ -1126,11 +1131,28 @@ geheugen, dus dat probleem bestaat niet. Met `--debug` start nog steeds de
 Flask-server, en die zet dan ook `Secure` van het sessiecookie uit, want
 zonder HTTPS kun je je lokaal anders niet aanmelden.
 
-**Nagemeten en niet te breken** (hercontrole augustus 2026): `X-Forwarded-For`
-is niet te vervalsen — de reverse proxy van DSM overschrijft die kop, dus de
-aanmeldrem telt per echte bezoeker en is niet te ontwijken; een zip-in-zip
-levert geen extra versterking; en meerdere `database.xml` in één zip tellen
-correct op tegen de grens.
+**Wie mag zeggen namens wie hij spreekt.** `_bezoeker_ip()` gelooft
+`X-Forwarded-For` en `X-Real-IP` alleen van `VERTROUWDE_PROXIES` (de
+DSM-proxy en de machine zelf). Van buitenaf was dit nooit een probleem — nginx
+overschrijft beide koppen — maar de applicatie luistert óók rechtstreeks op
+poort 8642 op het LAN, en daar kon iemand ze wél verzinnen: goed voor het
+omzeilen van de aanmeldrem én, met jouw adres in de kop, om jou een kwartier
+buiten te sluiten. De rem-administratie zelf wordt bij elke poging opgeruimd
+(verlopen adressen eruit, hard plafond van 5.000), anders groeit hij mee met
+elk adres dat het ooit probeerde.
+
+**Nagemeten en niet te breken** (hercontrole augustus 2026): een zip-in-zip
+wordt niet uitgepakt; meerdere `database.xml` in één zip tellen correct op
+tegen het budget; de authorizer laat `ATTACH`, `PRAGMA`, `load_extension` en
+elke CTE-truc niet door; en het CSRF-token wordt na aanmelden vervangen, dus
+een van tevoren bemachtigd token is waardeloos.
+
+**Wat de hercontrole nog aan het licht bracht** — behalve de UTF-16-omweg
+hierboven: de padcontrole liet `/reemd.example` door (browsers lezen `/\`
+als `//`, dus dat is alsnog een uitstapje naar een andere site), en de
+authorizer had recursieve CTE's stukgemaakt terwijl de pagina er wél mee
+adverteert (`SQLITE_RECURSIVE` hoort in `_MAG_LEZEN`). Beide hersteld; de
+vrije query heeft nu ook een afbreekrem van tien seconden.
 
 Wat al goed zat en zo moet blijven: geparametriseerde SQL overal (de
 zoekfunctie plakt wel SQL aan elkaar, maar uitsluitend uit vaste fragmenten),

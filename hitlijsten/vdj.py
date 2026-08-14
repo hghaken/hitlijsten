@@ -40,7 +40,7 @@ from xml.sax.saxutils import quoteattr
 from .normalize import sleutel_van
 
 __all__ = ["lees_database", "lees_upload", "match", "bouw_vdjfolder",
-           "bouw_m3u8", "TeGroot", "NIVEAUS"]
+           "bouw_m3u8", "Budget", "TeGroot", "NIVEAUS"]
 
 NIVEAUS = {
     1: "zeer strak",
@@ -74,16 +74,52 @@ _HAAKJES = re.compile(r"\s*[\(\[][^\)\]]*[\)\]]")
 #
 # De ruimte is royaal genoeg voor een echte bibliotheek: Heyes database.xml
 # is 209 MB en zijn backup-zip bevat 113.411 nummers.
-MAX_UITGEPAKT = 512 * 1024 * 1024      # per bestand in de upload
-MAX_NUMMERS = 2_000_000                # bovengrens aan de bibliotheek
+MAX_UITGEPAKT = 512 * 1024 * 1024      # uitgepakte bytes voor de hele upload
+MAX_NUMMERS = 300_000                  # bovengrens aan de bibliotheek
+MAX_BESTANDEN = 20                     # xml's die één upload mag bevatten
+
+# Waarom 300.000 en niet meer: een `Bestand` kost gemeten ~520 byte, dus dit
+# is ruwweg 160 MB per geladen bibliotheek. Er passen er acht in het geheugen
+# (`_vdj_sessies`), en die moeten samen onder de MemoryLimit van de dienst
+# blijven. Heyes eigen bibliotheek telt 113.411 nummers, dus er zit ruim
+# tweemaal zoveel rek in als de grootste echte verzameling die we kennen.
 
 
 class TeGroot(ValueError):
     """De upload overschrijdt een grens; de route toont dit aan de bezoeker."""
 
 
+class Budget:
+    """Wat één upload in totaal mag kosten.
+
+    Eén teller voor álle bestanden samen, en niet per bestand: anders stuurt
+    iemand tien zip's die elk net onder de grens blijven, of vult hij één zip
+    met twintig keer dezelfde `database.xml`. Ook bestanden die géén nummers
+    opleveren tellen mee -- het gaat om het werk dat de server verzet, niet om
+    de oogst.
+    """
+
+    def __init__(self, bytes_plafond: int = MAX_UITGEPAKT,
+                 nummers_plafond: int = MAX_NUMMERS,
+                 bestanden_plafond: int = MAX_BESTANDEN):
+        self.bytes_over = bytes_plafond
+        self.nummers_over = nummers_plafond
+        self.bestanden_over = bestanden_plafond
+
+    def neem_bestand(self) -> None:
+        self.bestanden_over -= 1
+        if self.bestanden_over < 0:
+            raise TeGroot(f"meer dan {MAX_BESTANDEN} bestanden in één upload")
+
+    def neem_nummer(self) -> None:
+        self.nummers_over -= 1
+        if self.nummers_over < 0:
+            raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in deze upload"
+                          .replace(",", "."))
+
+
 class _Bewaakt:
-    """Leesbare stroom die de uitgepakte omvang telt.
+    """Leesbare stroom die van het budget afschrijft wat hij uitpakt.
 
     Zip-bestanden geven hun inhoud pas al lezend prijs, dus de grens moet
     tijdens het lezen gelden en niet achteraf: bij het plafond stopt het
@@ -92,17 +128,17 @@ class _Bewaakt:
     (`veilig_iterparse`), want die kent de tekstcodering van het bestand.
     """
 
-    def __init__(self, stroom, plafond: int = MAX_UITGEPAKT):
+    def __init__(self, stroom, budget: Budget):
         self._stroom = stroom
-        self._over = plafond
+        self._budget = budget
 
     def read(self, aantal: int = -1) -> bytes:
         brok = self._stroom.read(aantal)
         if not brok:
             return brok
-        self._over -= len(brok)
-        if self._over < 0:
-            raise TeGroot("het bestand is na uitpakken groter dan "
+        self._budget.bytes_over -= len(brok)
+        if self._budget.bytes_over < 0:
+            raise TeGroot("deze upload is na uitpakken groter dan "
                           f"{MAX_UITGEPAKT // (1024 * 1024)} MB")
         return brok
 
@@ -130,7 +166,7 @@ def _kernsleutel(artiest: str, titel: str) -> str:
     return sleutel_van(artiest, _HAAKJES.sub("", titel))
 
 
-def lees_database(bron) -> list[Bestand]:
+def lees_database(bron, budget: Budget | None = None) -> list[Bestand]:
     """Lees een database.xml (pad of bestandsobject) tot een bestandenlijst.
 
     Stromend geparsed: een grote bibliotheek is honderden megabytes en de
@@ -138,11 +174,10 @@ def lees_database(bron) -> list[Bestand]:
     bestand met de hoogste bitrate -- het antwoord op dubbelen komt later,
     bij de matching, waar per sléutel de beste wint.
     """
+    budget = budget or Budget()
+    budget.neem_bestand()
     uit: list[Bestand] = []
-    for _, el in veilig_iterparse(_Bewaakt(bron), events=("end",)):
-        if len(uit) > MAX_NUMMERS:
-            raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in één bestand"
-                          .replace(",", "."))
+    for _, el in veilig_iterparse(_Bewaakt(bron, budget), events=("end",)):
         if el.tag != "Song":
             continue
         pad = el.get("FilePath", "")
@@ -161,6 +196,7 @@ def lees_database(bron) -> list[Bestand]:
                 # netsearch://tdv... is de videocatalogus, td... audio.
                 video = (pad.lower().endswith(_BEELD)
                          or pad.startswith("netsearch://tdv"))
+                budget.neem_nummer()
                 uit.append(Bestand(pad=pad, artiest=artiest, titel=titel,
                                    bitrate=bitrate, streaming=streaming,
                                    video=video))
@@ -172,7 +208,7 @@ def lees_database(bron) -> list[Bestand]:
     return uit
 
 
-def lees_rekordbox(bron) -> list[Bestand]:
+def lees_rekordbox(bron, budget: Budget | None = None) -> list[Bestand]:
     """Een rekordbox-export (Bestand -> Exporteer collectie in xml-formaat).
 
     Zelfde uitkomst als lees_database, andere structuur: TRACK-elementen
@@ -181,11 +217,10 @@ def lees_rekordbox(bron) -> list[Bestand]:
     """
     from urllib.parse import unquote, urlparse
 
+    budget = budget or Budget()
+    budget.neem_bestand()
     uit: list[Bestand] = []
-    for _, el in veilig_iterparse(_Bewaakt(bron), events=("end",)):
-        if len(uit) > MAX_NUMMERS:
-            raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in één bestand"
-                          .replace(",", "."))
+    for _, el in veilig_iterparse(_Bewaakt(bron, budget), events=("end",)):
         if el.tag != "TRACK":
             continue
         plek = el.get("Location", "")
@@ -201,6 +236,7 @@ def lees_rekordbox(bron) -> list[Bestand]:
                     bitrate = int(el.get("BitRate") or 0)
                 except ValueError:
                     bitrate = 0
+                budget.neem_nummer()
                 uit.append(Bestand(pad=pad, artiest=artiest, titel=titel,
                                    bitrate=bitrate,
                                    video=pad.lower().endswith(_BEELD)))
@@ -222,7 +258,8 @@ def _vertaal_xmlfout(fout: Exception) -> TeGroot | None:
     return None
 
 
-def lees_upload(stroom, naam: str) -> tuple[list[Bestand], str]:
+def lees_upload(stroom, naam: str,
+                budget: Budget | None = None) -> tuple[list[Bestand], str]:
     """Een upload lezen: een kale database.xml, een rekordbox-export of de
     backup-zip van VirtualDJ (Instellingen -> Backup) -- daar zit de
     database in, samen met de history en de playlists. We vissen elke
@@ -234,12 +271,13 @@ def lees_upload(stroom, naam: str) -> tuple[list[Bestand], str]:
     """
     import zipfile
 
+    budget = budget or Budget()
     kop = stroom.read(4096)
     stroom.seek(0)
     if kop[:4] != b"PK\x03\x04":
         if b"DJ_PLAYLISTS" in kop:
-            return lees_rekordbox(stroom), "rekordbox"
-        return lees_database(stroom), "vdj"
+            return lees_rekordbox(stroom, budget), "rekordbox"
+        return lees_database(stroom, budget), "vdj"
     uit: list[Bestand] = []
     with zipfile.ZipFile(stroom) as zak:
         for info in zak.infolist():
@@ -248,14 +286,11 @@ def lees_upload(stroom, naam: str) -> tuple[list[Bestand], str]:
             # De opgegeven maat staat in de zip zelf en is te vervalsen, dus
             # hij dient alleen om overduidelijke bommen vroeg te weigeren;
             # het echte plafond bewaakt _Bewaakt tijdens het lezen.
-            if info.file_size > MAX_UITGEPAKT:
-                raise TeGroot("een database.xml in deze zip is na uitpakken "
-                              f"groter dan {MAX_UITGEPAKT // (1024 * 1024)} MB")
+            if info.file_size > budget.bytes_over:
+                raise TeGroot("deze zip levert na uitpakken meer dan "
+                              f"{MAX_UITGEPAKT // (1024 * 1024)} MB op")
             with zak.open(info) as binnen:
-                uit += lees_database(binnen)
-            if len(uit) > MAX_NUMMERS:
-                raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in deze zip"
-                              .replace(",", "."))
+                uit += lees_database(binnen, budget)
     if not uit:
         raise ValueError(f"{naam}: geen database.xml in de zip gevonden")
     return uit, "vdj"

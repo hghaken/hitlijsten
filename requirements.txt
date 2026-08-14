@@ -1,0 +1,23 @@
+# Wat de applicatie nodig heeft. Installeren in het virtuele milieu:
+#
+#     python -m venv venv
+#     ./venv/bin/pip install -r requirements.txt
+#
+# Geen vastgepinde versies: dit is een hobbyproject dat meebeweegt met wat de
+# distributie levert. Wél een ondergrens waar die ertoe doet.
+
+# ophalen en lezen van de bronsites
+requests
+beautifulsoup4
+lxml
+
+# de webapplicatie
+Flask
+waitress            # productieserver; zonder dit valt hij terug op de
+                    # ontwikkelserver van Flask (zie web/__main__.py)
+defusedxml          # verplicht: parst de door bezoekers geüploade
+                    # DJ-databases zonder DTD's en entiteiten toe te laten
+
+# bestanden die de site aanbiedt
+openpyxl            # Excel-werkboeken
+fpdf2               # PDF's en de handleiding
