@@ -10,7 +10,7 @@
   {% if datum %}({{ _("uitgezonden op vrijdag") }} {{ datum }}){% endif %} — summarised.
   {% else %}De Top 40 van week {{ week }}, {{ jaar }}
   {% if datum %}(uitgezonden op vrijdag {{ datum }}){% endif %} — samengevat.
-  {% endif %}<a href="{{ url_for('weekbericht_rss') }}" title="{{ _("Volg het weekbericht via RSS") }}">{{ _("RSS-feed") }}</a></p>
+  {% endif %}<a href="{{ url_for('weekbericht_rss', taal=('en' if taal == 'en' else None)) }}" title="{{ _("Volg het weekbericht via RSS") }}">{{ _("RSS-feed") }}</a></p>
 
 <div class="kaart" style="display:flex; gap:.7rem; align-items:center;
      flex-wrap:wrap; margin-bottom:1.4rem">

@@ -1907,37 +1907,52 @@ def _registreer(app: Flask) -> None:
 
     @app.route("/weekbericht.rss")
     def weekbericht_rss():
-        """De laatste tien weken als feed, voor wie het wil volgen."""
+        """De laatste tien weken als feed, voor wie het wil volgen.
+
+        De taal zit in de URL (?taal=en): een feedlezer stuurt geen
+        cookies mee, dus de keuze moet in het adres dat hij bewaart.
+        Zonder parameter valt hij terug op het cookie en dan Nederlands.
+        """
         from xml.sax.saxutils import escape
 
+        taal = (request.args.get("taal")
+                or request.cookies.get("taal", "nl"))
+        en = taal == "en"
         con = verbinding()
         weken = [tuple(r) for r in con.execute(
             "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst='top40'"
             " ORDER BY jaar DESC, week DESC LIMIT 10")]
         stukken = ['<?xml version="1.0" encoding="UTF-8"?>',
                    '<rss version="2.0"><channel>',
+                   "<title>Hitlijsten — week report</title>" if en else
                    "<title>Hitlijsten — weekbericht</title>",
                    f"<link>{HOOFD_URL}/weekbericht</link>",
+                   "<description>The Dutch Top 40 summarised every week:"
+                   " the number 1, the new entries and the biggest jumps."
+                   "</description>" if en else
                    "<description>Elke week de Nederlandse Top 40 samengevat:"
                    " de nummer 1, de binnenkomers en de grootste sprongen."
                    "</description>",
-                   "<language>nl</language>"]
+                   f"<language>{'en' if en else 'nl'}</language>"]
         for jaar, week in weken:
             g = _weekbericht_gegevens(con, jaar, week)
             if not g:
                 continue
             een = g["nummer1"]
-            titel = (f"Top 40 week {week}, {jaar} — op 1: "
+            titel = (f"Top 40 week {week}, {jaar} — "
+                     f"{'at 1' if en else 'op 1'}: "
                      f"{een['artiest']} - {een['titel']}")
             delen = []
             if g["binnen"]:
-                delen.append("Nieuw: " + "; ".join(
+                delen.append(("New: " if en else "Nieuw: ") + "; ".join(
                     f"{r['artiest']} - {r['titel']} ({r['positie']})"
                     for r in g["binnen"]))
             if g["stijger"] is not None:
                 r = g["stijger"]
-                delen.append(f"Grootste stijger: {r['artiest']} -"
-                             f" {r['titel']} ({r['vorige_positie']} naar"
+                delen.append(f"{'Biggest climber' if en else 'Grootste stijger'}:"
+                             f" {r['artiest']} -"
+                             f" {r['titel']} ({r['vorige_positie']}"
+                             f" {'to' if en else 'naar'}"
                              f" {r['positie']})")
             verwijzing = (f"{HOOFD_URL}/weekbericht?jaar={jaar}"
                           f"&amp;week={week}")
