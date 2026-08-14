@@ -7,8 +7,8 @@ bestand wordt met de hand gebouwd::
 
     python -m hitlijsten.handleiding
 
-en het resultaat landt in ``web/static/handleiding.pdf`` (de voetregel van
-de site linkt ernaar).
+en het resultaat landt in ``web/static/handleiding.pdf`` (de menubalk linkt
+ernaar, rechtsboven naast de disclaimer).
 
 De tekst wordt twee keer gezet: de eerste ronde alleen om te weten op welke
 pagina elk hoofdstuk valt, de tweede ronde met die paginanummers in de
@@ -541,8 +541,8 @@ def bouw(versie: str = "augustus 2026") -> bytes:
         pdf.kop2("Bronnen")
         pdf.p("De weeklijsten worden samengesteld door top40.nl "
               "(Nederlandse Top 40, Tipparade, Sterren NL Top 25) en "
-              "oranjetop30.nl; Alarmschijf-markeringen via top40.nl en "
-              "michajans.nl. De jaarlijkse lijsten worden samengesteld "
+              "oranjetop30.nl; Alarmschijf-markeringen via top40.nl. De "
+              "jaarlijkse lijsten worden samengesteld "
               "door de radiozenders en verzameld via datastats.nl. Deze "
               "site toont hun gegevens; de rechten liggen bij de "
               "samenstellers. Zie de disclaimer op de site voor het "
