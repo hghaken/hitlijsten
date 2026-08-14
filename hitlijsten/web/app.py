@@ -1846,6 +1846,13 @@ def _registreer(app: Flask) -> None:
                         deel, soort = vdjmodule.lees_upload(upload.stream,
                                                             upload.filename)
                         bestanden += deel
+                        # Elk bestand bewaakt zichzelf, maar iemand kan er
+                        # tien tegelijk sturen; dit is de grens over de hele
+                        # upload heen.
+                        if len(bestanden) > vdjmodule.MAX_NUMMERS:
+                            raise vdjmodule.TeGroot(
+                                f"meer dan {vdjmodule.MAX_NUMMERS:,} nummers"
+                                " in deze upload".replace(",", "."))
             except vdjmodule.TeGroot as grens:
                 # Een grensoverschrijding verdient een eerlijk antwoord: de
                 # bezoeker met een echt grote bibliotheek moet weten waarom.
