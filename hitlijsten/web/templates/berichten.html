@@ -27,6 +27,7 @@
 
   <form method="post" action="{{ url_for('berichten_actie') }}"
         style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-start">
+  <input type="hidden" name="csrf" value="{{ csrf_teken() }}">
     <input type="hidden" name="id" value="{{ b.id }}">
     {% if b.mag_openbaar and b.status != 'gepubliceerd' %}
       <button class="hoofd" name="actie" value="publiceren">Publiceren</button>

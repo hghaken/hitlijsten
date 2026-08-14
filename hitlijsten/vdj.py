@@ -32,7 +32,7 @@ from xml.sax.saxutils import quoteattr
 from .normalize import sleutel_van
 
 __all__ = ["lees_database", "lees_upload", "match", "bouw_vdjfolder",
-           "bouw_m3u8", "NIVEAUS"]
+           "bouw_m3u8", "TeGroot", "NIVEAUS"]
 
 NIVEAUS = {
     1: "zeer strak",
@@ -49,6 +49,61 @@ _BEELD = (".mp4", ".mkv", ".avi", ".vob", ".webm", ".mov")
 _AUDIO = _GELUID + _BEELD
 
 _HAAKJES = re.compile(r"\s*[\(\[][^\)\]]*[\)\]]")
+
+# --- grenzen aan wat een upload mag kosten ---------------------------------
+#
+# De bezoeker levert het bestand aan, dus de server moet zich verweren tegen
+# twee klassieke trucs:
+#
+#   zip-bom            een paar kilobyte comprimeert naar gigabytes. Gemeten:
+#                      83 KB werd 23,8 MB (factor 294). Daarom telt de lezer
+#                      de UITGEPAKTE bytes, niet de bestandsgrootte.
+#   entiteit-explosie  een DTD met geneste entiteiten blaast in het geheugen
+#                      op ("billion laughs"): 400 bytes werden een miljoen
+#                      tekens. Een DTD heeft in een muziekdatabase niets te
+#                      zoeken, dus die weigeren we botweg -- dat sluit de
+#                      hele klasse af, ook XXE.
+#
+# De ruimte is royaal genoeg voor een echte bibliotheek: Heyes database.xml
+# is 209 MB en zijn backup-zip bevat 113.411 nummers.
+MAX_UITGEPAKT = 512 * 1024 * 1024      # per bestand in de upload
+MAX_NUMMERS = 2_000_000                # bovengrens aan de bibliotheek
+
+
+class TeGroot(ValueError):
+    """De upload overschrijdt een grens; de route toont dit aan de bezoeker."""
+
+
+class _Bewaakt:
+    """Leesbare stroom die de uitgepakte omvang telt en DTD's weigert.
+
+    Zip-bestanden geven hun inhoud pas al lezend prijs, dus de grens moet
+    tijdens het lezen gelden en niet achteraf: bij het plafond stopt het
+    parsen meteen, met hooguit één brok extra in het geheugen.
+    """
+
+    # Een DTD kan net over de rand van twee brokken vallen; bewaar daarom de
+    # staart van de vorige brok en zoek over de naad heen.
+    _NAAD = len(b"<!DOCTYPE")
+
+    def __init__(self, stroom, plafond: int = MAX_UITGEPAKT):
+        self._stroom = stroom
+        self._over = plafond
+        self._staart = b""
+
+    def read(self, aantal: int = -1) -> bytes:
+        brok = self._stroom.read(aantal)
+        if not brok:
+            return brok
+        self._over -= len(brok)
+        if self._over < 0:
+            raise TeGroot("het bestand is na uitpakken groter dan "
+                          f"{MAX_UITGEPAKT // (1024 * 1024)} MB")
+        kijk = self._staart + brok
+        if b"<!DOCTYPE" in kijk or b"<!doctype" in kijk:
+            raise TeGroot("dit bestand bevat een DTD; dat staan we niet toe")
+        self._staart = brok[-self._NAAD:]
+        return brok
 
 
 @dataclass
@@ -83,7 +138,10 @@ def lees_database(bron) -> list[Bestand]:
     bij de matching, waar per sléutel de beste wint.
     """
     uit: list[Bestand] = []
-    for _, el in ET.iterparse(bron, events=("end",)):
+    for _, el in ET.iterparse(_Bewaakt(bron), events=("end",)):
+        if len(uit) > MAX_NUMMERS:
+            raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in één bestand"
+                          .replace(",", "."))
         if el.tag != "Song":
             continue
         pad = el.get("FilePath", "")
@@ -123,7 +181,10 @@ def lees_rekordbox(bron) -> list[Bestand]:
     from urllib.parse import unquote, urlparse
 
     uit: list[Bestand] = []
-    for _, el in ET.iterparse(bron, events=("end",)):
+    for _, el in ET.iterparse(_Bewaakt(bron), events=("end",)):
+        if len(uit) > MAX_NUMMERS:
+            raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in één bestand"
+                          .replace(",", "."))
         if el.tag != "TRACK":
             continue
         plek = el.get("Location", "")
@@ -171,9 +232,19 @@ def lees_upload(stroom, naam: str) -> tuple[list[Bestand], str]:
     uit: list[Bestand] = []
     with zipfile.ZipFile(stroom) as zak:
         for info in zak.infolist():
-            if info.filename.lower().endswith("database.xml"):
-                with zak.open(info) as binnen:
-                    uit += lees_database(binnen)
+            if not info.filename.lower().endswith("database.xml"):
+                continue
+            # De opgegeven maat staat in de zip zelf en is te vervalsen, dus
+            # hij dient alleen om overduidelijke bommen vroeg te weigeren;
+            # het echte plafond bewaakt _Bewaakt tijdens het lezen.
+            if info.file_size > MAX_UITGEPAKT:
+                raise TeGroot("een database.xml in deze zip is na uitpakken "
+                              f"groter dan {MAX_UITGEPAKT // (1024 * 1024)} MB")
+            with zak.open(info) as binnen:
+                uit += lees_database(binnen)
+            if len(uit) > MAX_NUMMERS:
+                raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in deze zip"
+                              .replace(",", "."))
     if not uit:
         raise ValueError(f"{naam}: geen database.xml in de zip gevonden")
     return uit, "vdj"

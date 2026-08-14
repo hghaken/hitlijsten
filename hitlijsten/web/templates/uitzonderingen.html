@@ -10,6 +10,7 @@
 
 <h2>Toevoegen</h2>
 <form method="post" action="{{ url_for('uitzondering_bewaar') }}">
+  <input type="hidden" name="csrf" value="{{ csrf_teken() }}">
   <table style="max-width: 60rem">
     <tr><th style="width: 8rem">sleutel A</th>
         <td><input type="text" name="sleutel_a" style="width: 100%"></td></tr>
@@ -33,6 +34,7 @@
     <td>
       <form class="inline" method="post" action="{{ url_for('uitzondering_verwijder') }}"
             onsubmit="return confirm('Deze uitzondering verwijderen?')">
+  <input type="hidden" name="csrf" value="{{ csrf_teken() }}">
         <input type="hidden" name="sleutel_a" value="{{ r['sleutel_a'] }}">
         <input type="hidden" name="sleutel_b" value="{{ r['sleutel_b'] }}">
         <button class="gevaar" type="submit">verwijder</button>

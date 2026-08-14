@@ -5,7 +5,7 @@ import configparser
 import io
 import secrets
 import sqlite3
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from functools import wraps
 from pathlib import Path
 
@@ -30,17 +30,45 @@ HOOFD_URL = "https://hitlijsten.hhaken.nl"
 # Vrije query's zijn alleen-lezen. Een typefout in een UPDATE zonder WHERE is
 # onherstelbaar, en daar staat geen enkel gemak tegenover: wijzigen kan via de
 # bewerkschermen, die alles vastleggen in de tabel `wijzigingen`.
-VERBODEN_IN_QUERY = (
-    "insert", "update", "delete", "drop", "alter", "create", "replace",
-    "attach", "detach", "pragma", "vacuum",
-)
+# Een woordenlijst was hier de bewaking, en die was te omzeilen: SQLite
+# neemt genoegen met `WITH x AS (SELECT 1)DELETE FROM ...` -- zonder spatie,
+# met een newline of met /**/ ertussen glipte het erdoor en wiste het rijen.
+# Nu doet SQLite zelf de deur op slot met een authorizer: alleen lezende
+# handelingen komen langs, ongeacht hoe de tekst is opgeschreven.
+_MAG_LEZEN = frozenset({
+    sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_FUNCTION,
+})
+
+
+def _alleen_lezen(actie, *rest):
+    """Authorizer voor de vrije query: lezen mag, de rest niet."""
+    return sqlite3.SQLITE_OK if actie in _MAG_LEZEN else sqlite3.SQLITE_DENY
+
+
+# Mislukte aanmeldpogingen per IP, met het tijdstip. In het geheugen: na een
+# herstart mag iemand het opnieuw proberen, en dat is prima -- dit is een rem
+# tegen geautomatiseerd raden, geen slot.
+_aanmeld_pogingen: dict[str, list] = {}
 
 
 def maak_app() -> Flask:
     app = Flask(__name__)
     app.config.update(_lees_instellingen())
     # De VirtualDJ-pagina accepteert database-uploads; die zijn groot.
-    app.config["MAX_CONTENT_LENGTH"] = 512 * 1024 * 1024
+    # Ruim genoeg voor een kale database.xml (Heyes eigen bestand is 209 MB)
+    # en voor elke backup-zip; alles daarboven is geen bibliotheek meer maar
+    # een poging om het werkgeheugen te vullen.
+    app.config["MAX_CONTENT_LENGTH"] = 256 * 1024 * 1024
+    # Het beheerderscookie hoort niet over een onversleutelde verbinding en
+    # niet vanaf een andere site meegestuurd te worden. SECURE betekent wel
+    # dat aanmelden alleen nog via https://hitlijsten.hhaken.nl gaat, niet
+    # meer rechtstreeks op http://<nas>:8642.
+    app.config.update(
+        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        PERMANENT_SESSION_LIFETIME=timedelta(days=7),
+    )
     # Niet "lijsten" noemen: dat botst met de zoekresultaten die zo heten.
     app.jinja_env.globals["is_aangemeld"] = is_aangemeld
     app.jinja_env.globals["hoofd_url"] = HOOFD_URL
@@ -115,6 +143,12 @@ def _lees_instellingen() -> dict:
     }
 
 
+# Elke route met @vereist_aanmelding komt hier automatisch in te staan; de
+# CSRF-bewaking leest deze verzameling. Zo krijgt een nieuw beheerscherm de
+# bescherming vanzelf, zonder dat iemand eraan hoeft te denken.
+BEHEERROUTES: set[str] = set()
+
+
 def vereist_aanmelding(functie):
     """Zonder aanmelding doorsturen naar het aanmeldscherm.
 
@@ -123,6 +157,8 @@ def vereist_aanmelding(functie):
     zijn (sleutels, logboek, wijzigingen) of wat iets kan veranderen, zit er wel
     achter.
     """
+    BEHEERROUTES.add(functie.__name__)
+
     @wraps(functie)
     def omhulsel(*args, **kwargs):
         if not session.get("aangemeld"):
@@ -258,11 +294,34 @@ def _registreer(app: Flask) -> None:
     @app.route("/aanmelden", methods=["GET", "POST"])
     def aanmelden():
         if request.method == "POST":
+            mislukt = _aanmeld_pogingen.get(_bezoeker_ip(), [])
+            mislukt = [t for t in mislukt
+                       if (datetime.now() - t).total_seconds() < 900]
+            if len(mislukt) >= 5:
+                _aanmeld_pogingen[_bezoeker_ip()] = mislukt
+                app.logger.warning("aanmelden geweigerd (te veel pogingen)"
+                                   " vanaf %s", _bezoeker_ip())
+                flash("Te veel mislukte pogingen. Probeer het over een"
+                      " kwartier opnieuw.", "fout")
+                return render_template("aanmelden.html")
+            # encode(): compare_digest struikelt over niet-ASCII tekst,
+            # en een wachtwoord met een accent hoort geen serverfout te geven.
             if secrets.compare_digest(
-                request.form.get("wachtwoord", ""), app.config["WACHTWOORD"]
-            ):
+                    request.form.get("wachtwoord", "").encode("utf-8"),
+                    app.config["WACHTWOORD"].encode("utf-8")):
                 session["aangemeld"] = True
-                return redirect(request.args.get("volgende") or url_for("overzicht"))
+                _aanmeld_pogingen.pop(_bezoeker_ip(), None)
+                session.permanent = True
+                # Alleen terug naar een eigen pad: een volledige URL zou
+                # hier een phishing-doorgeefluik zijn.
+                volgende = request.args.get("volgende", "")
+                if not volgende.startswith("/") or volgende.startswith("//"):
+                    volgende = url_for("overzicht")
+                return redirect(volgende)
+            mislukt.append(datetime.now())
+            _aanmeld_pogingen[_bezoeker_ip()] = mislukt
+            app.logger.warning("mislukte aanmelding vanaf %s (%d in een"
+                               " kwartier)", _bezoeker_ip(), len(mislukt))
             flash("Onjuist wachtwoord", "fout")
         return render_template("aanmelden.html")
 
@@ -292,6 +351,58 @@ def _registreer(app: Flask) -> None:
         return sleutel in _nl_sleutels()
 
     app.jinja_env.globals["is_nl"] = _is_nl
+
+    def csrf_teken() -> str:
+        """Het token van deze sessie; wordt vanzelf gemaakt bij het eerste
+        beheerformulier dat erom vraagt."""
+        if "csrf" not in session:
+            session["csrf"] = secrets.token_urlsafe(32)
+        return session["csrf"]
+
+    app.jinja_env.globals["csrf_teken"] = csrf_teken
+
+    @app.before_request
+    def _csrf_bewaking():
+        """Een POST naar een beheerroute moet het token van deze sessie
+        meesturen.
+
+        Zonder dit kan een andere site jouw ingelogde browser laten posten:
+        aliassen wissen, een notering wijzigen of -- het ergste -- via
+        /beheer/start de database terugzetten naar een momentopname. Het
+        publieke feedbackformulier en de DJ Export blijven vrij: die hebben
+        hun eigen wering, en een token daar zou elke lezer een cookie
+        bezorgen (de disclaimer belooft van niet).
+        """
+        if request.method != "POST" or request.endpoint not in BEHEERROUTES:
+            return None
+        goed = session.get("csrf", "")
+        gegeven = request.form.get("csrf", "")
+        if not goed or not secrets.compare_digest(goed, gegeven):
+            abort(400, "csrf-token ontbreekt of klopt niet")
+        return None
+
+    @app.after_request
+    def _beveiligingsheaders(antwoord):
+        """Wat de browser mag met deze pagina's.
+
+        De sjablonen dragen hun stijl en scriptjes inline, dus 'unsafe-inline'
+        moet erin; de winst zit erin dat er van GEEN ENKELE andere herkomst
+        script, stijl of afbeelding geladen mag worden, dat de site niet in
+        een frame past en dat formulieren nergens anders heen kunnen posten.
+        """
+        antwoord.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+            "font-src 'self'; connect-src 'self'; frame-ancestors 'none'; "
+            "base-uri 'self'; form-action 'self'")
+        antwoord.headers.setdefault("X-Content-Type-Options", "nosniff")
+        antwoord.headers.setdefault("X-Frame-Options", "DENY")
+        antwoord.headers.setdefault("Referrer-Policy",
+                                    "strict-origin-when-cross-origin")
+        antwoord.headers.setdefault("Strict-Transport-Security",
+                                    "max-age=31536000")
+        return antwoord
 
     @app.context_processor
     def _taal_stand():
@@ -655,6 +766,19 @@ def _registreer(app: Flask) -> None:
             soort=request.args.get("soort") or request.form.get("soort") or "",
             geopend=int(datetime.now().timestamp()))
 
+    def _eigen_pad(waarde: str) -> str | None:
+        """Alleen een pad op deze site bewaren.
+
+        Dit veld komt uit een verborgen invoer van het feedbackformulier en
+        wordt op de berichtenpagina als link getoond. Zonder controle kan
+        iemand daar `javascript:...` neerleggen en wacht die op een klik van
+        de beheerder.
+        """
+        waarde = (waarde or "").strip()[:300]
+        if not waarde.startswith("/") or waarde.startswith("//"):
+            return None
+        return waarde
+
     def _bezoeker_ip() -> str:
         """Het echte adres, ook achter de reverse proxy van de NAS."""
         doorgegeven = request.headers.get("X-Forwarded-For", "")
@@ -706,7 +830,7 @@ def _registreer(app: Flask) -> None:
             " pagina, mag_openbaar, ip) VALUES (?,?,?,?,?,?,?,?)",
             (datetime.now().isoformat(timespec="seconds"), soort,
              naam or None, email or None, tekst,
-             request.form.get("pagina", "").strip()[:300] or None,
+             _eigen_pad(request.form.get("pagina", "")),
              1 if request.form.get("mag_openbaar") else 0, ip))
         con.commit()
 
@@ -1705,6 +1829,10 @@ def _registreer(app: Flask) -> None:
                         deel, soort = vdjmodule.lees_upload(upload.stream,
                                                             upload.filename)
                         bestanden += deel
+            except vdjmodule.TeGroot as grens:
+                # Een grensoverschrijding verdient een eerlijk antwoord: de
+                # bezoeker met een echt grote bibliotheek moet weten waarom.
+                fout = f"Deze upload is geweigerd: {grens}."
             except Exception:
                 fout = ("Dit is niet te lezen als VirtualDJ-database,"
                         " -backup of rekordbox-export.")
@@ -1806,7 +1934,7 @@ def _registreer(app: Flask) -> None:
             paden = [k["bestand"].pad for k in koppels if k["bestand"]]
             return render_template(
                 "vdj_rapport.html", niveaus=vdjmodule.NIVEAUS,
-                terug=request.referrer, uitkomst={
+                terug=_eigen_pad(request.referrer), uitkomst={
                     "koppels": koppels, "gevonden": len(paden),
                     "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
                     "bibliotheek": len(kaart["bestanden"]),
@@ -1880,7 +2008,7 @@ def _registreer(app: Flask) -> None:
         }
         return render_template("vdj_rapport.html", uitkomst=uitkomst,
                                niveaus=vdjmodule.NIVEAUS,
-                               terug=request.referrer)
+                               terug=_eigen_pad(request.referrer))
 
     @app.route("/weekbericht")
     def weekbericht():
@@ -2327,7 +2455,9 @@ def _registreer(app: Flask) -> None:
     @app.route("/query", methods=["GET", "POST"])
     @vereist_aanmelding
     def query():
-        sql = (request.form.get("sql") or request.args.get("sql") or "").strip()
+        # Alleen uit het formulier: een query in de URL zou via een link
+        # uitvoerbaar zijn zonder dat je het doorhebt.
+        sql = (request.form.get("sql") or "").strip()
         kolommen: list[str] = []
         rijen: list = []
         fout = None
@@ -2336,15 +2466,19 @@ def _registreer(app: Flask) -> None:
             if eerste not in ("select", "with"):
                 fout = ("Alleen SELECT (of WITH) is toegestaan. Wijzigen doe je via "
                         "de bewerkschermen, dan wordt het ook vastgelegd.")
-            elif any(f" {w} " in f" {sql.lower()} " for w in VERBODEN_IN_QUERY):
-                fout = "Deze query bevat een wijzigend commando en is geweigerd."
             else:
+                con = verbinding()
                 try:
-                    cur = verbinding().execute(sql)
+                    con.set_authorizer(_alleen_lezen)
+                    cur = con.execute(sql)
                     kolommen = [k[0] for k in cur.description or []]
                     rijen = cur.fetchmany(500)
-                except sqlite3.Error as e:
+                except sqlite3.DatabaseError as e:
+                    # "not authorized" komt hiervandaan zodra de query iets
+                    # wil wijzigen; de rest zijn gewone SQL-fouten.
                     fout = f"sqlite: {e}"
+                finally:
+                    con.set_authorizer(None)
         return render_template("query.html", sql=sql, kolommen=kolommen,
                                rijen=rijen, fout=fout)
 

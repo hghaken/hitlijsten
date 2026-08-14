@@ -11,6 +11,7 @@
         style="font-size:.55em; vertical-align:middle; color:#ED1C24">🔔 Alarmschijf</span>{% endif %}</h1>
 {% if is_aangemeld() %}<p class="sleutel">{{ sleutel }}</p>
 <form method="post" action="{{ url_for('taal_zet') }}" style="margin:-.4rem 0 .8rem">
+  <input type="hidden" name="csrf" value="{{ csrf_teken() }}">
   <input type="hidden" name="sleutel" value="{{ sleutel }}">
   <input type="hidden" name="nederlandstalig" value="{{ 0 if is_nl(sleutel) else 1 }}">
   <button type="submit">{{ nl_vlag() }}

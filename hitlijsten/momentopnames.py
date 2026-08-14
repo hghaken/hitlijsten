@@ -121,9 +121,10 @@ def terugzetten(pad: Path | str) -> Path:
     zelf ook een ingreep, en die wil je net zo goed kunnen terugdraaien als
     blijkt dat je de verkeerde hebt gekozen.
     """
-    pad = Path(pad)
-    if not pad.exists():
-        pad = MAP / pad.name
+    # Alleen de bestandsnaam telt, en die wordt altijd in de
+    # momentopnames-map gezocht: een pad van buitenaf (via een formulier)
+    # mag nooit bepalen welk bestand over de database heen gaat.
+    pad = MAP / Path(pad).name
     if not pad.exists():
         raise FileNotFoundError(f"geen momentopname: {pad}")
 
