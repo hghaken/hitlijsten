@@ -329,7 +329,7 @@ op de NAS, achter een reverse proxy.
 | Gastenboek | gepubliceerde bezoekersberichten, met eventueel een antwoord van de beheerder eronder |
 | Bericht achterlaten | formulier voor opmerkingen, tips, bugs en aanvullingen; spamwering met honeypot, invultijd en per-IP-limiet, geen CAPTCHA; alles komt privé binnen en niets staat live zonder akkoord |
 | Berichten | (achter de login) de postbus: publiceren, privé houden, verwijderen of beantwoorden; mailmelding bij elk nieuw bericht |
-| Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy |
+| Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy; volledig tweetalig, en het contact-blok verwijst naar het feedbackformulier (geen klikbaar mailadres meer op de site) |
 | Vormgeving | menubalk in twee rijen (de lijsten boven, de extra's en het beheer gedempt eronder), doorschijnend over de banner en met blur zodra er gescrold is; tabellen tot 100 rijen krijgen hun volle hoogte (geen binnenste scrollbalk), daarboven een scrollvak van 78vh; onder de 760px compact en niet-plakkend |
 | Banner | eigen ontwerp, vast aan de bovenrand achter de doorzichtige menubalk (die dichtgaat na scrollen); dezelfde banner siert de kop van elke PDF en is de og:image van gedeelde links |
 | Vindbaarheid | sitemap-index in twee delen (±50.000 pagina's incl. artiesten, gecachet), `robots.txt`, meta-descriptions, canonical-links, Open Graph-tags en JSON-LD structured data (MusicRecording, MusicGroup, ItemList) |
@@ -357,7 +357,9 @@ fouten in de bron zelf. Een disclaimer die alleen "aan deze gegevens kunnen geen
 rechten worden ontleend" zegt, helpt niemand.
 
 Verder: de rechten liggen bij de omroepen en de sites, met een verzoek om
-contact op te nemen als iemand iets verwijderd wil zien; en wat er van de
+contact op te nemen als iemand iets verwijderd wil zien (via het
+feedbackformulier — sinds augustus 2026 staat er geen klikbaar mailadres
+meer op de site, ook tegen adres-oogstende bots); en wat er van de
 bezoeker wordt bijgehouden. Dat laatste is nagekeken en niet aangenomen — er
 staat geen enkel script van een andere partij in de sjablonen, er wordt één
 cookie gezet en alleen bij het aanmelden, en de webserver houdt een gewone
