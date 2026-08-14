@@ -519,6 +519,10 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "Exporteer daar je collectie (Bestand → Collectie "
           "exporteren in xml-formaat) en upload dat bestand — de "
           "site herkent het vanzelf.")
+    pdf.tip("Een upload mag hoogstens 256 MB zijn. Dat is ruim voor elke "
+            "backup-zip (meestal een paar tientallen megabytes), maar een "
+            "kale database.xml kan er overheen gaan — nog een reden om de "
+            "zip te nemen.")
     pdf.kop2("Stap 2 · laad hem op de DJ Export-pagina")
     pdf.p("Ga naar **DJ Export** in de menubalk, kies je zip en druk "
           "op „Laad de database”. Drie keuzes bepalen wat er "
@@ -817,6 +821,9 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "**rekordbox** instead? Export your collection there "
           "(File → Export collection in xml format) and upload that "
           "file — the site recognises it automatically.")
+    pdf.tip("An upload may be 256 MB at most. That is ample for any backup "
+            "zip (usually a few tens of megabytes), but a bare database.xml "
+            "can exceed it — one more reason to use the zip.")
     pdf.kop2("Step 2 · load it on the DJ Export page")
     pdf.p("Go to **DJ Export** in the menu bar, pick your zip and "
           "press „Load the database”. Three choices control "
