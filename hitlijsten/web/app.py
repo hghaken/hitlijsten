@@ -293,6 +293,19 @@ def _registreer(app: Flask) -> None:
             " GROUP BY sleutel", (lijst,))}
         return [n for n in rijen if eerste.get(n["sleutel"]) == jaar]
 
+    def _nieuw_week_sleutels(con, lijst, jaar, week):
+        """De binnenkomers van één week: het groene speldje.
+
+        Op een weekpagina is "nieuw" de week-binnenkomer (geen vorige
+        positie en geen terugkeerder), niet de jaargang-binnenkomer van
+        _alleen_binnenkomers -- een lijst vol nummers in week 30 "nieuw"
+        noemen omdat ze in januari binnenkwamen zou nergens op slaan.
+        """
+        return {r["sleutel"] for r in con.execute(
+            "SELECT sleutel, vorige_positie, site_status FROM noteringen"
+            " WHERE lijst=? AND jaar=? AND week=?", (lijst, jaar, week))
+            if not r["vorige_positie"] and r["site_status"] != "terug"}
+
     def _alleen_nl(rijen, sleutel_van=lambda r: r["sleutel"]):
         """Pas het Nederlandstalig-filter toe als dat aan staat."""
         if not request.args.get("nl"):
@@ -444,6 +457,9 @@ def _registreer(app: Flask) -> None:
             " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie, artiest",
             (lijst, jaar, week)))
         rijen = _alleen_nl(rijen)
+        if request.args.get("nieuw"):
+            rijen = [r for r in rijen if not r["vorige_positie"]
+                     and r["site_status"] != "terug"]
         try:
             datum = als_tekst(vrijdag_van(jaar, week))
         except Exception:
@@ -1034,8 +1050,13 @@ def _registreer(app: Flask) -> None:
         """Eén weeklijst als Excel."""
         if lijst not in LIJSTEN or is_jaarlijks(lijst):
             abort(404)
+        con = verbinding()
         alleen, staartje = _nl_keuze()
-        wb = excel.bouw_week_werkboek(verbinding(), lijst, jaar, week,
+        if request.args.get("nieuw"):
+            nieuw = _nieuw_week_sleutels(con, lijst, jaar, week)
+            alleen = nieuw if alleen is None else alleen & nieuw
+            staartje += "_nieuw"
+        wb = excel.bouw_week_werkboek(con, lijst, jaar, week,
                                       alleen=alleen)
         if wb is None:
             abort(404)
@@ -1048,8 +1069,13 @@ def _registreer(app: Flask) -> None:
         if lijst not in LIJSTEN or is_jaarlijks(lijst):
             abort(404)
         from .. import pdf as pdfbouwer
+        con = verbinding()
         alleen, staartje = _nl_keuze()
-        inhoud = pdfbouwer.bouw_weeklijst(verbinding(), lijst, jaar, week,
+        if request.args.get("nieuw"):
+            nieuw = _nieuw_week_sleutels(con, lijst, jaar, week)
+            alleen = nieuw if alleen is None else alleen & nieuw
+            staartje += "_nieuw"
+        inhoud = pdfbouwer.bouw_weeklijst(con, lijst, jaar, week,
                                           alleen=alleen)
         if inhoud is None:
             abort(404)
@@ -1735,7 +1761,8 @@ def _registreer(app: Flask) -> None:
         naam = f"{LIJSTEN[lijst]['bestand']}_{jaar}"
         if week.isdigit():
             regels = [dict(r) for r in con.execute(
-                "SELECT sleutel, artiest, titel, positie hoogste"
+                "SELECT sleutel, artiest, titel, positie hoogste,"
+                " vorige_positie, site_status"
                 " FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
                 " ORDER BY positie, artiest", (lijst, jaar, int(week)))]
             naam += f"_Week{int(week):02d}"
@@ -1748,7 +1775,13 @@ def _registreer(app: Flask) -> None:
         if not regels:
             abort(404)
 
-        regels = _alleen_binnenkomers(con, lijst, jaar, _alleen_nl(regels))
+        regels = _alleen_nl(regels)
+        if week.isdigit():
+            if request.args.get("nieuw"):
+                regels = [r for r in regels if not r["vorige_positie"]
+                          and r["site_status"] != "terug"]
+        else:
+            regels = _alleen_binnenkomers(con, lijst, jaar, regels)
         top = _gekozen_top()
         if top:
             regels = regels[:top]

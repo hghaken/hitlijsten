@@ -29,6 +29,10 @@
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
   {{ nl_filter() }}
+  <label class="nlfilter" title="Alleen de binnenkomers van deze week">
+    <input type="checkbox" name="nieuw" value="1" onchange="this.form.submit()"
+           {% if nieuw_filter_aan %}checked{% endif %}>
+    <span class="speld nieuw">nieuw</span></label>
 
   {# Bladeren langs de kalender van uitgezonden weken, over de jaargrens heen:
      na week 52 komt week 1 van het jaar erop, en een overgeslagen kerstweek
@@ -43,12 +47,13 @@
   {% endif %}
 
   {% if rijen %}
-  <a class="knop" href="{{ url_for('download_week', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None)) }}"
+  {% set nw = '1' if nieuw_filter_aan else None %}
+  <a class="knop" href="{{ url_for('download_week', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None), nieuw=nw) }}"
      title="Deze weeklijst als werkboek">⤓ Excel</a>
-  <a class="knop" href="{{ url_for('download_week_pdf', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None)) }}"
+  <a class="knop" href="{{ url_for('download_week_pdf', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None), nieuw=nw) }}"
      title="Deze weeklijst als PDF">⤓ PDF</a>
   {% if vdj_geladen %}
-  <a class="knop" href="{{ url_for('vdj_maak', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None)) }}"
+  <a class="knop" href="{{ url_for('vdj_maak', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None), nieuw=nw) }}"
      title="Deze weeklijst als VirtualDJ-playlist uit je eigen bibliotheek (laad eerst je database op de VirtualDJ-pagina)">⤓ VDJ</a>
   {% endif %}
   {% endif %}
