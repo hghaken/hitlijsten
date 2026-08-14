@@ -415,6 +415,8 @@
       <a href="{{ url_for('jaarlijksen_lijst') }}">Jaarlijsten totaal</a>
     </nav>
     <span class="rechts">
+      <a href="{{ url_for('static', filename='handleiding.pdf') }}"
+         title="De gebruiksaanwijzing voor bezoekers, als PDF">Handleiding</a>
       <a href="{{ url_for('disclaimer') }}">Disclaimer</a>
       {% if is_aangemeld() %}
         <a href="{{ url_for('afmelden') }}">Afmelden</a>
