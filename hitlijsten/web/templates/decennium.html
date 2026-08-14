@@ -28,6 +28,18 @@
 
   {% if nummers %}
   {{ nl_filter() }}
+
+  {% if decennium in decennia %}
+  {% set plek = decennia.index(decennium) %}
+  {% if plek + 1 < decennia|length %}
+    <a class="knop" href="{{ url_for('decennium_overzicht', decennium=decennia[plek + 1]) }}"
+       title="de {{ decennia[plek + 1] }}'s">‹ vorige</a>
+  {% endif %}
+  {% if plek > 0 %}
+    <a class="knop" href="{{ url_for('decennium_overzicht', decennium=decennia[plek - 1]) }}"
+       title="de {{ decennia[plek - 1] }}'s">volgende ›</a>
+  {% endif %}
+  {% endif %}
   {% set top = toon if toon != totaal else None %}
   {% set nl = '1' if nl_filter_aan else None %}
   <a class="knop" href="{{ url_for('download_decennium', decennium=decennium, toon=top, nl=nl) }}"

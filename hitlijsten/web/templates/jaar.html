@@ -46,6 +46,18 @@
            {% if nieuw_filter_aan %}checked{% endif %}>
     <span class="speld nieuw">nieuw</span></label>
 
+  {% if jaar and jaar in jaren %}
+  {% set plek = jaren.index(jaar) %}
+  {% if plek + 1 < jaren|length %}
+    <a class="knop" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaren[plek + 1]) }}"
+       title="{{ jaren[plek + 1] }}">‹ vorige</a>
+  {% endif %}
+  {% if plek > 0 %}
+    <a class="knop" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaren[plek - 1]) }}"
+       title="{{ jaren[plek - 1] }}">volgende ›</a>
+  {% endif %}
+  {% endif %}
+
   {% if jaar and lijst in weeklijsten %}
     {# Rechtstreeks naar een losse week van deze jaargang. #}
     <select onchange="if (this.value) location = this.value">
