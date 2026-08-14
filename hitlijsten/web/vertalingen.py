@@ -33,7 +33,7 @@ EN = {
     "Afmelden": "Sign out",
     "Verras me: een willekeurig nummer": "Surprise me: a random song",
     "De gebruiksaanwijzing voor bezoekers, als PDF":
-        "The visitor manual, as a PDF (in Dutch)",
+        "The visitor manual, as a PDF",
 
     # -- gedeelde knoppen, filters en meldingen ----------------------------
     "vorige": "previous",

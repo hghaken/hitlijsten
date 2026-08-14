@@ -1,6 +1,211 @@
 {% extends "basis.html" %}
 {% block titel %}Disclaimer — Hitlijsten{% endblock %}
 {% block inhoud %}
+{% if taal == 'en' %}
+<h1>Disclaimer</h1>
+<p class="onder">What this site is, and what not to expect from it.</p>
+
+<div class="lap">
+
+<h2>A hobby project</h2>
+<p>
+  This site was built by one person, for his own use as a DJ. There is no
+  company behind it, nothing is sold and no editorial team checks along.
+  It is online because keeping it to myself would have been a waste.
+</p>
+
+<h2>The numbers can be wrong</h2>
+<p>
+  The chart entries are fetched and processed automatically. That usually
+  goes well, but not always. The known weak spots, so you know what to
+  watch for:
+</p>
+<ul>
+  <li>
+    <b>Songs are recognised by their name.</b> Artist and title are turned
+    into a key; if a source spells a song differently halfway through, it
+    can split in two and the points get divided. This is tracked down and
+    fixed by hand — about a hundred and thirty such corrections are in —
+    but some will be missing.
+  </li>
+  <li>
+    <b>The points are our own calculation</b>, not something the
+    broadcaster publishes: chart length − position + 1, per week. For the
+    Top 40 of 2025 all one hundred totals match the official year chart
+    exactly, but that is no guarantee for the other years.
+  </li>
+  <li>
+    <b>The broadcast dates are derived, not looked up.</b> Week N is the
+    N-th Saturday of the year and the broadcast was the Friday before.
+    That rule was measured against nearly four thousand known dates and
+    holds in 99.9% of cases — so not in all of them.
+  </li>
+  <li>
+    <b>The sources themselves contain errors too.</b> The 2013 Evergreen
+    Top 1000 has two songs at position 279 and no 278. Such things are
+    reported and otherwise taken over as they are; nothing is invented.
+  </li>
+  <li>
+    <b>Missing weeks.</b> Some weeks were never broadcast — around
+    Christmas the Top 40 usually skips one. Those are recorded as
+    "does not exist". If you spot a gap that should not be there,
+    I would love to hear about it.
+  </li>
+</ul>
+<p>
+  In short: use this site to look something up or find it back, not as
+  evidence. When in doubt, the source is leading — not this page.
+</p>
+
+<h2>But there is housekeeping</h2>
+<p>
+  The sources do not always spell the same artist the same way, and
+  sometimes there is simply a typo. That gets tracked down and fixed:
+  wrong punctuation, "Beatles" next to "The&nbsp;Beatles", "ACDC" next to
+  "AC/DC", "Crocodille&nbsp;Rock" next to "Crocodile&nbsp;Rock". Where
+  the choice does not follow from the data itself,
+  <a href="https://musicbrainz.org/" target="_blank" rel="noopener">MusicBrainz</a> or Wikipedia
+  gets a vote.
+</p>
+<p>
+  Two things about that. First: <b>every correction is recorded</b>, with
+  the old value, the new one and the reason. Nothing disappears silently.
+  Second: <b>we would rather merge too little than too much</b>. Two
+  songs that look alike but once charted side by side in the same week
+  stay separate — those really are two. That is how
+  <i>The&nbsp;Unforgiven I</i>, <i>II</i> and <i>III</i> stayed apart,
+  and Roy&nbsp;Dekkers stayed clear of Roxy&nbsp;Dekker.
+</p>
+
+<h2>No liability</h2>
+<p>
+  The data is offered as-is, with no guarantee of correctness,
+  completeness or availability. Use is at your own expense and risk. I am
+  not liable for any damage arising from the use of this site or of the
+  data you retrieve here, in whatever form. The site can change or go
+  offline without notice.
+</p>
+
+<h2>Whose charts these are</h2>
+<p>
+  The charts are not mine. They are compiled by
+  <a href="https://www.top40.nl/" target="_blank" rel="noopener">top40.nl</a> (Dutch
+  Top&nbsp;40, Tipparade, Sterren&nbsp;NL Top&nbsp;25) and
+  <a href="https://www.oranjetop30.nl/" target="_blank" rel="noopener">oranjetop30.nl</a>;
+  the annual charts by NPO&nbsp;Radio&nbsp;2 (Top&nbsp;2000, De
+  Koninklijke&nbsp;500), NPO&nbsp;3FM (Festival Top&nbsp;1003),
+  NPO&nbsp;Radio&nbsp;5 (Evergreen Top&nbsp;1000, Toplijsten of the 60s
+  and 70s), Radio&nbsp;10 (Top&nbsp;4000, 80's Top&nbsp;810), Veronica
+  (Top&nbsp;1000), Qmusic (Q&nbsp;Top&nbsp;1500, 90's Top&nbsp;500,
+  Q&nbsp;Zeroes Top&nbsp;500, Zomer Top&nbsp;500), Sublime (Soul
+  Top&nbsp;1000), Arrow&nbsp;Classic&nbsp;Rock (Rock&nbsp;Top&nbsp;500)
+  and KINK (Kink&nbsp;Top&nbsp;1500, Kink 80's Top&nbsp;500); those
+  annual charts arrive via
+  <a href="https://www.datastats.nl/" target="_blank" rel="noopener">datastats.nl</a>, the
+  Alarmschijf markings from
+  <a href="https://www.top40.nl/" target="_blank" rel="noopener">top40.nl</a> itself, and the
+  award dates of Alarmschijven and Dancesmashes via
+  <a href="https://www.michajans.nl/" target="_blank" rel="noopener">michajans.nl</a>.
+  The rights to that data remain with them.
+</p>
+<p>
+  The <b>Dutch-language flags</b> are not source data but our own
+  derivation: proven for everything that ever charted in the Oranje Top
+  30 or Sterren NL Top 25, and automatically recognised by artist and
+  title beyond that. Occasionally that goes wrong — if you see a flag
+  that should not be there (or miss one), do report it via the form.
+</p>
+<p>
+  <b>Special thanks to Ruud of
+  <a href="https://www.datastats.nl/" target="_blank" rel="noopener">Music Datastats</a></b>,
+  who collects and maintains all those annual charts one by one, and gave
+  permission to use his data here. Without that work there would not be
+  253 annual editions side by side on this site.
+</p>
+<p>
+  This site shows their work without earning anything from it, with
+  attribution on every page. If you are a rights holder and want
+  something removed, send a message — it will be taken down. No formal
+  procedure needed.
+</p>
+
+<h2>What is kept about you</h2>
+<p>
+  Nothing that leaves the building. There is not a single third-party
+  script on these pages: no visitor counter, no advertising, no social
+  media buttons, no external fonts. Everything you receive comes from
+  this server.
+</p>
+<ul>
+  <li>
+    <b>One cookie</b> is set, and only if you sign in to the admin area,
+    send a message via the form (for the confirmation notice) or load a
+    DJ database (to tie it to your visit) — plus a small cookie that
+    remembers your language choice. If you just read, you get no cookie.
+  </li>
+  <li>
+    If you load a <b>DJ database</b> (VirtualDJ or rekordbox), it is
+    processed exclusively in working memory: it never touches a disk, is
+    visible to no one else and disappears by itself after at most four
+    hours — or immediately, with the "forget my database" button.
+  </li>
+  <li>
+    The web server keeps, like every web server, an <b>access log</b>
+    with the IP address and the requested page. That stays on the server
+    and goes nowhere.
+  </li>
+  <li>
+    If you leave a <b>message</b>, what you filled in yourself is stored
+    (the message, and if you want your name and e-mail address) plus your
+    IP address — the latter only to limit spam. Your e-mail address is
+    used exclusively to reply to you and never appears on the site; the
+    guestbook only shows what you wrote yourself, and only if you ticked
+    the box ánd the site owner publishes it. Want a message removed
+    later? Send a note via the same form and it will be deleted.
+  </li>
+</ul>
+
+<h2>The source code is open</h2>
+<p>
+  Everything this site does is public at
+  <a href="https://github.com/hghaken/hitlijsten" target="_blank" rel="noopener">github.com/hghaken/hitlijsten</a>:
+  the fetching, the song matching across the weeks, the points
+  calculation and the pages you see here. If you want to know how a
+  number came to be, you can read it instead of believing it — including
+  the choices where things could have been done differently, because
+  those are explained in the documentation (in Dutch).
+</p>
+<p>
+  What is <b>not</b> in there: the data itself, the settings and
+  everything to do with the network behind it. The code is public, the
+  installation is not.
+</p>
+<p>
+  The code is under the <b>MIT licence</b>: feel free to use it. That
+  applies to the code only — the charts themselves belong to the parties
+  above and the licence changes nothing about that.
+</p>
+<p>
+  <b>Written with the help of Claude Code</b>, Anthropic's programming
+  assistant. That is stated here not as a disclaimer but because it is
+  true: most of what you see came about in conversation, and the commit
+  history shows it. The choices, the checks and what ends up online
+  remain my responsibility — a mistake is a mistake, no matter who typed
+  it.
+</p>
+
+<h2>Contact</h2>
+<p>
+  Found a mistake, something missing, or a removal request?
+  Mail <a href="mailto:heye@hhaken.nl">heye@hhaken.nl</a>.
+</p>
+
+<p class="hint" style="margin-top:2rem">
+  Last updated: August 2026. The Dutch version of this page is leading.
+</p>
+
+</div>
+{% else %}
 
 <h1>Disclaimer</h1>
 <p class="onder">Wat deze site is, en wat je er niet van moet verwachten.</p>
@@ -202,4 +407,5 @@
 </p>
 
 </div>
+{% endif %}
 {% endblock %}

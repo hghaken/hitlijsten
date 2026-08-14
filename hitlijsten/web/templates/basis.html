@@ -416,7 +416,7 @@
       <a href="{{ url_for('jaarlijksen_lijst') }}">{{ _("Jaarlijsten totaal") }}</a>
     </nav>
     <span class="rechts">
-      <a href="{{ url_for('static', filename='handleiding.pdf') }}"
+      <a href="{{ url_for('static', filename=('manual.pdf' if taal == 'en' else 'handleiding.pdf')) }}"
          target="_blank" rel="noopener"
          title="{{ _("De gebruiksaanwijzing voor bezoekers, als PDF") }}">{{ _("Handleiding") }}</a>
       <a href="{{ url_for('disclaimer') }}">{{ _("Disclaimer") }}</a>
@@ -477,7 +477,7 @@
   Sublime, Arrow Classic Rock and KINK, collected via
   <a href="https://www.datastats.nl/" target="_blank" rel="noopener">datastats.nl</a>.
   <br>This site shows their data; the rights remain theirs. See the
-  <a href="{{ url_for('disclaimer') }}">disclaimer</a> (in Dutch).
+  <a href="{{ url_for('disclaimer') }}">disclaimer</a>.
   Spotted something wrong?
   <a href="{{ url_for('feedback', soort='aanvulling', pagina=request.path) }}">Report
   it</a> — or leave a message in the
