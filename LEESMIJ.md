@@ -41,10 +41,10 @@ Wat je moet weten om de code te begrijpen:
 | | |
 |---|---|
 | Python | 3.14, eigen venv |
-| Webapplicatie | Flask, achter een reverse proxy |
+| Webapplicatie | Flask op **waitress** (één proces, acht draden), achter een reverse proxy |
 | Wekelijkse run | een systemd-timer, vrijdagavond |
 | Paden | via `HITLIJSTEN_DATA`, `HITLIJSTEN_CACHE` en `HITLIJSTEN_EXCEL` |
-| Pakketten | requests, beautifulsoup4, lxml, openpyxl, Flask, fpdf2 |
+| Pakketten | requests, beautifulsoup4, lxml, openpyxl, Flask, waitress, fpdf2 |
 
 De code staat los van de gegevens: de database, de cache en de Excel-bestanden
 liggen naast de broncode, niet erin. Zo kun je de code in zijn geheel vervangen
@@ -1093,6 +1093,17 @@ worden); vijf mislukte aanmeldpogingen per kwartier per IP mét logregel; geen
 open redirect meer via `?volgende=`; en `_eigen_pad()` op het pagina-veld van
 feedback en de terug-link van het DJ Export-rapport, zodat daar geen
 `javascript:`-link kan wachten op een klik van de beheerder.
+
+**De server**: `python -m hitlijsten.web` draait sinds augustus 2026 op
+**waitress** in plaats van de ontwikkelserver van Flask (die is niet gebouwd
+om aan het open internet te staan). Bewust **één proces met acht draden** en
+niet meerdere workers: de applicatie houdt dingen in het geheugen die per
+bezoeker gelden — de geladen DJ Export-bibliotheken, de aanmeldrem en de
+caches — en met meerdere processen zou een bezoeker zijn database in het ene
+proces laden en bij de volgende klik in het andere belanden. Draden delen hun
+geheugen, dus dat probleem bestaat niet. Met `--debug` start nog steeds de
+Flask-server, en die zet dan ook `Secure` van het sessiecookie uit, want
+zonder HTTPS kun je je lokaal anders niet aanmelden.
 
 Wat al goed zat en zo moet blijven: geparametriseerde SQL overal (de
 zoekfunctie plakt wel SQL aan elkaar, maar uitsluitend uit vaste fragmenten),
