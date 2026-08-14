@@ -28,17 +28,30 @@
 </tbody></table></div>
 {% endif %}
 
-<h2>{{ _("Per jaar en lijst") }}</h2>
-<div class="tabelvak"><table>
-  <thead><tr><th>{{ _("Lijst") }}</th><th class="getal">{{ _("Jaar") }}</th><th class="getal">{{ _("Punten") }}</th>
+<h2>{% if taal == 'en' %}Per chart{% else %}Per lijst{% endif %}</h2>
+<p class="hint" style="margin-top:-.3rem">
+  {% if taal == 'en' %}Click a chart for the graph of this song's run
+  there.{% else %}Klik op een lijst voor de grafiek van het verloop
+  daarin.{% endif %}</p>
+<div class="tabelvak"><table id="perlijst">
+  <thead><tr><th>{{ _("Lijst") }}</th><th class="getal">{{ _("Periode") }}</th>
+      <th class="getal">{{ _("Jaargangen") }}</th><th class="getal">{{ _("Punten") }}</th>
       <th class="getal">{{ _("Weken") }}</th><th class="getal">{{ _("Hoogste") }}</th></tr></thead><tbody>
-  {% for (lijst, jaar), v in samenvatting %}
-  <tr><td>{{ lijst_namen.get(lijst, lijst) }}</td><td class="getal">{{ jaar }}</td>
-      <td class="getal">{{ v.punten }}</td><td class="getal">{{ v.weken }}</td>
-      <td class="getal">{{ v.hoogste }}</td></tr>
+  {% for lijst, pl in per_lijst.items() %}
+  <tr data-sleutel="{{ sleutel }}" data-lijst="{{ lijst }}"
+      data-jaar="{{ pl.beste_jaar }}" data-artiest="{{ rijen[-1]['artiest'] }}"
+      data-titel="{{ rijen[-1]['titel'] }} — {{ lijst_namen.get(lijst, lijst) }}">
+    <td class="breed klikbaar" title="{{ _("Klik voor het verloop") }}">{{ lijst_namen.get(lijst, lijst) }}</td>
+    <td class="getal">{{ pl.van }}{% if pl.tot != pl.van %}–{{ pl.tot }}{% endif %}</td>
+    <td class="getal">{{ pl.jaren }}</td>
+    <td class="getal">{{ pl.punten }}</td>
+    <td class="getal">{{ pl.weken }}</td>
+    <td class="getal {% if pl.hoogste == 1 %}top1{% endif %}">{{ pl.hoogste }}</td>
+  </tr>
   {% endfor %}
 </tbody></table></div>
 
+{% if is_aangemeld() %}
 <h2>{{ _("Alle noteringen") }} ({{ rijen|length }})</h2>
 <div class="tabelvak"><table>
   <thead><tr><th>{{ _("Lijst") }}</th><th class="getal">{{ _("Jaar") }}</th><th class="getal">{{ _("Week") }}</th>
@@ -60,6 +73,9 @@
   </tr>
   {% endfor %}
 </tbody></table></div>
+{% endif %}
+
+{% include "_grafiek.html" %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

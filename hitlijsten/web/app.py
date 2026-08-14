@@ -2143,13 +2143,29 @@ def _registreer(app: Flask) -> None:
             vak["punten"] += lengte - r["positie"] + 1
             vak["weken"] += 1
             vak["hoogste"] = min(vak["hoogste"], r["positie"])
+        # En opgeteld per lijst: dat is wat de bezoeker wil zien bij een
+        # nummer dat in tien lijsten en 150 edities voorkwam. `beste_jaar`
+        # is de jaargang van de hoogste positie -- de grafiek-route wil
+        # een jaar als startpunt van de reeks.
+        per_lijst: dict[str, dict] = {}
+        for (lijst, jaar), vak in sorted(samenvatting.items()):
+            pl = per_lijst.setdefault(lijst, {
+                "van": jaar, "tot": jaar, "jaren": 0, "punten": 0,
+                "weken": 0, "hoogste": 99, "beste_jaar": jaar})
+            pl["tot"] = jaar
+            pl["jaren"] += 1
+            pl["punten"] += vak["punten"]
+            pl["weken"] += vak["weken"]
+            if vak["hoogste"] < pl["hoogste"]:
+                pl["hoogste"] = vak["hoogste"]
+                pl["beste_jaar"] = jaar
         alias = con.execute(
             "SELECT van, naar, opmerking FROM aliases WHERE naar=? OR van=?",
             (sleutel, sleutel),
         ).fetchall()
         return render_template("nummer.html", sleutel=sleutel, rijen=rijen,
                                samenvatting=sorted(samenvatting.items()),
-                               aliassen=alias)
+                               per_lijst=per_lijst, aliassen=alias)
 
     # --- notering met de hand corrigeren -----------------------------------
 

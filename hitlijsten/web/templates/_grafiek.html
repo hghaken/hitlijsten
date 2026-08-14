@@ -58,13 +58,14 @@
 (function () {
   // De tabel die de sleutels draagt heet op het jaaroverzicht "matrix" en op de
   // editiepagina "editie"; beide dragen lijst en jaar als data-kenmerk.
-  const bron = document.getElementById("matrix") || document.getElementById("editie");
+  const bron = document.getElementById("matrix") || document.getElementById("editie")
+    || document.getElementById("perlijst");
   const dialoog = document.getElementById("grafiek");
   if (!bron || !dialoog || typeof dialoog.showModal !== "function") return;
 
+  // Op de nummerpagina draagt elke RIJ zijn eigen lijst en jaar (een rij
+  // per lijst); op de jaar- en editiepagina staan ze op de tabel.
   const LIJST = bron.dataset.lijst, JAAR = bron.dataset.jaar;
-  const rijen = new Map();
-  Array.from(bron.tBodies[0].rows).forEach((r) => rijen.set(r.dataset.sleutel, r));
 
   const vensterbreedte = () =>
     (typeof window === "undefined" ? 1120 : window.innerWidth);
@@ -230,22 +231,25 @@
   }
 
   const opgehaald = new Map();
-  function haal(sleutel) {
-    if (!opgehaald.has(sleutel)) {
-      const adres = "/reeks?lijst=" + encodeURIComponent(LIJST) +
-        "&jaar=" + encodeURIComponent(JAAR) +
+  function haal(lijst, jaar, sleutel) {
+    const kenmerk = lijst + "|" + jaar + "|" + sleutel;
+    if (!opgehaald.has(kenmerk)) {
+      const adres = "/reeks?lijst=" + encodeURIComponent(lijst) +
+        "&jaar=" + encodeURIComponent(jaar) +
         "&sleutel=" + encodeURIComponent(sleutel);
-      opgehaald.set(sleutel, fetch(adres).then(function (antwoord) {
+      opgehaald.set(kenmerk, fetch(adres).then(function (antwoord) {
         if (!antwoord.ok) throw new Error("reeks niet gevonden");
         return antwoord.json();
       }));
     }
-    return opgehaald.get(sleutel);
+    return opgehaald.get(kenmerk);
   }
 
-  function toon(sleutel) {
-    const rij = rijen.get(sleutel);
+  function toon(rij) {
     if (!rij) return;
+    const sleutel = rij.dataset.sleutel;
+    const lijst = rij.dataset.lijst || LIJST;
+    const jaar = rij.dataset.jaar || JAAR;
     const plaat = dialoog.querySelector(".plaat");
     dialoog.querySelector(".artiest").textContent = rij.dataset.artiest;
     dialoog.querySelector(".titel").textContent = rij.dataset.titel;
@@ -254,7 +258,7 @@
     plaat.replaceChildren();
     dialoog.showModal();
 
-    return haal(sleutel).then(function (g) {
+    return haal(lijst, jaar, sleutel).then(function (g) {
       dialoog.querySelector(".samenvatting").textContent =
         g.as === "editie"
           ? "Hoogste positie " + g.hoogste + " · " + g.weken + " edities · " +
@@ -264,10 +268,13 @@
       // De cijfers hierboven gaan over de hele notering. Loopt die over de
       // jaargrens, dan zijn ze hoger dan wat het klassement van dit jaar toont,
       // en dat is verwarrend zonder deze regel erbij.
-      const eigen = String(g.reeks.filter((n) => String(n.jaar) === String(JAAR)).length);
+      // De "waarvan in dit jaar"-regel hoort bij de jaarpagina's; op de
+      // nummerpagina (rij draagt zijn eigen lijst) gaat de grafiek al
+      // over de hele reeks en zegt hij niets.
       dialoog.querySelector(".jaardeel").textContent =
-        g.as !== "editie" && g.reeks.some((n) => String(n.jaar) !== String(JAAR))
-          ? "Waarvan in " + JAAR + ": " + rij.dataset.weken + " weken · " +
+        !rij.dataset.lijst && g.as !== "editie"
+          && g.reeks.some((n) => String(n.jaar) !== String(jaar))
+          ? "Waarvan in " + jaar + ": " + rij.dataset.weken + " weken · " +
             rij.dataset.punten + " punten"
           : "";
       plaat.replaceChildren(
@@ -300,8 +307,8 @@
     tabel.addEventListener("click", function (gebeurtenis) {
       const cel = gebeurtenis.target.closest("td.klikbaar");
       if (!cel || !tabel.contains(cel)) return;
-      const sleutel = cel.parentElement.dataset.sleutel;
-      if (sleutel) toon(sleutel);
+      const rij = cel.parentElement;
+      if (rij.dataset.sleutel) toon(rij);
     });
   });
 
