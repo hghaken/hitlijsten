@@ -150,20 +150,24 @@ def lees_rekordbox(bron) -> list[Bestand]:
     return uit
 
 
-def lees_upload(stroom, naam: str) -> list[Bestand]:
+def lees_upload(stroom, naam: str) -> tuple[list[Bestand], str]:
     """Een upload lezen: een kale database.xml, een rekordbox-export of de
     backup-zip van VirtualDJ (Instellingen -> Backup) -- daar zit de
     database in, samen met de history en de playlists. We vissen elke
     database.xml eruit. Een rekordbox-bestand verraadt zich door zijn
-    DJ_PLAYLISTS-wortel."""
+    DJ_PLAYLISTS-wortel.
+
+    Geeft (bestanden, soort) terug -- soort is "vdj" of "rekordbox", want
+    de bron bepaalt welk playlistformaat de bezoeker straks krijgt.
+    """
     import zipfile
 
     kop = stroom.read(4096)
     stroom.seek(0)
     if kop[:4] != b"PK\x03\x04":
         if b"DJ_PLAYLISTS" in kop:
-            return lees_rekordbox(stroom)
-        return lees_database(stroom)
+            return lees_rekordbox(stroom), "rekordbox"
+        return lees_database(stroom), "vdj"
     uit: list[Bestand] = []
     with zipfile.ZipFile(stroom) as zak:
         for info in zak.infolist():
@@ -172,7 +176,7 @@ def lees_upload(stroom, naam: str) -> list[Bestand]:
                     uit += lees_database(binnen)
     if not uit:
         raise ValueError(f"{naam}: geen database.xml in de zip gevonden")
-    return uit
+    return uit, "vdj"
 
 
 def _beste(kandidaten: Iterable[Bestand]) -> Bestand:

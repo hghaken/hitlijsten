@@ -1653,14 +1653,16 @@ def _registreer(app: Flask) -> None:
                 _vdj_sessies.pop(session.pop("vdj", None), None)
                 return redirect(url_for("vdj_playlist"))
             bestanden = []
+            soort = "vdj"
             try:
                 for upload in request.files.getlist("database"):
                     if upload and upload.filename:
-                        bestanden += vdjmodule.lees_upload(upload.stream,
-                                                           upload.filename)
+                        deel, soort = vdjmodule.lees_upload(upload.stream,
+                                                            upload.filename)
+                        bestanden += deel
             except Exception:
-                fout = ("Dit is niet te lezen als VirtualDJ-database of"
-                        " -backup.")
+                fout = ("Dit is niet te lezen als VirtualDJ-database,"
+                        " -backup of rekordbox-export.")
             if not fout and not request.form.get("streaming"):
                 bestanden = [b for b in bestanden if not b.streaming]
             media = request.form.get("media", "audio")
@@ -1677,6 +1679,7 @@ def _registreer(app: Flask) -> None:
                 niveau = request.form.get("niveau", "2")
                 _vdj_sessies[token] = {
                     "bestanden": bestanden,
+                    "soort": soort,
                     "streaming": bool(request.form.get("streaming")),
                     "media": media if media in ("audio", "video", "beide")
                              else "audio",
@@ -1691,6 +1694,9 @@ def _registreer(app: Flask) -> None:
         if kaart:
             stand = {
                 "aantal": len(kaart["bestanden"]),
+                "soort": {"vdj": "VirtualDJ",
+                          "rekordbox": "rekordbox"}[kaart.get("soort",
+                                                              "vdj")],
                 "lokaal": sum(1 for b in kaart["bestanden"]
                               if not b.streaming),
                 "streaming": kaart["streaming"],
@@ -1759,8 +1765,12 @@ def _registreer(app: Flask) -> None:
                     "koppels": koppels, "gevonden": len(paden),
                     "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
                     "bibliotheek": len(kaart["bestanden"]),
-                    "vdjfolder": vdjmodule.bouw_vdjfolder(paden),
-                    "m3u8": vdjmodule.bouw_m3u8(koppels),
+                    "soort": kaart.get("soort", "vdj"),
+                    "vdjfolder": (vdjmodule.bouw_vdjfolder(paden)
+                                  if kaart.get("soort", "vdj") == "vdj"
+                                  else ""),
+                    "m3u8": (vdjmodule.bouw_m3u8(koppels)
+                             if kaart.get("soort") == "rekordbox" else ""),
                     "bestandsnaam": naam + ".vdjfolder",
                     "m3u8naam": naam + ".m3u8",
                 })
@@ -1815,8 +1825,11 @@ def _registreer(app: Flask) -> None:
             "gevonden": len(paden),
             "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
             "bibliotheek": len(kaart["bestanden"]),
-            "vdjfolder": vdjmodule.bouw_vdjfolder(paden),
-            "m3u8": vdjmodule.bouw_m3u8(koppels),
+            "soort": kaart.get("soort", "vdj"),
+            "vdjfolder": (vdjmodule.bouw_vdjfolder(paden)
+                          if kaart.get("soort", "vdj") == "vdj" else ""),
+            "m3u8": (vdjmodule.bouw_m3u8(koppels)
+                     if kaart.get("soort") == "rekordbox" else ""),
             "bestandsnaam": naam + ".vdjfolder",
             "m3u8naam": naam + ".m3u8",
         }
