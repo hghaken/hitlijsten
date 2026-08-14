@@ -309,6 +309,11 @@ def _registreer(app: Flask) -> None:
             if secrets.compare_digest(
                     request.form.get("wachtwoord", "").encode("utf-8"),
                     app.config["WACHTWOORD"].encode("utf-8")):
+                # Vers token na de aanmelding: een token dat iemand vóór
+                # het inloggen te pakken kreeg, is daarna niets meer waard.
+                # De rest van de sessie (een geladen DJ Export-bibliotheek)
+                # blijft staan, dus alleen deze sleutel gaat eruit.
+                session.pop("csrf", None)
                 session["aangemeld"] = True
                 _aanmeld_pogingen.pop(_bezoeker_ip(), None)
                 session.permanent = True
