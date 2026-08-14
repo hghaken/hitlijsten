@@ -416,6 +416,7 @@
     </nav>
     <span class="rechts">
       <a href="{{ url_for('static', filename='handleiding.pdf') }}"
+         target="_blank" rel="noopener"
          title="De gebruiksaanwijzing voor bezoekers, als PDF">Handleiding</a>
       <a href="{{ url_for('disclaimer') }}">Disclaimer</a>
       {% if is_aangemeld() %}
