@@ -23,12 +23,22 @@
   <a class="knop" id="vdjknop" download="{{ uitkomst.bestandsnaam }}">⤓ {{ uitkomst.bestandsnaam }}</a>
   <span class="hint">zet hem in je VirtualDJ-map onder <code>MyLists</code></span>
 </p>
+<p>
+  <a class="knop" id="m3uknop" download="{{ uitkomst.m3u8naam }}">⤓ {{ uitkomst.m3u8naam }}</a>
+  <span class="hint">dezelfde playlist als M3U8 — te importeren in rekordbox,
+    Engine DJ, Traktor, Serato en vrijwel elke mediaspeler</span>
+</p>
 <textarea id="vdjinhoud" style="display:none">{{ uitkomst.vdjfolder }}</textarea>
+<textarea id="m3uinhoud" style="display:none">{{ uitkomst.m3u8 }}</textarea>
 <script>
   (() => {
-    const blob = new Blob([document.getElementById("vdjinhoud").value],
-                          {type: "application/xml"});
-    document.getElementById("vdjknop").href = URL.createObjectURL(blob);
+    for (const [knop, vak, soort] of [
+        ["vdjknop", "vdjinhoud", "application/xml"],
+        ["m3uknop", "m3uinhoud", "audio/x-mpegurl"]]) {
+      const blob = new Blob([document.getElementById(vak).value],
+                            {type: soort});
+      document.getElementById(knop).href = URL.createObjectURL(blob);
+    }
   })();
 </script>
 

@@ -4,10 +4,11 @@
 {% block inhoud %}
 
 <h1>VirtualDJ</h1>
-<p class="onder">Laad hier één keer je database; daarna staat er op elke
-  weeklijst en elk jaaroverzicht een <b>VDJ-knop</b> die de getoonde
-  selectie — inclusief je top-keuze en filters — als
-  <code>.vdjfolder</code>-playlist oplevert.</p>
+<p class="onder">Laad hier één keer je database (VirtualDJ of rekordbox);
+  daarna staat er op elke weeklijst en elk jaaroverzicht een <b>VDJ-knop</b>
+  die de getoonde selectie — inclusief je top-keuze en filters — als
+  playlist oplevert: <code>.vdjfolder</code> voor VirtualDJ én
+  <code>.m3u8</code> voor rekordbox, Engine DJ en de rest.</p>
 
 {% if stand %}
 <div class="kaarten">
@@ -43,7 +44,10 @@
     <span class="hint" style="display:block">Het makkelijkst: maak in
       VirtualDJ een <b>backup</b> (Instellingen → Backup) en upload die zip —
       klein en compleet, ook met de muziek van losse schijven erin. Een kale
-      <code>database.xml</code> mag ook, en meerdere tegelijk.</span>
+      <code>database.xml</code> mag ook, en meerdere tegelijk. Draai je
+      <b>rekordbox</b>? Exporteer daar je collectie
+      (Bestand → Collectie exporteren in xml-formaat) en upload die —
+      het rapport geeft je dan een M3U8-playlist terug.</span>
   </label>
 
   <label style="display:flex; gap:.5rem; align-items:baseline">

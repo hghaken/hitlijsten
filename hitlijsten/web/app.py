@@ -1760,7 +1760,9 @@ def _registreer(app: Flask) -> None:
                     "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
                     "bibliotheek": len(kaart["bestanden"]),
                     "vdjfolder": vdjmodule.bouw_vdjfolder(paden),
+                    "m3u8": vdjmodule.bouw_m3u8(koppels),
                     "bestandsnaam": naam + ".vdjfolder",
+                    "m3u8naam": naam + ".m3u8",
                 })
 
         lijst = request.args.get("lijst") or "top40"
@@ -1814,7 +1816,9 @@ def _registreer(app: Flask) -> None:
             "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
             "bibliotheek": len(kaart["bestanden"]),
             "vdjfolder": vdjmodule.bouw_vdjfolder(paden),
+            "m3u8": vdjmodule.bouw_m3u8(koppels),
             "bestandsnaam": naam + ".vdjfolder",
+            "m3u8naam": naam + ".m3u8",
         }
         return render_template("vdj_rapport.html", uitkomst=uitkomst,
                                niveaus=vdjmodule.NIVEAUS,

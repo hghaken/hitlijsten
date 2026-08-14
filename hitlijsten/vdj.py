@@ -32,7 +32,7 @@ from xml.sax.saxutils import quoteattr
 from .normalize import sleutel_van
 
 __all__ = ["lees_database", "lees_upload", "match", "bouw_vdjfolder",
-           "NIVEAUS"]
+           "bouw_m3u8", "NIVEAUS"]
 
 NIVEAUS = {
     1: "zeer strak",
@@ -113,15 +113,56 @@ def lees_database(bron) -> list[Bestand]:
     return uit
 
 
+def lees_rekordbox(bron) -> list[Bestand]:
+    """Een rekordbox-export (Bestand -> Exporteer collectie in xml-formaat).
+
+    Zelfde uitkomst als lees_database, andere structuur: TRACK-elementen
+    met de metadata als attributen en het pad als file://-URL. Alles is
+    lokaal -- rekordbox exporteert geen streaming-catalogus.
+    """
+    from urllib.parse import unquote, urlparse
+
+    uit: list[Bestand] = []
+    for _, el in ET.iterparse(bron, events=("end",)):
+        if el.tag != "TRACK":
+            continue
+        plek = el.get("Location", "")
+        if plek:
+            # file://localhost/C:/Muziek/A%20B.mp3 -> C:/Muziek/A B.mp3
+            pad = unquote(urlparse(plek).path)
+            if len(pad) > 2 and pad[0] == "/" and pad[2] == ":":
+                pad = pad[1:]           # Windows: /C:/... -> C:/...
+            artiest = (el.get("Artist") or "").strip()
+            titel = (el.get("Name") or "").strip()
+            if artiest and titel and pad.lower().endswith(_AUDIO):
+                try:
+                    bitrate = int(el.get("BitRate") or 0)
+                except ValueError:
+                    bitrate = 0
+                uit.append(Bestand(pad=pad, artiest=artiest, titel=titel,
+                                   bitrate=bitrate,
+                                   video=pad.lower().endswith(_BEELD)))
+        el.clear()
+
+    for b in uit:
+        b.sleutel = sleutel_van(b.artiest, b.titel)
+        b.kern = _kernsleutel(b.artiest, b.titel)
+    return uit
+
+
 def lees_upload(stroom, naam: str) -> list[Bestand]:
-    """Een upload lezen: een kale database.xml of de backup-zip van
-    VirtualDJ (Instellingen -> Backup) -- daar zit de database in, samen
-    met de history en de playlists. We vissen elke database.xml eruit."""
+    """Een upload lezen: een kale database.xml, een rekordbox-export of de
+    backup-zip van VirtualDJ (Instellingen -> Backup) -- daar zit de
+    database in, samen met de history en de playlists. We vissen elke
+    database.xml eruit. Een rekordbox-bestand verraadt zich door zijn
+    DJ_PLAYLISTS-wortel."""
     import zipfile
 
-    kop = stroom.read(4)
+    kop = stroom.read(4096)
     stroom.seek(0)
-    if kop != b"PK\x03\x04":
+    if kop[:4] != b"PK\x03\x04":
+        if b"DJ_PLAYLISTS" in kop:
+            return lees_rekordbox(stroom)
         return lees_database(stroom)
     uit: list[Bestand] = []
     with zipfile.ZipFile(stroom) as zak:
@@ -219,6 +260,18 @@ def match(regels: list[dict], bestanden: list[Bestand],
         rij["niveau"] = trap
         uit.append(rij)
     return uit
+
+
+def bouw_m3u8(koppels: list[dict]) -> str:
+    """Dezelfde playlist als platte M3U8: voor rekordbox, Engine DJ,
+    Traktor, Serato en zo'n beetje elke mediaspeler. De duur kennen we
+    niet (-1); artiest en titel komen uit de lijst zelf."""
+    regels = ["#EXTM3U"]
+    for k in koppels:
+        if k["bestand"]:
+            regels.append(f"#EXTINF:-1,{k['artiest']} - {k['titel']}")
+            regels.append(k["bestand"].pad)
+    return "\n".join(regels) + "\n"
 
 
 def bouw_vdjfolder(paden: list[str]) -> str:
