@@ -1,6 +1,6 @@
 # hitlijsten
 
-Verzamelt wekelijks de vier Nederlandse hitlijsten en houdt zeven
+Verzamelt wekelijks de vier Nederlandse hitlijsten en houdt zeventien
 jaarlijkse lijsten bij, bewaart ze in sqlite en
 maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 **[hitlijsten.hhaken.nl](https://hitlijsten.hhaken.nl)**.
@@ -35,8 +35,11 @@ Discogs en Wikipedia; elke correctie staat met reden in een logboek. Elk
 nummer draagt bovendien zijn Alarmschijf-belletje (bron: top40.nl) en een
 Nederlandstalig-markering met filter. Voor bezoekers: artiestpagina's, een
 datumprikker ("wat stond er op 1 op jouw geboortedag?"), records, versies,
-een jaargang-vergelijker, een wekelijks weekbericht met RSS-feed en een
-gastenboek. Draait op een Synology NAS: een
+een jaargang-vergelijker, een wekelijks weekbericht met RSS-feed, een
+gastenboek, **DJ Export** (laad je VirtualDJ- of rekordbox-database en
+download elke lijst als playlist uit je eigen bibliotheek), een
+handleiding-PDF in twee talen en een NL/EN-taalkeuze voor de
+lijstpagina's. Draait op een Synology NAS: een
 Flask-applicatie achter de reverse proxy, en een systemd-timer die elke vrijdag
 om 22:00 de nieuwe week ophaalt.
 
