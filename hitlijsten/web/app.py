@@ -56,10 +56,32 @@ def maak_app() -> Flask:
     app.jinja_env.filters["tijd"] = leesbare_tijd
     app.jinja_env.globals["weeklijsten"] = [
         s for s in LIJSTEN if not is_jaarlijks(s)]
-    app.jinja_env.globals["jaarlijkse_lijsten"] = [
-        s for s in LIJSTEN if is_jaarlijks(s)]
+    # Op zender gesorteerd, en als (zender, lijsten)-groepjes voor de
+    # keuzelijsten: zo staan de vier Qmusic-lijsten bij elkaar in plaats
+    # van in invoervolgorde.
+    jaarlijks = sorted(
+        (s for s in LIJSTEN if is_jaarlijks(s)),
+        key=lambda s: (zender_van(s).lower(),
+                       LIJSTEN.get(s, {}).get("naam", s).lower()))
+    groepen: list = []
+    for s_ in jaarlijks:
+        z = zender_van(s_)
+        if not groepen or groepen[-1][0] != z:
+            groepen.append((z, []))
+        groepen[-1][1].append(s_)
+    app.jinja_env.globals["jaarlijkse_lijsten"] = jaarlijks
+    app.jinja_env.globals["jaarlijkse_groepen"] = groepen
     _registreer(app)
     return app
+
+
+def zender_van(sleutel: str) -> str:
+    """De zender achter een lijst: tussen haakjes in de naam ("Top 2000
+    (NPO Radio 2)"), of anders het eerste woord (de Kink-lijsten)."""
+    naam = LIJSTEN.get(sleutel, {}).get("naam", sleutel)
+    if naam.endswith(")") and "(" in naam:
+        return naam[naam.rindex("(") + 1:-1]
+    return naam.split()[0]
 
 
 def _lees_instellingen() -> dict:
@@ -400,15 +422,6 @@ def _registreer(app: Flask) -> None:
             editielengtes[lijst_naam] = (
                 f"{rij[0]}" if rij[0] == rij[1] else f"{rij[0]}–{rij[1]}")
 
-        # De zender staat tussen haakjes achter de lijstnaam ("Top 2000
-        # (NPO Radio 2)"); bij de Kink-lijsten is hij het eerste woord. Op
-        # die zender sorteren zet de lijsten van dezelfde zender bij elkaar.
-        def _zender_van(sleutel):
-            naam = LIJSTEN.get(sleutel, {}).get("naam", sleutel)
-            if naam.endswith(")") and "(" in naam:
-                return naam[naam.rindex("(") + 1:-1]
-            return naam.split()[0]
-
         # Groeperen gebeurt hier en niet in het sjabloon: een sqlite3.Row kent
         # geen attributen, dus selectattr() vindt er niets in.
         return render_template(
@@ -416,7 +429,7 @@ def _registreer(app: Flask) -> None:
             taak=taken.huidige(),
             week_rijen=[r for r in lijsten if not is_jaarlijks(r["lijst"])],
             jaar_rijen=sorted(
-                ({**dict(r), "zender": _zender_van(r["lijst"])}
+                ({**dict(r), "zender": zender_van(r["lijst"])}
                  for r in lijsten if is_jaarlijks(r["lijst"])),
                 key=lambda r: (r["zender"].lower(),
                                LIJSTEN.get(r["lijst"], {}).get(

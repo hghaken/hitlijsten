@@ -21,12 +21,14 @@
           >{{ lijst_namen.get(sleutel, sleutel) }}</option>
       {% endfor %}
     </optgroup>
-    <optgroup label="Jaarlijkse lijsten">
-      {% for sleutel in jaarlijkse_lijsten %}
+    {% for zender, groep in jaarlijkse_groepen %}
+    <optgroup label="{{ zender }}">
+      {% for sleutel in groep %}
         <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}
-          >{{ lijst_namen.get(sleutel, sleutel) }}</option>
+          >{{ lijst_namen.get(sleutel, sleutel).split(' (')[0] }}</option>
       {% endfor %}
     </optgroup>
+    {% endfor %}
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
   {{ nl_filter() }}
