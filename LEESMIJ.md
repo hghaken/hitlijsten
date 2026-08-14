@@ -1142,12 +1142,18 @@ www.hhaken.nl en de andere sites in die docroot merken er niets van. Een lus
 kan niet ontstaan: HTTPS voor dit hostname eindigt in de proxy en bereikt
 Apache nooit.
 
-> Dezelfde blinde vlek geldt voor **keepass**, **console** en **has** — die
-> geven over http óók gewoon de startpagina. Niet aangeraakt: daar hangen
-> clients aan (WebDAV, Home Assistant) waarvan ik niet weet hoe ze op een
-> omleiding reageren. Netter dan drie losse .htaccess-regels zou zijn: in DSM
-> per subdomein een HTTP-regel toevoegen, of één nginx-serverblok dat alles
-> doorstuurt.
+Dezelfde blinde vlek gold voor **keepass**, **console** en **has**; die staan
+in hetzelfde bestand, met één verschil: zij krijgen een **308** in plaats van
+een 301. Dat onderscheid telt alleen voor niet-browsers — bij een 301 mag een
+client een POST als GET herhalen, bij een 308 moet hij de methode behouden, en
+Home Assistant kent webhooks die posten. De site zelf houdt 301, de
+gebruikelijke keuze voor iets met zoekmachines. `hasnc` reageert niet op
+poort 80 en is dus niet getroffen.
+
+> Dat dit niets kón breken zit hem hierin: wie vandaag `http://` gebruikte
+> kreeg de verkeerde site, dus daar werkte al niets. Een nettere structurele
+> oplossing blijft: per subdomein een HTTP-regel in DSM, of één nginx-
+> serverblok dat alles doorstuurt.
 
 **Wie mag zeggen namens wie hij spreekt.** `_bezoeker_ip()` gelooft
 `X-Forwarded-For` en `X-Real-IP` alleen van `VERTROUWDE_PROXIES` (de
