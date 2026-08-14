@@ -15,11 +15,6 @@
     <div class="hint">{{ t.artiest }} · {{ t.jaar }}</div>
   </div>
   {% endfor %}
-  <div class="kaart">
-    <div class="naam">{{ _("EN OP JOUW DAG?") }}</div>
-    <div style="margin:.3rem 0"><a class="knop" href="{{ url_for('jouw_dag') }}">{{ _("kies een datum ›") }}</a></div>
-    <div class="hint">{{ _("je geboortedag, je trouwdag…") }}</div>
-  </div>
   {% if is_aangemeld() %}
   <div class="kaart"><div class="cijfer">{{ cijfers.aliassen }}</div>
     <div class="naam">aliassen</div></div>
