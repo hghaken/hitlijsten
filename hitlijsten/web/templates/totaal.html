@@ -32,7 +32,7 @@
      title="{% if top %}De top {{ top }}{% else %}De volledige lijst van {{ totaal }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}">⤓ PDF</a>
   {% if vdj_geladen %}
   <a class="knop" href="{{ url_for('vdj_maak', soort='totaal', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek">⤓ VDJ</a>
+     title="De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek">⤓ DJ Export</a>
   {% endif %}
 
   <span class="hint" style="margin-left:auto">

@@ -492,7 +492,7 @@ def bouw(versie: str | None = None) -> bytes:
               "archief omzetten in een **kant-en-klare playlist uit je "
               "eigen muziekbibliotheek**. Je laadt één keer je "
               "VirtualDJ-database; daarna staat er op elke lijstpagina een "
-              "VDJ-knop die de getoonde selectie matcht tegen wat jij "
+              "DJ Export-knop die de getoonde selectie matcht tegen wat jij "
               "hebt, en het resultaat als .vdjfolder-bestand aanbiedt — "
               "plus een boodschappenlijst van wat je nog mist.")
         pdf.kop2("Stap 1 · maak een backup in VirtualDJ")
@@ -546,11 +546,11 @@ def bouw(versie: str | None = None) -> bytes:
                 "**nooit op schijf bewaard**. Met de knop „vergeet "
                 "mijn database” haal je hem er direct uit; opnieuw "
                 "laden vervangt de vorige.", kop="Privacy")
-        pdf.kop2("Stap 3 · druk op de VDJ-knop")
+        pdf.kop2("Stap 3 · druk op de DJ Export-knop")
         pdf.p("Zodra je database geladen is, verschijnt naast de Excel- en "
               "PDF-knop op **elke lijstpagina** — weeklijsten, "
               "jaaroverzichten, edities, decennia en de beide "
-              "totaallijsten — een VDJ-knop. Die neemt exact de selectie "
+              "totaallijsten — een DJ Export-knop. Die neemt exact de selectie "
               "die op je scherm staat: kies je de top 100 met het "
               "NL-filter aan, dan wordt dát je playlist.")
         pdf.kop2("Stap 4 · het rapport")

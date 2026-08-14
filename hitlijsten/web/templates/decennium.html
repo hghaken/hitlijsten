@@ -48,7 +48,7 @@
      title="{% if top %}De top {{ top }} van{% else %}Het puntenklassement van{% endif %} {{ decennium }}–{{ decennium + 9 }} als PDF">⤓ PDF</a>
   {% if vdj_geladen %}
   <a class="knop" href="{{ url_for('vdj_maak', soort='decennium', decennium=decennium, toon=top, nl=nl) }}"
-     title="De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek">⤓ VDJ</a>
+     title="De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek">⤓ DJ Export</a>
   {% endif %}
   {% endif %}
 

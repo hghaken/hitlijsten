@@ -5,8 +5,8 @@
 
 <h1>DJ Export</h1>
 <p class="onder">Laad hier één keer je database (VirtualDJ of rekordbox);
-  daarna staat er op elke weeklijst en elk jaaroverzicht een <b>VDJ-knop</b>
-  die de getoonde selectie — inclusief je top-keuze en filters — als
+  daarna staat er op elke weeklijst en elk jaaroverzicht een
+  <b>DJ Export knop</b> die de getoonde selectie — inclusief je top-keuze en filters — als
   playlist oplevert, in het formaat dat bij je bron past:
   <code>.vdjfolder</code> voor VirtualDJ, <code>.m3u8</code> voor
   rekordbox.</p>
@@ -28,7 +28,7 @@
   <span>Je bibliotheek is geladen — ga naar de
     <a href="{{ url_for('weeklijst') }}">Weeklijsten</a> of de
     <a href="{{ url_for('jaaroverzicht') }}">Jaaroverzichten</a> en klik daar
-    op <b>⤓ VDJ</b>.</span>
+    op <b>⤓ DJ Export</b>.</span>
   <form method="post" style="margin-left:auto">
     <button name="vergeet" value="1"
       title="Haalt je database uit het geheugen">vergeet mijn database</button>
@@ -41,7 +41,7 @@
 
 <form method="post" enctype="multipart/form-data" class="kaart"
       style="display:grid; gap:.9rem; max-width:46rem">
-  <label>{% if stand %}Een andere database laden{% else %}Je VirtualDJ-database{% endif %}<br>
+  <label>{% if stand %}Een andere database laden{% else %}Je muziek database{% endif %}<br>
     <input type="file" name="database" accept=".xml,.zip" multiple required
            style="margin-top:.3rem">
     <span class="hint" style="display:block">Het makkelijkst: maak in
