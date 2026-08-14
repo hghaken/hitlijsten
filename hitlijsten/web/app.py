@@ -400,13 +400,27 @@ def _registreer(app: Flask) -> None:
             editielengtes[lijst_naam] = (
                 f"{rij[0]}" if rij[0] == rij[1] else f"{rij[0]}–{rij[1]}")
 
+        # De zender staat tussen haakjes achter de lijstnaam ("Top 2000
+        # (NPO Radio 2)"); bij de Kink-lijsten is hij het eerste woord. Op
+        # die zender sorteren zet de lijsten van dezelfde zender bij elkaar.
+        def _zender_van(sleutel):
+            naam = LIJSTEN.get(sleutel, {}).get("naam", sleutel)
+            if naam.endswith(")") and "(" in naam:
+                return naam[naam.rindex("(") + 1:-1]
+            return naam.split()[0]
+
         # Groeperen gebeurt hier en niet in het sjabloon: een sqlite3.Row kent
         # geen attributen, dus selectattr() vindt er niets in.
         return render_template(
             "overzicht.html", terugblik=terugblik, cijfers=cijfers, laatste=laatste,
             taak=taken.huidige(),
             week_rijen=[r for r in lijsten if not is_jaarlijks(r["lijst"])],
-            jaar_rijen=[r for r in lijsten if is_jaarlijks(r["lijst"])],
+            jaar_rijen=sorted(
+                ({**dict(r), "zender": _zender_van(r["lijst"])}
+                 for r in lijsten if is_jaarlijks(r["lijst"])),
+                key=lambda r: (r["zender"].lower(),
+                               LIJSTEN.get(r["lijst"], {}).get(
+                                   "naam", r["lijst"]).lower())),
             editielengtes=editielengtes, laatst_op=laatst_op,
             laatste_week=laatste_week,
         )

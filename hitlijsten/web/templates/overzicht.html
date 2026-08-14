@@ -63,11 +63,13 @@
   maar edities, en honderden tot duizenden noteringen per keer.
 </p>
 <div class="tabelvak"><table>
-  <thead><tr><th>Lijst</th><th class="getal">Edities</th><th class="getal">Van</th>
+  <thead><tr><th>Zender</th><th>Lijst</th><th class="getal">Edities</th><th class="getal">Van</th>
       <th class="getal">Tot</th><th class="getal">Per editie</th><th class="getal">Noteringen</th></tr></thead><tbody>
   {% for r in jaar_rijen %}
   <tr>
-    <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
+    {# De zender alleen op de eerste regel van zijn groepje. #}
+    <td>{% if loop.first or loop.previtem['zender'] != r['zender'] %}{{ r['zender'] }}{% endif %}</td>
+    <td>{{ lijst_namen.get(r['lijst'], r['lijst']).split(' (')[0] }}</td>
     <td class="getal">{{ r['jaren'] }}</td>
     <td class="getal">{{ r['van'] }}</td>
     <td class="getal">{{ r['tot'] }}</td>
