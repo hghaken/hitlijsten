@@ -31,8 +31,9 @@
 <h2>{% if taal == 'en' %}Per chart{% else %}Per lijst{% endif %}</h2>
 <p class="hint" style="margin-top:-.3rem">
   {% if taal == 'en' %}Click a chart for the graph of this song's run
-  there.{% else %}Klik op een lijst voor de grafiek van het verloop
-  daarin.{% endif %}</p>
+  there. Weekly and annual charts both count here.{% else %}Klik op een
+  lijst voor de grafiek van het verloop daarin. Week- én jaarlijkse
+  lijsten tellen hier allebei mee.{% endif %}</p>
 <div class="tabelvak"><table id="perlijst">
   <thead><tr><th>{{ _("Lijst") }}</th><th class="getal">{{ _("Periode") }}</th>
       <th class="getal">{{ _("Jaargangen") }}</th><th class="getal">{{ _("Punten") }}</th>

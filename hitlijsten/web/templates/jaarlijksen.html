@@ -86,8 +86,13 @@
 <div class="tabelvak"><table id="jaarlijksen" data-markeer="{{ markeer }}">
   <thead><tr>
     <th class="getal">#</th><th>{{ _("Artiest") }}</th><th>{{ _("Titel") }}</th>
-    <th class="getal">{{ _("Punten") }}</th><th class="getal">{{ _("Edities") }}</th>
-    <th class="getal">{{ _("Lijsten") }}</th><th class="getal">{{ _("Hoogste") }}</th>
+    {# "Edities" en "Lijsten" tellen hier alleen de jaarlijkse lijsten --
+       de Top 40 en de Tipparade blijven buiten dit klassement, dus de
+       nummerpagina (die álle lijsten toont) mag hoger uitkomen. #}
+    <th class="getal">{{ _("Punten") }}</th>
+    <th class="getal" title="{% if taal == 'en' %}in how many annual-chart editions this song appeared (weekly charts don't count here){% else %}in hoeveel edities van de jaarlijkse lijsten dit nummer stond (weeklijsten tellen hier niet mee){% endif %}">{{ _("Edities") }}</th>
+    <th class="getal" title="{% if taal == 'en' %}in how many of the {{ aantal_lijsten }} annual charts (weekly charts don't count here){% else %}in hoeveel van de {{ aantal_lijsten }} jaarlijkse lijsten (weeklijsten tellen hier niet mee){% endif %}">{{ _("Lijsten") }}</th>
+    <th class="getal">{{ _("Hoogste") }}</th>
   </tr></thead><tbody>
   {% for n in nummers %}
   {# Naar de nummerpagina: daar staat per lijst en jaargang waar dit
