@@ -318,7 +318,9 @@ def bouw(versie: str = "augustus 2026") -> bytes:
               "hij is uitgezonden, met de uitzenddatum erbij: positie, "
               "vorige positie, artiest, titel en het aantal weken "
               "genoteerd. Nieuwe binnenkomers en terugkeerders krijgen een "
-              "gekleurd speldje.")
+              "gekleurd speldje, en met de knoppen ‹ vorige en volgende › "
+              "blader je week voor week door de kalender — ook over de "
+              "jaargrens heen.")
         pdf.kop2("Jaaroverzichten")
         pdf.p("Per lijst en jaargang bouwt de site een **puntenklassement** "
               "uit alle weeknoteringen van dat jaar: hoe hoger en hoe "
@@ -327,7 +329,9 @@ def bouw(versie: str = "augustus 2026") -> bytes:
               "hoogste positie, aantal weken en de periode van binnenkomst "
               "tot laatste notering. Van de jaarlijkse lijsten (Top 2000 "
               "en dergelijke) staat elke **editie** er precies zoals "
-              "uitgezonden.")
+              "uitgezonden. Ook hier bladeren de knoppen ‹ vorige en "
+              "volgende › langs de jaargangen, en op de Decennia-pagina "
+              "langs de decennia.")
         pdf.kop2("Decennia en Top 40 totaal")
         pdf.p("Hetzelfde puntenklassement, maar dan over tien jaargangen "
               "(de jaren 60 tot en met nu) of over de **volledige Top "
@@ -354,7 +358,9 @@ def bouw(versie: str = "augustus 2026") -> bytes:
             "beperkt de lijst tot (vermoedelijk) Nederlandstalige "
             "nummers.",
             "**Alleen binnenkomers**: toont alleen nummers die in de "
-            "gekozen jaargang voor het eerst in de lijst verschenen.",
+            "gekozen jaargang voor het eerst in de lijst verschenen. Op "
+            "een weeklijst betekent het vinkje de binnenkomers van die "
+            "wéék — precies de rijen met het groene speldje.",
         ])
         pdf.p("Onder elke lijst staan downloadknoppen voor **Excel** en "
               "**PDF** (en, als je een VirtualDJ-database hebt geladen, "

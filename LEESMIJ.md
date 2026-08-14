@@ -304,9 +304,9 @@ op de NAS, achter een reverse proxy.
 | Pagina | Wat je er ziet |
 |---|---|
 | Overzicht | wat er in de database zit, in twee tabellen: weeklijsten en jaarlijkse lijsten |
-| Jaaroverzichten | puntenklassement en de matrix positie-per-week, per lijst en jaargang; ook een **binnenkomers-vinkje** (nummers die dat jaar voor het éérst in de lijst verschenen — over de hele historie gerekend, dus Last Christmas telt alleen in 1984) |
+| Jaaroverzichten | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met bladerknoppen langs de jaargangen; ook een **binnenkomers-vinkje** (nummers die dat jaar voor het éérst in de lijst verschenen — over de hele historie gerekend, dus Last Christmas telt alleen in 1984) |
 | Selecties & downloads | overal dezelfde spelregels: keuzelijst top 100/500/1000/2500/alles (standaard 100; onder de 250 nummers geen keuzelijst maar meteen alles), de filters NL en binnenkomers, en **wat op het scherm staat, zit in het bestand** — Excel en PDF volgen de selectie met `_topN`/`_NL`/`_nieuw` in de bestandsnaam; op "alles" zonder filter komen de rijke voorgebouwde jaarwerkboeken met weektabs, en de matrix-downloads blijven altijd volledig |
-| Decennia | het puntenklassement over tien jaargangen Top 40 |
+| Decennia | het puntenklassement over tien jaargangen Top 40, met bladerknoppen langs de decennia |
 | Top 40 totaal | hetzelfde over alle jaargangen 1965–nu |
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; `artiest \| titel` zoekt op allebei tegelijk (bij nul treffers met meerdere woorden stelt de pagina die schrijfwijze klikbaar voor); klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
 | Artiest | eigen pagina per artiest (±13.600): alle nummers over alle lijsten heen, met carrière-spanne, hoogste posities en nummer-1-teller; bereikbaar via artiestnamen op de nummer- en zoekpagina's |
@@ -318,7 +318,7 @@ op de NAS, achter een reverse proxy.
 | Vergelijk | twee jaargangen van dezelfde lijst naast elkaar: kerngetallen (incl. het Nederlandstalig-aandeel), de hoogst genoteerde nummers van elk jaar, en wat er in allebei stond |
 | Verras me | het dobbelsteentje achteraan de tweede menuregel, naast het Gastenboek: een willekeurig nummer, gewogen naar noteringen |
 | Weekbericht | de nieuwste Top 40 samengevat (nummer 1, binnenkomers, grootste stijger/daler, terugkeerders, uitvallers), bladerbaar per week en te volgen via de **RSS-feed** `/weekbericht.rss` — schrijft zichzelf uit de vrijdagrun |
-| Weeklijsten | één week zoals uitgezonden, met week-keuzelijst, bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en de nieuw/terug-spelden |
+| Weeklijsten | één week zoals uitgezonden, met week-keuzelijst, bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en de nieuw/terug-spelden; het **nieuw-vinkje** betekent hier de binnenkomers van de wéék zelf (het groene speldje), niet de jaargang-binnenkomers |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
 | Alarmschijf | rood belletje 🔔 vóór de titel op de Top 40-weeklijsten; het belletje van top40.nl zelf (klasse `hitrecord`), per plaat vastgelegd in `noteringen.alarmschijf` en elke vrijdagrun bijgehouden; michajans.nl blijft de bron voor de toekenningsdatum |
 | Nederlandstalig | rood-wit-blauw vlaggetje voor de titel, op elke lijstpagina én de wetenswaardigheden óók als filter (checkbox "NL"; de weetjes-ranglijsten rekenen zichzelf dan opnieuw uit over alleen Nederlandstalig, en de ter-plekke gebouwde Excel- en PDF-downloads filteren mee, met `_NL` in de bestandsnaam); herkenning in drie trappen — lijstbewijs (Oranje/Sterren NL zijn per definitie Nederlandstalig), artiestroute en titel-woordenlijst — met handmatige correctie op de nummerpagina die altijd wint |
