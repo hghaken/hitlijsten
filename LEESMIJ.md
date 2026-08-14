@@ -1081,7 +1081,7 @@ aanspreken, dus daar zit de meeste wering. Twee dingen, elk op zijn eigen plek:
 - **DTD's en entiteiten** weigert **defusedxml** (`veilig_iterparse`), niet
   wijzelf. Dat is een geleerde les: de eerste versie zocht in de bytes naar
   `<!DOCTYPE`, en dat leek te werken tot de hercontrole een **UTF-16**-bestand
-  probeerde. Daar staat `< ! D ...` en zag het patroon niets,
+  probeerde. Daar staat `<` NUL `!` NUL `D` NUL `…` en zag het patroon niets,
   terwijl de entiteit gewoon werd uitgevouwen — een DTD van 400 bytes werd een
   miljoen tekens ("billion laughs"). Een bibliotheek die de tekstcodering kent
   doet dit beter dan een patroon dat wij verzinnen; het sluit meteen XXE mee
@@ -1148,7 +1148,7 @@ elke CTE-truc niet door; en het CSRF-token wordt na aanmelden vervangen, dus
 een van tevoren bemachtigd token is waardeloos.
 
 **Wat de hercontrole nog aan het licht bracht** — behalve de UTF-16-omweg
-hierboven: de padcontrole liet `/reemd.example` door (browsers lezen `/\`
+hierboven: de padcontrole liet `/` + backslash + `vreemd.example` door (browsers lezen `/\`
 als `//`, dus dat is alsnog een uitstapje naar een andere site), en de
 authorizer had recursieve CTE's stukgemaakt terwijl de pagina er wél mee
 adverteert (`SQLITE_RECURSIVE` hoort in `_MAG_LEZEN`). Beide hersteld; de
