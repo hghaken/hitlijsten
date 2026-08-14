@@ -767,14 +767,31 @@ def _registreer(app: Flask) -> None:
             geopend=int(datetime.now().timestamp()))
 
     def _eigen_pad(waarde: str) -> str | None:
-        """Alleen een pad op deze site bewaren.
+        """Alleen een plek op deze site teruggeven, als pad.
 
-        Dit veld komt uit een verborgen invoer van het feedbackformulier en
-        wordt op de berichtenpagina als link getoond. Zonder controle kan
-        iemand daar `javascript:...` neerleggen en wacht die op een klik van
-        de beheerder.
+        Twee soorten invoer komen hier binnen: een kaal pad (het verborgen
+        veld van het feedbackformulier) en een volledige URL (de
+        Referer-kop, voor de terug-link van het DJ Export-rapport). Allebei
+        moeten ze op deze site uitkomen; de rest wordt None.
+
+        Zonder deze controle kan iemand in dat verborgen veld
+        `javascript:...` zetten, en dan wacht die link op een klik van de
+        beheerder op de berichtenpagina.
         """
+        from urllib.parse import urlsplit
+
         waarde = (waarde or "").strip()[:300]
+        if not waarde:
+            return None
+        deel = urlsplit(waarde)
+        if deel.scheme or deel.netloc:
+            # Een volledige URL: alleen die van onszelf, en dan verder met
+            # het pad. Zo overleeft de terug-link, maar een vreemde site niet.
+            eigen = urlsplit(request.host_url).netloc
+            if deel.scheme not in ("http", "https") or deel.netloc != eigen:
+                return None
+            pad = deel.path or "/"
+            return f"{pad}?{deel.query}" if deel.query else pad
         if not waarde.startswith("/") or waarde.startswith("//"):
             return None
         return waarde
@@ -1833,8 +1850,11 @@ def _registreer(app: Flask) -> None:
                 # Een grensoverschrijding verdient een eerlijk antwoord: de
                 # bezoeker met een echt grote bibliotheek moet weten waarom.
                 fout = f"Deze upload is geweigerd: {grens}."
-            except Exception:
-                fout = ("Dit is niet te lezen als VirtualDJ-database,"
+            except Exception as ruw:
+                vertaald = vdjmodule._vertaal_xmlfout(ruw)
+                fout = (f"Deze upload is geweigerd: {vertaald}."
+                        if vertaald else
+                        "Dit is niet te lezen als VirtualDJ-database,"
                         " -backup of rekordbox-export.")
             if not fout and not request.form.get("streaming"):
                 bestanden = [b for b in bestanden if not b.streaming]

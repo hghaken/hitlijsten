@@ -24,6 +24,14 @@ from __future__ import annotations
 
 import re
 import xml.etree.ElementTree as ET
+
+# Het parsen van bezoekersbestanden gaat via defusedxml: dat weigert DTD's en
+# entiteiten op parserniveau. Een eigen controle op de bytes `<!DOCTYPE` leek
+# genoeg, maar was te omzeilen met een UTF-16-bestand -- daar staat er
+# `<\x00!\x00D\x00...` en dan zag de zoektocht niets, terwijl de entiteit
+# gewoon werd uitgevouwen. Een bibliotheek die de encoding kent doet dit beter
+# dan een patroon dat wij zelf verzinnen.
+from defusedxml.ElementTree import iterparse as veilig_iterparse
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from typing import Iterable, Optional
@@ -75,21 +83,18 @@ class TeGroot(ValueError):
 
 
 class _Bewaakt:
-    """Leesbare stroom die de uitgepakte omvang telt en DTD's weigert.
+    """Leesbare stroom die de uitgepakte omvang telt.
 
     Zip-bestanden geven hun inhoud pas al lezend prijs, dus de grens moet
     tijdens het lezen gelden en niet achteraf: bij het plafond stopt het
-    parsen meteen, met hooguit één brok extra in het geheugen.
+    parsen meteen, met hooguit één brok extra in het geheugen. De wering
+    tegen DTD's en entiteiten zit niet hier maar in de parser
+    (`veilig_iterparse`), want die kent de tekstcodering van het bestand.
     """
-
-    # Een DTD kan net over de rand van twee brokken vallen; bewaar daarom de
-    # staart van de vorige brok en zoek over de naad heen.
-    _NAAD = len(b"<!DOCTYPE")
 
     def __init__(self, stroom, plafond: int = MAX_UITGEPAKT):
         self._stroom = stroom
         self._over = plafond
-        self._staart = b""
 
     def read(self, aantal: int = -1) -> bytes:
         brok = self._stroom.read(aantal)
@@ -99,10 +104,6 @@ class _Bewaakt:
         if self._over < 0:
             raise TeGroot("het bestand is na uitpakken groter dan "
                           f"{MAX_UITGEPAKT // (1024 * 1024)} MB")
-        kijk = self._staart + brok
-        if b"<!DOCTYPE" in kijk or b"<!doctype" in kijk:
-            raise TeGroot("dit bestand bevat een DTD; dat staan we niet toe")
-        self._staart = brok[-self._NAAD:]
         return brok
 
 
@@ -138,7 +139,7 @@ def lees_database(bron) -> list[Bestand]:
     bij de matching, waar per sléutel de beste wint.
     """
     uit: list[Bestand] = []
-    for _, el in ET.iterparse(_Bewaakt(bron), events=("end",)):
+    for _, el in veilig_iterparse(_Bewaakt(bron), events=("end",)):
         if len(uit) > MAX_NUMMERS:
             raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in één bestand"
                           .replace(",", "."))
@@ -181,7 +182,7 @@ def lees_rekordbox(bron) -> list[Bestand]:
     from urllib.parse import unquote, urlparse
 
     uit: list[Bestand] = []
-    for _, el in ET.iterparse(_Bewaakt(bron), events=("end",)):
+    for _, el in veilig_iterparse(_Bewaakt(bron), events=("end",)):
         if len(uit) > MAX_NUMMERS:
             raise TeGroot(f"meer dan {MAX_NUMMERS:,} nummers in één bestand"
                           .replace(",", "."))
@@ -209,6 +210,16 @@ def lees_rekordbox(bron) -> list[Bestand]:
         b.sleutel = sleutel_van(b.artiest, b.titel)
         b.kern = _kernsleutel(b.artiest, b.titel)
     return uit
+
+
+def _vertaal_xmlfout(fout: Exception) -> TeGroot | None:
+    """Een weigering van defusedxml omzetten in een leesbare melding."""
+    soort = type(fout).__name__
+    if soort in ("DTDForbidden", "EntitiesForbidden",
+                 "ExternalReferenceForbidden"):
+        return TeGroot("dit bestand bevat een DTD of externe verwijzing;"
+                       " dat staan we niet toe")
+    return None
 
 
 def lees_upload(stroom, naam: str) -> tuple[list[Bestand], str]:
