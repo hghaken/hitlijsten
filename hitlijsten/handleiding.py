@@ -645,10 +645,9 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "and — at the very end — a die that opens a random song from "
           "the archive. At the top right, the NL/EN button switches "
           "between Dutch and English.")
-    pdf.tip("The chart pages are fully translated; the special pages "
-            "(Search, Week report, Records and so on) are currently "
-            "Dutch-only. The tables speak for themselves, though — "
-            "artists, titles and numbers need no translation.")
+    pdf.tip("The whole site is bilingual: the chart pages, the "
+            "special pages and this manual all follow the NL/EN "
+            "switch. Only the admin area is Dutch-only.")
 
     # -- 2 · The chart pages ------------------------------------------------
     h += 1
@@ -756,8 +755,6 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     # -- 5 · The special pages ----------------------------------------------
     h += 1
     _hoofdstuk(pdf, toc, links, h, "The special pages")
-    pdf.p("These pages are currently Dutch-only; an English version "
-          "may follow. A short guide to what they hold:")
     pdf.kop2("Your day (Jouw dag)")
     pdf.p("Pick a date — your birthday, your wedding day — and see "
           "which chart was current that week, what was number 1 and "

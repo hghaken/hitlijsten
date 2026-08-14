@@ -3,26 +3,28 @@
 {% block beschrijving %}Het gastenboek van het hitlijsten-archief: opmerkingen, tips en aanvullingen van bezoekers.{% endblock %}
 {% block inhoud %}
 
-<h1>Gastenboek</h1>
-<p class="onder">Wat bezoekers achterlieten — en soms een antwoord terug.</p>
+<h1>{{ _("Gastenboek") }}</h1>
+<p class="onder">{% if taal == 'en' %}What visitors left behind — and sometimes a reply.{% else %}Wat bezoekers achterlieten — en soms een antwoord terug.{% endif %}</p>
 
 <div class="kaart" style="display:flex; gap:.9rem; align-items:center;
      flex-wrap:wrap; margin-bottom:1.6rem">
-  <span>Iets kwijt? Een opmerking, tip, bug of aanvulling —</span>
-  <a class="knop" href="{{ url_for('feedback') }}">schrijf een bericht</a>
-  <span class="hint">Berichten verschijnen hier pas na een akkoord van de
+  <span>{% if taal == 'en' %}Something to share? A remark, tip, bug or correction —{% else %}Iets kwijt? Een opmerking, tip, bug of aanvulling —{% endif %}</span>
+  <a class="knop" href="{{ url_for('feedback') }}">{{ _("schrijf een bericht") }}</a>
+  <span class="hint">{% if taal == 'en' %}Messages only appear here
+    after the site owner approves them; if you'd rather stay out of the
+    guestbook, just untick the box.{% else %}Berichten verschijnen hier pas na een akkoord van de
     beheerder; wie liever niet in het gastenboek staat, vinkt dat gewoon
-    uit.</span>
+    uit.{% endif %}</span>
 </div>
 
 {% if not berichten %}
-  <p class="hint">Nog geen berichten — wees de eerste!</p>
+  <p class="hint">{% if taal == 'en' %}No messages yet — be the first!{% else %}Nog geen berichten — wees de eerste!{% endif %}</p>
 {% endif %}
 
 {% for b in berichten %}
 <div class="kaart" style="margin-bottom:1rem; max-width:62rem">
   <div style="display:flex; gap:.8rem; align-items:baseline; flex-wrap:wrap">
-    <b>{{ b.naam or "Een bezoeker" }}</b>
+    <b>{{ b.naam or _("Een bezoeker") }}</b>
     <span class="hint">{{ b.tijdstip[:10] }} · {{ b.soort }}</span>
   </div>
   <p style="white-space:pre-line; margin:.5rem 0 0">{{ b.tekst }}</p>
@@ -30,7 +32,7 @@
   <p style="white-space:pre-line; margin:.7rem 0 0; padding:.55rem .8rem;
      border-left:3px solid var(--accent2); background:var(--glas);
      border-radius:0 10px 10px 0">
-    <b>Antwoord:</b> {{ b.antwoord }}</p>
+    <b>{{ _("Antwoord:") }}</b> {{ b.antwoord }}</p>
   {% endif %}
 </div>
 {% endfor %}

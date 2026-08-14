@@ -3,71 +3,79 @@
 {% from "_vlag.html" import nl_vlag, nl_filter with context %}
 {% block titel %}Zoeken — Hitlijsten{% endblock %}
 {% block inhoud %}
-<h1>Noteringen zoeken</h1>
+<h1>{{ _("Noteringen zoeken") }}</h1>
 
 <form method="get">
   <input type="text" name="term" value="{{ term }}"
-         placeholder="zoekterm, * als joker, artiest | titel samen" autofocus>
+         placeholder="{% if taal == 'en' %}search term, * as wildcard, artist | title combined{% else %}zoekterm, * als joker, artiest | titel samen{% endif %}" autofocus>
   <select name="waar">
-    <option value="beide" {% if waar == 'beide' %}selected{% endif %}>artiest en titel</option>
-    <option value="artiest" {% if waar == 'artiest' %}selected{% endif %}>alleen artiest</option>
-    <option value="titel" {% if waar == 'titel' %}selected{% endif %}>alleen titel</option>
+    <option value="beide" {% if waar == 'beide' %}selected{% endif %}>{{ _("artiest en titel") }}</option>
+    <option value="artiest" {% if waar == 'artiest' %}selected{% endif %}>{{ _("alleen artiest") }}</option>
+    <option value="titel" {% if waar == 'titel' %}selected{% endif %}>{{ _("alleen titel") }}</option>
   </select>
   <select name="lijst">
-    <option value="">alle lijsten</option>
+    <option value="">{{ _("alle lijsten") }}</option>
     {% for sleutel, naam in lijst_namen.items() %}
       <option value="{{ sleutel }}" {% if lijst == sleutel %}selected{% endif %}>{{ naam }}</option>
     {% endfor %}
   </select>
-  <button class="hoofd" type="submit">Zoeken</button>
+  <button class="hoofd" type="submit">{{ _("Zoeken") }}</button>
   {{ nl_filter() }}
 </form>
 
 {% if term %}
-  <p class="hint">{{ resultaten|length }} resultaten{% if resultaten|length == 200 %}
-    (afgekapt op 200 — maak de zoekterm specifieker){% endif %}</p>
+  <p class="hint">{{ resultaten|length }} {{ _("resultaten") }}{% if resultaten|length == 200 %}
+    {% if taal == 'en' %}(capped at 200 — make the search term more specific){% else %}(afgekapt op 200 — maak de zoekterm specifieker){% endif %}{% endif %}</p>
   {% if suggesties %}
   <div class="melding goed" style="max-width:44rem">
-    Zocht je op artiest <b>én</b> titel? Zet er een pipe tussen — probeer
+    {% if taal == 'en' %}Searching for artist <b>and</b> title? Put a
+    pipe between them — try{% else %}Zocht je op artiest <b>én</b> titel? Zet er een pipe tussen — probeer{% endif %}
     {% for sug in suggesties %}
-      <a href="{{ url_for('zoek', term=sug, lijst=lijst, waar=waar) }}"><code>{{ sug }}</code></a>{% if not loop.last %} of{% endif %}
+      <a href="{{ url_for('zoek', term=sug, lijst=lijst, waar=waar) }}"><code>{{ sug }}</code></a>{% if not loop.last %} {{ _("of") }}{% endif %}
     {% endfor %}
   </div>
   {% endif %}
   <div class="tabelvak"><table>
-    <thead><tr><th>Artiest</th><th>Titel</th><th>Lijst</th><th class="getal">Van</th>
-        <th class="getal">Tot</th><th class="getal">Weken</th>
-        <th class="getal">Hoogste</th><th></th></tr></thead><tbody>
+    <thead><tr><th>{{ _("Artiest") }}</th><th>{{ _("Titel") }}</th><th>{{ _("Lijst") }}</th><th class="getal">{{ _("Van") }}</th>
+        <th class="getal">{{ _("Tot") }}</th><th class="getal">{{ _("Weken") }}</th>
+        <th class="getal">{{ _("Hoogste") }}</th><th></th></tr></thead><tbody>
     {% for r in resultaten %}
     <tr>
       {# De artiest gaat naar zijn eigen pagina; de titel springt naar de
          jaargang waarin het nummer zijn hoogste plek haalde. #}
       <td><a class="stil" href="{{ url_for('artiest',
              artiestsleutel=r['sleutel'].split('|')[0]) }}"
-             title="Alle hits van {{ r['artiest'] }}"
+             title="{{ _("Alle hits van") }} {{ r['artiest'] }}"
              >{{ r['artiest'] }}</a></td>
       <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=r['lijst'],
              jaar=r['piekjaar'], markeer=r['sleutel']) }}"
-             title="naar {{ r['piekjaar'] }}, waar dit nummer op {{ r['hoogste'] }} stond"
+             title="{% if taal == 'en' %}to {{ r['piekjaar'] }}, where this song peaked at {{ r['hoogste'] }}{% else %}naar {{ r['piekjaar'] }}, waar dit nummer op {{ r['hoogste'] }} stond{% endif %}"
              >{% if is_nl(r['sleutel']) %}{{ nl_vlag() }} {% endif %}{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
       <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
       <td class="getal">{{ r['van'] }}</td>
       <td class="getal">{{ r['tot'] }}</td>
       <td class="getal">{{ r['weken'] }}</td>
       <td class="getal">{{ r['hoogste'] }}</td>
-      <td><a href="{{ url_for('nummer', sleutel=r['sleutel']) }}">bekijk</a></td>
+      <td><a href="{{ url_for('nummer', sleutel=r['sleutel']) }}">{{ _("bekijk") }}</a></td>
     </tr>
     {% endfor %}
   </tbody></table></div>
 {% else %}
   <p class="hint">
-    Zoek op een deel van de titel of de artiestnaam. Zonder jokerteken zoekt hij
+    {% if taal == 'en' %}Search on part of the title or artist name. Without
+    a wildcard it searches <b>contains</b>: <code>beatles</code> also finds
+    "The Beatles". With an asterisk you decide where the word sits —
+    <code>beatles*</code> starts with it, <code>*beatles</code> ends on it,
+    <code>*beat*</code> is contains again. To search artist <b>and</b> title
+    at once, put a pipe between them: <code>abba | fernando</code> — artist
+    left, title right, wildcards allowed on both sides.
+    {% else %}Zoek op een deel van de titel of de artiestnaam. Zonder jokerteken zoekt hij
     <b>bevat</b>: <code>beatles</code> vindt ook "The Beatles". Met een sterretje
     bepaal je zelf waar het woord staat — <code>beatles*</code> begint ermee,
     <code>*beatles</code> eindigt erop, <code>*beat*</code> is weer bevat.
     Wil je op artiest <b>én</b> titel tegelijk zoeken, zet er een pipe tussen:
     <code>abba | fernando</code> — links de artiest, rechts de titel, jokers
-    mogen aan beide kanten.
+    mogen aan beide kanten.{% endif %}
   </p>
 {% endif %}
 {% endblock %}

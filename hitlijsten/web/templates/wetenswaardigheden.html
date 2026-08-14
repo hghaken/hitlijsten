@@ -5,10 +5,13 @@
 {% block inhoud %}
 {% set jaarlijks = is_jaarlijks(lijst) %}
 
-<h1>Wetenswaardigheden</h1>
-<p class="onder">Tien ranglijsten uit
+<h1>{{ _("Wetenswaardigheden") }}</h1>
+<p class="onder">{% if taal == 'en' %}Ten rankings from
+  {% if jaarlijks %}{{ cijfers.weken }} editions{% else %}{{ cijfers.tot - cijfers.van + 1 }}
+  years{% endif %} of the {{ lijst_namen.get(lijst, lijst) }}.
+  {% else %}Tien ranglijsten uit
   {% if jaarlijks %}{{ cijfers.weken }} edities{% else %}{{ cijfers.tot - cijfers.van + 1 }}
-  jaargangen{% endif %} {{ lijst_namen.get(lijst, lijst) }}.</p>
+  jaargangen{% endif %} {{ lijst_namen.get(lijst, lijst) }}.{% endif %}</p>
 
 <form method="get" class="kaart" style="display:flex; gap:.7rem; align-items:center;
       flex-wrap:wrap; margin-bottom:1.4rem">
@@ -41,29 +44,31 @@
 <div class="kaarten">
   <div class="kaart">
     <div class="cijfer">{{ '{:,}'.format(cijfers.noteringen).replace(',', '.') }}</div>
-    <div class="naam">noteringen</div>
+    <div class="naam">{{ _("noteringen") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ '{:,}'.format(cijfers.nummers).replace(',', '.') }}</div>
-    <div class="naam">unieke nummers</div>
+    <div class="naam">{{ _("unieke nummers") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ '{:,}'.format(cijfers.artiesten).replace(',', '.') }}</div>
-    <div class="naam">artiesten</div>
+    <div class="naam">{{ _("artiesten") }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ '{:,}'.format(cijfers.weken).replace(',', '.') }}</div>
-    <div class="naam">{{ 'edities' if jaarlijks else 'uitgezonden weken' }}</div>
+    <div class="naam">{{ _('edities') if jaarlijks else _('uitgezonden weken') }}</div>
   </div>
   <div class="kaart">
     <div class="cijfer">{{ cijfers.van }}–{{ cijfers.tot }}</div>
-    <div class="naam">jaargangen</div>
+    <div class="naam">{{ _("jaargangen") }}</div>
   </div>
 </div>
 
 <nav class="sprong">
-  {% for b in blokken %}<a href="#{{ b.sleutel }}">{{ b.titel }}</a>{% endfor %}
-  <button type="button" id="allemaal" class="alles">Alles uitklappen</button>
+  {% for b in blokken %}<a href="#{{ b.sleutel }}">{{ _(b.titel) }}</a>{% endfor %}
+  <button type="button" id="allemaal" class="alles"
+    data-open="{{ _('Alles uitklappen') }}" data-dicht="{{ _('Alles inklappen') }}"
+    >{{ _("Alles uitklappen") }}</button>
 </nav>
 
 {% for b in blokken %}
@@ -73,19 +78,19 @@
 <details class="weetje" id="{{ b.sleutel }}">
   <summary>
     <span class="nr">{{ loop.index }}.</span>
-    <span class="wat">{{ b.titel }}</span>
+    <span class="wat">{{ _(b.titel) }}</span>
     {% if b.rijen %}
       <span class="winnaar">{{ b.rijen[0].naam }} <b>{{ b.rijen[0].waarde }}</b></span>
     {% endif %}
   </summary>
-  <p class="hint uitleg">{{ b.uitleg }}</p>
+  <p class="hint uitleg">{{ _(b.uitleg) }}</p>
   <div class="tabelvak">
     <table>
       <thead>
         <tr>
           <th class="getal">#</th>
           {% for k in b.kolommen %}
-            <th class="{{ 'breed' if loop.first else 'getal' }}">{{ k }}</th>
+            <th class="{{ 'breed' if loop.first else 'getal' }}">{{ _(k) }}</th>
           {% endfor %}
         </tr>
       </thead>
@@ -110,32 +115,44 @@
 </details>
 {% endfor %}
 
-<h2>Hoe je dit moet lezen</h2>
+<h2>{% if taal == 'en' %}How to read this{% else %}Hoe je dit moet lezen{% endif %}</h2>
 <p class="hint" style="max-width:62rem">
-  <b>Een samenwerking telt als een eigen artiest.</b> "Lady Gaga &amp; Bruno Mars"
+  {% if taal == 'en' %}<b>A collaboration counts as its own artist.</b>
+  "Lady Gaga &amp; Bruno Mars" is not Lady Gaga ánd Bruno Mars here.
+  Splitting them sounds attractive, but then Simon &amp; Garfunkel and
+  Earth, Wind &amp; Fire fall apart too — and those are not
+  collaborations but names.{% else %}<b>Een samenwerking telt als een eigen artiest.</b> "Lady Gaga &amp; Bruno Mars"
   is hier niet Lady Gaga én Bruno Mars. Uit elkaar trekken lijkt aantrekkelijk,
   maar dan sneuvelen Simon &amp; Garfunkel en Earth, Wind &amp; Fire ook — en dat
-  zijn geen samenwerkingen maar namen.
+  zijn geen samenwerkingen maar namen.{% endif %}
 </p>
 {% if jaarlijks %}
 <p class="hint" style="max-width:62rem">
-  <b>De eenheid is hier een editie, geen week.</b> Deze lijst wordt één keer per
+  {% if taal == 'en' %}<b>The unit here is an edition, not a week.</b>
+  This chart airs once a year, so "longest charting" means: appeared in
+  the most editions. The very first edition ({{ cijfers.van }}) does not
+  count as an entry — back then everything was new.{% else %}<b>De eenheid is hier een editie, geen week.</b> Deze lijst wordt één keer per
   jaar uitgezonden, dus "langst genoteerd" betekent: in de meeste edities
   gestaan. De allereerste editie ({{ cijfers.van }}) telt niet als binnenkomst —
-  toen was alles nieuw.
+  toen was alles nieuw.{% endif %}
 </p>
 {% else %}
 <p class="hint" style="max-width:62rem">
-  <b>Weken worden langs de kalender geteld, niet per jaargang.</b> Een notering
+  {% if taal == 'en' %}<b>Weeks are counted along the calendar, not per
+  year.</b> A run that crosses the year boundary is one continuous
+  period. The very first week of {{ cijfers.van }} does not count as an
+  entry: back then the whole chart was new.{% else %}<b>Weken worden langs de kalender geteld, niet per jaargang.</b> Een notering
   die over de jaarwisseling doorloopt is één aaneengesloten periode. De
   allereerste week van {{ cijfers.van }} telt niet als binnenkomst: toen was de
-  hele lijst nieuw.
+  hele lijst nieuw.{% endif %}
 </p>
 {% endif %}
 <p class="hint" style="max-width:62rem">
-  <b>Klik op een nummer</b> om naar de {{ 'editie' if jaarlijks else 'jaargang' }}
+  {% if taal == 'en' %}<b>Click a song</b> to go to the
+  {{ 'edition' if jaarlijks else 'year' }} in which it scored most,
+  with the chart-run graph close at hand.{% else %}<b>Klik op een nummer</b> om naar de {{ 'editie' if jaarlijks else 'jaargang' }}
   te gaan waarin het de meeste punten haalde, met de grafiek van het verloop
-  binnen handbereik.
+  binnen handbereik.{% endif %}
 </p>
 
 <script>
@@ -166,11 +183,11 @@
     // Staat er nog eentje dicht, dan openen we alles; anders klappen we in.
     const openen = blokken.some((b) => !b.open);
     blokken.forEach((b) => { b.open = openen; });
-    knop.textContent = openen ? "Alles inklappen" : "Alles uitklappen";
+    knop.textContent = openen ? knop.dataset.dicht : knop.dataset.open;
   });
   blokken.forEach((b) => b.addEventListener("toggle", function () {
     knop.textContent = blokken.every((x) => x.open)
-      ? "Alles inklappen" : "Alles uitklappen";
+      ? knop.dataset.dicht : knop.dataset.open;
   }));
 })();
 </script>

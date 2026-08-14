@@ -10,7 +10,20 @@
   <div class="jaardeel hint"></div>
   <div class="plaat"></div>
   <p class="hint voet">
-    Hoger in beeld is een hogere notering; de hulplijnen links dragen de echte
+    {% if taal == 'en' %}Higher on screen is a higher position; the guide
+    lines on the left carry the real position numbers. For the <b>weekly
+    charts</b> the scale runs from 1 to the chart's length. For the
+    <b>long charts</b> it runs logarithmically from this song's best to
+    its worst position — otherwise a run bouncing between 22 and 970
+    would be a flat line at the top with three quarters of the graph
+    empty. Under each point sits the position and the change since last
+    time: green is up, red is down, <b>N</b> the entry. A dotted line
+    bridges a time the song was not in the chart.
+    <br>For the <b>weekly charts</b> each point is a week and the graph
+    follows the whole run, across the year boundary too — with a line
+    where the year changes. For the <b>Top 2000</b> each point is an
+    edition, so the year sits underneath.
+    {% else %}Hoger in beeld is een hogere notering; de hulplijnen links dragen de echte
     positienummers. Bij de <b>weeklijsten</b> loopt de schaal van 1 tot de
     lengte van de lijst. Bij de <b>lange lijsten</b> loopt hij logaritmisch van
     de beste tot de slechtste positie van dít nummer — anders zou een reeks die
@@ -22,7 +35,7 @@
     <br>Bij de <b>weeklijsten</b> is elk punt een week en volgt de grafiek de
     hele notering, ook over de jaarwisseling heen — met een streep waar de
     jaargang wisselt. Bij de <b>Top 2000</b> is elk punt een editie, dus staat
-    het jaartal eronder.
+    het jaartal eronder.{% endif %}
   </p>
 </dialog>
 

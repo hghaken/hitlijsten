@@ -4,9 +4,11 @@
 {% block beschrijving %}Dezelfde titel door verschillende artiesten in de Nederlandse hitlijsten: covers, heropnames en soms gewoon naamgenoten.{% endblock %}
 {% block inhoud %}
 
-<h1>Versies</h1>
-<p class="onder">Dezelfde titel, andere artiest: vaak een cover of heropname —
-  en soms puur toeval, want een titel bewijst niets.</p>
+<h1>{{ _("Versies") }}</h1>
+<p class="onder">{% if taal == 'en' %}Same title, different artist:
+  often a cover or re-recording — and sometimes pure coincidence,
+  because a title proves nothing.{% else %}Dezelfde titel, andere artiest: vaak een cover of heropname —
+  en soms puur toeval, want een titel bewijst niets.{% endif %}</p>
 
 <form method="get" class="kaart" style="display:flex; gap:.7rem;
       align-items:center; flex-wrap:wrap; margin-bottom:1.4rem">
@@ -15,16 +17,17 @@
       <option value="{{ a }}" {% if toon == a %}selected{% endif %}>top {{ a }}</option>
     {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      alle {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — traag{% endif %}</option>
+      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
   <span class="hint" style="margin-left:auto">{{ '{:,}'.format(totaal).replace(',', '.') }}
-    titels met twee of meer uitvoeringen · gesorteerd op aantal</span>
+    {% if taal == 'en' %}titles with two or more recordings · sorted by count
+    {% else %}titels met twee of meer uitvoeringen · gesorteerd op aantal{% endif %}</span>
 </form>
 
 <div class="tabelvak"><table>
-  <thead><tr><th>Titel</th><th class="getal">Versies</th>
-    <th>Uitvoeringen</th><th class="getal">Periode</th></tr></thead><tbody>
+  <thead><tr><th>{{ _("Titel") }}</th><th class="getal">{{ _("Versies") }}</th>
+    <th>{{ _("Uitvoeringen") }}</th><th class="getal">{{ _("Periode") }}</th></tr></thead><tbody>
   {% for f in families %}
   <tr>
     <td class="breed"><b>{{ f.titel }}</b></td>

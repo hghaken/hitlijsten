@@ -5,38 +5,40 @@
 {% block beschrijving %}De Nederlandse Top 40 van week {{ week }}, {{ jaar }} samengevat: de nummer 1, de binnenkomers, de grootste stijger en daler en de uitvallers.{% endblock %}
 {% block inhoud %}
 
-<h1>Weekbericht</h1>
-<p class="onder">De Top 40 van week {{ week }}, {{ jaar }}
+<h1>{{ _("Weekbericht") }}</h1>
+<p class="onder">{% if taal == 'en' %}The Top 40 of week {{ week }}, {{ jaar }}
+  {% if datum %}({{ _("uitgezonden op vrijdag") }} {{ datum }}){% endif %} — summarised.
+  {% else %}De Top 40 van week {{ week }}, {{ jaar }}
   {% if datum %}(uitgezonden op vrijdag {{ datum }}){% endif %} — samengevat.
-  <a href="{{ url_for('weekbericht_rss') }}" title="Volg het weekbericht via RSS">RSS-feed</a></p>
+  {% endif %}<a href="{{ url_for('weekbericht_rss') }}" title="{{ _("Volg het weekbericht via RSS") }}">{{ _("RSS-feed") }}</a></p>
 
 <div class="kaart" style="display:flex; gap:.7rem; align-items:center;
      flex-wrap:wrap; margin-bottom:1.4rem">
   {% if vorige %}
-    <a class="knop" href="{{ url_for('weekbericht', jaar=vorige[0], week=vorige[1]) }}">‹ week {{ vorige[1] }}</a>
+    <a class="knop" href="{{ url_for('weekbericht', jaar=vorige[0], week=vorige[1]) }}">‹ {{ _('week') }} {{ vorige[1] }}</a>
   {% endif %}
   {% if volgende %}
-    <a class="knop" href="{{ url_for('weekbericht', jaar=volgende[0], week=volgende[1]) }}">week {{ volgende[1] }} ›</a>
+    <a class="knop" href="{{ url_for('weekbericht', jaar=volgende[0], week=volgende[1]) }}">{{ _('week') }} {{ volgende[1] }} ›</a>
   {% endif %}
-  <a class="knop" href="{{ url_for('weeklijst', lijst='top40', jaar=jaar, week=week) }}">de volledige lijst</a>
-  <span class="hint" style="margin-left:auto">{{ binnen|length }} nieuw ·
-    {{ terug|length }} terug · {{ uitvallers|length }} eruit</span>
+  <a class="knop" href="{{ url_for('weeklijst', lijst='top40', jaar=jaar, week=week) }}">{{ _('de volledige lijst') }}</a>
+  <span class="hint" style="margin-left:auto">{{ binnen|length }} {{ _("nieuw") }} ·
+    {{ terug|length }} {{ _("terug") }} · {{ uitvallers|length }} {{ _("eruit") }}</span>
 </div>
 
 <div class="kaarten">
   <div class="kaart" style="flex: 2 1 22rem">
-    <div class="naam">DE NUMMER 1</div>
+    <div class="naam">{{ _("DE NUMMER 1") }}</div>
     <div class="cijfer" style="font-size:1.5rem; line-height:1.25">
       {% if is_nl(nummer1.sleutel) %}{{ nl_vlag() }} {% endif %}<a class="stil"
       href="{{ url_for('nummer', sleutel=nummer1.sleutel) }}">{{ nummer1.titel }}</a></div>
     <div style="color:var(--gedempt)">{{ nummer1.artiest }}
-      {% if nummer1.vorige_positie == 1 %}· {{ nummer1.weken_genoteerd }} weken genoteerd
-      {% elif nummer1.vorige_positie %}· kwam van {{ nummer1.vorige_positie }}{% endif %}
+      {% if nummer1.vorige_positie == 1 %}· {{ nummer1.weken_genoteerd }} {{ _("weken genoteerd") }}
+      {% elif nummer1.vorige_positie %}· {{ _("kwam van") }} {{ nummer1.vorige_positie }}{% endif %}
       {{ zoeklinks(nummer1.artiest, nummer1.titel) }}</div>
   </div>
   {% if stijger and stijger.vorige_positie - stijger.positie > 0 %}
   <div class="kaart">
-    <div class="naam">GROOTSTE STIJGER</div>
+    <div class="naam">{{ _("GROOTSTE STIJGER") }}</div>
     <div style="font-weight:650; margin:.15rem 0"><a class="stil"
       href="{{ url_for('nummer', sleutel=stijger.sleutel) }}">{{ stijger.titel }}</a></div>
     <div class="hint">{{ stijger.artiest }} · <span class="op">{{ stijger.vorige_positie }} → {{ stijger.positie }}</span></div>
@@ -44,7 +46,7 @@
   {% endif %}
   {% if daler and daler.vorige_positie - daler.positie < 0 %}
   <div class="kaart">
-    <div class="naam">DIEPSTE DALER</div>
+    <div class="naam">{{ _("DIEPSTE DALER") }}</div>
     <div style="font-weight:650; margin:.15rem 0"><a class="stil"
       href="{{ url_for('nummer', sleutel=daler.sleutel) }}">{{ daler.titel }}</a></div>
     <div class="hint">{{ daler.artiest }} · <span class="neer">{{ daler.vorige_positie }} → {{ daler.positie }}</span></div>
@@ -53,9 +55,9 @@
 </div>
 
 {% if binnen %}
-<h2>Binnenkomers</h2>
+<h2>{{ _("Binnenkomers") }}</h2>
 <div class="tabelvak"><table>
-  <thead><tr><th class="getal">Positie</th><th>Artiest</th><th>Titel</th></tr></thead><tbody>
+  <thead><tr><th class="getal">{{ _("Positie") }}</th><th>{{ _("Artiest") }}</th><th>{{ _("Titel") }}</th></tr></thead><tbody>
   {% for r in binnen %}
   <tr>
     <td class="getal">{{ r.positie }}</td>
@@ -68,7 +70,7 @@
 {% endif %}
 
 {% if terug %}
-<h2>Terug van weggeweest</h2>
+<h2>{{ _("Terug van weggeweest") }}</h2>
 <div class="tabelvak"><table><tbody>
   {% for r in terug %}
   <tr>
@@ -81,9 +83,10 @@
 {% endif %}
 
 {% if uitvallers %}
-<h2>Eruit</h2>
-<p class="hint" style="margin-top:-.3rem">Stonden vorige week nog genoteerd
-  (de positie is die van vorige week).</p>
+<h2>{{ _("Eruit") }}</h2>
+<p class="hint" style="margin-top:-.3rem">{% if taal == 'en' %}Still
+  charting last week (the position shown is last week's).{% else %}Stonden vorige week nog genoteerd
+  (de positie is die van vorige week).{% endif %}</p>
 <div class="tabelvak"><table><tbody>
   {% for r in uitvallers %}
   <tr>

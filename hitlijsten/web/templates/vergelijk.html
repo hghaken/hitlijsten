@@ -4,8 +4,8 @@
 {% block beschrijving %}Twee jaargangen {{ lijst_namen.get(lijst, lijst) }} naast elkaar: de kerngetallen, de grootste hits van elk jaar en de nummers die in allebei stonden.{% endblock %}
 {% block inhoud %}
 
-<h1>Vergelijk</h1>
-<p class="onder">Twee jaargangen van dezelfde lijst naast elkaar.</p>
+<h1>{{ _("Vergelijk") }}</h1>
+<p class="onder">{% if taal == 'en' %}Two years of the same chart side by side.{% else %}Twee jaargangen van dezelfde lijst naast elkaar.{% endif %}</p>
 
 <form method="get" class="kaart" style="display:flex; gap:.7rem;
       align-items:center; flex-wrap:wrap; margin-bottom:1.6rem">
@@ -17,7 +17,7 @@
   <select name="a" onchange="this.form.submit()">
     {% for j in jaren %}<option value="{{ j }}" {% if a == j %}selected{% endif %}>{{ j }}</option>{% endfor %}
   </select>
-  <span>tegen</span>
+  <span>{{ _('tegen') }}</span>
   <select name="b" onchange="this.form.submit()">
     {% for j in jaren %}<option value="{{ j }}" {% if b == j %}selected{% endif %}>{{ j }}</option>{% endfor %}
   </select>
@@ -27,11 +27,11 @@
 <div class="tabelvak"><table>
   <thead><tr><th></th><th class="getal">{{ a }}</th><th class="getal">{{ b }}</th></tr></thead>
   <tbody>
-    <tr><td>Unieke nummers</td><td class="getal">{{ links.nummers }}</td><td class="getal">{{ rechts.nummers }}</td></tr>
-    <tr><td>Noteringen</td><td class="getal">{{ links.noteringen }}</td><td class="getal">{{ rechts.noteringen }}</td></tr>
-    <tr><td>Binnenkomers (eerste jaar ooit)</td><td class="getal">{{ links.binnen }}</td><td class="getal">{{ rechts.binnen }}</td></tr>
-    <tr><td>Nummer-1-hits</td><td class="getal">{{ links.nummer1s }}</td><td class="getal">{{ rechts.nummer1s }}</td></tr>
-    <tr><td>Nederlandstalig</td>
+    <tr><td>{{ _("Unieke nummers") }}</td><td class="getal">{{ links.nummers }}</td><td class="getal">{{ rechts.nummers }}</td></tr>
+    <tr><td>{{ _("Noteringen") }}</td><td class="getal">{{ links.noteringen }}</td><td class="getal">{{ rechts.noteringen }}</td></tr>
+    <tr><td>{{ _("Binnenkomers (eerste jaar ooit)") }}</td><td class="getal">{{ links.binnen }}</td><td class="getal">{{ rechts.binnen }}</td></tr>
+    <tr><td>{{ _("Nummer-1-hits") }}</td><td class="getal">{{ links.nummer1s }}</td><td class="getal">{{ rechts.nummer1s }}</td></tr>
+    <tr><td>{{ _("Nederlandstalig") }}</td>
       <td class="getal">{{ links.nl }} <span class="hint">({{ (100 * links.nl / links.nummers) | round(1) }}%)</span></td>
       <td class="getal">{{ rechts.nl }} <span class="hint">({{ (100 * rechts.nl / rechts.nummers) | round(1) }}%)</span></td></tr>
   </tbody>
@@ -40,14 +40,14 @@
 <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit, minmax(20rem, 1fr)); margin-top:1.4rem">
   {% for kant in (links, rechts) %}
   <div>
-    <h2 style="margin-top:0">Hoogst genoteerd in {{ kant.jaar }}</h2>
+    <h2 style="margin-top:0">{{ _("Hoogst genoteerd in") }} {{ kant.jaar }}</h2>
     <div class="tabelvak"><table><tbody>
       {% for n in kant.top %}
       <tr>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
         <td>{{ n.artiest }}</td>
         <td><a class="stil" href="{{ url_for('nummer', sleutel=n.sleutel) }}">{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
-        <td class="getal hint" title="noteringen dat jaar">{{ n.weken }}</td>
+        <td class="getal hint" title="{{ _("noteringen dat jaar") }}">{{ n.weken }}</td>
       </tr>
       {% endfor %}
     </tbody></table></div>
@@ -55,15 +55,17 @@
   {% endfor %}
 </div>
 
-<h2>In allebei de jaargangen</h2>
+<h2>{{ _("In allebei de jaargangen") }}</h2>
 <p class="hint" style="margin-top:-.3rem">
-  {% if beide %}{{ beide|length }} nummer{{ 's' if beide|length != 1 }} —
+  {% if taal == 'en' %}{% if beide %}{{ beide|length }} song{{ 's' if beide|length != 1 }} —
+  for distant years these are the evergreens and re-entries.{% else %}
+  Not a single song charted in both years.{% endif %}{% else %}{% if beide %}{{ beide|length }} nummer{{ 's' if beide|length != 1 }} —
   bij verre jaren zijn dit de evergreens en terugkeerders.{% else %}
-  Geen enkel nummer stond in beide jaargangen.{% endif %}</p>
+  Geen enkel nummer stond in beide jaargangen.{% endif %}{% endif %}</p>
 {% if beide %}
 <div class="tabelvak"><table>
-  <thead><tr><th>Artiest</th><th>Titel</th>
-    <th class="getal">Hoogste {{ a }}</th><th class="getal">Hoogste {{ b }}</th></tr></thead>
+  <thead><tr><th>{{ _("Artiest") }}</th><th>{{ _("Titel") }}</th>
+    <th class="getal">{{ _("Hoogste") }} {{ a }}</th><th class="getal">{{ _("Hoogste") }} {{ b }}</th></tr></thead>
   <tbody>
   {% for n in beide %}
   <tr>

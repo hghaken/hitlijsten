@@ -6,7 +6,7 @@
 {% block inhoud %}
 <h1>{% if is_nl(sleutel) %}{{ nl_vlag() }} {% endif %}{{ rijen[-1]['titel'] }} <span class="hint">— <a class="stil"
   href="{{ url_for('artiest', artiestsleutel=sleutel.split('|')[0]) }}"
-  title="Alle hits van {{ rijen[-1]['artiest'] }}">{{ rijen[-1]['artiest'] }}</a></span>{{ zoeklinks(rijen[-1]['artiest'], rijen[-1]['titel']) }}{% if rijen | selectattr('alarmschijf') | list %}
+  title="{{ _("Alle hits van") }} {{ rijen[-1]['artiest'] }}">{{ rijen[-1]['artiest'] }}</a></span>{{ zoeklinks(rijen[-1]['artiest'], rijen[-1]['titel']) }}{% if rijen | selectattr('alarmschijf') | list %}
   <span title="Alarmschijf van de Nederlandse Top 40 (bron: top40.nl)"
         style="font-size:.55em; vertical-align:middle; color:#ED1C24">🔔 Alarmschijf</span>{% endif %}</h1>
 {% if is_aangemeld() %}<p class="sleutel">{{ sleutel }}</p>
@@ -28,10 +28,10 @@
 </tbody></table></div>
 {% endif %}
 
-<h2>Per jaar en lijst</h2>
+<h2>{{ _("Per jaar en lijst") }}</h2>
 <div class="tabelvak"><table>
-  <thead><tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Punten</th>
-      <th class="getal">Weken</th><th class="getal">Hoogste</th></tr></thead><tbody>
+  <thead><tr><th>{{ _("Lijst") }}</th><th class="getal">{{ _("Jaar") }}</th><th class="getal">{{ _("Punten") }}</th>
+      <th class="getal">{{ _("Weken") }}</th><th class="getal">{{ _("Hoogste") }}</th></tr></thead><tbody>
   {% for (lijst, jaar), v in samenvatting %}
   <tr><td>{{ lijst_namen.get(lijst, lijst) }}</td><td class="getal">{{ jaar }}</td>
       <td class="getal">{{ v.punten }}</td><td class="getal">{{ v.weken }}</td>
@@ -39,12 +39,12 @@
   {% endfor %}
 </tbody></table></div>
 
-<h2>Alle noteringen ({{ rijen|length }})</h2>
+<h2>{{ _("Alle noteringen") }} ({{ rijen|length }})</h2>
 <div class="tabelvak"><table>
-  <thead><tr><th>Lijst</th><th class="getal">Jaar</th><th class="getal">Week</th>
-      <th class="getal">Positie</th><th class="getal">Vorige</th>
-      <th class="getal">Weken (site)</th><th>Status</th><th>Artiest</th>
-      <th>Titel</th><th></th></tr></thead><tbody>
+  <thead><tr><th>{{ _("Lijst") }}</th><th class="getal">{{ _("Jaar") }}</th><th class="getal">{{ _("Week") }}</th>
+      <th class="getal">{{ _("Positie") }}</th><th class="getal">{{ _("Vorige") }}</th>
+      <th class="getal">{{ _("Weken (site)") }}</th><th>{{ _("Status") }}</th><th>{{ _("Artiest") }}</th>
+      <th>{{ _("Titel") }}</th><th></th></tr></thead><tbody>
   {% for r in rijen %}
   <tr>
     <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
