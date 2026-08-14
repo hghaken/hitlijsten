@@ -363,7 +363,8 @@ def bouw(versie: str | None = None) -> bytes:
               "en dergelijke) staat elke **editie** er precies zoals "
               "uitgezonden. Ook hier bladeren de knoppen ‹ vorige en "
               "volgende › langs de jaargangen, en op de Decennia-pagina "
-              "langs de decennia.")
+              "langs de decennia. In de lijstkeuze staan de jaarlijkse "
+              "lijsten per zender gegroepeerd, van Arrow tot Veronica.")
         pdf.kop2("Decennia en Top 40 totaal")
         pdf.p("Hetzelfde puntenklassement, maar dan over tien jaargangen "
               "(de jaren 60 tot en met nu) of over de **volledige Top "
@@ -385,8 +386,9 @@ def bouw(versie: str | None = None) -> bytes:
               "en alles wat je downloadt volgt die keuze exact.")
         pdf.punten([
             "**Toon**: standaard zie je de top 100; de keuzelijst biedt "
-            "ook 500, 1000, 2500 of de complete lijst. Korte lijsten "
-            "(tot 250 nummers) tonen meteen alles.",
+            "ook 500, 1000, 2500 of de complete lijst — alleen de keuzes "
+            "die bij de lengte van de lijst passen. Korte lijsten (tot "
+            "250 nummers) tonen meteen alles.",
             "**Alleen Nederlandstalig**: het vinkje met het vlaggetje "
             "beperkt de lijst tot (vermoedelijk) Nederlandstalige "
             "nummers.",

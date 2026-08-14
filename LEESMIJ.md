@@ -303,9 +303,9 @@ op de NAS, achter een reverse proxy.
 
 | Pagina | Wat je er ziet |
 |---|---|
-| Overzicht | wat er in de database zit, in twee tabellen: weeklijsten en jaarlijkse lijsten |
+| Overzicht | wat er in de database zit, in twee tabellen: weeklijsten en jaarlijkse lijsten — die laatste **per zender gegroepeerd** (zenderkolom, afgeleid uit de lijstnaam via `zender_van()`); dezelfde groepjes vullen de optgroups van de lijst-keuzelijsten |
 | Jaaroverzichten | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met bladerknoppen langs de jaargangen; ook een **binnenkomers-vinkje** (nummers die dat jaar voor het éérst in de lijst verschenen — over de hele historie gerekend, dus Last Christmas telt alleen in 1984) |
-| Selecties & downloads | overal dezelfde spelregels: keuzelijst top 100/500/1000/2500/alles (standaard 100; onder de 250 nummers geen keuzelijst maar meteen alles), de filters NL en binnenkomers, en **wat op het scherm staat, zit in het bestand** — Excel en PDF volgen de selectie met `_topN`/`_NL`/`_nieuw` in de bestandsnaam; op "alles" zonder filter komen de rijke voorgebouwde jaarwerkboeken met weektabs, en de matrix-downloads blijven altijd volledig |
+| Selecties & downloads | overal dezelfde spelregels: keuzelijst top 100/500/1000/2500/alles (standaard 100; onder de 250 nummers geen keuzelijst maar meteen alles; opties vanaf de lijstlengte vervallen en het traag-label staat alleen boven de 2500 regels), de filters NL en binnenkomers, en **wat op het scherm staat, zit in het bestand** — Excel en PDF volgen de selectie met `_topN`/`_NL`/`_nieuw` in de bestandsnaam; op "alles" zonder filter komen de rijke voorgebouwde jaarwerkboeken met weektabs, en de matrix-downloads blijven altijd volledig |
 | Decennia | het puntenklassement over tien jaargangen Top 40, met bladerknoppen langs de decennia |
 | Top 40 totaal | hetzelfde over alle jaargangen 1965–nu |
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; `artiest \| titel` zoekt op allebei tegelijk (bij nul treffers met meerdere woorden stelt de pagina die schrijfwijze klikbaar voor); klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
