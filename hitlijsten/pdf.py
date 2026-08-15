@@ -303,6 +303,82 @@ def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
                       kolommen, rijen, vet=("Positie",))
 
 
+# Waar de laatste tabelregel nog net op een pagina past. De voetregel begint
+# op 284; daaronder blijft het leeg.
+ONDERGRENS = 278.0
+
+
+def _kolomkop(pdf: "_Blad", kolommen: list, y: float, breed: float) -> float:
+    """De kolomnamen met de accentlijn eronder; geeft de nieuwe y terug."""
+    pdf.set_font("dejavu", "B", 7.5)
+    pdf.set_text_color(*GRIJS)
+    x = KANTLIJN
+    for kop, kolbreed, uitlijning in kolommen:
+        pdf.set_xy(x, y)
+        pdf.cell(kolbreed, 5, kop.upper(), align=uitlijning)
+        x += kolbreed
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_draw_color(*ACCENT)
+    pdf.set_line_width(0.5)
+    pdf.line(KANTLIJN, y + 5.3, KANTLIJN + breed, y + 5.3)
+    pdf.set_line_width(0.2)
+    return y + 6.8
+
+
+def _sectie_op_blad(pdf: "_Blad", titel: str, kolommen: list, rijen: list,
+                    y: float, vet: tuple = ("#", "Punten")) -> float:
+    """Eén tabel met een kop erboven, doorlopend vanaf `y`.
+
+    Anders dan `_tabel_op_blad` begint dit niet aan een nieuwe pagina: bij
+    "alle weeklijsten" met het binnenkomers-filter houdt elke lijst maar een
+    handvol regels over, en dan is een pagina per lijst verspilling. Er komt
+    alleen een nieuwe pagina als de kop met de eerste regels er niet meer op
+    zou passen.
+    """
+    kolommen = _pas_nummerkolom(kolommen, len(rijen))
+    breed = sum(k[1] for k in kolommen)
+
+    # Een kop onderaan de pagina met de tabel op de volgende is lelijk; eis
+    # daarom ruimte voor de kop, de kolomnamen en drie regels.
+    if y + 9 + 6.8 + 3 * REGEL > ONDERGRENS:
+        pdf.add_page()
+        y = BANNER + 9
+
+    pdf.set_font("dejavu", "B", 12)
+    pdf.set_text_color(*(round(k * 0.55) for k in ACCENT))
+    pdf.set_xy(KANTLIJN, y)
+    pdf.cell(breed, 7, titel)
+    pdf.set_text_color(0, 0, 0)
+    y += 9
+    y = _kolomkop(pdf, kolommen, y, breed)
+
+    for rij in rijen:
+        if y + REGEL > ONDERGRENS:
+            pdf.add_page()
+            y = BANNER + 9
+            # Op een vervolgpagina de kolomnamen herhalen, met de lijstnaam
+            # erbij -- anders sta je te raden bij welke lijst je kijkt.
+            pdf.set_font("dejavu", "", 8.5)
+            pdf.set_text_color(*GRIJS)
+            pdf.set_xy(KANTLIJN, y)
+            pdf.cell(breed, 5, f"{titel} (vervolg)")
+            pdf.set_text_color(0, 0, 0)
+            y += 7
+            y = _kolomkop(pdf, kolommen, y, breed)
+        pdf.set_draw_color(*LIJN)
+        pdf.line(KANTLIJN, y + REGEL - 0.6, KANTLIJN + breed, y + REGEL - 0.6)
+        x = KANTLIJN
+        for (kop, kolbreed, uitlijning), waarde in zip(kolommen, rij):
+            pdf.set_font("dejavu", "B" if kop in vet else "", 8)
+            pdf.set_xy(x, y)
+            tekst = "" if waarde is None else str(waarde)
+            pdf.cell(kolbreed, REGEL - 0.6,
+                     _kort(pdf, tekst, kolbreed - 2), align=uitlijning)
+            x += kolbreed
+        y += REGEL
+    return y + 6          # witruimte voor de volgende sectie
+
+
 def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
                    alleen: Optional[set] = None,
                    binnenkomers: bool = False) -> Optional[bytes]:
@@ -334,8 +410,13 @@ def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
 
     kolommen = [("Positie", 15, "C"), ("Vorige", 15, "C"),
                 ("Artiest", 63, "L"), ("Titel", 78, "L"), ("Weken", 15, "C")]
-    pdf = _Blad("Weeklijsten", f"week {week}", "")
+    totaal = sum(len(r) for _, r in delen)
+    soort = "binnenkomers" if binnenkomers else "noteringen"
+    pdf = _Blad("Weeklijsten", f"week {week}",
+                f"{len(delen)} lijsten · {totaal} {soort} · {jaar}")
     pdf.alias_nb_pages()
+    pdf.add_page()
+    y = BANNER + 9
     for welke, rijen_db in delen:
         rijen = []
         for r in rijen_db:
@@ -344,10 +425,9 @@ def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
                 vorige = "terug" if r["site_status"] == "terug" else "nieuw"
             rijen.append([r["positie"], vorige, r["artiest"], r["titel"],
                           r["weken_genoteerd"]])
-        # De banner leest deze twee bij elke nieuwe pagina opnieuw uit.
-        pdf.naam = LIJSTEN.get(welke, {}).get("naam", welke)
-        pdf.ondertitel = f"Weeklijst · {len(rijen)} noteringen"
-        _tabel_op_blad(pdf, kolommen, rijen, vet=("Positie",))
+        naam = LIJSTEN.get(welke, {}).get("naam", welke)
+        y = _sectie_op_blad(pdf, f"{naam} — {len(rijen)} {soort}",
+                            kolommen, rijen, y, vet=("Positie",))
     return bytes(pdf.output())
 
 
