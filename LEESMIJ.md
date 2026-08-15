@@ -333,6 +333,7 @@ op de NAS, achter een reverse proxy.
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy; volledig tweetalig, en het contact-blok verwijst naar het feedbackformulier (geen klikbaar mailadres meer op de site) |
 | Vormgeving | menubalk in twee rijen (de lijsten boven, de extra's en het beheer gedempt eronder), doorschijnend over de banner en met blur zodra er gescrold is; tabellen tot 100 rijen krijgen hun volle hoogte (geen binnenste scrollbalk), daarboven een scrollvak van 78vh; onder de 760px compact en niet-plakkend |
 | Banner | eigen ontwerp, vast aan de bovenrand achter de doorzichtige menubalk (die dichtgaat na scrollen); dezelfde banner siert de kop van elke PDF en is de og:image van gedeelde links |
+| Facebook | de voettekst verwijst naar de pagina [Nederlandse Hitlijsten](https://www.facebook.com/nederlandsehitlijsten) (tweetalig, één `{% set %}` voor het adres zodat NL en EN niet uit elkaar kunnen lopen). Profielfoto en omslagfoto zijn in dezelfde huisstijl gemaakt; de omslag houdt alle tekst in de bovenhelft, want Facebook legt de profielcirkel op 54% van de hoogte, en noemt **geen** aantal noteringen — dat loopt elke vrijdag op |
 | Vindbaarheid | sitemap-index in twee delen (±50.000 pagina's incl. artiesten, gecachet), `robots.txt`, meta-descriptions, canonical-links, Open Graph-tags en JSON-LD structured data (MusicRecording, MusicGroup, ItemList) |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,

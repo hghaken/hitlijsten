@@ -504,6 +504,18 @@
   het</a> — of laat een bericht achter in het
   <a href="{{ url_for('gastenboek') }}">gastenboek</a>.
   {% endif %}
+
+  {# Los van het bronnenblok: dat gaat over rechten, dit is een verwijzing.
+     Het adres staat één keer, zodat de twee talen niet uit elkaar kunnen
+     lopen als de paginanaam ooit wijzigt. #}
+  {% set facebook = "https://www.facebook.com/nederlandsehitlijsten" %}
+  <p style="margin:.9rem 0 0">
+    {% if taal == 'en' %}This site is also on
+    <a href="{{ facebook }}" target="_blank" rel="noopener">Facebook</a>.
+    {% else %}Deze site staat ook op
+    <a href="{{ facebook }}" target="_blank" rel="noopener">Facebook</a>.
+    {% endif %}
+  </p>
 </footer>
 
 <script>
