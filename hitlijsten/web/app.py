@@ -1293,6 +1293,24 @@ def _registreer(app: Flask) -> None:
         alleen = binnen if alleen is None else (alleen & binnen)
         return alleen, staartje + "_nieuw"
 
+    def _filtermelding() -> str:
+        """Welke schermfilters aan staan, in gewone woorden.
+
+        De bestandsnaam draagt al _NL en _nieuw, maar wie het bestand
+        doorstuurt of uitprint ziet die naam niet meer -- en een lijst met
+        zes regels waar er veertig horen roept dan vragen op. Daarom staat
+        het ook in het stuk zelf.
+        """
+        delen = []
+        if request.args.get("nl"):
+            delen.append("alleen Nederlandstalig")
+        if request.args.get("nieuw"):
+            delen.append("alleen binnenkomers")
+        if not delen:
+            return ""
+        tekst = " en ".join(delen)
+        return f"FILTER: {tekst[0].upper()}{tekst[1:]}."
+
     def _nl_keuze():
         """(set of None, naamdeel) voor de downloadroutes."""
         if request.args.get("nl"):
@@ -1334,7 +1352,8 @@ def _registreer(app: Flask) -> None:
                 staartje += "_nieuw"
             wb = excel.bouw_week_alle_werkboek(
                 con, jaar, week, alleen=alleen,
-                binnenkomers=bool(request.args.get("nieuw")))
+                binnenkomers=bool(request.args.get("nieuw")),
+                melding=_filtermelding())
             if wb is None:
                 abort(404)
             return _stuur_excel(
@@ -1348,7 +1367,8 @@ def _registreer(app: Flask) -> None:
             alleen = nieuw if alleen is None else alleen & nieuw
             staartje += "_nieuw"
         wb = excel.bouw_week_werkboek(con, lijst, jaar, week,
-                                      alleen=alleen)
+                                      alleen=alleen,
+                                      melding=_filtermelding())
         if wb is None:
             abort(404)
         naam = LIJSTEN[lijst]["bestand"]
@@ -1365,7 +1385,8 @@ def _registreer(app: Flask) -> None:
                 staartje += "_nieuw"
             inhoud = pdfbouwer.bouw_week_alle(
                 con, jaar, week, alleen=alleen,
-                binnenkomers=bool(request.args.get("nieuw")))
+                binnenkomers=bool(request.args.get("nieuw")),
+                melding=_filtermelding())
             if inhoud is None:
                 abort(404)
             return _stuur_pdf(
@@ -1379,7 +1400,8 @@ def _registreer(app: Flask) -> None:
             alleen = nieuw if alleen is None else alleen & nieuw
             staartje += "_nieuw"
         inhoud = pdfbouwer.bouw_weeklijst(con, lijst, jaar, week,
-                                          alleen=alleen)
+                                          alleen=alleen,
+                                          melding=_filtermelding())
         if inhoud is None:
             abort(404)
         naam = LIJSTEN[lijst]["bestand"]
@@ -1391,7 +1413,8 @@ def _registreer(app: Flask) -> None:
         top = _gekozen_top()
         alleen, staartje = _nl_keuze()
         wb = excel.bouw_jaarlijksen_werkboek(verbinding(), top=top,
-                                             alleen=alleen)
+                                             alleen=alleen,
+                                             melding=_filtermelding())
         if wb is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("jaarlijksen_lijst"))
@@ -1405,7 +1428,8 @@ def _registreer(app: Flask) -> None:
         top = _gekozen_top()
         alleen, staartje = _nl_keuze()
         inhoud = pdfbouwer.bouw_jaarlijksen(verbinding(), top=top,
-                                            alleen=alleen)
+                                            alleen=alleen,
+                                            melding=_filtermelding())
         if inhoud is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("jaarlijksen_lijst"))
@@ -1420,7 +1444,7 @@ def _registreer(app: Flask) -> None:
         alleen, staartje = _nl_keuze()
         inhoud = pdfbouwer.bouw_klassement(
             verbinding(), DECENNIUM_LIJST, decennium, decennium + 9,
-            top=top, alleen=alleen)
+            top=top, alleen=alleen, melding=_filtermelding())
         if inhoud is None:
             flash(f"Voor de {decennium}'s staat er niets in de database.",
                   "fout")
@@ -1441,7 +1465,8 @@ def _registreer(app: Flask) -> None:
         top = _gekozen_top()
         alleen, staartje = _nl_keuze()
         inhoud = pdfbouwer.bouw_klassement(con, DECENNIUM_LIJST, van, tot,
-                                           top=top, alleen=alleen)
+                                           top=top, alleen=alleen,
+                                           melding=_filtermelding())
         if inhoud is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("totaal_lijst"))
@@ -1458,7 +1483,8 @@ def _registreer(app: Flask) -> None:
         top = _gekozen_top()
         alleen, staartje = _nl_keuze()
         wb = excel.bouw_totalen_werkboek(con, DECENNIUM_LIJST, van, tot,
-                                         top=top, alleen=alleen)
+                                         top=top, alleen=alleen,
+                                         melding=_filtermelding())
         if wb is None:
             flash("Er staat nog niets in de database.", "fout")
             return redirect(url_for("totaal_lijst"))
@@ -1568,7 +1594,8 @@ def _registreer(app: Flask) -> None:
             # met de weektabs blijft er via de keuze "alles" gewoon naast
             # bestaan.
             wb = excel.bouw_totalen_werkboek(verbinding(), lijst, jaar, jaar,
-                                             top=top, alleen=alleen)
+                                             top=top, alleen=alleen,
+                                             melding=_filtermelding())
             if wb is None:
                 flash("Niets te downloaden binnen deze selectie.", "fout")
                 return redirect(url_for("jaaroverzicht", lijst=lijst, jaar=jaar))
@@ -1596,7 +1623,8 @@ def _registreer(app: Flask) -> None:
         alleen, staartje = _nl_keuze()
         wb = excel.bouw_totalen_werkboek(verbinding(), DECENNIUM_LIJST,
                                          decennium, decennium + 9, top=top,
-                                         alleen=alleen)
+                                         alleen=alleen,
+                                         melding=_filtermelding())
         if wb is None:
             flash(f"Voor de {decennium}'s staat er niets in de database.", "fout")
             return redirect(url_for("decennium_overzicht"))
@@ -1633,7 +1661,8 @@ def _registreer(app: Flask) -> None:
             # Zelfde spelregel als bij de Excel: de selectie op het scherm
             # is de selectie in het bestand.
             inhoud = pdfbouwer.bouw_klassement(con, lijst, jaar, jaar,
-                                               top=top, alleen=alleen)
+                                               top=top, alleen=alleen,
+                                               melding=_filtermelding())
             if inhoud is None:
                 flash("Niets te downloaden binnen deze selectie.", "fout")
                 return redirect(url_for("jaaroverzicht", lijst=lijst, jaar=jaar))
@@ -1650,7 +1679,8 @@ def _registreer(app: Flask) -> None:
             return send_file(pad, as_attachment=True, download_name=bestand,
                              mimetype="application/pdf")
 
-        gegevens = pdfbouwer.bouw_jaaroverzicht(con, lijst, jaar)
+        gegevens = pdfbouwer.bouw_jaaroverzicht(con, lijst, jaar,
+                                                melding=_filtermelding())
         if gegevens is None:
             flash(f"Voor {jaar} staat er niets in de database.", "fout")
             return redirect(url_for("jaaroverzicht", lijst=lijst))

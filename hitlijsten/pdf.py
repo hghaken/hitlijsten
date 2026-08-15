@@ -164,7 +164,7 @@ def _kopregel(pdf: _Blad, y: float, kolommen: list = KOLOMMEN) -> float:
 
 
 def bouw_jaaroverzicht(
-    con: sqlite3.Connection, lijst: str, jaar: int
+    con: sqlite3.Connection, lijst: str, jaar: int, melding: str = ""
 ) -> Optional[bytes]:
     """Het puntenklassement van één lijst en jaargang. None als er niets is."""
     gegevens = verzamel_lijst(con, lijst, jaar)
@@ -177,8 +177,9 @@ def bouw_jaaroverzicht(
         key=lambda n: (-n.punten, n.hoogste_positie, n.eerste_week, n.titel.lower()),
     )
     naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
-    ondertitel = (f"Puntenklassement · {len(nummers)} nummers "
-                  f"over {len(gegevens.weken)} weken")
+    ondertitel = _met_melding(
+        f"Puntenklassement · {len(nummers)} nummers "
+        f"over {len(gegevens.weken)} weken", melding)
 
     pdf = _Blad(naam, jaar, ondertitel)
     pdf.alias_nb_pages()
@@ -223,6 +224,11 @@ def bouw_jaaroverzicht(
 # alleen de kolommen en de rijen verschillen per lijstsoort. Deze bouwers
 # maken de bytes ter plekke (geen bestanden op schijf): een weeklijst is
 # klein, en de klassementen mogen nooit achterlopen op de database.
+
+
+def _met_melding(ondertitel: str, melding: str) -> str:
+    """De actieve filters achter de ondertitel plakken."""
+    return f"{ondertitel} · {melding}" if melding else ondertitel
 
 
 def _tabel_pdf(naam: str, jaartekst, ondertitel: str, kolommen: list,
@@ -277,7 +283,8 @@ def _tabel_op_blad(pdf: "_Blad", kolommen: list, rijen: list,
 
 
 def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
-                   week: int, alleen: Optional[set] = None) -> Optional[bytes]:
+                   week: int, alleen: Optional[set] = None,
+                   melding: str = "") -> Optional[bytes]:
     """Eén week zoals uitgezonden."""
     rijen_db = list(con.execute(
         "SELECT positie, vorige_positie, artiest, titel, weken_genoteerd,"
@@ -299,7 +306,9 @@ def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
                       r["weken_genoteerd"]])
 
     naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
-    return _tabel_pdf(naam, f"week {week}", f"Weeklijst · {len(rijen)} noteringen",
+    return _tabel_pdf(naam, f"week {week}",
+                      _met_melding(f"Weeklijst · {len(rijen)} noteringen",
+                                   melding),
                       kolommen, rijen, vet=("Positie",))
 
 
@@ -402,7 +411,8 @@ def _sectie_op_blad(pdf: "_Blad", titel: str, kolommen: list, rijen: list,
 
 def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
                    alleen: Optional[set] = None,
-                   binnenkomers: bool = False) -> Optional[bytes]:
+                   binnenkomers: bool = False,
+                   melding: str = "") -> Optional[bytes]:
     """Alle weeklijsten van één week in één PDF, elke lijst een eigen deel.
 
     Niet samengevoegd tot één tabel: elke lijst heeft zijn eigen nummer 1,
@@ -434,7 +444,9 @@ def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
     totaal = sum(len(r) for _, r in delen)
     soort = "binnenkomers" if binnenkomers else "noteringen"
     pdf = _Blad("Weeklijsten", f"week {week}",
-                f"{len(delen)} lijsten · {totaal} {soort} · {jaar}")
+                _met_melding(
+                    f"{len(delen)} lijsten · {totaal} {soort} · {jaar}",
+                    melding))
     pdf.alias_nb_pages()
     pdf.add_page()
     y = BOVENGRENS
@@ -454,7 +466,8 @@ def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
 
 def bouw_klassement(con: sqlite3.Connection, lijst: str, van: int,
                     tot: int, top: Optional[int] = None,
-                    alleen: Optional[set] = None) -> Optional[bytes]:
+                    alleen: Optional[set] = None,
+                    melding: str = "") -> Optional[bytes]:
     """Het puntenklassement over een reeks jaargangen (decennium of alles)."""
     from .db import totalen_over
 
@@ -480,12 +493,14 @@ def bouw_klassement(con: sqlite3.Connection, lijst: str, van: int,
     naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
     soort = f"Top {top} van het puntenklassement" if top else "Puntenklassement"
     return _tabel_pdf(naam, f"{van}-{tot}",
-                      f"{soort} · {len(rijen)} nummers over "
-                      f"{tot - van + 1} jaargangen", kolommen, rijen)
+                      _met_melding(f"{soort} · {len(rijen)} nummers over "
+                                   f"{tot - van + 1} jaargangen", melding),
+                      kolommen, rijen)
 
 
 def bouw_jaarlijksen(con: sqlite3.Connection, top: Optional[int] = None,
-                     alleen: Optional[set] = None) -> Optional[bytes]:
+                     alleen: Optional[set] = None,
+                     melding: str = "") -> Optional[bytes]:
     """De gecombineerde lijst over alle jaarlijkse lijsten."""
     from .db import jaarlijkse_totalen
 
@@ -508,8 +523,10 @@ def bouw_jaarlijksen(con: sqlite3.Connection, top: Optional[int] = None,
 
     kop = f"top {top} van alle" if top else "alle"
     return _tabel_pdf("Jaarlijsten totaal", "alle lijsten",
-                      f"De {kop} jaarlijkse lijsten samen, genormaliseerd · "
-                      f"{len(rijen)} nummers", kolommen, rijen)
+                      _met_melding(
+                          f"De {kop} jaarlijkse lijsten samen, "
+                          f"genormaliseerd · {len(rijen)} nummers", melding),
+                      kolommen, rijen)
 
 
 # --- op schijf bewaren ------------------------------------------------------

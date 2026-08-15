@@ -337,7 +337,7 @@ def _schrijf_tabel(
 
 
 def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int,
-             tabtitel: Optional[str] = None) -> None:
+             tabtitel: Optional[str] = None, melding: str = "") -> None:
     """De complete lijst van die week, met de binnenkomers lichtblauw."""
     kolommen = ["Positie", "Vorige positie", "Artiest", "Titel"]
     if gegevens.heeft_label:
@@ -370,6 +370,10 @@ def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int,
     toelichting = WEEK_TOELICHTING
     if not any(accent):
         toelichting = "Geen nieuwe nummers deze week. " + toelichting
+    # De melding als eerste: dat je naar een selectie kijkt is het eerste
+    # wat je moet weten bij een tab met zes van de veertig regels.
+    if melding:
+        toelichting = f"{melding} {toelichting}"
 
     ws = wb.create_sheet(tabnaam(tabtitel or f"Week {week:02d}"))
     _schrijf_tabel(ws, kolommen, rijen, toelichting=toelichting, accent=accent,
@@ -528,16 +532,17 @@ GECENTREERD_DECENNIUM = (
 
 def bouw_decennium_werkboek(
     con: sqlite3.Connection, lijst: str, decennium: int,
-    alleen: Optional[set] = None,
+    alleen: Optional[set] = None, melding: str = "",
 ) -> Optional[Workbook]:
     """Eén tab met het puntenklassement over tien jaargangen."""
     return bouw_totalen_werkboek(con, lijst, decennium, decennium + 9,
-                                 alleen=alleen)
+                                 alleen=alleen, melding=melding)
 
 
 def bouw_totalen_werkboek(
     con: sqlite3.Connection, lijst: str, van: int, tot: int,
     top: Optional[int] = None, alleen: Optional[set] = None,
+    melding: str = "",
 ) -> Optional[Workbook]:
     """Eén tab met het puntenklassement over de jaargangen `van` t/m `tot`.
 
@@ -603,6 +608,7 @@ def bouw_totalen_werkboek(
         rijen.append(waarden)
 
     toelichting = (
+        (f"{melding} " if melding else "") +
         (f"De top {top} van het " if top else "Het ") +
         f"puntenklassement {van}-{tot} van de {cfg.get('naam', lijst)}. "
         "Punten per notering = lijstlengte - positie + 1, per jaargang gerekend "
@@ -619,7 +625,7 @@ def bouw_totalen_werkboek(
 
 def bouw_week_werkboek(
     con: sqlite3.Connection, lijst: str, jaar: int, week: int,
-    alleen: Optional[set] = None,
+    alleen: Optional[set] = None, melding: str = "",
 ) -> Optional[Workbook]:
     """Eén weeklijst als los werkboek -- dezelfde tab als in het jaarbestand."""
     gegevens = verzamel_lijst(con, lijst, jaar)
@@ -634,13 +640,14 @@ def bouw_week_werkboek(
             return None
     wb = Workbook()
     wb.remove(wb.active)
-    _weektab(wb, gegevens, week)
+    _weektab(wb, gegevens, week, melding=melding)
     return wb
 
 
 def bouw_week_alle_werkboek(
     con: sqlite3.Connection, jaar: int, week: int,
     alleen: Optional[set] = None, binnenkomers: bool = False,
+    melding: str = "",
 ) -> Optional[Workbook]:
     """Alle weeklijsten van één week in één werkboek: een tab per lijst.
 
@@ -671,13 +678,14 @@ def bouw_week_alle_werkboek(
         gegevens.alle_per_week[week] = rijen
         gegevens.nieuw_per_week[week] = nieuwe
         _weektab(wb, gegevens, week,
-                 tabtitel=LIJSTEN.get(welke, {}).get("naam", welke))
+                 tabtitel=LIJSTEN.get(welke, {}).get("naam", welke),
+                 melding=melding)
     return wb if wb.sheetnames else None
 
 
 def bouw_jaarlijksen_werkboek(
     con: sqlite3.Connection, top: Optional[int] = None,
-    alleen: Optional[set] = None,
+    alleen: Optional[set] = None, melding: str = "",
 ) -> Optional[Workbook]:
     """De gecombineerde lijst over alle jaarlijkse lijsten, één tab."""
     from .db import jaarlijkse_totalen
@@ -700,6 +708,7 @@ def bouw_jaarlijksen_werkboek(
                       n["sleutel"]])
 
     toelichting = (
+        (f"{melding} " if melding else "") +
         "Alle jaarlijkse lijsten samen, genormaliseerd op lijstlengte: elke "
         "notering telt (lengte - positie + 1) / lengte punten, dus de nummer 1 "
         "van elke lijst is precies één punt waard. Het maximum is het aantal "
