@@ -40,7 +40,7 @@ from xml.sax.saxutils import quoteattr
 from .normalize import sleutel_van
 
 __all__ = ["lees_database", "lees_upload", "match", "bouw_vdjfolder",
-           "bouw_m3u8", "Budget", "TeGroot", "NIVEAUS"]
+           "bouw_m3u8", "bouw_rapport", "Budget", "TeGroot", "NIVEAUS"]
 
 NIVEAUS = {
     1: "zeer strak",
@@ -415,6 +415,64 @@ def bouw_m3u8(koppels: list[dict]) -> str:
         if k["bestand"]:
             regels.append(f"#EXTINF:-1,{k['artiest']} - {k['titel']}")
             regels.append(k["bestand"].pad)
+    return "\n".join(regels) + "\n"
+
+
+def bouw_rapport(koppels: list[dict], titel: str, bibliotheek: int,
+                 bron: str = "vdj") -> str:
+    """Het rapport als leesbaar tekstbestand.
+
+    Bedoeld om mee te nemen: uitprinten, in een berichtje plakken of naast
+    de platenkast leggen. Vandaar vaste kolombreedtes en geen scheidings-
+    tekens -- een tabel die je met het oog leest, niet met een programma.
+    De ontbrekende nummers staan onderaan nog eens apart: dat is in de
+    praktijk het lijstje waar je iets mee gaat doen.
+    """
+    gevonden = [k for k in koppels if k["bestand"]]
+    ontbreekt = [k for k in koppels if not k["bestand"]]
+    twijfel = [k for k in koppels if k["niveau"] == 4]
+
+    # Zo breed als nodig, maar niet breder dan een printbare regel.
+    breed_a = min(34, max([len(str(k["artiest"])) for k in koppels] + [7]))
+    breed_t = min(40, max([len(str(k["titel"])) for k in koppels] + [5]))
+
+    def kort(tekst, breedte):
+        tekst = str(tekst or "")
+        return tekst if len(tekst) <= breedte else tekst[:breedte - 1] + "…"
+
+    regels = [
+        f"{titel}",
+        "=" * max(40, len(titel)),
+        "",
+        f"Gevonden in je bibliotheek : {len(gevonden)} van {len(koppels)}",
+        f"Ontbreekt                  : {len(ontbreekt)}",
+    ]
+    if twijfel:
+        regels.append(f"Twijfelgevallen            : {len(twijfel)}"
+                      "  (zeer soepel gematcht -- nalopen)")
+    bronnaam = {"vdj": "VirtualDJ", "rekordbox": "rekordbox"}.get(bron, bron)
+    regels += [
+        f"Bibliotheek                : {bibliotheek:,} nummers ({bronnaam})"
+        .replace(",", "."),
+        "",
+        f"{'POS':>4}  {'ARTIEST':<{breed_a}}  {'TITEL':<{breed_t}}  "
+        f"{'STATUS':<11}  BESTAND",
+        "-" * (4 + 2 + breed_a + 2 + breed_t + 2 + 11 + 2 + 8),
+    ]
+    for k in koppels:
+        stand = NIVEAUS[k["niveau"]] if k["bestand"] else "ontbreekt"
+        pad = k["bestand"].pad if k["bestand"] else ""
+        regels.append(
+            f"{k['hoogste']:>4}  {kort(k['artiest'], breed_a):<{breed_a}}  "
+            f"{kort(k['titel'], breed_t):<{breed_t}}  {stand:<11}  {pad}")
+
+    if ontbreekt:
+        regels += ["", "", f"BOODSCHAPPENLIJST ({len(ontbreekt)})",
+                   "-" * 40]
+        for k in ontbreekt:
+            regels.append(f"{k['hoogste']:>4}  {k['artiest']} - {k['titel']}")
+
+    regels += ["", "", "hitlijsten.hhaken.nl"]
     return "\n".join(regels) + "\n"
 
 

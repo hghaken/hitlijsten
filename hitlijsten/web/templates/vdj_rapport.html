@@ -36,11 +36,20 @@
 </p>
 <textarea id="vdjinhoud" style="display:none">{{ uitkomst.vdjfolder }}</textarea>
 {% endif %}
+<p>
+  <a class="knop" id="txtknop" download="{{ uitkomst.rapportnaam }}">⤓ {{ uitkomst.rapportnaam }}</a>
+  <span class="hint">{% if taal == 'en' %}the report as plain text, with the
+    shopping list at the end — handy to print or paste into a message
+    {% else %}het rapport als platte tekst, met de boodschappenlijst
+    onderaan — handig om te printen of in een berichtje te plakken{% endif %}</span>
+</p>
+<textarea id="txtinhoud" style="display:none">{{ uitkomst.rapport }}</textarea>
 <script>
   (() => {
     for (const [knop, vak, soort] of [
         ["vdjknop", "vdjinhoud", "application/xml"],
-        ["m3uknop", "m3uinhoud", "audio/x-mpegurl"]]) {
+        ["m3uknop", "m3uinhoud", "audio/x-mpegurl"],
+        ["txtknop", "txtinhoud", "text/plain;charset=utf-8"]]) {
       const el = document.getElementById(knop);
       if (!el) continue;
       const blob = new Blob([document.getElementById(vak).value],

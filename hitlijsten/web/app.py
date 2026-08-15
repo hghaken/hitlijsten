@@ -1948,6 +1948,34 @@ def _registreer(app: Flask) -> None:
     # de pollende draad een andere kopie zien dan de uploadende.
     _vdj_voortgang: dict = {}
 
+    def _vdj_rapport(koppels, kaart, naam, titel):
+        """De uitkomst voor het rapportsjabloon.
+
+        Stond drie keer bijna gelijk in deze module (weeklijst, klassement,
+        alle weeklijsten); één plek betekent dat een nieuw veld -- zoals de
+        tekstversie -- niet twee keer vergeten kan worden.
+        """
+        from .. import vdj as vdjmodule
+
+        paden = [k["bestand"].pad for k in koppels if k["bestand"]]
+        bron = kaart.get("soort", "vdj")
+        return {
+            "koppels": koppels,
+            "gevonden": len(paden),
+            "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
+            "bibliotheek": len(kaart["bestanden"]),
+            "soort": bron,
+            "vdjfolder": (vdjmodule.bouw_vdjfolder(paden)
+                          if bron == "vdj" else ""),
+            "m3u8": (vdjmodule.bouw_m3u8(koppels)
+                     if bron == "rekordbox" else ""),
+            "rapport": vdjmodule.bouw_rapport(koppels, titel,
+                                              len(kaart["bestanden"]), bron),
+            "bestandsnaam": naam + ".vdjfolder",
+            "m3u8naam": naam + ".m3u8",
+            "rapportnaam": naam + ".txt",
+        }
+
     def _is_xhr() -> bool:
         """Komt dit verzoek van de voortgangsbalk en niet van het formulier?"""
         return request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -2140,22 +2168,11 @@ def _registreer(app: Flask) -> None:
                 regel["hoogste"] = plek
             koppels = vdjmodule.match(regels, kaart["bestanden"],
                                       kaart["niveau"])
-            paden = [k["bestand"].pad for k in koppels if k["bestand"]]
+            kop = naam.replace("_", " ")
             return render_template(
                 "vdj_rapport.html", niveaus=vdjmodule.NIVEAUS,
-                terug=_eigen_pad(request.referrer), uitkomst={
-                    "koppels": koppels, "gevonden": len(paden),
-                    "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
-                    "bibliotheek": len(kaart["bestanden"]),
-                    "soort": kaart.get("soort", "vdj"),
-                    "vdjfolder": (vdjmodule.bouw_vdjfolder(paden)
-                                  if kaart.get("soort", "vdj") == "vdj"
-                                  else ""),
-                    "m3u8": (vdjmodule.bouw_m3u8(koppels)
-                             if kaart.get("soort") == "rekordbox" else ""),
-                    "bestandsnaam": naam + ".vdjfolder",
-                    "m3u8naam": naam + ".m3u8",
-                })
+                terug=_eigen_pad(request.referrer),
+                uitkomst=_vdj_rapport(koppels, kaart, naam, kop))
 
         lijst = request.args.get("lijst") or "top40"
         if lijst not in LIJSTEN and lijst != ALLE_WEEKLIJSTEN:
@@ -2198,22 +2215,11 @@ def _registreer(app: Flask) -> None:
             naam += staartje
             koppels = vdjmodule.match(regels, kaart["bestanden"],
                                       kaart["niveau"])
-            paden = [k["bestand"].pad for k in koppels if k["bestand"]]
-            soort_bron = kaart.get("soort", "vdj")
+            kop = f"Alle weeklijsten - week {int(week)}, {jaar}"
             return render_template(
                 "vdj_rapport.html", niveaus=vdjmodule.NIVEAUS,
-                terug=_eigen_pad(request.referrer), uitkomst={
-                    "koppels": koppels, "gevonden": len(paden),
-                    "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
-                    "bibliotheek": len(kaart["bestanden"]),
-                    "soort": soort_bron,
-                    "vdjfolder": (vdjmodule.bouw_vdjfolder(paden)
-                                  if soort_bron == "vdj" else ""),
-                    "m3u8": (vdjmodule.bouw_m3u8(koppels)
-                             if soort_bron == "rekordbox" else ""),
-                    "bestandsnaam": naam + ".vdjfolder",
-                    "m3u8naam": naam + ".m3u8",
-                })
+                terug=_eigen_pad(request.referrer),
+                uitkomst=_vdj_rapport(koppels, kaart, naam, kop))
         if lijst == ALLE_WEEKLIJSTEN:
             abort(404)
 
@@ -2252,20 +2258,10 @@ def _registreer(app: Flask) -> None:
 
         koppels = vdjmodule.match(regels, kaart["bestanden"],
                                   kaart["niveau"])
-        paden = [k["bestand"].pad for k in koppels if k["bestand"]]
-        uitkomst = {
-            "koppels": koppels,
-            "gevonden": len(paden),
-            "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
-            "bibliotheek": len(kaart["bestanden"]),
-            "soort": kaart.get("soort", "vdj"),
-            "vdjfolder": (vdjmodule.bouw_vdjfolder(paden)
-                          if kaart.get("soort", "vdj") == "vdj" else ""),
-            "m3u8": (vdjmodule.bouw_m3u8(koppels)
-                     if kaart.get("soort") == "rekordbox" else ""),
-            "bestandsnaam": naam + ".vdjfolder",
-            "m3u8naam": naam + ".m3u8",
-        }
+        lijstnaam = LIJSTEN.get(lijst, {}).get("naam", lijst)
+        kop = (f"{lijstnaam} - week {int(week)}, {jaar}" if week.isdigit()
+               else f"{lijstnaam} - {jaar}")
+        uitkomst = _vdj_rapport(koppels, kaart, naam, kop)
         return render_template("vdj_rapport.html", uitkomst=uitkomst,
                                niveaus=vdjmodule.NIVEAUS,
                                terug=_eigen_pad(request.referrer))
