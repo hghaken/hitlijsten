@@ -8,7 +8,7 @@ de pagina kan schrijven.
     [facebook]
     pagina_id = 123456789012345
     token     = EAAG...                ; page access token, langlevend
-    api       = v25.0                  ; optioneel
+    api       = v26.0                  ; optioneel
     link      = https://hitlijsten.hhaken.nl/weekbericht
 
 **Zonder dat bestand doet deze module niets.** Dat is met opzet: publiceren is
@@ -33,7 +33,7 @@ HOOFD_URL = "https://hitlijsten.hhaken.nl"
 STANDAARD = {
     "pagina_id": "",
     "token": "",
-    "api": "v25.0",
+    "api": "v26.0",
     "link": HOOFD_URL + "/weekbericht",
 }
 
