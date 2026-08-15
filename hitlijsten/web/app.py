@@ -58,6 +58,10 @@ _aanmeld_pogingen: dict[str, list] = {}
 # van DSM (die het verzoek van buiten doorgeeft) en de machine zelf.
 VERTROUWDE_PROXIES = frozenset({"10.10.8.20", "127.0.0.1", "::1"})
 
+# De waarde in de lijstkeuze op /week die "laat ze alle vier zien" betekent.
+# Geen lijstnaam, dus hij kan nooit botsen met een sleutel uit LIJSTEN.
+ALLE_WEEKLIJSTEN = "alle"
+
 
 def _rem_opruimen() -> None:
     """Verlopen pogingen weggooien, en niet onbeperkt adressen onthouden.
@@ -624,17 +628,27 @@ def _registreer(app: Flask) -> None:
         de editie staat al compleet op de jaarpagina.
         """
         con = verbinding()
+        weeklijsten = [s for s in LIJSTEN if not is_jaarlijks(s)]
         lijst = request.args.get("lijst") or "top40"
-        if lijst not in LIJSTEN or is_jaarlijks(lijst):
+        if lijst != ALLE_WEEKLIJSTEN and (lijst not in LIJSTEN
+                                          or is_jaarlijks(lijst)):
             lijst = "top40"
 
-        # De kalender van uitgezonden weken van deze lijst, op volgorde. Daar
-        # komt alles uit: de keuzelijsten, de standaardweek (de nieuwste) en de
-        # buren om langs te bladeren -- over de jaargrens heen, en een
-        # overgeslagen kerstweek wordt daarbij vanzelf overgeslagen.
-        kalender = [(r[0], r[1]) for r in con.execute(
-            "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst=?"
-            " ORDER BY jaar, week", (lijst,))]
+        # De kalender van uitgezonden weken, op volgorde. Daar komt alles uit:
+        # de keuzelijsten, de standaardweek (de nieuwste) en de buren om langs
+        # te bladeren -- over de jaargrens heen, en een overgeslagen kerstweek
+        # wordt daarbij vanzelf overgeslagen. Bij "alle weeklijsten" is het de
+        # vereniging: de Oranje Top 30 begint pas in 2008, maar dat mag geen
+        # week uit de Top 40 wegnemen.
+        if lijst == ALLE_WEEKLIJSTEN:
+            plaatsen = ",".join("?" for _ in weeklijsten)
+            kalender = [(r[0], r[1]) for r in con.execute(
+                "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst IN"
+                f" ({plaatsen}) ORDER BY jaar, week", weeklijsten)]
+        else:
+            kalender = [(r[0], r[1]) for r in con.execute(
+                "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst=?"
+                " ORDER BY jaar, week", (lijst,))]
         if not kalender:
             abort(404)
 
@@ -656,25 +670,39 @@ def _registreer(app: Flask) -> None:
         vorige = kalender[plek - 1] if plek > 0 else None
         volgende = kalender[plek + 1] if plek + 1 < len(kalender) else None
 
-        rijen = list(con.execute(
-            "SELECT positie, vorige_positie, artiest, titel, label,"
-            " weken_genoteerd, site_status, sleutel, alarmschijf FROM noteringen"
-            " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie, artiest",
-            (lijst, jaar, week)))
-        rijen = _alleen_nl(rijen)
-        if request.args.get("nieuw"):
-            rijen = [r for r in rijen if not r["vorige_positie"]
-                     and r["site_status"] != "terug"]
+        def _rijen_van(welke: str) -> list:
+            """Eén weeklijst, met de filters van het scherm erop."""
+            rijen = list(con.execute(
+                "SELECT positie, vorige_positie, artiest, titel, label,"
+                " weken_genoteerd, site_status, sleutel, alarmschijf"
+                " FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
+                " ORDER BY positie, artiest", (welke, jaar, week)))
+            rijen = _alleen_nl(rijen)
+            if request.args.get("nieuw"):
+                rijen = [r for r in rijen if not r["vorige_positie"]
+                         and r["site_status"] != "terug"]
+            return rijen
+
+        # Altijd blokken, ook bij één lijst: dan hoeft het sjabloon geen twee
+        # wegen te kennen. Een lijst zonder rijen (bestond die week nog niet,
+        # of de filters lieten niets over) valt weg.
+        if lijst == ALLE_WEEKLIJSTEN:
+            blokken = [(w, _rijen_van(w)) for w in weeklijsten]
+            blokken = [(w, r) for w, r in blokken if r]
+        else:
+            blokken = [(lijst, _rijen_van(lijst))]
+        rijen = [r for _, deel in blokken for r in deel]
+
         try:
             datum = als_tekst(vrijdag_van(jaar, week))
         except Exception:
             datum = None
         return render_template(
             "week.html", lijst=lijst, jaar=jaar, week=week, rijen=rijen,
+            blokken=blokken, alle=ALLE_WEEKLIJSTEN,
             jaren=sorted({j for j, _ in kalender}, reverse=True),
             weken=[w for j, w in kalender if j == jaar],
             vorige=vorige, volgende=volgende, datum=datum,
-            heeft_label=any(r["label"] for r in rijen),
         )
 
     _sitemap_cache: dict = {}
@@ -2024,13 +2052,64 @@ def _registreer(app: Flask) -> None:
                 })
 
         lijst = request.args.get("lijst") or "top40"
-        if lijst not in LIJSTEN:
+        if lijst not in LIJSTEN and lijst != ALLE_WEEKLIJSTEN:
             abort(404)
         try:
             jaar = int(request.args.get("jaar", ""))
         except ValueError:
             abort(404)
         week = request.args.get("week", "")
+
+        # Alle weeklijsten van één week samen: de vier lijsten achter elkaar,
+        # elk op eigen volgorde. Dubbelen (een nummer dat in twee lijsten
+        # staat) laat de matcher vanzelf tegen hetzelfde bestand landen; ze
+        # dubbel in de playlist zetten zou raar zijn, dus dat filteren we.
+        if lijst == ALLE_WEEKLIJSTEN and week.isdigit():
+            weeklijsten = [w for w in LIJSTEN if not is_jaarlijks(w)]
+            plaatsen = ",".join("?" for _ in weeklijsten)
+            ruw = [dict(r) for r in con.execute(
+                "SELECT lijst, sleutel, artiest, titel, positie hoogste,"
+                " vorige_positie, site_status FROM noteringen WHERE lijst IN"
+                f" ({plaatsen}) AND jaar=? AND week=?"
+                " ORDER BY lijst, positie, artiest",
+                (*weeklijsten, jaar, int(week)))]
+            regels, gezien = [], set()
+            for regel in ruw:
+                if regel["sleutel"] in gezien:
+                    continue
+                gezien.add(regel["sleutel"])
+                regels.append(regel)
+            if not regels:
+                abort(404)
+            regels = _alleen_nl(regels)
+            if request.args.get("nieuw"):
+                regels = [r for r in regels if not r["vorige_positie"]
+                          and r["site_status"] != "terug"]
+            naam = f"Weeklijsten_{jaar}_Week{int(week):02d}"
+            _, staartje = _nl_keuze()
+            if request.args.get("nieuw"):
+                staartje += "_nieuw"
+            naam += staartje
+            koppels = vdjmodule.match(regels, kaart["bestanden"],
+                                      kaart["niveau"])
+            paden = [k["bestand"].pad for k in koppels if k["bestand"]]
+            soort_bron = kaart.get("soort", "vdj")
+            return render_template(
+                "vdj_rapport.html", niveaus=vdjmodule.NIVEAUS,
+                terug=_eigen_pad(request.referrer), uitkomst={
+                    "koppels": koppels, "gevonden": len(paden),
+                    "twijfel": sum(1 for k in koppels if k["niveau"] == 4),
+                    "bibliotheek": len(kaart["bestanden"]),
+                    "soort": soort_bron,
+                    "vdjfolder": (vdjmodule.bouw_vdjfolder(paden)
+                                  if soort_bron == "vdj" else ""),
+                    "m3u8": (vdjmodule.bouw_m3u8(koppels)
+                             if soort_bron == "rekordbox" else ""),
+                    "bestandsnaam": naam + ".vdjfolder",
+                    "m3u8naam": naam + ".m3u8",
+                })
+        if lijst == ALLE_WEEKLIJSTEN:
+            abort(404)
 
         naam = f"{LIJSTEN[lijst]['bestand']}_{jaar}"
         if week.isdigit():
