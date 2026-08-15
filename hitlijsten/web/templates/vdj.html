@@ -53,12 +53,17 @@
        required-melding) achter. #}
     <span style="display:inline-flex; gap:.7rem; align-items:center; margin-top:.3rem">
       <span class="knop">{{ _("Selecteer file") }}</span>
-      <span class="hint" id="gekozen">{{ _("nog niets gekozen") }}</span>
+      <span class="hint" id="gekozen"
+            data-leeg="{{ _("nog niets gekozen") }}">{{ _("nog niets gekozen") }}</span>
     </span>
-    <input type="file" name="database" accept=".xml,.zip" multiple required
-           style="position:absolute; opacity:0; width:1px; height:1px"
-           onchange="document.getElementById('gekozen').textContent =
-             [...this.files].map(f => f.name).join(', ') || {{ _('nog niets gekozen') | tojson }}">
+    {# Het veld zelf is onzichtbaar maar wel focusbaar (voor de
+       required-melding); de knop hierboven staat in hetzelfde label, dus
+       klikken opent de bestandskiezer. De namen invullen gebeurt in een
+       scriptblok onderaan en niet in een onchange-attribuut: de vertaalde
+       tekst draagt aanhalingstekens en die braken het attribuut op. #}
+    <input type="file" name="database" id="bestandkiezer"
+           accept=".xml,.zip" multiple required
+           style="position:absolute; opacity:0; width:1px; height:1px">
     <span class="hint" style="display:block">{% if taal == 'en' %}The
       easy way: make a <b>backup</b> in VirtualDJ (Settings → Backup) and
       upload that zip — small and complete, including music on
@@ -115,5 +120,21 @@
 </form>
 
 {% if fout %}<div class="melding fout" style="margin-top:1rem">{{ fout }}</div>{% endif %}
+
+<script>
+  /* Laat zien welk bestand je koos: zonder dit lijkt de knop niets te doen,
+     want het echte invoerveld is onzichtbaar. */
+  (function () {
+    var veld = document.getElementById("bestandkiezer");
+    var uit = document.getElementById("gekozen");
+    if (!veld || !uit) return;
+    veld.addEventListener("change", function () {
+      var namen = Array.prototype.map.call(veld.files, function (f) {
+        return f.name;
+      });
+      uit.textContent = namen.join(", ") || uit.dataset.leeg;
+    });
+  })();
+</script>
 
 {% endblock %}
