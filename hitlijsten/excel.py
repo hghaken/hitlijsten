@@ -336,10 +336,25 @@ def _schrijf_tabel(
     return kop_rij
 
 
+# In welke lijst een Alarmschijf hoort te worden getoond; zie _weektab.
+ALARMSCHIJF_LIJST = "top40"
+
+
 def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int,
              tabtitel: Optional[str] = None, melding: str = "") -> None:
     """De complete lijst van die week, met de binnenkomers lichtblauw."""
+    # Alleen in de Top 40, net als op de site. De vlag is een eigenschap van
+    # de PLAAT en staat daarom ook op de Tipparade- en Sterren NL-noteringen
+    # van datzelfde nummer, maar uitgeroepen worden ze in de Top 40 -- dat is
+    # ook hoe top40.nl het toont. Elders zou de kolom suggereren dat die
+    # lijst eigen Alarmschijven kent.
+    heeft_alarm = (gegevens.lijst == ALARMSCHIJF_LIJST
+                   and any(r["alarmschijf"]
+                           for r in gegevens.alle_per_week[week]))
+
     kolommen = ["Positie", "Vorige positie", "Artiest", "Titel"]
+    if heeft_alarm:
+        kolommen.append("Alarmschijf")
     if gegevens.heeft_label:
         kolommen.append("Label")
     kolommen += ["Aantal weken", "Site-status", "Sleutel"]
@@ -356,6 +371,8 @@ def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int,
             rij["artiest"],
             rij["titel"],
         ]
+        if heeft_alarm:
+            waarden.append("ja" if rij["alarmschijf"] else None)
         if gegevens.heeft_label:
             waarden.append(rij["label"])
         weken_site = rij["weken_genoteerd"]
@@ -368,6 +385,9 @@ def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int,
         accent.append(rij["sleutel"] in nieuwe_sleutels)
 
     toelichting = WEEK_TOELICHTING
+    if heeft_alarm:
+        toelichting += (" Alarmschijf = door de Top 40 uitgeroepen tot"
+                        " aandachtsplaat van de week (bron: top40.nl).")
     if not any(accent):
         toelichting = "Geen nieuwe nummers deze week. " + toelichting
     # De melding als eerste: dat je naar een selectie kijkt is het eerste

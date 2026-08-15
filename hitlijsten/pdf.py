@@ -226,6 +226,32 @@ def bouw_jaaroverzicht(
 # klein, en de klassementen mogen nooit achterlopen op de database.
 
 
+# Het belletje van de site (U+1F514) zit niet in DejaVu Sans en zou een leeg
+# blokje worden; de ster wel.
+STER = "★"
+
+# Alleen in de Top 40, net als op de site. De vlag is een eigenschap van de
+# PLAAT en staat daarom ook op de Tipparade- en Sterren NL-noteringen van
+# datzelfde nummer (gemeten: 2.652 en 451 stuks), maar uitgeroepen worden ze
+# in de Top 40 -- zo toont top40.nl het ook. Elders zou een ster suggereren
+# dat die lijst eigen Alarmschijven kent.
+ALARMSCHIJF_LIJST = "top40"
+
+
+def _met_ster(titel: str, alarmschijf, lijst: str) -> str:
+    """Een ster voor de titel als het nummer Alarmschijf was."""
+    if alarmschijf and lijst == ALARMSCHIJF_LIJST:
+        return f"{STER} {titel}"
+    return titel
+
+
+def _met_ster_uitleg(ondertitel: str, rijen_db, lijst: str) -> str:
+    """De legenda erbij, maar alleen als er ook echt een ster op staat."""
+    if lijst == ALARMSCHIJF_LIJST and any(r["alarmschijf"] for r in rijen_db):
+        return f"{ondertitel} · {STER} = Alarmschijf"
+    return ondertitel
+
+
 def _met_melding(ondertitel: str, melding: str) -> str:
     """De actieve filters achter de ondertitel plakken."""
     return f"{ondertitel} · {melding}" if melding else ondertitel
@@ -288,8 +314,9 @@ def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
     """Eén week zoals uitgezonden."""
     rijen_db = list(con.execute(
         "SELECT positie, vorige_positie, artiest, titel, weken_genoteerd,"
-        " site_status, sleutel FROM noteringen WHERE lijst=? AND jaar=?"
-        " AND week=? ORDER BY positie", (lijst, jaar, week)))
+        " site_status, sleutel, alarmschijf FROM noteringen"
+        " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie",
+        (lijst, jaar, week)))
     if alleen is not None:
         rijen_db = [r for r in rijen_db if r["sleutel"] in alleen]
     if not rijen_db:
@@ -302,13 +329,13 @@ def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
         vorige = r["vorige_positie"]
         if vorige is None:
             vorige = "terug" if r["site_status"] == "terug" else "nieuw"
-        rijen.append([r["positie"], vorige, r["artiest"], r["titel"],
+        rijen.append([r["positie"], vorige, r["artiest"],
+                      _met_ster(r["titel"], r["alarmschijf"], lijst),
                       r["weken_genoteerd"]])
 
     naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
-    return _tabel_pdf(naam, f"week {week}",
-                      _met_melding(f"Weeklijst · {len(rijen)} noteringen",
-                                   melding),
+    onder = _met_ster_uitleg(f"Weeklijst · {len(rijen)} noteringen", rijen_db, lijst)
+    return _tabel_pdf(naam, f"week {week}", _met_melding(onder, melding),
                       kolommen, rijen, vet=("Positie",))
 
 
@@ -427,8 +454,9 @@ def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
     for welke in weeklijsten:
         rijen_db = list(con.execute(
             "SELECT positie, vorige_positie, artiest, titel, weken_genoteerd,"
-            " site_status, sleutel FROM noteringen WHERE lijst=? AND jaar=?"
-            " AND week=? ORDER BY positie", (welke, jaar, week)))
+            " site_status, sleutel, alarmschijf FROM noteringen"
+            " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie",
+            (welke, jaar, week)))
         if alleen is not None:
             rijen_db = [r for r in rijen_db if r["sleutel"] in alleen]
         if binnenkomers:
@@ -443,9 +471,13 @@ def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
                 ("Artiest", 63, "L"), ("Titel", 78, "L"), ("Weken", 15, "C")]
     totaal = sum(len(r) for _, r in delen)
     soort = "binnenkomers" if binnenkomers else "noteringen"
+    alle_rijen = [r for welke, deel in delen for r in deel
+                  if welke == ALARMSCHIJF_LIJST]
     pdf = _Blad("Weeklijsten", f"week {week}",
                 _met_melding(
-                    f"{len(delen)} lijsten · {totaal} {soort} · {jaar}",
+                    _met_ster_uitleg(
+                        f"{len(delen)} lijsten · {totaal} {soort} · {jaar}",
+                        alle_rijen, ALARMSCHIJF_LIJST),
                     melding))
     pdf.alias_nb_pages()
     pdf.add_page()
@@ -456,7 +488,8 @@ def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
             vorige = r["vorige_positie"]
             if vorige is None:
                 vorige = "terug" if r["site_status"] == "terug" else "nieuw"
-            rijen.append([r["positie"], vorige, r["artiest"], r["titel"],
+            rijen.append([r["positie"], vorige, r["artiest"],
+                          _met_ster(r["titel"], r["alarmschijf"], welke),
                           r["weken_genoteerd"]])
         naam = LIJSTEN.get(welke, {}).get("naam", welke)
         y = _sectie_op_blad(pdf, f"{naam} — {len(rijen)} {soort}",
