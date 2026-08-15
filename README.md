@@ -37,7 +37,8 @@ Nederlandstalig-markering met filter. Voor bezoekers: artiestpagina's, een
 datumprikker ("wat stond er op 1 op jouw geboortedag?"), records, versies,
 een jaargang-vergelijker, een wekelijks weekbericht met RSS-feed, een
 gastenboek, **DJ Export** (laad je VirtualDJ- of rekordbox-database en
-download elke lijst als playlist uit je eigen bibliotheek), een
+download elke lijst als playlist uit je eigen bibliotheek, met een
+rapport en een boodschappenlijst van wat ontbreekt), een
 handleiding-PDF in twee talen en een NL/EN-taalkeuze die de hele site
 dekt, van lijstpagina's tot disclaimer. Draait op een Synology NAS: een
 Flask-applicatie op waitress achter de reverse proxy, en een systemd-timer die elke vrijdag

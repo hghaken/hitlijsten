@@ -551,6 +551,9 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
         "**Matching-strengheid**: hoe soepel de site jouw tags aan "
         "de lijsttitels mag koppelen — zie de tabel hieronder.",
     ])
+    pdf.p("Tijdens het laden verschijnt een balk met een percentage. Een "
+          "grote database duurt een seconde of tien; de balk laat zien "
+          "hoever de server is, zodat je weet dat er nog gewerkt wordt.")
     pdf.tabel(
         [("Niveau", 30, "L"), ("Hoe streng", BREED - 30, "L")],
         [
@@ -589,6 +592,12 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "status en het gevonden bestandspad. Bestaat een nummer "
           "meerdere keren in je bibliotheek, dan wint het lokale "
           "bestand met de hoogste bitrate.")
+    pdf.p("Naast de playlist staat een knop die datzelfde rapport als "
+          "**tekstbestand** (.txt) oplevert: dezelfde tabel in vaste "
+          "kolommen, en onderaan nog eens los je boodschappenlijst — "
+          "alleen wat je mist, met de volledige titel. Handig om uit te "
+          "printen, mee te nemen naar de platenzaak of in een berichtje "
+          "te plakken.")
     pdf.kop2("Stap 5 · gebruik hem in je DJ-software")
     pdf.p("De downloadknop past zich aan je bron aan, en het bestand "
           "is genoemd naar de lijst en je selectie. Laadde je een "
@@ -861,6 +870,9 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
         "**Matching strictness**: how loosely the site may match "
         "your tags to the chart titles — see the table below.",
     ])
+    pdf.p("While loading, a bar with a percentage appears. A large "
+          "database takes ten seconds or so; the bar shows how far the "
+          "server has got, so you know it is still working.")
     pdf.tabel(
         [("Level", 30, "L"), ("How strict", BREED - 30, "L")],
         [
@@ -898,6 +910,12 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "with its status and the file path found. If a song exists "
           "more than once in your library, the local file with the "
           "highest bitrate wins.")
+    pdf.p("Next to the playlist there is a button that gives you that "
+          "same report as a **text file** (.txt): the same table in "
+          "fixed columns, and your shopping list again separately at "
+          "the bottom — only what you are missing, with the full "
+          "title. Handy to print, take to the record shop or paste "
+          "into a message.")
     pdf.kop2("Step 5 · use it in your DJ software")
     pdf.p("The download button adapts to your source, and the file is "
           "named after the chart and your selection. If you loaded a "
