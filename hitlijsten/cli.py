@@ -10,6 +10,7 @@
     python -m hitlijsten opschonen       leestekens en schrijfwijzen rechtzetten
     python -m hitlijsten momentopname    kopie van de database maken of terugzetten
     python -m hitlijsten testmail        proefmail versturen
+    python -m hitlijsten facebook        het wekelijkse bericht tonen (--plaats = echt plaatsen)
 
 --jaar mag voor of na de opdracht: "hitlijsten excel --jaar 2025" werkt, en
 "hitlijsten --jaar 2025 excel" ook.
@@ -924,6 +925,52 @@ def _mailtekst(
     return onderwerp, tekst
 
 
+def opdracht_facebook(*, plaatsen: bool = False, stil: bool = False,
+                      weken: dict | None = None) -> None:
+    """Het wekelijkse bericht: laten zien, of echt op de pagina zetten.
+
+    Standaard alleen tonen. Publiceren is naar buiten treden, en dat hoort
+    een bewuste keuze te zijn -- vandaar dat --plaats nodig is en dat een
+    ontbrekende facebook.ini gewoon stil overslaat in plaats van te klagen.
+    """
+    from . import facebook
+
+    if weken is not None:
+        # Vanuit de run: welke Top 40-week is er zojuist bijgekomen?
+        top40 = [(jaar, week) for (lijst, jaar), lijstweken in weken.items()
+                 if lijst == "top40" for week in lijstweken]
+        if not top40:
+            if not stil:
+                log("Facebook: geen nieuwe Top 40-week, niets te melden")
+            return
+        jaar, week = max(top40)
+    else:
+        with db.verbinding() as con:
+            rij = con.execute(
+                "SELECT jaar, week FROM noteringen WHERE lijst='top40'"
+                " ORDER BY jaar DESC, week DESC LIMIT 1").fetchone()
+        if not rij:
+            log("Facebook: geen Top 40 in de database")
+            return
+        jaar, week = rij[0], rij[1]
+
+    if stil and not facebook.is_ingesteld():
+        return                                # nog niet aangezet; geen ruis
+
+    with db.verbinding() as con:
+        tekst = facebook.berichttekst(con, jaar, week)
+    if not tekst:
+        log(f"Facebook: week {week} van {jaar} is leeg")
+        return
+
+    if not plaatsen:
+        print(tekst)
+        log(f"Facebook: proef voor {jaar} week {week} (niet geplaatst)")
+        return
+
+    log(f"Facebook: bericht geplaatst, id {facebook.plaats(tekst)}")
+
+
 def opdracht_run(jaar: int, *, stuur_mail: bool = True) -> None:
     log("=" * 60)
     log("wekelijkse run gestart")
@@ -980,6 +1027,15 @@ def opdracht_run(jaar: int, *, stuur_mail: bool = True) -> None:
         else:
             log("mail overgeslagen (--geen-mail)")
             print("\n" + tekst)
+
+        # Het wekelijkse berichtje op Facebook. Alleen als er een nieuwe
+        # Top 40-week binnenkwam -- anders zou een stille run hetzelfde
+        # bericht nog eens plaatsen. Zonder facebook.ini gebeurt er niets.
+        try:
+            opdracht_facebook(plaatsen=stuur_mail, stil=True,
+                              weken=nieuwe_weken)
+        except Exception as fout:            # nooit de run laten stranden
+            log(f"Facebook-bericht mislukt: {fout}")
     except Exception:
         fout = traceback.format_exc()
         log("RUN MISLUKT\n" + fout)
@@ -1064,6 +1120,11 @@ def main(argv: list[str] | None = None) -> int:
                    help="tonen wat er bewaard is")
     sub.add_parser("testmail", help="proefmail versturen")
 
+    f = sub.add_parser("facebook",
+                       help="het wekelijkse bericht tonen of plaatsen")
+    f.add_argument("--plaats", action="store_true",
+                   help="echt op de pagina zetten (zonder dit alleen tonen)")
+
     r = sub.add_parser("run", parents=[jaar_ouder], help="bijwerken + excel + mail")
     r.add_argument("--geen-mail", action="store_true")
 
@@ -1108,6 +1169,8 @@ def main(argv: list[str] | None = None) -> int:
             "Als je dit leest werkt de melding vanaf de pc via de mailrelay.",
         )
         log("proefmail verstuurd")
+    elif args.opdracht == "facebook":
+        opdracht_facebook(plaatsen=args.plaats)
     elif args.opdracht == "run":
         opdracht_run(jaar, stuur_mail=not args.geen_mail)
     return 0

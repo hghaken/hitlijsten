@@ -19,6 +19,7 @@ data/
 webapp.ini
 discogs.ini
 mail.ini
+facebook.ini
 
 # Logboeken en werkbestanden.
 run.log
