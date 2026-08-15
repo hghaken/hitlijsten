@@ -362,7 +362,9 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "genoteerd. Nieuwe binnenkomers en terugkeerders krijgen een "
           "gekleurd speldje, en met de knoppen ‹ vorige en volgende › "
           "blader je week voor week door de kalender — ook over de "
-          "jaargrens heen.")
+          "jaargrens heen. Onderaan de lijstkeuze staat **Alle "
+          "weeklijsten**: dan zie je de vier lijsten van diezelfde week "
+          "onder elkaar, elk met een eigen kop en eigen posities.")
     pdf.kop2("Jaaroverzichten")
     pdf.p("Per lijst en jaargang bouwt de site een **puntenklassement** "
           "uit alle weeknoteringen van dat jaar: hoe hoger en hoe "
@@ -408,10 +410,17 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
         "wéék — precies de rijen met het groene speldje.",
     ])
     pdf.p("Onder elke lijst staan downloadknoppen voor **Excel** en "
-          "**PDF** (en, als je een VirtualDJ-database hebt geladen, "
-          "**VDJ** — zie hoofdstuk 6). De download bevat precies de "
-          "selectie die op je scherm staat; de bestandsnaam vertelt "
-          "het na: een achtervoegsel als _top100, _NL of _nieuw.")
+          "**PDF** (en, als je een DJ-database hebt geladen, "
+          "**DJ Export** — zie hoofdstuk 6). De download bevat precies "
+          "de selectie die op je scherm staat; de bestandsnaam vertelt "
+          "het na met een achtervoegsel als _top100, _NL of _nieuw, en "
+          "staat er een filter aan, dan zegt het bestand dat ook zelf — "
+          "in de PDF onder de kop, in Excel boven de tabel. Een "
+          "doorgestuurd of uitgeprint blad draagt zijn bestandsnaam "
+          "immers niet meer.")
+    pdf.p("Koos je **Alle weeklijsten**, dan krijg je één werkboek met "
+          "een tab per lijst en één PDF waarin de lijsten onder elkaar "
+          "doorlopen.")
     pdf.tip("De PDF's zijn gemaakt om te printen: veertig regels per "
             "pagina, rustig zwart-op-wit, alleen de kop in kleur. "
             "Handig voor in de studio of op de vlooienmarkt.")
@@ -446,7 +455,8 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
             ["NL-vlaggetje", "(Vermoedelijk) Nederlandstalig nummer; "
              "op de nummerpagina kan dit per nummer gecorrigeerd zijn."],
             ["Belletje", "Alarmschijf: door de Top 40 uitgeroepen tot "
-             "aandachtsplaat van de week."],
+             "aandachtsplaat van de week. In de downloads heet dit een "
+             "kolom (Excel) of een ster vóór de titel (PDF)."],
             ["Speldje „nieuw”", "Nieuwe binnenkomer in die "
              "week."],
             ["Speldje „terug”", "Terugkeerder: stond eerder "
@@ -667,7 +677,10 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "artist, title and weeks on chart. New entries and returning "
           "songs get a coloured badge, and the ‹ previous and next › "
           "buttons page through the calendar week by week — across the "
-          "year boundary too.")
+          "year boundary too. At the bottom of the chart picker sits "
+          "**All weekly charts**: that shows all four charts of the same "
+          "week below each other, each with its own heading and its own "
+          "positions.")
     pdf.kop2("Year charts")
     pdf.p("For every chart and year the site builds a **points "
           "ranking** from all weekly entries of that year: the higher "
@@ -714,7 +727,13 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "**PDF** (and, with a DJ database loaded, **DJ Export** — "
           "see chapter 6). The download contains exactly the selection "
           "on your screen; the file name says so, with a suffix like "
-          "_top100, _NL or _nieuw.")
+          "_top100, _NL or _nieuw — and with a filter on, the file "
+          "says so itself: under the heading in the PDF, above the "
+          "table in Excel. A forwarded or printed sheet no longer "
+          "carries its file name, after all.")
+    pdf.p("If you picked **All weekly charts**, you get one workbook "
+          "with a tab per chart and one PDF in which the charts follow "
+          "each other continuously.")
     pdf.tip("The PDFs are made for printing: forty rows per page, "
             "calm black-on-white, only the header in colour. Handy "
             "for the studio or the record fair.")
@@ -749,7 +768,8 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
             ["NL flag", "(Presumably) Dutch-language song; on the "
              "song page this can be corrected per song."],
             ["Bell", "Alarmschijf: named record of the week by the "
-             "Top 40."],
+             "Top 40. In the downloads this becomes a column (Excel) or "
+             "a star before the title (PDF)."],
             ["„new” badge", "New entry that week."],
             ["„back” badge", "Re-entry: charted before, "
              "dropped out and returned."],
