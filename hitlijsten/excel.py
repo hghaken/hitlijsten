@@ -336,7 +336,8 @@ def _schrijf_tabel(
     return kop_rij
 
 
-def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int) -> None:
+def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int,
+             tabtitel: Optional[str] = None) -> None:
     """De complete lijst van die week, met de binnenkomers lichtblauw."""
     kolommen = ["Positie", "Vorige positie", "Artiest", "Titel"]
     if gegevens.heeft_label:
@@ -370,7 +371,7 @@ def _weektab(wb: Workbook, gegevens: LijstGegevens, week: int) -> None:
     if not any(accent):
         toelichting = "Geen nieuwe nummers deze week. " + toelichting
 
-    ws = wb.create_sheet(tabnaam(f"Week {week:02d}"))
+    ws = wb.create_sheet(tabnaam(tabtitel or f"Week {week:02d}"))
     _schrijf_tabel(ws, kolommen, rijen, toelichting=toelichting, accent=accent,
                    centreer=GECENTREERD)
 
@@ -635,6 +636,43 @@ def bouw_week_werkboek(
     wb.remove(wb.active)
     _weektab(wb, gegevens, week)
     return wb
+
+
+def bouw_week_alle_werkboek(
+    con: sqlite3.Connection, jaar: int, week: int,
+    alleen: Optional[set] = None, binnenkomers: bool = False,
+) -> Optional[Workbook]:
+    """Alle weeklijsten van één week in één werkboek: een tab per lijst.
+
+    Een tab per lijst en niet één lange tabel: de lijsten hebben elk hun
+    eigen posities en lengte, en in Excel wil je ze naast elkaar kunnen
+    leggen zonder eerst te moeten filteren.
+    """
+    from .config import is_jaarlijks
+
+    wb = Workbook()
+    wb.remove(wb.active)
+    for welke in [k for k in LIJSTEN if not is_jaarlijks(k)]:
+        gegevens = verzamel_lijst(con, welke, jaar)
+        if gegevens is None or week not in gegevens.alle_per_week:
+            continue
+        rijen = gegevens.alle_per_week[week]
+        nieuwe = gegevens.nieuw_per_week[week]
+        if alleen is not None:
+            rijen = [r for r in rijen if r["sleutel"] in alleen]
+            nieuwe = [r for r in nieuwe if r["sleutel"] in alleen]
+        if binnenkomers:
+            houden = {r["sleutel"] for r in rijen
+                      if not r["vorige_positie"] and r["site_status"] != "terug"}
+            rijen = [r for r in rijen if r["sleutel"] in houden]
+            nieuwe = [r for r in nieuwe if r["sleutel"] in houden]
+        if not rijen:
+            continue
+        gegevens.alle_per_week[week] = rijen
+        gegevens.nieuw_per_week[week] = nieuwe
+        _weektab(wb, gegevens, week,
+                 tabtitel=LIJSTEN.get(welke, {}).get("naam", welke))
+    return wb if wb.sheetnames else None
 
 
 def bouw_jaarlijksen_werkboek(

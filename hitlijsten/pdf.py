@@ -28,7 +28,7 @@ from .excel import BestandInGebruik, verzamel_lijst
 
 __all__ = [
     "bouw_jaaroverzicht", "schrijf_jaaroverzicht", "pad_van", "is_actueel",
-    "REGELS_PER_PAGINA",
+    "bouw_week_alle", "REGELS_PER_PAGINA",
 ]
 
 LETTERTYPEN = ROOT / "lettertypen"
@@ -230,6 +230,18 @@ def _tabel_pdf(naam: str, jaartekst, ondertitel: str, kolommen: list,
     """Een klassement als PDF: kolommen (kop, mm, uitlijning) en rijen."""
     pdf = _Blad(naam, jaartekst, ondertitel)
     pdf.alias_nb_pages()
+    _tabel_op_blad(pdf, kolommen, rijen, vet)
+    return bytes(pdf.output())
+
+
+def _tabel_op_blad(pdf: "_Blad", kolommen: list, rijen: list,
+                   vet: tuple = ("#", "Punten")) -> None:
+    """Zet één tabel op een bestaand blad, vanaf een nieuwe pagina.
+
+    Apart van `_tabel_pdf` omdat een document meer dan één tabel kan
+    dragen: bij "alle weeklijsten" volgen de vier lijsten elkaar op in
+    hetzelfde bestand, elk met een eigen kop in de banner.
+    """
     kolommen = _pas_nummerkolom(kolommen, len(rijen))
     breed = sum(k[1] for k in kolommen)
 
@@ -263,8 +275,6 @@ def _tabel_pdf(naam: str, jaartekst, ondertitel: str, kolommen: list,
                 x += kolbreed
             y += REGEL
 
-    return bytes(pdf.output())
-
 
 def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
                    week: int, alleen: Optional[set] = None) -> Optional[bytes]:
@@ -291,6 +301,54 @@ def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
     naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
     return _tabel_pdf(naam, f"week {week}", f"Weeklijst · {len(rijen)} noteringen",
                       kolommen, rijen, vet=("Positie",))
+
+
+def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
+                   alleen: Optional[set] = None,
+                   binnenkomers: bool = False) -> Optional[bytes]:
+    """Alle weeklijsten van één week in één PDF, elke lijst een eigen deel.
+
+    Niet samengevoegd tot één tabel: elke lijst heeft zijn eigen nummer 1,
+    en die naast elkaar zetten zou een rangorde suggereren die er niet is.
+    De banner draagt per deel de naam van de lijst, zodat je op elke pagina
+    ziet waar je in zit.
+    """
+    from .config import is_jaarlijks
+
+    weeklijsten = [k for k in LIJSTEN if not is_jaarlijks(k)]
+    delen = []
+    for welke in weeklijsten:
+        rijen_db = list(con.execute(
+            "SELECT positie, vorige_positie, artiest, titel, weken_genoteerd,"
+            " site_status, sleutel FROM noteringen WHERE lijst=? AND jaar=?"
+            " AND week=? ORDER BY positie", (welke, jaar, week)))
+        if alleen is not None:
+            rijen_db = [r for r in rijen_db if r["sleutel"] in alleen]
+        if binnenkomers:
+            rijen_db = [r for r in rijen_db if not r["vorige_positie"]
+                        and r["site_status"] != "terug"]
+        if rijen_db:
+            delen.append((welke, rijen_db))
+    if not delen:
+        return None
+
+    kolommen = [("Positie", 15, "C"), ("Vorige", 15, "C"),
+                ("Artiest", 63, "L"), ("Titel", 78, "L"), ("Weken", 15, "C")]
+    pdf = _Blad("Weeklijsten", f"week {week}", "")
+    pdf.alias_nb_pages()
+    for welke, rijen_db in delen:
+        rijen = []
+        for r in rijen_db:
+            vorige = r["vorige_positie"]
+            if vorige is None:
+                vorige = "terug" if r["site_status"] == "terug" else "nieuw"
+            rijen.append([r["positie"], vorige, r["artiest"], r["titel"],
+                          r["weken_genoteerd"]])
+        # De banner leest deze twee bij elke nieuwe pagina opnieuw uit.
+        pdf.naam = LIJSTEN.get(welke, {}).get("naam", welke)
+        pdf.ondertitel = f"Weeklijst · {len(rijen)} noteringen"
+        _tabel_op_blad(pdf, kolommen, rijen, vet=("Positie",))
+    return bytes(pdf.output())
 
 
 def bouw_klassement(con: sqlite3.Connection, lijst: str, van: int,

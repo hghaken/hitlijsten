@@ -1326,7 +1326,19 @@ def _registreer(app: Flask) -> None:
 
     @app.route("/download/week/<lijst>/<int:jaar>/<int:week>")
     def download_week(lijst: str, jaar: int, week: int):
-        """Eén weeklijst als Excel."""
+        """Eén weeklijst als Excel, of alle vier met een tab per lijst."""
+        if lijst == ALLE_WEEKLIJSTEN:
+            con = verbinding()
+            alleen, staartje = _nl_keuze()
+            if request.args.get("nieuw"):
+                staartje += "_nieuw"
+            wb = excel.bouw_week_alle_werkboek(
+                con, jaar, week, alleen=alleen,
+                binnenkomers=bool(request.args.get("nieuw")))
+            if wb is None:
+                abort(404)
+            return _stuur_excel(
+                wb, f"Weeklijsten_{jaar}_Week{week:02d}{staartje}.xlsx")
         if lijst not in LIJSTEN or is_jaarlijks(lijst):
             abort(404)
         con = verbinding()
@@ -1344,10 +1356,22 @@ def _registreer(app: Flask) -> None:
 
     @app.route("/download/pdf/week/<lijst>/<int:jaar>/<int:week>")
     def download_week_pdf(lijst: str, jaar: int, week: int):
-        """Eén weeklijst als PDF."""
+        """Eén weeklijst als PDF, of alle vier achter elkaar."""
+        from .. import pdf as pdfbouwer
+        if lijst == ALLE_WEEKLIJSTEN:
+            con = verbinding()
+            alleen, staartje = _nl_keuze()
+            if request.args.get("nieuw"):
+                staartje += "_nieuw"
+            inhoud = pdfbouwer.bouw_week_alle(
+                con, jaar, week, alleen=alleen,
+                binnenkomers=bool(request.args.get("nieuw")))
+            if inhoud is None:
+                abort(404)
+            return _stuur_pdf(
+                inhoud, f"Weeklijsten_{jaar}_Week{week:02d}{staartje}.pdf")
         if lijst not in LIJSTEN or is_jaarlijks(lijst):
             abort(404)
-        from .. import pdf as pdfbouwer
         con = verbinding()
         alleen, staartje = _nl_keuze()
         if request.args.get("nieuw"):

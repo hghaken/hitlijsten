@@ -55,15 +55,12 @@
 
   {% if rijen %}
   {% set nw = '1' if nieuw_filter_aan else None %}
-  {# Excel en PDF worden per lijst gebouwd (eigen kolommen, eigen kopregel),
-     dus bij "alle weeklijsten" wijzen ze nergens naar. De DJ Export kan wél
-     samen: dat is één playlist. #}
-  {% if lijst != alle %}
+  {# Ook bij "alle weeklijsten": het werkboek krijgt dan een tab per lijst
+     en de PDF een deel per lijst, elk met zijn eigen kop. #}
   <a class="knop" href="{{ url_for('download_week', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None), nieuw=nw) }}"
-     title="{{ _("Deze weeklijst als werkboek") }}">⤓ Excel</a>
+     title="{% if lijst == alle %}{% if taal == 'en' %}All four weekly charts as one workbook, a tab per chart{% else %}Alle vier de weeklijsten als één werkboek, een tab per lijst{% endif %}{% else %}{{ _("Deze weeklijst als werkboek") }}{% endif %}">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download_week_pdf', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None), nieuw=nw) }}"
-     title="{{ _("Deze weeklijst als PDF") }}">⤓ PDF</a>
-  {% endif %}
+     title="{% if lijst == alle %}{% if taal == 'en' %}All four weekly charts as one PDF, a section per chart{% else %}Alle vier de weeklijsten als één PDF, een deel per lijst{% endif %}{% else %}{{ _("Deze weeklijst als PDF") }}{% endif %}">⤓ PDF</a>
   {% if vdj_geladen %}
   <a class="knop" href="{{ url_for('vdj_maak', lijst=lijst, jaar=jaar, week=week, nl=('1' if nl_filter_aan else None), nieuw=nw) }}"
      title="{{ _("Deze weeklijst als VirtualDJ-playlist uit je eigen bibliotheek (laad eerst je database op de VirtualDJ-pagina)") }}">⤓ DJ Export</a>
