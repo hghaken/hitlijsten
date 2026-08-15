@@ -1941,6 +1941,17 @@ def _registreer(app: Flask) -> None:
             kaart["tijd"] = datetime.now()
         return kaart
 
+    # Stand van lopende uploads, op een sleutel die de bezoeker zelf meestuurt.
+    # Alleen in het geheugen en maar kort: zodra het verzoek klaar is, gaat de
+    # regel eruit. Dat dit werkt komt doordat de webserver één proces is met
+    # meerdere draden (zie web/__main__.py) -- met losse worker-processen zou
+    # de pollende draad een andere kopie zien dan de uploadende.
+    _vdj_voortgang: dict = {}
+
+    def _is_xhr() -> bool:
+        """Komt dit verzoek van de voortgangsbalk en niet van het formulier?"""
+        return request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
     def _vdj_opruimen() -> None:
         nu = datetime.now()
         for token in [t for t, k in _vdj_sessies.items()
@@ -1955,6 +1966,17 @@ def _registreer(app: Flask) -> None:
         # De VDJ-knop op de lijstpagina's verschijnt alleen met een geladen
         # bibliotheek; zonder is hij ruis.
         return {"vdj_geladen": session.get("vdj") in _vdj_sessies}
+
+    @app.route("/vdj/voortgang/<sleutel>")
+    def vdj_voortgang(sleutel: str):
+        """Hoever is het verwerken van deze upload?
+
+        De balk op de pagina vraagt het elke halve seconde. Geen gegevens
+        van iemand anders: de sleutel is een toevalsgetal dat de bezoeker
+        zelf verzon, en er staat niets anders in dan twee getallen.
+        """
+        gelezen, totaal = _vdj_voortgang.get(sleutel, (0, 0))
+        return jsonify({"gelezen": gelezen, "totaal": totaal})
 
     @app.route("/vdj", methods=["GET", "POST"])
     def vdj_playlist():
@@ -1977,7 +1999,20 @@ def _registreer(app: Flask) -> None:
                 # Eén budget voor alle bestanden samen: bytes, nummers
                 # én het aantal bestanden. Zo helpt het niet om het werk over
                 # meerdere uploads in hetzelfde formulier te verdelen.
-                budget = vdjmodule.Budget()
+                # De sleutel komt van de bezoeker; alleen tekens die geen
+                # kwaad kunnen, en kort.
+                sleutel = "".join(
+                    t for t in request.form.get("voortgang", "")[:40]
+                    if t.isalnum() or t in "-_")
+                if sleutel:
+                    while len(_vdj_voortgang) > 20:
+                        _vdj_voortgang.pop(next(iter(_vdj_voortgang)), None)
+
+                    def melden(gelezen, totaal, _s=sleutel):
+                        _vdj_voortgang[_s] = (gelezen, totaal)
+                else:
+                    melden = None
+                budget = vdjmodule.Budget(melder=melden)
                 for upload in request.files.getlist("database"):
                     if upload and upload.filename:
                         deel, soort = vdjmodule.lees_upload(
@@ -2017,6 +2052,9 @@ def _registreer(app: Flask) -> None:
                     "tijd": datetime.now(),
                 }
                 session["vdj"] = token
+                _vdj_voortgang.pop(sleutel, None)
+                if _is_xhr():
+                    return jsonify({"goed": True})
                 return redirect(url_for("vdj_playlist"))
             # Ook een mislukte poging eindigt in een omleiding in plaats van
             # in een gerenderde pagina. Dat is niet alleen netter (opnieuw
@@ -2024,6 +2062,12 @@ def _registreer(app: Flask) -> None:
             # voortgangsbalk nodig heeft: die stuurt het formulier met een
             # XHR en kan daarna simpelweg de pagina verversen, in beide
             # afloopgevallen.
+            _vdj_voortgang.pop(sleutel, None)
+            # Bij een XHR geen omleiding met een flash-melding: die volgt de
+            # XHR zelf, verbruikt de melding in dat antwoord, en dan vindt de
+            # verversing erna niets meer. De pagina zet de tekst zelf neer.
+            if _is_xhr():
+                return jsonify({"goed": False, "fout": fout})
             flash(fout, "fout")
             return redirect(url_for("vdj_playlist"))
 

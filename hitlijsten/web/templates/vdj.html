@@ -181,8 +181,18 @@
       if (!veld || !veld.files.length) return;   // laat de browser klagen
       gebeurtenis.preventDefault();
 
+      // Een eigen kenmerk zodat de server zijn stand onder die naam kan
+      // bewaren en deze pagina hem kan opvragen.
+      var kenmerk = String(Date.now()) + "-" +
+        Math.random().toString(36).slice(2, 10);
+      var polsen = null;
+      var pakket = new FormData(formulier);
+      pakket.append("voortgang", kenmerk);
+
       var verzoek = new XMLHttpRequest();
       verzoek.open("POST", formulier.action || window.location.pathname);
+      // Zegt tegen de route: antwoord met JSON, niet met een omleiding.
+      verzoek.setRequestHeader("X-Requested-With", "XMLHttpRequest");
       vak.hidden = false;
       knop.disabled = true;
 
@@ -194,20 +204,49 @@
           "% (" + mb(p.loaded) + " / " + mb(p.total) + ")";
       });
       verzoek.upload.addEventListener("load", function () {
-        // Alles verstuurd; vanaf hier is het wachten op de server.
+        /* Alles verstuurd; vanaf hier is het wachten op de server. Op een
+           snelle verbinding is het versturen zo klaar (29 MB in een tiende
+           seconde over het thuisnetwerk) en zit de hele wachttijd hier --
+           daarom vraagt de pagina de server nu zelf hoever hij is. */
         vak.classList.add("bezig");
         tekst.textContent = T.verwerken;
+        polsen = setInterval(function () {
+          var vraag = new XMLHttpRequest();
+          vraag.open("GET", "{{ url_for('vdj_playlist') }}/voortgang/" + kenmerk);
+          vraag.addEventListener("load", function () {
+            var stand;
+            try { stand = JSON.parse(vraag.responseText); } catch (e) { return; }
+            if (!stand.totaal) return;         // nog niets te melden
+            var deel = Math.min(1, stand.gelezen / stand.totaal);
+            vak.classList.remove("bezig");
+            vulling.style.width = (deel * 100).toFixed(0) + "%";
+            tekst.textContent = T.verwerken + " " + (deel * 100).toFixed(0) +
+              "% (" + mb(stand.gelezen) + " / " + mb(stand.totaal) + ")";
+          });
+          vraag.send();
+        }, 400);
       });
       verzoek.addEventListener("load", function () {
+        clearInterval(polsen);
+        var antwoord = null;
+        try { antwoord = JSON.parse(verzoek.responseText); } catch (e) { /* leeg */ }
+        if (antwoord && antwoord.goed === false) {
+          vak.classList.remove("bezig");
+          vulling.style.width = "0";
+          tekst.textContent = antwoord.fout;
+          knop.disabled = false;
+          return;
+        }
         window.location = "{{ url_for('vdj_playlist') }}";
       });
       verzoek.addEventListener("error", function () {
+        clearInterval(polsen);
         vak.classList.remove("bezig");
         vulling.style.width = "0";
         tekst.textContent = T.mislukt;
         knop.disabled = false;
       });
-      verzoek.send(new FormData(formulier));
+      verzoek.send(pakket);
     });
   })();
 

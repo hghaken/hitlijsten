@@ -101,10 +101,22 @@ class Budget:
 
     def __init__(self, bytes_plafond: int = MAX_UITGEPAKT,
                  nummers_plafond: int = MAX_NUMMERS,
-                 bestanden_plafond: int = MAX_BESTANDEN):
+                 bestanden_plafond: int = MAX_BESTANDEN,
+                 melder=None):
         self.bytes_over = bytes_plafond
         self.nummers_over = nummers_plafond
         self.bestanden_over = bestanden_plafond
+        # Voor de voortgangsbalk: hoeveel er gelezen is en hoeveel er komt.
+        # `totaal` is pas bekend als de zip open is; tot die tijd 0, en dan
+        # meldt de teller alleen het aantal bytes.
+        self.gelezen = 0
+        self.totaal = 0
+        self._melder = melder
+
+    def gelezen_erbij(self, aantal: int) -> None:
+        self.gelezen += aantal
+        if self._melder is not None:
+            self._melder(self.gelezen, self.totaal)
 
     def neem_bestand(self) -> None:
         self.bestanden_over -= 1
@@ -137,6 +149,7 @@ class _Bewaakt:
         if not brok:
             return brok
         self._budget.bytes_over -= len(brok)
+        self._budget.gelezen_erbij(len(brok))
         if self._budget.bytes_over < 0:
             raise TeGroot("deze upload is na uitpakken groter dan "
                           f"{MAX_UITGEPAKT // (1024 * 1024)} MB")
@@ -275,11 +288,21 @@ def lees_upload(stroom, naam: str,
     kop = stroom.read(4096)
     stroom.seek(0)
     if kop[:4] != b"PK\x03\x04":
+        # Een kaal xml-bestand: de omvang is meteen te meten, en dat is
+        # precies het werk dat eraan komt.
+        stroom.seek(0, 2)
+        budget.totaal += stroom.tell()
+        stroom.seek(0)
         if b"DJ_PLAYLISTS" in kop:
             return lees_rekordbox(stroom, budget), "rekordbox"
         return lees_database(stroom, budget), "vdj"
     uit: list[Bestand] = []
     with zipfile.ZipFile(stroom) as zak:
+        # De uitgepakte maat van de database.xml'en is het werk dat komt.
+        # Hij staat in de zip zelf en is dus te vervalsen, maar dat maakt
+        # hier alleen de balk onnauwkeurig -- de grenzen bewaakt _Bewaakt.
+        budget.totaal += sum(i.file_size for i in zak.infolist()
+                             if i.filename.lower().endswith("database.xml"))
         for info in zak.infolist():
             if not info.filename.lower().endswith("database.xml"):
                 continue
