@@ -188,6 +188,10 @@ EN = {
     "Selecteer file": "Select file",
     "nog niets gekozen": "nothing chosen yet",
     "Laad de database": "Load the database",
+    "versturen": "sending",
+    "bezig met verwerken op de server…": "processing on the server…",
+    "Versturen mislukt. Probeer het opnieuw.":
+        "Sending failed. Please try again.",
     "vergeet mijn database": "forget my database",
     "Haalt je database uit het geheugen":
         "Removes your database from memory",

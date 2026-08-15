@@ -2018,6 +2018,14 @@ def _registreer(app: Flask) -> None:
                 }
                 session["vdj"] = token
                 return redirect(url_for("vdj_playlist"))
+            # Ook een mislukte poging eindigt in een omleiding in plaats van
+            # in een gerenderde pagina. Dat is niet alleen netter (opnieuw
+            # laden herhaalt de upload niet), het is ook wat de
+            # voortgangsbalk nodig heeft: die stuurt het formulier met een
+            # XHR en kan daarna simpelweg de pagina verversen, in beide
+            # afloopgevallen.
+            flash(fout, "fout")
+            return redirect(url_for("vdj_playlist"))
 
         kaart = _vdj_bibliotheek()
         stand = None

@@ -2,6 +2,24 @@
 {% block titel %}DJ Export — Hitlijsten{% endblock %}
 {% block beschrijving %}Laad je VirtualDJ-database (of de backup-zip) en download daarna op elke lijstpagina met één knop een .vdjfolder-playlist van wat je zelf in je bibliotheek hebt.{% endblock %}
 {% block inhoud %}
+<style>
+  #voortgang .balk {
+    height: 10px; border-radius: 6px; overflow: hidden;
+    background: var(--glas); border: 1px solid var(--rand);
+  }
+  #voortgang .balk span {
+    display: block; height: 100%; width: 0; background: var(--balk);
+    transition: width .15s linear;
+  }
+  /* Bezig op de server: geen percentage te melden, dus een streep die
+     heen en weer loopt. */
+  #voortgang.bezig .balk span {
+    width: 35%; animation: schuif 1.1s ease-in-out infinite;
+  }
+  @keyframes schuif {
+    0% { margin-left: -35%; } 100% { margin-left: 100%; }
+  }
+</style>
 
 <h1>DJ Export</h1>
 <p class="onder">{% if taal == 'en' %}Load your database once
@@ -46,7 +64,7 @@
 {% endif %}
 
 <form method="post" enctype="multipart/form-data" class="kaart"
-      style="display:grid; gap:.9rem; max-width:46rem">
+      id="laadformulier" style="display:grid; gap:.9rem; max-width:46rem">
   <label>{% if stand %}{{ _("Een andere database laden") }}{% else %}{{ _("Je muziek database") }}{% endif %}<br>
     {# "Choose files" is browsertekst en niet te vertalen; daarom een eigen
        knop met het veld er onzichtbaar (maar focusbaar, voor de
@@ -113,10 +131,20 @@
       de soepelste treffers heten in het rapport "twijfel".{% endif %}</span>
   </label>
 
-  <div><button class="hoofd" type="submit">{{ _("Laad de database") }}</button>
+  <div><button class="hoofd" type="submit" id="laadknop">{{ _("Laad de database") }}</button>
     <span class="hint">{% if taal == 'en' %}a large database can take a
       moment; nothing is stored{% else %}bij een grote database kan dit even duren; er wordt
       niets bewaard{% endif %}</span></div>
+
+  {# Verschijnt pas tijdens het laden. Twee fasen, en die zijn eerlijk
+     gescheiden: het versturen is echt te meten (de browser weet hoeveel
+     bytes eruit zijn), het verwerken op de server niet -- daar loopt een
+     streep heen en weer in plaats van een percentage dat we zouden
+     verzinnen. #}
+  <div id="voortgang" hidden>
+    <div class="balk"><span id="balkvulling"></span></div>
+    <span class="hint" id="voortgangtekst"></span>
+  </div>
 </form>
 
 {% if fout %}<div class="melding fout" style="margin-top:1rem">{{ fout }}</div>{% endif %}
@@ -124,6 +152,62 @@
 <script>
   /* Laat zien welk bestand je koos: zonder dit lijkt de knop niets te doen,
      want het echte invoerveld is onzichtbaar. */
+  /* Het formulier gaat met een XHR de deur uit, want alleen zo weet de
+     pagina hoeveel er verstuurd is. Zonder JavaScript blijft het een gewone
+     POST: die werkt onveranderd, alleen zonder balk. */
+  (function () {
+    var formulier = document.getElementById("laadformulier");
+    var knop = document.getElementById("laadknop");
+    var vak = document.getElementById("voortgang");
+    var vulling = document.getElementById("balkvulling");
+    var tekst = document.getElementById("voortgangtekst");
+    if (!formulier || !window.FormData || !window.XMLHttpRequest) return;
+
+    var T = {
+      versturen: {{ _("versturen") | tojson }},
+      verwerken: {{ _("bezig met verwerken op de server…") | tojson }},
+      mislukt: {{ _("Versturen mislukt. Probeer het opnieuw.") | tojson }}
+    };
+
+    function mb(aantal) {
+      return (aantal / 1048576).toFixed(1) + " MB";
+    }
+
+    formulier.addEventListener("submit", function (gebeurtenis) {
+      var veld = document.getElementById("bestandkiezer");
+      if (!veld || !veld.files.length) return;   // laat de browser klagen
+      gebeurtenis.preventDefault();
+
+      var verzoek = new XMLHttpRequest();
+      verzoek.open("POST", formulier.action || window.location.pathname);
+      vak.hidden = false;
+      knop.disabled = true;
+
+      verzoek.upload.addEventListener("progress", function (p) {
+        if (!p.lengthComputable) return;
+        var deel = p.loaded / p.total;
+        vulling.style.width = (deel * 100).toFixed(0) + "%";
+        tekst.textContent = T.versturen + " " + (deel * 100).toFixed(0) +
+          "% (" + mb(p.loaded) + " / " + mb(p.total) + ")";
+      });
+      verzoek.upload.addEventListener("load", function () {
+        // Alles verstuurd; vanaf hier is het wachten op de server.
+        vak.classList.add("bezig");
+        tekst.textContent = T.verwerken;
+      });
+      verzoek.addEventListener("load", function () {
+        window.location = "{{ url_for('vdj_playlist') }}";
+      });
+      verzoek.addEventListener("error", function () {
+        vak.classList.remove("bezig");
+        vulling.style.width = "0";
+        tekst.textContent = T.mislukt;
+        knop.disabled = false;
+      });
+      verzoek.send(new FormData(formulier));
+    });
+  })();
+
   (function () {
     var veld = document.getElementById("bestandkiezer");
     var uit = document.getElementById("gekozen");
