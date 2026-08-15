@@ -303,9 +303,24 @@ def bouw_weeklijst(con: sqlite3.Connection, lijst: str, jaar: int,
                       kolommen, rijen, vet=("Positie",))
 
 
-# Waar de laatste tabelregel nog net op een pagina past. De voetregel begint
-# op 284; daaronder blijft het leeg.
-ONDERGRENS = 278.0
+# De maten van de doorlopende opzet (alle weeklijsten samen). Ze zijn zo
+# gekozen dat een volledige Top 40 met zijn kop op ÉÉN pagina past: dat is
+# de lijst waar je het vaakst naar kijkt, en hem over twee bladen zien
+# lopen leest slecht. De rekensom, van boven naar beneden:
+#
+#   281,0  ondergrens (de voetregel begint op 284)
+#  - 29,0  waar de inhoud onder de banner begint
+#  = 252,0 mm werkruimte
+#  -  7,0  de kop van de sectie
+#  -  6,8  de kolomnamen met hun accentlijn
+#  = 238,2 mm voor de regels -> 41 bij 5,8 mm per regel
+#
+# De losse weeklijst-PDF's houden hun eigen, iets ruimere REGEL van 6 mm;
+# daar staat maar één tabel op een blad en is die ruimte er gewoon.
+ONDERGRENS = 281.0
+BOVENGRENS = BANNER + 5
+SECTIEKOP = 7.0
+SECTIEREGEL = 5.8
 
 
 def _kolomkop(pdf: "_Blad", kolommen: list, y: float, breed: float) -> float:
@@ -339,23 +354,28 @@ def _sectie_op_blad(pdf: "_Blad", titel: str, kolommen: list, rijen: list,
     breed = sum(k[1] for k in kolommen)
 
     # Een kop onderaan de pagina met de tabel op de volgende is lelijk; eis
-    # daarom ruimte voor de kop, de kolomnamen en drie regels.
-    if y + 9 + 6.8 + 3 * REGEL > ONDERGRENS:
+    # daarom ruimte voor de kop, de kolomnamen en drie regels. En past de
+    # hele sectie op een verse pagina, dan hem daar in zijn geheel zetten in
+    # plaats van na twee regels afbreken.
+    heel = SECTIEKOP + 6.8 + len(rijen) * SECTIEREGEL
+    past_vers = BOVENGRENS + heel <= ONDERGRENS
+    if (y + SECTIEKOP + 6.8 + 3 * SECTIEREGEL > ONDERGRENS
+            or (past_vers and y + heel > ONDERGRENS)):
         pdf.add_page()
-        y = BANNER + 9
+        y = BOVENGRENS
 
     pdf.set_font("dejavu", "B", 12)
     pdf.set_text_color(*(round(k * 0.55) for k in ACCENT))
     pdf.set_xy(KANTLIJN, y)
-    pdf.cell(breed, 7, titel)
+    pdf.cell(breed, 6, titel)
     pdf.set_text_color(0, 0, 0)
-    y += 9
+    y += SECTIEKOP
     y = _kolomkop(pdf, kolommen, y, breed)
 
     for rij in rijen:
-        if y + REGEL > ONDERGRENS:
+        if y + SECTIEREGEL > ONDERGRENS:
             pdf.add_page()
-            y = BANNER + 9
+            y = BOVENGRENS
             # Op een vervolgpagina de kolomnamen herhalen, met de lijstnaam
             # erbij -- anders sta je te raden bij welke lijst je kijkt.
             pdf.set_font("dejavu", "", 8.5)
@@ -366,17 +386,18 @@ def _sectie_op_blad(pdf: "_Blad", titel: str, kolommen: list, rijen: list,
             y += 7
             y = _kolomkop(pdf, kolommen, y, breed)
         pdf.set_draw_color(*LIJN)
-        pdf.line(KANTLIJN, y + REGEL - 0.6, KANTLIJN + breed, y + REGEL - 0.6)
+        pdf.line(KANTLIJN, y + SECTIEREGEL - 0.6,
+                 KANTLIJN + breed, y + SECTIEREGEL - 0.6)
         x = KANTLIJN
         for (kop, kolbreed, uitlijning), waarde in zip(kolommen, rij):
             pdf.set_font("dejavu", "B" if kop in vet else "", 8)
             pdf.set_xy(x, y)
             tekst = "" if waarde is None else str(waarde)
-            pdf.cell(kolbreed, REGEL - 0.6,
+            pdf.cell(kolbreed, SECTIEREGEL - 0.6,
                      _kort(pdf, tekst, kolbreed - 2), align=uitlijning)
             x += kolbreed
-        y += REGEL
-    return y + 6          # witruimte voor de volgende sectie
+        y += SECTIEREGEL
+    return y + 5          # witruimte voor de volgende sectie
 
 
 def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
@@ -416,7 +437,7 @@ def bouw_week_alle(con: sqlite3.Connection, jaar: int, week: int,
                 f"{len(delen)} lijsten · {totaal} {soort} · {jaar}")
     pdf.alias_nb_pages()
     pdf.add_page()
-    y = BANNER + 9
+    y = BOVENGRENS
     for welke, rijen_db in delen:
         rijen = []
         for r in rijen_db:
