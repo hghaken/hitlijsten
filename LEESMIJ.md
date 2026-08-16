@@ -236,6 +236,16 @@ lijst krijgt daarom een eigen pagina: de editie met *vorige editie*, *verschil*,
 grafiek als bij de weeklijsten, maar dan met een punt per editie in plaats van
 per week; de server zegt in het veld `as` welke van de twee het is.
 
+**Het venster opent vanuit twee tabellen, en dat is een valkuil geweest.** Op
+een jaar- en editiepagina staan het klassement en de matrix onder elkaar, met
+één klik-afhandelaar voor allebei: de rij draagt de gegevens die in de kop van
+het venster komen. De matrixrijen droegen alles, de klassementsrijen alleen de
+sleutel — dus vanuit het klassement opende het venster met een lege artiest en
+titel, en bij een notering over de jaargrens stond er *undefined weken ·
+undefined punten*. Wie hier een kenmerk bijzet, moet het in **beide** tabellen
+doen; dat de grafiek het van de rij leest en niet van de server is juist wat
+een tweede kopie in JSON bespaart.
+
 **De verticale schaal hangt af van de lengte van de lijst.**
 
 Bij een **weeklijst** loopt hij van 1 tot de lengte van de lijst, lineair. Elke
