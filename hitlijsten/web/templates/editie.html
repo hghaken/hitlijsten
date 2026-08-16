@@ -171,7 +171,10 @@
     </thead>
     <tbody>
       {% for n in nummers %}
-      <tr data-sleutel="{{ n.sleutel }}">
+      {# Artiest en titel als kenmerk, want de grafiek zet ze in zijn kop;
+         zonder deze twee opent het venster met een lege regel. #}
+      <tr data-sleutel="{{ n.sleutel }}" data-artiest="{{ n.artiest }}"
+          data-titel="{{ n.titel }}">
         <td class="getal {% if n.positie == 1 %}top1{% elif n.positie <= 3 %}top3{% endif %}">
           {{ n.positie }}</td>
         <td class="breed klikbaar" title="{{ _("Klik voor het verloop") }}">{{ n.artiest }}</td>
@@ -233,8 +236,9 @@
     <tbody>
       {% for n in matrix %}
       {# data-sleutel + klikbaar: daarmee haakt _grafiek.html aan, net als in
-         het klassement hierboven. #}
-      <tr data-sleutel="{{ n.sleutel }}">
+         het klassement hierboven -- inclusief artiest en titel voor de kop. #}
+      <tr data-sleutel="{{ n.sleutel }}" data-artiest="{{ n.artiest }}"
+          data-titel="{{ n.titel }}">
         <td class="breed klikbaar" title="{{ _("Klik voor het verloop") }}"
             style="position:sticky; left:0; background:#0f1626">
           {{ n.artiest }} <span class="hint">— {{ n.titel }}</span>

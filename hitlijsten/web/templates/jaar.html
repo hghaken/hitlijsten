@@ -152,7 +152,14 @@
     </thead>
     <tbody>
       {% for n in nummers %}
-      <tr data-sleutel="{{ n.sleutel }}">
+      {# Dezelfde kenmerken als de matrix hieronder: de grafiek opent vanuit
+         beide tabellen, en las hier tot nu toe alleen de sleutel. Daardoor
+         bleven artiest en titel leeg in de kop van het venster, en stond er
+         "undefined weken · undefined punten" zodra een notering over de
+         jaargrens liep. #}
+      <tr data-sleutel="{{ n.sleutel }}" data-artiest="{{ n.artiest }}"
+          data-titel="{{ n.titel }}" data-punten="{{ n.punten }}"
+          data-weken="{{ n.weken }}">
         <td class="getal {% if loop.index == 1 %}top1{% elif loop.index <= 3 %}top3{% endif %}">
           {{ loop.index }}</td>
         <td class="breed klikbaar" title="{{ _("Klik voor de grafiek") }}">{{ n.artiest }}</td>
