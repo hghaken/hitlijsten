@@ -335,7 +335,7 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "in het archief, van de Top 2000 tot de Zomer Top 500: "
           "lijsten die radiozenders één keer per jaar uitzenden.")
     pdf.kop2("De menubalk")
-    pdf.p("Bovenaan elke pagina staan twee rijen. De **bovenste rij** "
+    pdf.p("Bovenaan elke pagina staan drie rijen. De **bovenste rij** "
           "bevat de lijstweergaven: Overzicht, Weeklijsten, "
           "Jaaroverzichten, Decennia, Top 40 totaal en Jaarlijsten "
           "totaal. De **tweede rij** bevat de specials: Zoeken, Jouw "
@@ -344,8 +344,15 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "helemaal achteraan — een dobbelsteen: die opent een "
           "willekeurig nummer uit het archief. **Feedback** neemt de "
           "pagina mee waar je vandaan komt, dus meld een fout het "
-          "liefst vanaf de pagina waar je hem ziet. Rechtsboven wissel "
-          "je met de NL/EN-knop tussen Nederlands en Engels.")
+          "liefst vanaf de pagina waar je hem ziet. De **derde rij** is "
+          "de titel van de pagina waar je bent, met een regel uitleg. "
+          "Rechtsboven wissel je met de NL/EN-knop tussen Nederlands "
+          "en Engels.")
+    pdf.p("Die hele balk blijft staan als je scrolt, en de kolomkoppen "
+          "van een lijst blijven er net onder hangen. Bij een lange "
+          "lijst weet je zo halverwege nog welke lijst je bekijkt en "
+          "welke kolom welke is. Op een klein scherm gebeurt dat niet: "
+          "daar zou een vaste balk te veel van het beeld opeten.")
     pdf.tip("De site werkt net zo goed op je telefoon als op een groot "
             "scherm; op smalle schermen schuiven de menu's en tabellen "
             "vanzelf in een compactere vorm.")
@@ -677,7 +684,7 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "charts**, from the Top 2000 to the Zomer Top 500: charts "
           "that Dutch radio stations broadcast once a year.")
     pdf.kop2("The menu bar")
-    pdf.p("Every page has two menu rows. The **top row** holds the "
+    pdf.p("Every page has three menu rows. The **top row** holds the "
           "chart views: Overview, Weekly charts, Year charts, Decades, "
           "Top 40 all-time and Annual all-time. The **second row** "
           "holds the specials: Search, Your day, Week report, Fun "
@@ -685,8 +692,14 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "Feedback and — at the very end — a die that opens a random "
           "song from the archive. **Feedback** carries along the page "
           "you came from, so report a mistake from the page where you "
-          "spot it. At the top right, the NL/EN button switches "
-          "between Dutch and English.")
+          "spot it. The **third row** is the title of the page you are "
+          "on, with a line of explanation. At the top right, the NL/EN "
+          "button switches between Dutch and English.")
+    pdf.p("That whole bar stays put as you scroll, and a chart's column "
+          "headings stay just below it. On a long chart you can still "
+          "see which chart you are looking at and which column is "
+          "which. Not on a small screen: there a fixed bar would eat "
+          "too much of the view.")
     pdf.tip("The whole site is bilingual: the chart pages, the "
             "special pages and this manual all follow the NL/EN "
             "switch. Only the admin area is Dutch-only.")
