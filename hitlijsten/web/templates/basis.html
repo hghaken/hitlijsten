@@ -110,6 +110,11 @@
     -webkit-mask-image: linear-gradient(180deg, #000 25%, transparent 97%);
     mask-image: linear-gradient(180deg, #000 25%, transparent 97%);
   }
+  /* Het Facebook-merkteken: meeloopt met de voettekst tot je hem aanwijst,
+     dan het eigen blauw. Een altijd-blauw blok trekt in een grijze voetregel
+     meer aandacht dan een verwijzing verdient. */
+  a.fb { color: var(--gedempt); display: inline-flex; }
+  a.fb:hover, a.fb:focus-visible { color: #1877F2; }
   h1 { font-size: 1.5rem; margin: 0 0 .3rem; font-weight: 650; }
   h1 + .onder { color: var(--gedempt); margin: 0 0 1.5rem; font-size: .95rem; }
   h2 {
@@ -516,15 +521,22 @@
   {% endif %}
 
   {# Los van het bronnenblok: dat gaat over rechten, dit is een verwijzing.
-     Het adres staat één keer, zodat de twee talen niet uit elkaar kunnen
-     lopen als de paginanaam ooit wijzigt. #}
-  {% set facebook = "https://www.facebook.com/nederlandsehitlijsten" %}
+     Het merkteken in plaats van een zin -- iedereen herkent het, en het
+     vraagt geen vertaling. De titel blijft er wel in, voor wie de pagina
+     laat voorlezen: een kaal plaatje zegt een schermlezer niets. #}
   <p style="margin:.9rem 0 0">
-    {% if taal == 'en' %}This site is also on
-    <a href="{{ facebook }}" target="_blank" rel="noopener">Facebook</a>.
-    {% else %}Deze site staat ook op
-    <a href="{{ facebook }}" target="_blank" rel="noopener">Facebook</a>.
-    {% endif %}
+    <a href="https://www.facebook.com/nederlandsehitlijsten"
+       target="_blank" rel="noopener" class="fb"
+       title="{{ _("Deze site op Facebook") }}">
+      <svg viewBox="0 0 24 24" width="26" height="26" role="img"
+           aria-label="{{ _("Deze site op Facebook") }}">
+        <path fill="currentColor" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0
+          12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02
+          1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.95H15.83c-1.49
+          0-1.96.93-1.96 1.89v2.27h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1
+          24 12.07z"/>
+      </svg>
+    </a>
   </p>
 </footer>
 {% endif %}

@@ -28,6 +28,7 @@ EN = {
     "Vergelijk": "Compare",
     "Gastenboek": "Guestbook",
     "Feedback": "Feedback",
+    "Deze site op Facebook": "This site on Facebook",
     "Iets gezien dat niet klopt? Meld het":
         "Spotted something wrong? Report it",
     "Handleiding": "Manual",
