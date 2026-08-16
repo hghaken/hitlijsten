@@ -133,6 +133,13 @@
   }
   .kopvast h1 { margin: 0; }
   .kopvast .onder { margin: .15rem 0 0; }
+  /* Bij een half venster wrapt de menubalk naar vier regels en de ondertitel
+     naar drie; samen vraten ze een derde van het scherm. Het scriptje meet
+     dat en zet de kop dan gewoon weer los. */
+  .kopvast.meescrollen {
+    position: static; background: none; margin: 0 0 1.5rem; padding: 0;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
   h1 { font-size: 1.5rem; margin: 0 0 .3rem; font-weight: 650; }
   h1 + .onder { color: var(--gedempt); margin: 0 0 1.5rem; font-size: .95rem; }
   h2 {
@@ -174,6 +181,14 @@
      pagina; de klasse zet het scriptje onderaan. Daarboven blijft de vaste
      hoogte, anders wordt een editie van vierduizend rijen onhandelbaar. */
   .tabelvak.past { max-height: none; }
+  /* Zo'n korte tabel scrolt met de pagina mee, en dan bleven de kolomkoppen
+     niet staan: `sticky` werkt tegen het scrollvak, en dat scrolt niet. Past
+     de tabel horizontaal in beeld, dan hoeft het vak ook geen scrollcontainer
+     te zijn -- en dan plakken de koppen wel, tegen het venster, net onder de
+     paginakop. Het scriptje meet per tabel of dat kan; een brede matrix houdt
+     zijn scrollvak, anders raak je het horizontaal schuiven kwijt. */
+  .tabelvak.vrij { overflow: visible; }
+  .tabelvak.vrij thead th { top: var(--kopoffset, 0px); }
 
   /* --- smalle schermen --------------------------------------------------- */
   @media (max-width: 760px) {
@@ -665,11 +680,40 @@
     /* De menubalk wrapt, dus zijn hoogte is geen vast getal: uitmeten en als
        variabele doorgeven, en opnieuw bij elke maatverandering. Zonder dit
        schuift de paginakop bij een smal venster onder het menu door. */
-    const meet = () => document.documentElement.style.setProperty(
-      "--menuhoogte", kop.offsetHeight + "px");
+    const wortel = document.documentElement;
+    function meet() {
+      const titel = document.querySelector(".kopvast");
+      if (titel) titel.classList.remove("meescrollen");   // eerst terug, dan meten
+      const plakt = getComputedStyle(kop).position === "sticky";
+      const menu = plakt ? kop.offsetHeight : 0;
+      let titelhoog = (titel && plakt) ? titel.offsetHeight : 0;
+      /* Meer dan een derde van het venster aan vaste balken is te veel: dan
+         lees je door een kier. Bij een half venster wrapt de menubalk naar
+         vier regels en de ondertitel naar drie, en precies dan slaat dit om. */
+      if (titel && menu + titelhoog > innerHeight * 0.32) {
+        titel.classList.add("meescrollen");
+        titelhoog = 0;
+      }
+      wortel.style.setProperty("--menuhoogte", menu + "px");
+      wortel.style.setProperty("--kopoffset", (menu + titelhoog) + "px");
+
+      /* Per korte tabel: past hij horizontaal, dan mag het scrollvak weg en
+         plakken de kolomkoppen tegen het venster. Past hij niet -- een matrix
+         met vijftig weekkolommen -- dan blijft het vak, want horizontaal
+         schuiven weegt zwaarder dan een meeplakkende kop. Opnieuw meten bij
+         elke maatverandering: bij een smaller venster kan het omslaan. */
+      document.querySelectorAll(".tabelvak.past").forEach(function (vak) {
+        const tabel = vak.querySelector("table");
+        if (!tabel) return;
+        vak.classList.remove("vrij");
+        if (plakt && tabel.scrollWidth <= vak.clientWidth + 1) {
+          vak.classList.add("vrij");
+        }
+      });
+    }
     meet();
     if (window.ResizeObserver) new ResizeObserver(meet).observe(kop);
-    else addEventListener("resize", meet);
+    addEventListener("resize", meet);
   })();
 </script>
 </body>
