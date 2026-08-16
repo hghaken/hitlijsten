@@ -35,6 +35,32 @@ JAAR = date.today().year
 # site: welke parser de HTML afhandelt.
 # lengte: verwacht aantal noteringen; None = variabel (structuurcontrole kijkt dan
 #         alleen of de posities 1..N aaneengesloten zijn).
+# Waar een lijst vandaan komt, voor de bezoeker. Los van de fetch-URL's:
+# die wijzen naar de pagina van een specifieke week, deze naar de lijst zoals
+# hij nu is. Alle dertien zijn nagelopen (aug 2026) -- een dode verwijzing is
+# vervelender dan geen verwijzing.
+BRON_URLS = {
+    "top40": "https://www.top40.nl/top40",
+    "tipparade": "https://www.top40.nl/tipparade",
+    "sterrennl": "https://www.top40.nl/sterren-nl-top25",
+    "oranje": "https://www.oranjetop30.nl/",
+}
+
+# De zender achter een jaarlijkse lijst. De sleutel is wat zender_van() uit
+# de lijstnaam haalt, dus die twee moeten gelijk blijven lopen.
+ZENDER_URLS = {
+    "NPO Radio 2": "https://www.nporadio2.nl/",
+    "NPO Radio 3FM": "https://www.npo3fm.nl/",
+    "NPO Radio 5": "https://www.nporadio5.nl/",
+    "Radio 10": "https://www.radio10.nl/",
+    "Veronica": "https://www.radioveronica.nl/",
+    "Qmusic": "https://qmusic.nl/",
+    "Sublime": "https://www.sublime.nl/",
+    # arrowclassicrock.nl stuurt door naar arrow.nl; meteen het eindpunt.
+    "Arrow": "https://www.arrow.nl/",
+    "Kink": "https://kink.nl/",
+}
+
 LIJSTEN = {
     "top40": {
         "naam": "Nederlandse Top 40",

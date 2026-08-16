@@ -15,7 +15,8 @@ from flask import (
 )
 
 from .. import db, excel
-from ..config import EXCEL_DIR, LIJSTEN, ROOT, decennium_van, is_jaarlijks
+from ..config import (BRON_URLS, EXCEL_DIR, LIJSTEN, ROOT, ZENDER_URLS,
+                      decennium_van, is_jaarlijks)
 from ..datums import als_tekst, vrijdag_van
 from ..db import Looptijd, looptijden
 from . import taken
@@ -114,6 +115,8 @@ def maak_app() -> Flask:
     # nodigt uit tot vergelijkingen die nergens op slaan, dus de sjablonen
     # groeperen ze -- vandaar deze twee hulpjes.
     app.jinja_env.globals["is_jaarlijks"] = is_jaarlijks
+    app.jinja_env.globals["bron_urls"] = BRON_URLS
+    app.jinja_env.globals["zender_urls"] = ZENDER_URLS
     app.jinja_env.filters["tijd"] = leesbare_tijd
     app.jinja_env.globals["weeklijsten"] = [
         s for s in LIJSTEN if not is_jaarlijks(s)]

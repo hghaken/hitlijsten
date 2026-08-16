@@ -468,6 +468,11 @@
   {% block inhoud %}{% endblock %}
 </main>
 
+{# De bronvermelding staat alleen op het Overzicht. Op elke lijstpagina
+   herhalen maakte hem tot behang dat niemand meer las; wie hem zoekt, vindt
+   hem waar de lijsten zelf worden verantwoord. De disclaimer blijft
+   bereikbaar via de menubalk bovenaan. #}
+{% if request.endpoint == 'overzicht' %}
 <footer style="max-width:1600px; margin:0 auto; padding:1rem 1.4rem 2.5rem;
                border-top:1px solid var(--rand2); color:var(--gedempt);
                font-size:.85rem">
@@ -517,6 +522,7 @@
     {% endif %}
   </p>
 </footer>
+{% endif %}
 
 <script>
 /* Sorteren op kolomkop.

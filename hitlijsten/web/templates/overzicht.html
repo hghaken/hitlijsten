@@ -39,7 +39,11 @@
       <th class="getal">{{ _("Tot") }} · {{ _("opgehaald") }}</th><th class="getal">{{ _("Weken") }}</th><th class="getal">{{ _("Noteringen") }}</th></tr></thead><tbody>
   {% for r in week_rijen %}
   <tr>
-    <td>{{ lijst_namen.get(r['lijst'], r['lijst']) }}</td>
+    <td>{% set bron = bron_urls.get(r['lijst']) %}
+      {%- if bron %}<a href="{{ bron }}" target="_blank" rel="noopener"
+        title="{{ _('de lijst van deze week op de bronsite') }}"
+        >{{ lijst_namen.get(r['lijst'], r['lijst']) }}</a>
+      {%- else %}{{ lijst_namen.get(r['lijst'], r['lijst']) }}{% endif %}</td>
     <td class="getal">{{ r['jaren'] }}</td>
     <td class="getal">{{ r['van'] }}</td>
     <td class="getal">{{ r['tot'] }}
@@ -68,7 +72,10 @@
   {% for r in jaar_rijen %}
   <tr>
     {# De zender alleen op de eerste regel van zijn groepje. #}
-    <td>{% if loop.first or loop.previtem['zender'] != r['zender'] %}{{ r['zender'] }}{% endif %}</td>
+    <td>{% if loop.first or loop.previtem['zender'] != r['zender'] %}
+      {%- set zender = zender_urls.get(r['zender']) %}
+      {%- if zender %}<a href="{{ zender }}" target="_blank" rel="noopener">{{ r['zender'] }}</a>
+      {%- else %}{{ r['zender'] }}{% endif %}{% endif %}</td>
     <td>{{ lijst_namen.get(r['lijst'], r['lijst']).split(' (')[0] }}</td>
     <td class="getal">{{ r['jaren'] }}</td>
     <td class="getal">{{ r['van'] }}</td>
