@@ -340,10 +340,12 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "Jaaroverzichten, Decennia, Top 40 totaal en Jaarlijsten "
           "totaal. De **tweede rij** bevat de specials: Zoeken, Jouw "
           "dag, Weekbericht, Wetenswaardigheden, Records, Versies, "
-          "Vergelijk, VirtualDJ, het Gastenboek en — helemaal "
-          "achteraan — een dobbelsteen: die opent een willekeurig "
-          "nummer uit het archief. Rechtsboven wissel je met de "
-          "NL/EN-knop tussen Nederlands en Engels.")
+          "Vergelijk, VirtualDJ, het Gastenboek, Feedback en — "
+          "helemaal achteraan — een dobbelsteen: die opent een "
+          "willekeurig nummer uit het archief. **Feedback** neemt de "
+          "pagina mee waar je vandaan komt, dus meld een fout het "
+          "liefst vanaf de pagina waar je hem ziet. Rechtsboven wissel "
+          "je met de NL/EN-knop tussen Nederlands en Engels.")
     pdf.tip("De site werkt net zo goed op je telefoon als op een groot "
             "scherm; op smalle schermen schuiven de menu's en tabellen "
             "vanzelf in een compactere vorm.")
@@ -354,7 +356,11 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     pdf.kop2("Overzicht")
     pdf.p("De voorpagina toont de kerncijfers van het archief, de meest "
           "recente weeklijsten en een terugblik-blok: welke nummers "
-          "stonden er vandaag 10, 25 of 40 jaar geleden op nummer 1?")
+          "stonden er vandaag 10, 25 of 40 jaar geleden op nummer 1? In "
+          "de twee tabellen zijn de lijstnamen en de zenders "
+          "aanklikbaar: die brengen je naar de bronsite of de zender "
+          "zelf. Onderaan deze pagina — en alleen hier — staat de "
+          "bronvermelding, met daarboven het Facebook-teken.")
     pdf.kop2("Weeklijsten")
     pdf.p("Kies een lijst, jaargang en week en je ziet de lijst zoals "
           "hij is uitgezonden, met de uitzenddatum erbij: positie, "
@@ -675,9 +681,11 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "chart views: Overview, Weekly charts, Year charts, Decades, "
           "Top 40 all-time and Annual all-time. The **second row** "
           "holds the specials: Search, Your day, Week report, Fun "
-          "facts, Records, Versions, Compare, DJ Export, the Guestbook "
-          "and — at the very end — a die that opens a random song from "
-          "the archive. At the top right, the NL/EN button switches "
+          "facts, Records, Versions, Compare, DJ Export, the Guestbook, "
+          "Feedback and — at the very end — a die that opens a random "
+          "song from the archive. **Feedback** carries along the page "
+          "you came from, so report a mistake from the page where you "
+          "spot it. At the top right, the NL/EN button switches "
           "between Dutch and English.")
     pdf.tip("The whole site is bilingual: the chart pages, the "
             "special pages and this manual all follow the NL/EN "
@@ -689,7 +697,11 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     pdf.kop2("Overview")
     pdf.p("The front page shows the key figures of the archive, the "
           "most recent weekly charts and a look-back block: which songs "
-          "were number 1 on this day 10, 25 or 40 years ago?")
+          "were number 1 on this day 10, 25 or 40 years ago? In both "
+          "tables the chart names and the stations are clickable: they "
+          "take you to the source site or to the station itself. At the "
+          "foot of this page — and only here — sits the source credit, "
+          "with the Facebook mark above it.")
     pdf.kop2("Weekly charts")
     pdf.p("Pick a chart, a year and a week and you see the chart as it "
           "aired, with the broadcast date: position, previous position, "
