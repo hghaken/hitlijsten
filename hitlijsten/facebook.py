@@ -40,6 +40,7 @@ STANDAARD = {
 # Meer dan dit maakt van een berichtje een lijstpagina, en die staat al op de
 # site -- daar wijst de link naartoe.
 MAX_BINNENKOMERS = 8
+MAX_TERUG = 3
 
 # De Top 40 is de kop van het bericht; deze drie krijgen een regel. Namen kort
 # gehouden -- config.LIJSTEN heeft ze ook, maar dan staat er "Nederlandse
@@ -125,7 +126,12 @@ def berichttekst(con: sqlite3.Connection, jaar: int, week: int) -> str | None:
     terug = [r for r in rijen
              if r["vorige_positie"] is None and r["site_status"] == "terug"]
     if terug:
-        namen = ", ".join(f"{r['artiest']} - {r['titel']}" for r in terug[:3])
+        namen = ", ".join(f"{r['artiest']} - {r['titel']}" for r in terug[:MAX_TERUG])
+        # In zestig jaar Top 40 zijn er nooit meer dan drie tegelijk
+        # teruggekeerd, dus dit staartje verschijnt zelden. Maar zwijgend
+        # afkappen leest als "dit was alles", en dat is het dan niet.
+        if len(terug) > MAX_TERUG:
+            namen += f" en nog {len(terug) - MAX_TERUG}"
         regels += ["", f"↩️ Terug in de lijst: {namen}"]
 
     # Alleen uitleggen wat er ook echt staat: het belletje hangt aan de
@@ -161,11 +167,16 @@ def _andere_lijsten(con: sqlite3.Connection, jaar: int, week: int) -> list[str]:
         top = rijen[0]
         regel = f"• {naam} — op 1: {top['artiest']} - {top['titel']}"
         # Zelfde maatstaf als bij de Top 40 hierboven: een herintreder heeft
-        # ook geen vorige positie, maar is geen binnenkomer.
-        nieuw = sum(1 for r in rijen if r["vorige_positie"] is None
-                    and r["site_status"] != "terug")
-        if nieuw:
-            regel += f" ({nieuw} nieuw)"
+        # ook geen vorige positie, maar is geen binnenkomer. Ze krijgen hier
+        # geen namen maar een telling -- anders wordt deze regel een alinea,
+        # en de Oranje Top 30 haalde ooit acht herintreders in een week.
+        zonder_vorige = [r for r in rijen if r["vorige_positie"] is None]
+        nieuw = sum(1 for r in zonder_vorige if r["site_status"] != "terug")
+        terug = len(zonder_vorige) - nieuw
+        delen = ([f"{nieuw} nieuw"] if nieuw else []) + \
+                ([f"{terug} terug"] if terug else [])
+        if delen:
+            regel += f" ({', '.join(delen)})"
         uit.append(regel)
     return uit
 
