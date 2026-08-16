@@ -121,32 +121,22 @@
      meer aandacht dan een verwijzing verdient. */
   a.fb { color: var(--gedempt); display: inline-flex; }
   a.fb:hover, a.fb:focus-visible { color: #1877F2; }
-  /* De paginakop blijft staan als je scrolt, net onder de menubalk. Dat is
-     vooral op de lange lijsten prettig: daar weet je anders halverwege niet
-     meer welke lijst je bekijkt. De hoogte van de menubalk komt uit het
-     scriptje onderaan -- vast opgeven kan niet, want die balk wrapt. */
-  .kopvast {
-    position: sticky; top: var(--menuhoogte, 0px); z-index: 10;
-    /* De bovenmarge van main zit hier IN het vak (negatieve marge, zelfde
-       padding). Zonder die truc valt hij weg zodra de kop vastplakt en
-       springt de titel 1,6rem omhoog -- precies op het moment dat je scrolt
-       en dus het minst verwacht dat er iets beweegt. */
-    margin: -1.6rem -1.4rem 1.5rem; padding: 1.6rem 1.4rem .5rem;
-    /* Dezelfde dekking als de menubalk erboven: die twee raken elkaar, en bij
-       een verschil zie je de naad en oogt de onderste band dicht. De blur doet
-       het leeswerk, niet de donkerte. */
-    background: rgba(9,12,24,.45);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  /* De paginakop blijft staan als je scrolt. Hij zit IN de menubalk en niet
+     in een eigen band eronder: twee glaslagen naast elkaar blurren allebei
+     hun eigen stukje achtergrond, en omdat de banner naar beneden dimt zie je
+     precies op de grens een randje. Eén ruit heeft dat probleem niet.
+     Het scriptje onderaan verhuist de h1 en de regel eronder hierheen. */
+  /* header .binnen is een flexrij; deze rij hoort te stapelen, dus even
+     specifiek genoeg om daarvan te winnen. */
+  header .binnen.paginakop {
+    display: block; padding-top: .1rem; padding-bottom: .6rem;
   }
-  .kopvast h1 { margin: 0; }
-  .kopvast .onder { margin: .15rem 0 0; }
-  /* Bij een half venster wrapt de menubalk naar vier regels en de ondertitel
-     naar drie; samen vraten ze een derde van het scherm. Het scriptje meet
-     dat en zet de kop dan gewoon weer los. */
-  .kopvast.meescrollen {
-    position: static; background: none; margin: 0 0 1.5rem; padding: 0;
-    backdrop-filter: none; -webkit-backdrop-filter: none;
-  }
+  /* Valt de kop terug in de pagina (te weinig hoogte, of een smal scherm),
+     dan heeft hij de ruimte eronder wel nodig -- in de menubalk zorgt de
+     padding daarvoor. */
+  main > .paginakop { margin-bottom: 1.5rem; }
+  .paginakop h1 { margin: 0; }
+  .paginakop .onder { margin: .1rem 0 0; }
   h1 { font-size: 1.5rem; margin: 0 0 .3rem; font-weight: 650; }
   h1 + .onder { color: var(--gedempt); margin: 0 0 1.5rem; font-size: .95rem; }
   h2 {
@@ -208,12 +198,9 @@
     header nav a { padding: .12rem .4rem; font-size: .84rem; }
     main { padding: 1rem .7rem 3rem; }
     h1 { font-size: 1.3rem; }
-    /* Zelfde afweging als bij de menubalk hierboven: op een klein scherm
-       weegt de ruimte zwaarder dan het meekijken. */
-    .kopvast {
-      position: static; background: none; margin: 0 0 1.2rem; padding: 0;
-      backdrop-filter: none; -webkit-backdrop-filter: none;
-    }
+    /* Op een klein scherm is de menubalk niet vastgezet, dus de paginakop
+       erin scrolt vanzelf mee -- geen aparte regels nodig. */
+    .paginakop { padding-bottom: .3rem; }
     th, td { padding: .35rem .5rem; }
     .kaart { min-width: 8.5rem; }
   }
@@ -669,52 +656,56 @@
     addEventListener("scroll", zet, {passive: true});
     zet();
 
-    /* De titel en de regel eronder blijven staan bij het scrollen. Ze zitten
-       in 29 sjablonen los onder elkaar; ze hier omwikkelen scheelt dat het
-       overal met de hand moet, en houdt de sjablonen leesbaar.
-       Alleen als de h1 direct onder main hangt -- elders zou een wikkel de
-       opmaak kunnen breken. */
+    /* De titel en de regel eronder verhuizen naar de menubalk, als derde
+       rij. Ze staan in 29 sjablonen los onder elkaar; hier oppakken scheelt
+       dat het overal met de hand moet. Alleen een h1 die direct onder main
+       hangt -- elders zou verplaatsen de opmaak kunnen breken. */
     const titel = document.querySelector("main > h1");
+    const onder = (titel && titel.nextElementSibling
+                   && titel.nextElementSibling.classList.contains("onder"))
+      ? titel.nextElementSibling : null;
+    let vak = null;
     if (titel) {
-      const vak = document.createElement("div");
-      vak.className = "kopvast";
-      titel.parentNode.insertBefore(vak, titel);
+      vak = document.createElement("div");
+      vak.className = "binnen paginakop";
+      kop.appendChild(vak);
       vak.appendChild(titel);
-      const onder = vak.nextElementSibling;
-      if (onder && onder.classList.contains("onder")) vak.appendChild(onder);
+      if (onder) vak.appendChild(onder);
     }
 
     /* De menubalk wrapt, dus zijn hoogte is geen vast getal: uitmeten en als
-       variabele doorgeven, en opnieuw bij elke maatverandering. Zonder dit
-       schuift de paginakop bij een smal venster onder het menu door. */
+       variabele doorgeven, en opnieuw bij elke maatverandering. Daar hangt de
+       tabelkop onder.
+
+       En als het geheel te hoog wordt -- op een half venster wrapt de
+       menubalk naar vier regels en de ondertitel naar drie -- gaat de titel
+       terug naar de pagina zelf. Meer dan een derde van het venster aan
+       vaste balken betekent dat je door een kier leest. */
     const wortel = document.documentElement;
+    const hoofd = document.querySelector("main");
     function meet() {
-      const titel = document.querySelector(".kopvast");
-      if (titel) titel.classList.remove("meescrollen");   // eerst terug, dan meten
-      const plakt = getComputedStyle(kop).position === "sticky";
-      const menu = plakt ? kop.offsetHeight : 0;
-      let titelhoog = (titel && plakt) ? titel.offsetHeight : 0;
-      /* Meer dan een derde van het venster aan vaste balken is te veel: dan
-         lees je door een kier. Bij een half venster wrapt de menubalk naar
-         vier regels en de ondertitel naar drie, en precies dan slaat dit om. */
-      if (titel && menu + titelhoog > innerHeight * 0.32) {
-        titel.classList.add("meescrollen");
-        titelhoog = 0;
+      if (vak && vak.parentNode !== kop) {          // stond terug in de pagina
+        kop.appendChild(vak);
       }
-      wortel.style.setProperty("--menuhoogte", menu + "px");
-      wortel.style.setProperty("--kopoffset", (menu + titelhoog) + "px");
+      const plakt = getComputedStyle(kop).position === "sticky";
+      if (vak && plakt && kop.offsetHeight > innerHeight * 0.32) {
+        hoofd.insertBefore(vak, hoofd.firstChild);  // te hoog: laat maar los
+      }
+      wortel.style.setProperty("--menuhoogte", kop.offsetHeight + "px");
+      wortel.style.setProperty("--kopoffset",
+                               (plakt ? kop.offsetHeight : 0) + "px");
 
       /* Per korte tabel: past hij horizontaal, dan mag het scrollvak weg en
          plakken de kolomkoppen tegen het venster. Past hij niet -- een matrix
          met vijftig weekkolommen -- dan blijft het vak, want horizontaal
          schuiven weegt zwaarder dan een meeplakkende kop. Opnieuw meten bij
          elke maatverandering: bij een smaller venster kan het omslaan. */
-      document.querySelectorAll(".tabelvak.past").forEach(function (vak) {
-        const tabel = vak.querySelector("table");
+      document.querySelectorAll(".tabelvak.past").forEach(function (tabelvak) {
+        const tabel = tabelvak.querySelector("table");
         if (!tabel) return;
-        vak.classList.remove("vrij");
-        if (plakt && tabel.scrollWidth <= vak.clientWidth + 1) {
-          vak.classList.add("vrij");
+        tabelvak.classList.remove("vrij");
+        if (plakt && tabel.scrollWidth <= tabelvak.clientWidth + 1) {
+          tabelvak.classList.add("vrij");
         }
       });
     }
