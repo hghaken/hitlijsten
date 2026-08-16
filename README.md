@@ -35,8 +35,10 @@ Discogs en Wikipedia; elke correctie staat met reden in een logboek. Elk
 nummer draagt bovendien zijn Alarmschijf-belletje (bron: top40.nl) en een
 Nederlandstalig-markering met filter. Voor bezoekers: artiestpagina's, een
 datumprikker ("wat stond er op 1 op jouw geboortedag?"), records, versies,
-een jaargang-vergelijker, een wekelijks weekbericht met RSS-feed, een
-gastenboek, **DJ Export** (laad je VirtualDJ- of rekordbox-database en
+een jaargang-vergelijker, een wekelijks weekbericht met RSS-feed dat ook de andere drie weeklijsten
+samenvat en elke vrijdag automatisch op de
+[Facebook-pagina](https://www.facebook.com/nederlandsehitlijsten) verschijnt,
+een gastenboek, **DJ Export** (laad je VirtualDJ- of rekordbox-database en
 download elke lijst als playlist uit je eigen bibliotheek, met een
 rapport en een boodschappenlijst van wat ontbreekt), een
 handleiding-PDF in twee talen en een NL/EN-taalkeuze die de hele site

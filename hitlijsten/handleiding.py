@@ -479,6 +479,12 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "je het automatisch volgen, dan is er een **RSS-feed** "
           "(weekbericht.rss) voor je feedlezer — de feed-link op de "
           "pagina volgt je taalkeuze.")
+    pdf.p("Onderaan die pagina staat **Ook deze week**: een kaartje per "
+          "andere weeklijst — de Tipparade, de Oranje Top 30 en de "
+          "Sterren NL Top 25 — met wie daar op 1 staat en hoeveel "
+          "binnenkomers en terugkeerders er zijn. Lijsten die in die "
+          "week nog niet bestonden blijven weg; bij een weekbericht "
+          "uit 1972 zie je dus alleen de Tipparade.")
     pdf.kop2("Records")
     pdf.p("De klappers over het complete archief: meeste weken "
           "genoteerd, langste tijd op 1, grootste sprong en diepste "
@@ -639,7 +645,11 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     pdf.kop2("Contact")
     pdf.p("Een fout gezien, een lijst die je mist, of gewoon een "
           "groet? Gebruik het feedbackformulier of het gastenboek — "
-          "beide staan onderaan elke pagina. Veel plezier met het "
+          "beide staan onderaan elke pagina.")
+    pdf.p("De site staat ook op Facebook, als **Nederlandse "
+          "Hitlijsten**. Daar verschijnt elke vrijdag automatisch het "
+          "weekbericht: de nieuwe nummer 1, de binnenkomers en wat er "
+          "in de andere lijsten gebeurde. Veel plezier met het "
           "archief!")
 
 
@@ -802,6 +812,12 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "(weekbericht.rss) for your feed reader — the feed link on "
           "the page follows your language choice, so you subscribe to "
           "the English edition.")
+    pdf.p("At the foot of that page sits **Also this week**: one card "
+          "per other weekly chart — the Tipparade, the Oranje Top 30 "
+          "and the Sterren NL Top 25 — showing who is at number 1 "
+          "there and how many new entries and re-entries there are. "
+          "Charts that did not yet exist that week are left out, so a "
+          "week report from 1972 shows only the Tipparade.")
     pdf.kop2("Records")
     pdf.p("The record books of the whole archive: most weeks on "
           "chart, longest run at number 1, biggest jump and deepest "
@@ -954,7 +970,11 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     pdf.kop2("Contact")
     pdf.p("Found a mistake, missing a chart, or just want to wave? "
           "Use the feedback form or the guestbook — both are linked "
-          "at the bottom of every page. Enjoy the archive!")
+          "at the bottom of every page.")
+    pdf.p("The site is on Facebook too, as **Nederlandse Hitlijsten**. "
+          "The week report appears there automatically every Friday: "
+          "the new number 1, the new entries and what happened in the "
+          "other charts. Enjoy the archive!")
 
 
 def bouw(versie: str | None = None, taal: str = "nl") -> bytes:
