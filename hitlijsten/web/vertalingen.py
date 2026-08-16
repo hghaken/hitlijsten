@@ -301,6 +301,7 @@ EN = {
     "De top 10 van die week": "That week's top 10",
     "De volledige lijst van die week ›": "The full chart of that week ›",
     "de volledige lijst": "the full chart",
+    "Ook deze week": "Also this week",
     "DE NUMMER 1": "THE NUMBER 1",
     "GROOTSTE STIJGER": "BIGGEST CLIMBER",
     "DIEPSTE DALER": "DEEPEST FALLER",

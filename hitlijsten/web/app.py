@@ -1845,7 +1845,35 @@ def _registreer(app: Flask) -> None:
         return {"jaar": jaar, "week": week, "rijen": rijen,
                 "nummer1": rijen[0], "binnen": binnen, "terug": terug,
                 "stijger": stijger, "daler": daler, "uitvallers": uitvallers,
-                "vorige": vorige, "volgende": volgende, "datum": datum}
+                "vorige": vorige, "volgende": volgende, "datum": datum,
+                "andere": _andere_weeklijsten(con, jaar, week)}
+
+    def _andere_weeklijsten(con, jaar: int, week: int) -> list[dict]:
+        """De drie andere weeklijsten van dezelfde week, samengevat.
+
+        Alleen lijsten die die week echt hebben: de Oranje Top 30 begint in
+        2008 en de Sterren NL Top 25 in 2019, dus een weekbericht uit 1972
+        hoort ze niet als lege kaarten te tonen.
+        """
+        uit = []
+        for sleutel in ("tipparade", "oranje", "sterrennl"):
+            rijen = list(con.execute(
+                "SELECT positie, vorige_positie, artiest, titel, sleutel,"
+                " site_status, weken_genoteerd FROM noteringen"
+                " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie",
+                (sleutel, jaar, week)))
+            if not rijen:
+                continue
+            zonder = [r for r in rijen if r["vorige_positie"] is None]
+            uit.append({
+                "lijst": sleutel,
+                "naam": LIJSTEN[sleutel]["naam"],
+                "nummer1": rijen[0],
+                "binnen": sum(1 for r in zonder if r["site_status"] != "terug"),
+                "terug": sum(1 for r in zonder if r["site_status"] == "terug"),
+                "lengte": len(rijen),
+            })
+        return uit
 
     def _jaarprofiel(con, lijst: str, jaar: int) -> dict:
         """De kerngetallen van één jaargang, voor de vergelijker."""
