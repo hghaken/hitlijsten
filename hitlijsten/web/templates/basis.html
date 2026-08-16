@@ -127,8 +127,15 @@
      scriptje onderaan -- vast opgeven kan niet, want die balk wrapt. */
   .kopvast {
     position: sticky; top: var(--menuhoogte, 0px); z-index: 10;
-    margin: 0 -1.4rem 1.5rem; padding: .7rem 1.4rem .5rem;
-    background: rgba(9,12,24,.55);
+    /* De bovenmarge van main zit hier IN het vak (negatieve marge, zelfde
+       padding). Zonder die truc valt hij weg zodra de kop vastplakt en
+       springt de titel 1,6rem omhoog -- precies op het moment dat je scrolt
+       en dus het minst verwacht dat er iets beweegt. */
+    margin: -1.6rem -1.4rem 1.5rem; padding: 1.6rem 1.4rem .5rem;
+    /* Dezelfde dekking als de menubalk erboven: die twee raken elkaar, en bij
+       een verschil zie je de naad en oogt de onderste band dicht. De blur doet
+       het leeswerk, niet de donkerte. */
+    background: rgba(9,12,24,.45);
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   }
   .kopvast h1 { margin: 0; }
