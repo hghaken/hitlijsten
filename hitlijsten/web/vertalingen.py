@@ -27,6 +27,9 @@ EN = {
     "Versies": "Versions",
     "Vergelijk": "Compare",
     "Gastenboek": "Guestbook",
+    "Feedback": "Feedback",
+    "Iets gezien dat niet klopt? Meld het":
+        "Spotted something wrong? Report it",
     "Handleiding": "Manual",
     "Disclaimer": "Disclaimer",
     "Aanmelden": "Sign in",

@@ -446,6 +446,11 @@
       <a href="{{ url_for('vergelijk') }}">{{ _("Vergelijk") }}</a>
       <a href="{{ url_for('vdj_playlist') }}">DJ Export</a>
       <a href="{{ url_for('gastenboek') }}">{{ _("Gastenboek") }}</a>
+      {# De pagina waar je vandaan komt gaat mee, zoals hij dat in de oude
+         voettekst ook deed: een melding zonder vindplaats kost twee mails
+         heen en weer voor je weet waar het over gaat. #}
+      <a href="{{ url_for('feedback', soort='aanvulling', pagina=request.path) }}"
+         title="{{ _("Iets gezien dat niet klopt? Meld het") }}">{{ _("Feedback") }}</a>
       <a href="{{ url_for('verras') }}" title="{{ _("Verras me: een willekeurig nummer") }}">🎲</a>
       {% if is_aangemeld() %}
         <span class="scheiding" aria-hidden="true">|</span>
