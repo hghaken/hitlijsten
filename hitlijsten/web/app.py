@@ -536,6 +536,79 @@ def _registreer(app: Flask) -> None:
 
     # --- overzicht ---------------------------------------------------------
 
+    # De tellingen op de voorpagina kostten 790 ms: een GROUP BY over alle
+    # 539.288 noteringen, plus per jaarlijkse lijst nog een telling voor de
+    # editielengtes. Dat is precies de pagina waar bezoekers binnenkomen, en
+    # gemeten liep hij vast op 2,6 per seconde -- bij zestien tegelijk wachtte
+    # iedereen ruim zes seconden.
+    #
+    # Die cijfers veranderen één keer per week. Ze horen dus niet bij elk
+    # bezoek opnieuw uitgerekend te worden.
+    _overzicht_cache: dict = {}
+
+    def _overzicht_cijfers(con) -> dict:
+        """Alles op de voorpagina dat alleen van de database afhangt.
+
+        Het stempel is het aantal noteringen plus het laatste ophaalmoment.
+        Dat is genoeg: hier staan alleen tellingen en jaartallen in, geen
+        namen -- een hernoemde artiest verandert er niets aan, een
+        toegevoegde of verwijderde notering wel, en die telt mee.
+        """
+        stempel = (con.execute("SELECT COUNT(*) FROM noteringen").fetchone()[0],
+                   con.execute("SELECT MAX(opgehaald_op) FROM opgehaald")
+                   .fetchone()[0])
+        if _overzicht_cache.get("stempel") == stempel:
+            return _overzicht_cache["waarden"]
+
+        lijsten = list(con.execute(
+            "SELECT lijst, MIN(jaar) van, MAX(jaar) tot, COUNT(DISTINCT jaar) jaren,"
+            " COUNT(DISTINCT jaar || '-' || week) weken, COUNT(*) noteringen"
+            " FROM noteringen GROUP BY lijst ORDER BY van"))
+        cijfers = {
+            "noteringen": stempel[0],
+            "aliassen": con.execute("SELECT COUNT(*) FROM aliases").fetchone()[0],
+            "uitzonderingen": con.execute(
+                "SELECT COUNT(*) FROM niet_samenvoegen").fetchone()[0],
+            "wijzigingen": con.execute("SELECT COUNT(*) FROM wijzigingen").fetchone()[0],
+        }
+        laatste = con.execute(
+            "SELECT lijst, jaar, week, opgehaald_op FROM opgehaald"
+            " ORDER BY opgehaald_op DESC LIMIT 5").fetchall()
+        # Wanneer is er voor het laatst iets binnengehaald? Alleen de
+        # weeklijsten tonen dit: bij een jaarlijkse lijst is het niet meer dan
+        # het moment van de handmatige import.
+        laatst_op = {
+            r[0]: r[1] for r in con.execute(
+                "SELECT lijst, MAX(opgehaald_op) FROM opgehaald GROUP BY lijst")}
+        # En tot welke week loopt die lijst? De laatste week van het laatste
+        # jaar -- uit `noteringen`, net als het jaartal ernaast, want een
+        # opgehaalde week zonder noteringen (kerst) is geen "tot".
+        laatste_week = {
+            r[0]: r[1] for r in con.execute(
+                "SELECT lijst, MAX(week) FROM noteringen n WHERE jaar ="
+                " (SELECT MAX(jaar) FROM noteringen WHERE lijst=n.lijst)"
+                " GROUP BY lijst")}
+
+        # Hoe lang is een editie? Het gemiddelde (noteringen / edities) is
+        # misleidend zodra een lijst van lengte verandert: de Veronica Top 1000
+        # kwam zo op 1086 uit, en zo lang is geen enkele editie geweest.
+        # Daarom de echte kortste en langste editie.
+        editielengtes = {}
+        for lijst_naam in [r["lijst"] for r in lijsten if is_jaarlijks(r["lijst"])]:
+            rij = con.execute(
+                "SELECT MIN(n), MAX(n) FROM (SELECT COUNT(*) n FROM noteringen"
+                " WHERE lijst=? GROUP BY jaar)", (lijst_naam,)).fetchone()
+            editielengtes[lijst_naam] = (
+                f"{rij[0]}" if rij[0] == rij[1] else f"{rij[0]}–{rij[1]}")
+
+        _overzicht_cache["stempel"] = stempel
+        _overzicht_cache["waarden"] = {
+            "lijsten": lijsten, "cijfers": cijfers, "laatste": laatste,
+            "laatst_op": laatst_op, "laatste_week": laatste_week,
+            "editielengtes": editielengtes,
+        }
+        return _overzicht_cache["waarden"]
+
     @app.route("/")
     def overzicht():
         con = verbinding()
@@ -562,55 +635,16 @@ def _registreer(app: Flask) -> None:
                                   "week": tweek, "artiest": rij["artiest"],
                                   "titel": rij["titel"],
                                   "sleutel": rij["sleutel"]})
-        lijsten = list(con.execute(
-            "SELECT lijst, MIN(jaar) van, MAX(jaar) tot, COUNT(DISTINCT jaar) jaren,"
-            " COUNT(DISTINCT jaar || '-' || week) weken, COUNT(*) noteringen"
-            " FROM noteringen GROUP BY lijst ORDER BY van"
-        ))
-        cijfers = {
-            "noteringen": con.execute("SELECT COUNT(*) FROM noteringen").fetchone()[0],
-            "aliassen": con.execute("SELECT COUNT(*) FROM aliases").fetchone()[0],
-            "uitzonderingen": con.execute(
-                "SELECT COUNT(*) FROM niet_samenvoegen").fetchone()[0],
-            "wijzigingen": con.execute("SELECT COUNT(*) FROM wijzigingen").fetchone()[0],
-        }
-        laatste = con.execute(
-            "SELECT lijst, jaar, week, opgehaald_op FROM opgehaald"
-            " ORDER BY opgehaald_op DESC LIMIT 5"
-        ).fetchall()
-        # Wanneer is er voor het laatst iets binnengehaald? Alleen de
-        # weeklijsten tonen dit: bij een jaarlijkse lijst is het niet meer dan
-        # het moment van de handmatige import.
-        laatst_op = {
-            r[0]: r[1] for r in con.execute(
-                "SELECT lijst, MAX(opgehaald_op) FROM opgehaald GROUP BY lijst")
-        }
-        # En tot welke week loopt die lijst? De laatste week van het laatste
-        # jaar -- uit `noteringen`, net als het jaartal ernaast, want een
-        # opgehaalde week zonder noteringen (kerst) is geen "tot".
-        laatste_week = {
-            r[0]: r[1] for r in con.execute(
-                "SELECT lijst, MAX(week) FROM noteringen n WHERE jaar ="
-                " (SELECT MAX(jaar) FROM noteringen WHERE lijst=n.lijst)"
-                " GROUP BY lijst")
-        }
-
-        # Hoe lang is een editie? Het gemiddelde (noteringen / edities) is
-        # misleidend zodra een lijst van lengte verandert: de Veronica Top 1000
-        # kwam zo op 1086 uit, en zo lang is geen enkele editie geweest.
-        # Daarom de echte kortste en langste editie.
-        editielengtes = {}
-        for lijst_naam in [r["lijst"] for r in lijsten if is_jaarlijks(r["lijst"])]:
-            rij = con.execute(
-                "SELECT MIN(n), MAX(n) FROM (SELECT COUNT(*) n FROM noteringen"
-                " WHERE lijst=? GROUP BY jaar)", (lijst_naam,)).fetchone()
-            editielengtes[lijst_naam] = (
-                f"{rij[0]}" if rij[0] == rij[1] else f"{rij[0]}–{rij[1]}")
+        gegevens = _overzicht_cijfers(con)
+        lijsten = gegevens["lijsten"]
 
         # Groeperen gebeurt hier en niet in het sjabloon: een sqlite3.Row kent
         # geen attributen, dus selectattr() vindt er niets in.
         return render_template(
-            "overzicht.html", terugblik=terugblik, cijfers=cijfers, laatste=laatste,
+            "overzicht.html", terugblik=terugblik,
+            cijfers=gegevens["cijfers"], laatste=gegevens["laatste"],
+            # De taakstand niet uit de cache: die verandert tijdens een run,
+            # en juist dan kijkt de beheerder op deze pagina.
             taak=taken.huidige(),
             week_rijen=[r for r in lijsten if not is_jaarlijks(r["lijst"])],
             jaar_rijen=sorted(
@@ -619,8 +653,9 @@ def _registreer(app: Flask) -> None:
                 key=lambda r: (r["zender"].lower(),
                                LIJSTEN.get(r["lijst"], {}).get(
                                    "naam", r["lijst"]).lower())),
-            editielengtes=editielengtes, laatst_op=laatst_op,
-            laatste_week=laatste_week,
+            editielengtes=gegevens["editielengtes"],
+            laatst_op=gegevens["laatst_op"],
+            laatste_week=gegevens["laatste_week"],
         )
 
     @app.route("/week")
