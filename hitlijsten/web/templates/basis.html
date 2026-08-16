@@ -94,6 +94,12 @@
   .subnav .scheiding { color: var(--rand); align-self: center; }
 
   main { max-width: 1600px; margin: 0 auto; padding: 1.6rem 1.4rem 4rem; }
+  /* Die ruime ondermarge is er voor pagina's die op niets uitlopen. Op het
+     Overzicht volgt de voettekst er direct op, en dan staat hij samen met de
+     padding van de footer als een gat tussen de tabel en het merkteken.
+     Browsers zonder :has() houden gewoon de oude ruimte -- niet mooi, wel
+     goed. */
+  main:has(+ footer) { padding-bottom: 1rem; }
   /* De banner zit vast aan de bovenrand van het SCHERM (position: fixed):
      hij scrolt niet mee, de inhoud schuift eroverheen. Hij ligt achter alles,
      ook de menubalk (die zijn eigen halfdoorzichtige laag heeft).
