@@ -54,25 +54,6 @@
   {% endif %}
 </div>
 
-{% if andere %}
-<h2>{{ _("Ook deze week") }}</h2>
-<div class="kaarten">
-  {% for a in andere %}
-  <div class="kaart">
-    <div class="naam">{{ a.naam|upper }}</div>
-    <div style="font-weight:650; margin:.15rem 0">
-      {% if is_nl(a.nummer1.sleutel) %}{{ nl_vlag() }} {% endif %}<a class="stil"
-      href="{{ url_for('nummer', sleutel=a.nummer1.sleutel) }}">{{ a.nummer1.titel }}</a></div>
-    <div class="hint">{{ a.nummer1.artiest }}</div>
-    <div class="hint" style="margin-top:.45rem">
-      {{ a.binnen }} {{ _("nieuw") }}{% if a.terug %} · {{ a.terug }} {{ _("terug") }}{% endif %} ·
-      <a href="{{ url_for('weeklijst', lijst=a.lijst, jaar=jaar, week=week) }}">{{ _("de volledige lijst") }}</a>
-    </div>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
-
 {% if binnen %}
 <h2>{{ _("Binnenkomers") }}</h2>
 <div class="tabelvak"><table>
@@ -115,6 +96,25 @@
   </tr>
   {% endfor %}
 </tbody></table></div>
+{% endif %}
+
+{% if andere %}
+<h2>{{ _("Ook deze week") }}</h2>
+<div class="kaarten">
+  {% for a in andere %}
+  <div class="kaart">
+    <div class="naam">{{ a.naam|upper }}</div>
+    <div style="font-weight:650; margin:.15rem 0">
+      {% if is_nl(a.nummer1.sleutel) %}{{ nl_vlag() }} {% endif %}<a class="stil"
+      href="{{ url_for('nummer', sleutel=a.nummer1.sleutel) }}">{{ a.nummer1.titel }}</a></div>
+    <div class="hint">{{ a.nummer1.artiest }}</div>
+    <div class="hint" style="margin-top:.45rem">
+      {{ a.binnen }} {{ _("nieuw") }}{% if a.terug %} · {{ a.terug }} {{ _("terug") }}{% endif %} ·
+      <a href="{{ url_for('weeklijst', lijst=a.lijst, jaar=jaar, week=week) }}">{{ _("de volledige lijst") }}</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
 {% endif %}
 
 {% endblock %}
