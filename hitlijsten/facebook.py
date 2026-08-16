@@ -41,6 +41,16 @@ STANDAARD = {
 # site -- daar wijst de link naartoe.
 MAX_BINNENKOMERS = 8
 
+# De Top 40 is de kop van het bericht; deze drie krijgen een regel. Namen kort
+# gehouden -- config.LIJSTEN heeft ze ook, maar dan staat er "Nederlandse
+# Top 40" boven en eronder de volle namen, en dat leest als een opsomming van
+# een archief in plaats van als nieuws.
+ANDERE_LIJSTEN = [
+    ("tipparade", "Tipparade"),
+    ("oranje", "Oranje Top 30"),
+    ("sterrennl", "Sterren NL Top 25"),
+]
+
 
 def instellingen() -> dict[str, str]:
     waarden = dict(STANDAARD)
@@ -123,9 +133,41 @@ def berichttekst(con: sqlite3.Connection, jaar: int, week: int) -> str | None:
     if any(r["alarmschijf"] for r in getoond):
         regels += ["", "\U0001f514 = Alarmschijf"]
 
+    overig = _andere_lijsten(con, jaar, week)
+    if overig:
+        regels += ["", "Ook deze week:"] + overig
+
     regels += ["", "De hele lijst, alle wisselingen en het archief vanaf 1965:",
                f"{HOOFD_URL}/weekbericht?jaar={jaar}&week={week}"]
     return "\n".join(regels)
+
+
+def _andere_lijsten(con: sqlite3.Connection, jaar: int, week: int) -> list[str]:
+    """Eén regel per andere weeklijst: wie er op 1 staat, en hoeveel nieuw.
+
+    Alleen dezelfde week, en alleen lijsten die die week echt hebben. De
+    Sterren NL Top 25 bestaat pas vanaf 2019 en de Oranje Top 30 vanaf 2008;
+    een bericht over 1972 hoort daar niet over te zwijgen met een lege regel,
+    maar ze simpelweg niet te noemen.
+    """
+    uit = []
+    for sleutel, naam in ANDERE_LIJSTEN:
+        rijen = list(con.execute(
+            "SELECT positie, vorige_positie, artiest, titel, site_status"
+            " FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
+            " ORDER BY positie", (sleutel, jaar, week)))
+        if not rijen:
+            continue
+        top = rijen[0]
+        regel = f"• {naam} — op 1: {top['artiest']} - {top['titel']}"
+        # Zelfde maatstaf als bij de Top 40 hierboven: een herintreder heeft
+        # ook geen vorige positie, maar is geen binnenkomer.
+        nieuw = sum(1 for r in rijen if r["vorige_positie"] is None
+                    and r["site_status"] != "terug")
+        if nieuw:
+            regel += f" ({nieuw} nieuw)"
+        uit.append(regel)
+    return uit
 
 
 def plaats(tekst: str, link: str | None = None) -> str:
