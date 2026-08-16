@@ -121,6 +121,18 @@
      meer aandacht dan een verwijzing verdient. */
   a.fb { color: var(--gedempt); display: inline-flex; }
   a.fb:hover, a.fb:focus-visible { color: #1877F2; }
+  /* De paginakop blijft staan als je scrolt, net onder de menubalk. Dat is
+     vooral op de lange lijsten prettig: daar weet je anders halverwege niet
+     meer welke lijst je bekijkt. De hoogte van de menubalk komt uit het
+     scriptje onderaan -- vast opgeven kan niet, want die balk wrapt. */
+  .kopvast {
+    position: sticky; top: var(--menuhoogte, 0px); z-index: 10;
+    margin: 0 -1.4rem 1.5rem; padding: .7rem 1.4rem .5rem;
+    background: rgba(9,12,24,.55);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .kopvast h1 { margin: 0; }
+  .kopvast .onder { margin: .15rem 0 0; }
   h1 { font-size: 1.5rem; margin: 0 0 .3rem; font-weight: 650; }
   h1 + .onder { color: var(--gedempt); margin: 0 0 1.5rem; font-size: .95rem; }
   h2 {
@@ -174,6 +186,12 @@
     header nav a { padding: .12rem .4rem; font-size: .84rem; }
     main { padding: 1rem .7rem 3rem; }
     h1 { font-size: 1.3rem; }
+    /* Zelfde afweging als bij de menubalk hierboven: op een klein scherm
+       weegt de ruimte zwaarder dan het meekijken. */
+    .kopvast {
+      position: static; background: none; margin: 0 0 1.2rem; padding: 0;
+      backdrop-filter: none; -webkit-backdrop-filter: none;
+    }
     th, td { padding: .35rem .5rem; }
     .kaart { min-width: 8.5rem; }
   }
@@ -622,11 +640,36 @@
   });
 
   // De menubalk: doorzichtig op de banner, dicht zodra er gescrold is.
+  // Meteen ook de hoogte doorgeven, want daar hangt de paginakop onder.
   (() => {
     const kop = document.querySelector("header");
     const zet = () => kop.classList.toggle("vast", window.scrollY > 8);
     addEventListener("scroll", zet, {passive: true});
     zet();
+
+    /* De titel en de regel eronder blijven staan bij het scrollen. Ze zitten
+       in 29 sjablonen los onder elkaar; ze hier omwikkelen scheelt dat het
+       overal met de hand moet, en houdt de sjablonen leesbaar.
+       Alleen als de h1 direct onder main hangt -- elders zou een wikkel de
+       opmaak kunnen breken. */
+    const titel = document.querySelector("main > h1");
+    if (titel) {
+      const vak = document.createElement("div");
+      vak.className = "kopvast";
+      titel.parentNode.insertBefore(vak, titel);
+      vak.appendChild(titel);
+      const onder = vak.nextElementSibling;
+      if (onder && onder.classList.contains("onder")) vak.appendChild(onder);
+    }
+
+    /* De menubalk wrapt, dus zijn hoogte is geen vast getal: uitmeten en als
+       variabele doorgeven, en opnieuw bij elke maatverandering. Zonder dit
+       schuift de paginakop bij een smal venster onder het menu door. */
+    const meet = () => document.documentElement.style.setProperty(
+      "--menuhoogte", kop.offsetHeight + "px");
+    meet();
+    if (window.ResizeObserver) new ResizeObserver(meet).observe(kop);
+    else addEventListener("resize", meet);
   })();
 </script>
 </body>
