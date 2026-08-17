@@ -350,6 +350,7 @@ op de NAS, achter een reverse proxy.
 | Feedback | staat sinds de voettekst-ingreep in de **tweede menubalk** (naast Gastenboek) en geeft `pagina=request.path` mee, zoals de oude voettekstlink deed; zonder die ingang had een bezoeker die iets ziet dat niet klopt geen weg meer naar het formulier |
 | Snelheid | de webapplicatie draait als **één proces met acht threads** (waitress), dus meer bezoekers tegelijk maakt niets sneller: Python's threads draaien om beurten. Gemeten op de NAS (Ryzen R1600): weeklijst 58 ms, weekbericht 30 ms, zoeken 4 ms, jaaroverzicht 255 ms (639 kB), totaallijst 195 ms — ~15 verzoeken/sec in totaal. De **voorpagina** kostte 790 ms (een `GROUP BY` over alle noteringen + per jaarlijkse lijst een telling voor de editielengtes) en liep vast op 2,6/sec; sinds de cache 15 ms en ~75/sec. Stempel = (aantal noteringen, laatste ophaalmoment) — genoeg omdat er alleen tellingen in zitten, geen namen; de taakstand blijft er bewust buiten. **Bandbreedte is de rem niet:** een eerste bezoek is ~122 kB (35 kB HTML + 87 kB banner), en bij ~930 Mbit upload zou de lijn honderden bezoekers per seconde aankunnen — honderden malen meer dan de NAS |
 | Vaste paginakop | de `h1` en de regel eronder blijven staan bij het scrollen. Ze worden door het scriptje in `basis.html` **in de menubalk gezet** (derde rij, `.paginakop`) en niet in een eigen band eronder: twee `backdrop-filter`-lagen naast elkaar blurren elk hun eigen stuk achtergrond, en omdat de banner naar beneden dimt zie je precies op de grens een randje. Eén ruit heeft dat niet. Het verplaatsen gebeurt in JavaScript en niet in de 29 sjablonen zelf; de hoogte van de menubalk komt uit een gemeten `--menuhoogte`, want die balk wrapt en een vast getal zou de kop er bij een smal venster onderdoor laten schuiven. Onder 760 px plakt hij niet, dezelfde afweging als bij de menubalk daar. Ook de **tabelkop** blijft staan bij een `past`-tabel (≤100 rijen, waar de pagina scrolt in plaats van het vak): `sticky` werkt daar tegen de scrollport van `.tabelvak` en die scrolt niet, dus krijgt zo'n vak `overflow: visible` — maar **alleen als de tabel horizontaal past**, want overflow-x en -y zijn niet los in te stellen en een brede matrix zou zijn schuifbaarheid verliezen. Het scriptje meet dat per tabel, opnieuw bij elke maatverandering. Boven **een derde van de vensterhoogte** aan vaste balken zet het scriptje de kop terug in de pagina: op een half venster wrapt de menubalk naar vier regels en de ondertitel naar drie, en dan lees je door een kier. Valkuil: `header .binnen` is een flexrij, dus die rij moet expliciet `display: block` krijgen om te stapelen |
+| Compressie | tekstantwoorden gaan **gzipped** de deur uit (`_comprimeren`, after_request): het jaaroverzicht 707 → 47,6 kB, de voorpagina 39,9 → 11,7 kB. In de applicatie en niet in nginx, want DSM genereert het serverblok van hitlijsten uit `ReverseProxy.json` en overschrijft handmatige regels. Raakt niet aan: al ingepakte antwoorden, `direct_passthrough`-stromen (send_file — `get_data()` zou de download breken), niet-teksttypen en alles onder 1 kB. `Vary: Accept-Encoding` gaat mee |
 | Vindbaarheid | sitemap-index in twee delen (±50.000 pagina's incl. artiesten, gecachet), `robots.txt`, meta-descriptions, canonical-links, Open Graph-tags en JSON-LD structured data (MusicRecording, MusicGroup, ItemList) |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
@@ -1221,10 +1222,19 @@ adverteert (`SQLITE_RECURSIVE` hoort in `_MAG_LEZEN`). Beide hersteld; de
 vrije query heeft nu ook een afbreekrem van tien seconden.
 
 **Derde ronde (aug 2026), na de Facebook-, cache- en query-toevoegingen.**
-De aanmeldrem bleek niet te omzeilen met een verzonnen `X-Forwarded-For`: de
-reverse proxy schoont die kop, en `_bezoeker_ip()` vertrouwt hem alleen als
-het verzoek écht van de proxy komt (live getoetst: een gespooft adres werd
-niet gelogd). De backslash-fout uit de vorige ronde was op **twee** plekken
+De aanmeldrem bleek niet te omzeilen met een verzonnen `X-Forwarded-For`, maar
+het mechanisme is anders dan je zou denken en dat is het opschrijven waard.
+Nginx zet `X-Forwarded-For $proxy_add_x_forwarded_for` — dat **plakt** de kop
+van de bezoeker ervóór, dus die is wél te beïnvloeden. Wat het tegenhoudt is
+**waitress**: die strípt standaard alle proxy-koppen (`trusted_proxy` staat niet
+ingesteld), zodat `X-Forwarded-For` de applicatie nooit bereikt. `X-Real-IP`
+overleeft dat wél, en dáár leest `_bezoeker_ip()` het adres uit — maar nginx
+overschrijft die met `$remote_addr`, wat een bezoeker niet kan vervalsen.
+Gemeten: van buiten en vanaf een gewone LAN-machine (10.10.8.39) wordt een
+gespooft adres genegeerd; alleen vanaf 127.0.0.1 of 10.10.8.20 — dus met een
+voet op de NAS zelf — wordt `X-Real-IP` overgenomen. **Let op bij wijzigingen:**
+zou iemand ooit `trusted_proxy` in waitress zetten, dan komt `X-Forwarded-For`
+wél door en wordt `split(",")[0]` in `_bezoeker_ip()` alsnog vervalsbaar. De backslash-fout uit de vorige ronde was op **twee** plekken
 hersteld (`_eigen_pad`) maar op twee andere blijven staan (`taal_kies`, de
 `volgende` bij het aanmelden); die zijn nu samengevoegd tot één
 `_veilig_pad()`. Bij dat samenvoegen kwam een **stuurteken-omweg** boven die

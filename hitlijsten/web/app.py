@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import configparser
+import gzip
 import io
 import secrets
 import sqlite3
@@ -449,6 +450,45 @@ def _registreer(app: Flask) -> None:
         if not goed or not secrets.compare_digest(goed, gegeven):
             abort(400, "csrf-token ontbreekt of klopt niet")
         return None
+
+    # Pagina's zijn groot: het jaaroverzicht is 707 kB tekst, en tekst laat
+    # zich met gzip tot een fractie samenpersen (gemeten: 707 -> 48 kB, 93%
+    # eraf). Dat scheelt de bezoeker laadtijd op een trage verbinding, en het
+    # scheelt Google crawlbudget -- met 36.000 pagina's die nog opgehaald
+    # moeten worden telt dat.
+    #
+    # Waarom hier en niet in nginx: de reverse proxy van DSM schrijft zijn
+    # eigen configuratie, en die wordt bij elke regeneratie overschreven. Een
+    # gzip-regel daar is een reparatie die ooit stilletjes verdwijnt; hier
+    # staat hij in de repo en gaat hij mee met elke uitrol.
+    GZIP_VANAF = 1024                     # kleiner comprimeren kost meer dan het opbrengt
+    GZIP_SOORTEN = ("text/html", "text/css", "text/plain", "text/xml",
+                    "application/json", "application/javascript",
+                    "application/xml", "image/svg+xml")
+
+    @app.after_request
+    def _comprimeren(antwoord):
+        """Tekstantwoorden ingepakt meesturen als de browser dat aankan."""
+        if "gzip" not in request.headers.get("Accept-Encoding", "").lower():
+            return antwoord
+        # Al ingepakt, of een bestand dat stukje bij beetje wordt verstuurd
+        # (send_file): daar mogen we niet aankomen -- get_data() zou de
+        # stroom opslurpen en het downloaden breken.
+        if antwoord.direct_passthrough or antwoord.headers.get("Content-Encoding"):
+            return antwoord
+        soort = (antwoord.mimetype or "").lower()
+        if soort not in GZIP_SOORTEN or antwoord.status_code >= 300:
+            return antwoord
+        inhoud = antwoord.get_data()
+        if len(inhoud) < GZIP_VANAF:
+            return antwoord
+        antwoord.set_data(gzip.compress(inhoud, compresslevel=6))
+        antwoord.headers["Content-Encoding"] = "gzip"
+        antwoord.headers["Content-Length"] = str(len(antwoord.get_data()))
+        # Zonder deze regel bewaart een tussenliggende cache het ingepakte
+        # antwoord en serveert het aan een browser die geen gzip aankan.
+        antwoord.headers.add("Vary", "Accept-Encoding")
+        return antwoord
 
     @app.after_request
     def _beveiligingsheaders(antwoord):
