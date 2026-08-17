@@ -1122,6 +1122,26 @@ met een authorizer, niet doordat er woorden gefilterd worden. Die woordenlijst
 was te omzeilen: `WITH x AS (SELECT 1)DELETE FROM ...` — zonder spatie, of met
 een newline of `/**/` ertussen — kwam er gewoon doorheen en wiste rijen.
 
+De grenzen zijn nagemeten (aug 2026), niet aangenomen. Wat wordt tegengehouden:
+een `DELETE` verstopt achter een `WITH` (*not authorized*, 1 ms), een `ATTACH`
+als tweede statement (één statement tegelijk), `readfile()` (bestaat niet in de
+Python-koppeling), een kruisproduct van vier keer de hele tabel (afgebroken na
+tien seconden) en een half miljoen rijen ophalen (`fetchmany(500)`).
+
+**Wat er niet tegen beschermt, bewust:** één rij mag onbeperkt groot zijn.
+`SELECT zeroblob(200000000)` levert een cel van 191 MB in 133 ms — te snel voor
+de tijdrem, en met vijfhonderd van die rijen zit je over het geheugenplafond van
+de dienst heen. Dan schiet systemd de webapplicatie af en is de site tien
+seconden weg. Bewust gelaten: het scherm zit achter een aanmelding, dus dit is
+jezelf in de voet schieten en niet een deur voor een ander. Een maat per cel of
+een kortere rem lost het op als het ooit hindert.
+
+**Afmelden gaat naar de voorpagina**, niet terug naar het aanmeldscherm: dat
+laatste leest als een mislukte poging terwijl je juist weg wilde. Met een
+bevestiging erbij (categorie `goed` — de site kent alleen `goed` en `fout` als
+opmaakklasse, dus een verzonnen `gelukt` zou een kale regel geven), want anders
+is het enige zichtbare verschil dat de gele beheerregel verdwenen is.
+
 **Verder**: het CSRF-token wordt vernieuwd zodra je je aanmeldt (een token dat
 iemand daarvóór bemachtigde is dan niets meer waard); sessiecookie met
 `Secure`, `SameSite=Lax` en zeven dagen
