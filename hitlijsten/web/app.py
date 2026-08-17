@@ -370,7 +370,11 @@ def _registreer(app: Flask) -> None:
     @app.route("/afmelden")
     def afmelden():
         session.clear()
-        return redirect(url_for("aanmelden"))
+        # Naar de voorpagina en niet naar het aanmeldscherm: afmelden is
+        # klaar zijn, niet opnieuw willen beginnen. Het aanmeldscherm
+        # aanbieden aan iemand die net uitlog leest als een mislukte poging.
+        flash("Je bent afgemeld", "goed")
+        return redirect(url_for("overzicht"))
 
     # --- Nederlandstalig ---------------------------------------------------
 
