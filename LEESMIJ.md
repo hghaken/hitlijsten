@@ -1150,9 +1150,13 @@ rechtstreeks op `http://<nas>:8642`); beveiligingsheaders op elk antwoord
 (CSP met `unsafe-inline` omdat de sjablonen hun stijl en scriptjes inline
 dragen — de winst is dat er van geen enkele andere herkomst iets geladen mag
 worden); vijf mislukte aanmeldpogingen per kwartier per IP mét logregel; geen
-open redirect meer via `?volgende=`; en `_eigen_pad()` op het pagina-veld van
-feedback en de terug-link van het DJ Export-rapport, zodat daar geen
-`javascript:`-link kan wachten op een klik van de beheerder. Die laatste
+open redirect meer; **alle vier de plekken die een door de bezoeker
+aangeleverd pad volgen** (`?volgende=` bij het aanmelden, `?terug=` bij de
+taalkeuze, en `_eigen_pad()` op het pagina-veld van feedback en de terug-link
+van het DJ Export-rapport) delen sinds aug 2026 één `_veilig_pad()`, zodat ze
+niet meer uit elkaar kunnen lopen. `_eigen_pad()` zorgt bovendien dat er geen
+`javascript:`-link in het pagina-veld kan wachten op een klik van de
+beheerder. Die laatste
 controle moet wél twee soorten invoer aankunnen: een kaal pad (het verborgen
 formulierveld) én een volledige URL (de Referer-kop). De eerste versie kende
 alleen paden en liet daarmee de terug-link op het DJ Export-rapport
@@ -1215,6 +1219,22 @@ als `//`, dus dat is alsnog een uitstapje naar een andere site), en de
 authorizer had recursieve CTE's stukgemaakt terwijl de pagina er wél mee
 adverteert (`SQLITE_RECURSIVE` hoort in `_MAG_LEZEN`). Beide hersteld; de
 vrije query heeft nu ook een afbreekrem van tien seconden.
+
+**Derde ronde (aug 2026), na de Facebook-, cache- en query-toevoegingen.**
+De aanmeldrem bleek niet te omzeilen met een verzonnen `X-Forwarded-For`: de
+reverse proxy schoont die kop, en `_bezoeker_ip()` vertrouwt hem alleen als
+het verzoek écht van de proxy komt (live getoetst: een gespooft adres werd
+niet gelogd). De backslash-fout uit de vorige ronde was op **twee** plekken
+hersteld (`_eigen_pad`) maar op twee andere blijven staan (`taal_kies`, de
+`volgende` bij het aanmelden); die zijn nu samengevoegd tot één
+`_veilig_pad()`. Bij dat samenvoegen kwam een **stuurteken-omweg** boven die
+overal in zat: een tab, newline of return in het pad wordt door de browser én
+door Werkzeug uit de URL geknipt, waarna `/	/vreemd` overblijft als
+`//vreemd` — gemeten kwam `?terug=/%09/evil` er als `Location: //evil.example`
+uit, een echte open-redirect zonder proxy nodig. `_veilig_pad()` weigert nu
+elk stuurteken. De query-OOM (één reuzegrote `zeroblob`-rij) is opnieuw
+bekeken en als geaccepteerd risico gelaten: het scherm zit achter een
+aanmelding.
 
 Wat al goed zat en zo moet blijven: geparametriseerde SQL overal (de
 zoekfunctie plakt wel SQL aan elkaar, maar uitsluitend uit vaste fragmenten),

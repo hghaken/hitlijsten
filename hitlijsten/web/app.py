@@ -59,6 +59,30 @@ _aanmeld_pogingen: dict[str, list] = {}
 # van DSM (die het verzoek van buiten doorgeeft) en de machine zelf.
 VERTROUWDE_PROXIES = frozenset({"10.10.8.20", "127.0.0.1", "::1"})
 
+
+def _veilig_pad(waarde: str) -> str | None:
+    """Een door de bezoeker aangeleverd pad, of None als het niet deugt.
+
+    Terug naar een plek op deze site mag; een uitstapje naar een andere site
+    niet. Drie vermommingen springen daar overheen:
+      - `//vreemd.example` is protocol-relatief en gaat naar vreemd.example;
+      - `/\\vreemd.example` óók, want browsers lezen de backslash als `/`;
+      - `/\tvreemd.example` (tab, newline, return) óók: browsers -- en
+        Werkzeug zelf -- knippen die tekens uit de URL, waarna `/\t/vreemd`
+        overblijft als `//vreemd`. Geverifieerd aug 2026: dat kwam er als
+        `Location: //vreemd.example` uit.
+    Vandaar: geen stuurtekens, begint met precies één `/`, en het tweede
+    teken is geen `/` of `\\`. Deze functie staat los zodat elke redirect die
+    een `?terug=`- of `?volgende=`-waarde volgt dezelfde controle deelt --
+    drie plekken die eerder uit elkaar liepen.
+    """
+    waarde = (waarde or "").strip()[:300]
+    if any(teken < " " for teken in waarde):      # tab, newline, return, ...
+        return None
+    if len(waarde) < 2 or waarde[0] != "/" or waarde[1] in "/\\":
+        return None
+    return waarde
+
 # De waarde in de lijstkeuze op /week die "laat ze alle vier zien" betekent.
 # Geen lijstnaam, dus hij kan nooit botsen met een sleutel uit LIJSTEN.
 ALLE_WEEKLIJSTEN = "alle"
@@ -356,9 +380,8 @@ def _registreer(app: Flask) -> None:
                 session.permanent = True
                 # Alleen terug naar een eigen pad: een volledige URL zou
                 # hier een phishing-doorgeefluik zijn.
-                volgende = request.args.get("volgende", "")
-                if not volgende.startswith("/") or volgende.startswith("//"):
-                    volgende = url_for("overzicht")
+                volgende = _veilig_pad(request.args.get("volgende", "")) \
+                    or url_for("overzicht")
                 return redirect(volgende)
             mislukt.append(datetime.now())
             _aanmeld_pogingen[_bezoeker_ip()] = mislukt
@@ -473,9 +496,7 @@ def _registreer(app: Flask) -> None:
     @app.route("/taal/<code>")
     def taal_kies(code: str):
         """Taalkeuze vastleggen en terug naar waar de bezoeker was."""
-        terug = request.args.get("terug", "/")
-        if not terug.startswith("/") or terug.startswith("//"):
-            terug = "/"
+        terug = _veilig_pad(request.args.get("terug", "")) or "/"
         antwoord = redirect(terug)
         if code in ("nl", "en"):
             antwoord.set_cookie("taal", code, max_age=31536000,
@@ -897,12 +918,8 @@ def _registreer(app: Flask) -> None:
                 return None
             pad = deel.path or "/"
             return f"{pad}?{deel.query}" if deel.query else pad
-        # Een pad, maar geen protocol-relatieve verwijzing. Let op de
-        # backslash: browsers lezen `/\vreemd.example` net als `//` en
-        # sturen je dan alsnog naar een andere site.
-        if len(waarde) < 2 or waarde[0] != "/" or waarde[1] in "/\\":
-            return None
-        return waarde
+        # Een kaal pad: dezelfde controle als elke andere terug-verwijzing.
+        return _veilig_pad(waarde)
 
     def _bezoeker_ip() -> str:
         """Het echte adres, ook achter de reverse proxy van de NAS.
