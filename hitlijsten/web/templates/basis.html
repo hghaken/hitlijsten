@@ -33,6 +33,7 @@
     --accent2:   #7a5cff;
     --accent3:   #34e2c4;
     --waarschuw: #ff5b6e;
+    --beheer:    #ffc857;   /* beheerknoppen: wijzigen, geen rondkijken */
     --glas:      rgba(255,255,255,.06);
     --glas2:     rgba(255,255,255,.03);
     --rand:      rgba(255,255,255,.12);
@@ -92,6 +93,11 @@
   }
   .subnav a:hover { color: var(--ink); background: var(--glas); }
   .subnav .scheiding { color: var(--rand); align-self: center; }
+  /* De beheerregel: geel, want hier verander je iets. De gedempte kleur van
+     de gewone menu's zou hem laten wegvallen tussen het rondkijken. */
+  .beheerbalk { padding-top: 0; }
+  .beheerbalk .subnav a { color: var(--beheer); }
+  .beheerbalk .subnav a:hover { color: #fff3d0; background: var(--glas); }
 
   main { max-width: 1600px; margin: 0 auto; padding: 1.6rem 1.4rem 4rem; }
   /* Die ruime ondermarge is er voor pagina's die op niets uitlopen. Op het
@@ -490,17 +496,23 @@
       <a href="{{ url_for('feedback', soort='aanvulling', pagina=request.path) }}"
          title="{{ _("Iets gezien dat niet klopt? Meld het") }}">{{ _("Feedback") }}</a>
       <a href="{{ url_for('verras') }}" title="{{ _("Verras me: een willekeurig nummer") }}">🎲</a>
-      {% if is_aangemeld() %}
-        <span class="scheiding" aria-hidden="true">|</span>
-        <a href="{{ url_for('berichten') }}">Berichten</a>
-        <a href="{{ url_for('aliassen') }}">Aliassen</a>
-        <a href="{{ url_for('uitzonderingen') }}">Uitzonderingen</a>
-        <a href="{{ url_for('query') }}">Query</a>
-        <a href="{{ url_for('beheer') }}">Beheer</a>
-        <a href="{{ url_for('wijzigingen') }}">Logboek</a>
-      {% endif %}
     </nav>
   </div>
+  {# Het beheer op een eigen regel en in geel: die knoppen wijzigen gegevens,
+     en dat hoort zichtbaar anders te zijn dan rondkijken. Alleen te zien als
+     je aangemeld bent, dus een bezoeker merkt er niets van. #}
+  {% if is_aangemeld() %}
+  <div class="binnen subbalk beheerbalk">
+    <nav class="subnav">
+      <a href="{{ url_for('berichten') }}">Berichten</a>
+      <a href="{{ url_for('aliassen') }}">Aliassen</a>
+      <a href="{{ url_for('uitzonderingen') }}">Uitzonderingen</a>
+      <a href="{{ url_for('query') }}">Query</a>
+      <a href="{{ url_for('beheer') }}">Beheer</a>
+      <a href="{{ url_for('wijzigingen') }}">Logboek</a>
+    </nav>
+  </div>
+  {% endif %}
 </header>
 <main>
   {% with meldingen = get_flashed_messages(with_categories=true) %}
