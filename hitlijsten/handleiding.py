@@ -655,6 +655,17 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "site toont hun gegevens; de rechten liggen bij de "
           "samenstellers. Zie de disclaimer op de site voor het "
           "volledige verhaal.")
+    pdf.kop2("De broncode")
+    pdf.p("De site is met de hand gebouwd en de code is openbaar: "
+          "**github.com/hghaken/hitlijsten**, onder de MIT-licentie. "
+          "De gegevens niet — de noteringen blijven van de "
+          "samenstellers hierboven; dit project verzamelt en toont hun "
+          "werk, het claimt het niet.")
+    pdf.p("Geschreven met hulp van **Claude Code** van Anthropic. Bij "
+          "elke wijziging staat in het logboek van de code waarom hij "
+          "zo gemaakt is en niet anders — ook de keuzes die achteraf "
+          "verkeerd bleken.")
+
     pdf.kop2("Contact")
     pdf.p("Een fout gezien, een lijst die je mist, of gewoon een "
           "groet? Gebruik het feedbackformulier of het gastenboek — "
@@ -992,6 +1003,17 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "datastats.nl. This site shows their data; the rights remain "
           "with the compilers. See the site's disclaimer for the full "
           "story.")
+    pdf.kop2("The source code")
+    pdf.p("The site was built by hand and the code is public: "
+          "**github.com/hghaken/hitlijsten**, under the MIT licence. "
+          "The data is not — the chart entries remain with the "
+          "compilers named above; this project collects and shows "
+          "their work, it does not claim it.")
+    pdf.p("Written with the help of **Claude Code** by Anthropic. Every "
+          "change carries a note in the code’s log explaining why it "
+          "was made that way and not another — including the choices "
+          "that turned out to be wrong.")
+
     pdf.kop2("Contact")
     pdf.p("Found a mistake, missing a chart, or just want to wave? "
           "Use the feedback form or the guestbook — both are linked "
