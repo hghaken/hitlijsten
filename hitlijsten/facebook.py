@@ -89,7 +89,11 @@ def berichttekst(con: sqlite3.Connection, jaar: int, week: int) -> str | None:
         return None
 
     top = rijen[0]
-    regels = [f"Nederlandse Top 40 — week {week} van {jaar}", ""]
+    # Geen lege regel tussen de kop en de nummer 1: Facebook klapt het bericht
+    # in na een paar regels, en telt die lege regel gewoon mee. Dan staat er in
+    # de tijdlijn alleen een titel met "Meer weergeven" eronder, en moet iemand
+    # klikken om te zien of er nieuws is. Nu draagt regel twee het nieuws.
+    regels = [f"Nederlandse Top 40 — week {week} van {jaar}"]
 
     # weken_genoteerd telt weken IN de lijst, niet weken op 1. Dat verschil
     # moet uit de zin blijken, anders staat er straks dat een plaat twaalf
