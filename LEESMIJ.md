@@ -1229,7 +1229,7 @@ hersteld (`_eigen_pad`) maar op twee andere blijven staan (`taal_kies`, de
 `volgende` bij het aanmelden); die zijn nu samengevoegd tot één
 `_veilig_pad()`. Bij dat samenvoegen kwam een **stuurteken-omweg** boven die
 overal in zat: een tab, newline of return in het pad wordt door de browser én
-door Werkzeug uit de URL geknipt, waarna `/	/vreemd` overblijft als
+door Werkzeug uit de URL geknipt, waarna `/\t/vreemd` overblijft als
 `//vreemd` — gemeten kwam `?terug=/%09/evil` er als `Location: //evil.example`
 uit, een echte open-redirect zonder proxy nodig. `_veilig_pad()` weigert nu
 elk stuurteken. De query-OOM (één reuzegrote `zeroblob`-rij) is opnieuw
