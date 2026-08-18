@@ -457,6 +457,20 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "het complete chartverloop als grafiek, elke notering in "
           "elke lijst, en zoekknoppen naar YouTube en Spotify. Bestaan "
           "er meerdere versies van een titel, dan staan die er ook.")
+    pdf.p("De noteringen staan in **twee tabellen**: de weeklijsten "
+          "apart van de jaarlijsten. Die meten namelijk iets anders — "
+          "een weeklijst laat zien wat er destijds verkocht werd, een "
+          "jaarlijst waar mensen jaarlijks op blijven stemmen. Achter "
+          "de hoogste positie staat hoe vaak die gehaald is: Bohemian "
+          "Rhapsody heeft 1 (22×) in de Top 2000 en 1 (3×) in "
+          "de Top 40. Datzelfde nummer, twee heel verschillende "
+          "verhalen.")
+    pdf.p("Onderaan staan soms **wetenswaardigheden**. Kwam een plaat "
+          "in losse golven terug — een heruitgave, een film, het "
+          "overlijden van de zanger — dan zie je daar de periodes "
+          "apart. \"Top 40, 1975–1992\" klinkt als zeventien jaar "
+          "onafgebroken, terwijl het twee keer een half jaar was met "
+          "vijftien jaar stilte ertussen.")
     pdf.kop2("Artiestpagina's")
     pdf.p("Klik op een artiestnaam en je ziet de complete "
           "hitgeschiedenis van die artiest over alle lijsten heen — "
@@ -812,6 +826,19 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "complete chart run as a graph, every entry in every chart, "
           "and search buttons for YouTube and Spotify. If several "
           "versions of a title exist, they are listed too.")
+    pdf.p("The entries sit in **two tables**: the weekly charts apart "
+          "from the annual ones. They measure different things — a "
+          "weekly chart shows what was selling at the time, an annual "
+          "chart what people keep voting for. Behind the peak position "
+          "you see how often it was reached: Bohemian Rhapsody has "
+          "1 (22×) in the Top 2000 and 1 (3×) in the Top 40. "
+          "The same record, two very different stories.")
+    pdf.p("At the foot you sometimes find **fun facts**. If a record "
+          "returned in separate waves — a reissue, a film, the death "
+          "of the singer — the periods are listed apart there. "
+          "\"Top 40, 1975–1992\" sounds like seventeen unbroken "
+          "years, while it was two half-years with fifteen years of "
+          "silence in between.")
     pdf.kop2("Artist pages")
     pdf.p("Click an artist name for that artist's complete chart "
           "history across all charts — over 13,000 artists have such "

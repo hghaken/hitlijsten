@@ -351,6 +351,7 @@ op de NAS, achter een reverse proxy.
 | Snelheid | de webapplicatie draait als **één proces met acht threads** (waitress), dus meer bezoekers tegelijk maakt niets sneller: Python's threads draaien om beurten. Gemeten op de NAS (Ryzen R1600): weeklijst 58 ms, weekbericht 30 ms, zoeken 4 ms, jaaroverzicht 255 ms (639 kB), totaallijst 195 ms — ~15 verzoeken/sec in totaal. De **voorpagina** kostte 790 ms (een `GROUP BY` over alle noteringen + per jaarlijkse lijst een telling voor de editielengtes) en liep vast op 2,6/sec; sinds de cache 15 ms en ~75/sec. Stempel = (aantal noteringen, laatste ophaalmoment) — genoeg omdat er alleen tellingen in zitten, geen namen; de taakstand blijft er bewust buiten. **Bandbreedte is de rem niet:** een eerste bezoek is ~122 kB (35 kB HTML + 87 kB banner), en bij ~930 Mbit upload zou de lijn honderden bezoekers per seconde aankunnen — honderden malen meer dan de NAS |
 | Vaste paginakop | de `h1` en de regel eronder blijven staan bij het scrollen. Ze worden door het scriptje in `basis.html` **in de menubalk gezet** (derde rij, `.paginakop`) en niet in een eigen band eronder: twee `backdrop-filter`-lagen naast elkaar blurren elk hun eigen stuk achtergrond, en omdat de banner naar beneden dimt zie je precies op de grens een randje. Eén ruit heeft dat niet. Het verplaatsen gebeurt in JavaScript en niet in de 29 sjablonen zelf; de hoogte van de menubalk komt uit een gemeten `--menuhoogte`, want die balk wrapt en een vast getal zou de kop er bij een smal venster onderdoor laten schuiven. Onder 760 px plakt hij niet, dezelfde afweging als bij de menubalk daar. Ook de **tabelkop** blijft staan bij een `past`-tabel (≤100 rijen, waar de pagina scrolt in plaats van het vak): `sticky` werkt daar tegen de scrollport van `.tabelvak` en die scrolt niet, dus krijgt zo'n vak `overflow: visible` — maar **alleen als de tabel horizontaal past**, want overflow-x en -y zijn niet los in te stellen en een brede matrix zou zijn schuifbaarheid verliezen. Het scriptje meet dat per tabel, opnieuw bij elke maatverandering. Boven **een derde van de vensterhoogte** aan vaste balken zet het scriptje de kop terug in de pagina: op een half venster wrapt de menubalk naar vier regels en de ondertitel naar drie, en dan lees je door een kier. Valkuil: `header .binnen` is een flexrij, dus die rij moet expliciet `display: block` krijgen om te stapelen |
 | Compressie | tekstantwoorden gaan **gzipped** de deur uit (`_comprimeren`, after_request): het jaaroverzicht 707 → 47,6 kB, de voorpagina 39,9 → 11,7 kB. In de applicatie en niet in nginx, want DSM genereert het serverblok van hitlijsten uit `ReverseProxy.json` en overschrijft handmatige regels. Raakt niet aan: al ingepakte antwoorden, `direct_passthrough`-stromen (send_file — `get_data()` zou de download breken), niet-teksttypen en alles onder 1 kB. `Vary: Accept-Encoding` gaat mee |
+| Nummerpagina | de noteringen **per lijst**, in twee tabellen: week- en jaarlijsten apart, want ze meten iets anders (wat er destijds verkocht werd tegenover waar mensen jaarlijks op blijven stemmen). Bij de hoogste positie staat **hoe vaak** die gehaald is — Bohemian Rhapsody heeft `1 (22×)` bij de Top 2000 en `1 (3×)` bij de Top 40, en dat contrast is het hele verhaal van een klassieker. Onder **Wetenswaardigheden** de golven: "Top 40, 1975–1992" suggereert zeventien jaar onafgebroken terwijl het twee periodes waren met vijftien jaar stilte ertussen (de heruitgave na het overlijden van Freddie Mercury). Een gat van twee jaargangen telt als nieuwe golf, zodat een notering over de jaarwisseling één periode blijft; alleen weeklijsten, want bij een jaarlijst is elke editie per definitie een los moment. Valkuil: het grafiek-id (`#perlijst`) moet meeverhuizen naar de jaartabel als een nummer alleen daarin voorkomt, anders vindt het grafiekscript zijn bron niet |
 | Vindbaarheid | sitemap-index in twee delen (±50.000 pagina's incl. artiesten, gecachet), `robots.txt`, meta-descriptions, canonical-links, Open Graph-tags en JSON-LD structured data (MusicRecording, MusicGroup, ItemList) |
 
 **Achter het wachtwoord** (staat in `app/webapp.ini`, niet in git): zoeken,
@@ -417,6 +418,26 @@ opdracht helpt het, tegen een kapot volume niet — daarvoor is er het
 snapshotschema van de NAS, dat sinds 2 augustus 2026 ook op deze share staat.
 De twee vullen elkaar aan: een snapshot bewaart de hele share en overleeft een
 verwijderde map, deze kopieën zitten er juist in en gaan met één knop terug.
+
+### Twee stille fouten, gevonden doordat er iets naast kwam te staan
+
+**De hoogste positie werd afgekapt op 99.** De startwaarde voor het minimum was
+`99`, en `min()` maakt daar nooit meer 1279 van. Elke plaat die in een Top 2000,
+Top 4000 of Evergreen Top 1000 lager dan 99 stond, kreeg "99" te zien. De fout
+zat er al langer, maar viel pas op toen week- en jaarlijsten in aparte tabellen
+kwamen te staan: dan staan er ineens vijf negenennegentigen onder elkaar.
+Startwaarde is nu `None`, met een expliciete controle bij de eerste notering.
+In `kruiscontrole.py` staat hetzelfde patroon, maar die werkt uitsluitend op
+weeklijsten (posities tot 40) — daar kan 99 geen kwaad.
+
+**De bouw-wachtrij liep vol.** `db.gebouwd()` bestond al, netjes geschreven,
+maar werd nergens aangeroepen: `opdracht_excel` schreef de bestanden en liet de
+markering in `te_bouwen` staan. Zolang je alleen de vrijdagrun draait valt dat
+niet op, want die markeert en bouwt in één beweging. Na een `hersleutel` over 62
+jaargangen stonden er in één klap **380 markeringen** voor bestanden die er
+allang waren, en het beheerscherm meldt die als "openstaand". `opdracht_excel`
+ruimt nu op wat het gebouwd heeft — voor de hele jaargang tegelijk, want
+`bouw_alles` doet per definitie alle lijsten van dat jaar.
 
 ### Opschonen
 
@@ -503,7 +524,7 @@ wél raakt. "Beatles" en "The Beatles" leverden twee gescheiden geschiedenissen
 op, en "Crocodille Rock" naast "Crocodile Rock" splitste één nummer in tweeën —
 met verdeelde punten en twee halve noteringen in de jaarlijst.
 
-**Twee fouten in de normalisatie zelf** kwamen bij dit werk boven water. De
+**Drie fouten in de normalisatie zelf** kwamen bij dit werk boven water. De
 eerste: een lidwoord vooraan de artiestnaam telde mee, terwijl de bronnen het er
 niet over eens zijn (top40.nl schrijft "The Beatles", Music Datastats schrijft
 "Beatles"). De tweede: `normaliseer()` haalt accenten weg door letters te
@@ -511,6 +532,36 @@ ontleden — é wordt e plus een tekentje — maar de ø van Bløf is een eigen 
 Die overleefde de ontleding en werd daarna als rommel geschrapt, waarna "Bløf"
 als "bl f" naast "Blof" stond. Nu vertaald, samen met æ, ß, ł en een stuk of tien
 andere.
+
+De derde kwam pas boven toen een bezoeker een cijfer op de Facebook-pagina
+betwistte (aug 2026). `_EN` trok `&`, `+`, `x` en `vs` gelijk, maar **niet het
+woord "and"** — en daar loopt precies de scheidslijn tussen de bronnen: top40.nl
+schrijft "Simon and Garfunkel", Music Datastats "Simon & Garfunkel". Gevolg:
+**131 platen lagen in tweeën**, de weeklijsten op de ene sleutel en de
+jaarlijsten op de andere, en op geen van beide pagina's het hele verhaal.
+Purple Rain, Bridge Over Troubled Water, Band On The Run — 5.066 noteringen.
+
+Titels kregen een **eigen, smallere regex** (`_EN_TITEL`). Die draaien bewust
+met `samenwerking=False` omdat "x" er een letter is (Malcolm X) en "vs" bij de
+titel hoort; alleen `&` en `and` worden er gelijkgetrokken. Zonder die splitsing
+zou "Malcolm X" veranderen in "Malcolm &".
+
+**Vooraf twee proefdraaien** die niets wijzigden maar wel uitrekenden wat er zou
+samenvallen — de enige manier om te zien of er geen covers op één hoop belanden.
+Uitkomst: nul samenvoegingen waarbij de artiest verschilt, dus East Side Beat
+bleef los van Simple Minds en O'Hara's Playboys los van de Bee Gees. Twee
+gevallen die verdacht leken (Despacito, Pilé) bleken **verouderde sleutels die
+niet meer bij hun eigen titel pasten**; die zijn meegerepareerd.
+
+Wat een `hersleutel` over álle jaargangen vraagt: die opdracht draait **per
+jaargang**, dus een lus over `SELECT DISTINCT jaar`. Daarna de Excel-bestanden
+herbouwen (62 jaargangen, ruim een kwartier).
+
+**Zes gevallen blijven bewust staan**, met een andere oorzaak: punten en
+apostrofs in de artiestnaam ("K.C." tegenover "KC", "The Mama's and The Papa's"
+tegenover "The Mamas & The Papas", "Patti La Belle" tegenover "Patti Labelle").
+Daar zou het wegstrepen van spaties ook echt verschillende artiesten kunnen
+raken, dus dat vraagt een eigen afweging.
 
 **Eén schrijfwijze per artiest én per titel.** Dat tweede was er eerst niet, en
 dat viel meteen op: "Beggin" van Madcon in de Top 40 naast "Beggin'" in de Top
