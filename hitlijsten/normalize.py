@@ -28,8 +28,17 @@ from .config import ALIASES_PATH, NIET_SAMENVOEGEN_PATH
 # artiesten. Dat is een verschil zonder betekenis: het gaat om dezelfde twee
 # mensen op dezelfde plaat. 162 samenwerkingen stonden er los van elkaar door.
 _FEAT = re.compile(r"\s*(?:\bfeat\b\.?|\bft\b\.?|\bfeaturing\b|\bwith\b|\bmet\b)\s*", re.I)
-# Samenwerkingstekens gelijktrekken: "x", "&", "+", "vs" -> "&".
-_EN = re.compile(r"\s*(?:&|\+|\bx\b|\bvs\b\.?|\bversus\b)\s*", re.I)
+# Samenwerkingstekens gelijktrekken: "x", "&", "+", "and", "vs" -> "&".
+# "and" zat er lang niet in, en dat liep dwars door het archief: top40.nl
+# schrijft "Simon and Garfunkel", Music Datastats "Simon & Garfunkel". Daardoor
+# lagen 121 platen in tweeen -- de weeklijsten op de ene sleutel, de jaarlijsten
+# op de andere, en op geen van beide pagina's het hele verhaal.
+_EN = re.compile(r"\s*(?:&|\+|\band\b|\bx\b|\bvs\b\.?|\bversus\b)\s*", re.I)
+# Voor TITELS een smallere variant. Daar draait de normalisatie bewust met
+# samenwerking=False, want "x" is er een letter ("Malcolm X") en "vs" hoort bij
+# de titel zelf. Maar "Alive & Kicking" en "Alive And Kicking" zijn onmiskenbaar
+# dezelfde plaat, dus die twee -- en alleen die twee -- worden gelijkgetrokken.
+_EN_TITEL = re.compile(r"\s*(?:&|\band\b)\s*", re.I)
 _WITRUIMTE = re.compile(r"\s+")
 # Alles behalve letters, cijfers, spatie en de betekenisdragende &.
 # Let op: dit verwijdert ook de "|" -- dat is met opzet, want die scheidt in de
@@ -81,6 +90,8 @@ def normaliseer(tekst: str, *, samenwerking: bool = True) -> str:
     if samenwerking:
         tekst = _FEAT.sub(" & ", tekst)
         tekst = _EN.sub(" & ", tekst)
+    else:
+        tekst = _EN_TITEL.sub(" & ", tekst)
     tekst = _ROMMEL.sub(" ", tekst)
     return _WITRUIMTE.sub(" ", tekst).strip()
 
