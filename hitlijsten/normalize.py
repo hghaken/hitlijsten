@@ -40,6 +40,15 @@ _EN = re.compile(r"\s*(?:&|\+|\band\b|\bx\b|\bvs\b\.?|\bversus\b)\s*", re.I)
 # dezelfde plaat, dus die twee -- en alleen die twee -- worden gelijkgetrokken.
 _EN_TITEL = re.compile(r"\s*(?:&|\band\b)\s*", re.I)
 _WITRUIMTE = re.compile(r"\s+")
+# Leestekens die zonder spoor mogen verdwijnen, vóór _ROMMEL er spaties van
+# maakt. Zonder dit werd "K.C." tot "k c" en stond die los van "KC"; net zo
+# "Mama's" naast "Mamas" en "Sexy M.F." naast "Sexy MF".
+_APOSTROF = re.compile(r"['`‘’ʼ]")
+# Alleen een punt BINNEN een woord (niet gevolgd door witruimte): dat zijn
+# initialen. Een punt met een spatie erachter scheidt echt en blijft een
+# spatie -- "Stop. Look. Listen." hoort niet "stoplooklisten" te worden.
+_PUNT_IN_WOORD = re.compile(r"\.(?!\s)")
+
 # Alles behalve letters, cijfers, spatie en de betekenisdragende &.
 # Let op: dit verwijdert ook de "|" -- dat is met opzet, want die scheidt in de
 # sleutel de artiest van de titel en mag daar niet uit de tekst zelf komen.
@@ -83,6 +92,8 @@ def normaliseer(tekst: str, *, samenwerking: bool = True) -> str:
         tekst = tekst.replace(van, naar)
     for van, naar in _LETTERS.items():
         tekst = tekst.replace(van, naar)
+    # Eerst de spoorloze leestekens, dan pas de rest naar spaties.
+    tekst = _PUNT_IN_WOORD.sub("", _APOSTROF.sub("", tekst))
     # Accenten weg: "Beyoncé" == "Beyonce".
     tekst = unicodedata.normalize("NFKD", tekst)
     tekst = "".join(c for c in tekst if not unicodedata.combining(c))
