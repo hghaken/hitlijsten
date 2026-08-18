@@ -91,16 +91,29 @@
     set plekken = deelrijen | map(attribute='positie') | unique | list | length %}{%
     if plekken != deelrijen|length %} {{ _("op") }} {{ plekken }} {{ _("plekken") }}{%
     endif %}</span></h2>{% endif %}
-{# Een legenda alleen als er die week ook echt een stip staat. Geen toets op
-   de lijst: de parser vult het veld alleen waar de stip iets betekent, dus
+{# De legenda legt alleen uit wat er die week ook echt staat. Geen toets op
+   de lijst: de velden worden alleen gevuld waar het teken iets betekent, dus
    waar er een staat hoort de uitleg erbij. #}
-{% if deelrijen | selectattr('stip') | list %}
+{% set heeft_stip = deelrijen | selectattr('stip') | list %}
+{% set heeft_bel = deelrijen | selectattr('alarmschijf') | list %}
+{% set heeft_kroon = deelrijen | selectattr('kroon') | list %}
+{% if heeft_stip or heeft_bel or heeft_kroon %}
 <p class="hint" style="margin:.2rem 0 .6rem">
+  {%- if heeft_stip %}
   <span class="stip" style="font-size:.85em">7</span>
   {{ _("stipnotering") }} &nbsp;
   <span class="superstip" style="font-size:.85em">7</span>
   {{ _("superstip") }}
   <span style="opacity:.75">— {{ _("een plaat die die week hard steeg") }}</span>
+  {%- endif %}
+  {%- if heeft_bel %}{% if heeft_stip %} &nbsp;&nbsp; {% endif %}
+  <span style="color:#ED1C24">🔔</span> {{ _("alarmschijf") }}
+  <span style="opacity:.75">— {{ _("de plaat waarvan de Top 40 een hit verwacht") }}</span>
+  {%- endif %}
+  {%- if heeft_kroon %}{% if heeft_stip or heeft_bel %} &nbsp;&nbsp; {% endif %}
+  <span>👑</span> {{ _("Oranje Kroon") }}
+  <span style="opacity:.75">— {{ _("clip van de week bij TV Oranje") }}</span>
+  {%- endif %}
 </p>
 {% endif %}
 <div class="tabelvak"><table>
