@@ -53,7 +53,7 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 539.163 noteringen over
+- **Het hele archief staat in de database**: 540.352 noteringen over
   eenentwintig lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
@@ -445,7 +445,9 @@ mag nooit invloed hebben op wat een sleutel wordt. Vierduizend regels ertussen
 zouden die curatie onleesbaar maken.
 
 `hersleutel` legt verhuizingen sinds deze ronde **zelf** vast, dus de volgende
-normalisatiewijziging regelt dit vanzelf. De 4.929 van augustus 2026 zijn
+normalisatiewijziging regelt dit vanzelf. Een splitsing valt daar niet onder --
+daar verdwijnt een sleutel in plaats van dat hij verandert -- dus die legt zijn
+eigen omleidingen aan (34 stuks). De 4.929 van augustus 2026 zijn
 nagekomen uit de momentopname: notering-id's zijn stabiel, dus een join tussen
 de opname en de database van nu geeft precies waar elke sleutel heen ging.
 
@@ -487,7 +489,7 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Dubbele haken | 225 nummers, 1.703 noteringen | een regel |
 | Eén samenwerkingscredit (feat./ft./featuring/x/komma/met → &) | 2.796 namen, ~30.000 noteringen | regels met beschermlijsten |
 | Gastartiest uit de titel naar de artiest | 2 nummers | een smalle regel |
-| Versies die een plek deelden (jaren 60) | 19 nummers, 269 noteringen | woordvergelijking + Discogs |
+| Versies die een plek deelden | 1.115 weekregels → 2.471 | de weeklijst zelf + eigen keuzelijst |
 | ///-schrijfwijzen en /-hernoemingen | 21 + 16 gevallen | MusicBrainz, Discogs, hoezen |
 | Ondertitel achter een streepje → tussen haken | 321 titels | versie-/themawoorden |
 
@@ -621,7 +623,7 @@ streep voor van alles, en het ziet er telkens hetzelfde uit:
 
 | Vorm | Betekent meestal | Wat ermee gebeurt |
 |---|---|---|
-| `A / B` bij artiest én titel | twee opnamen op één plek | splitsen (17 gevallen, 1965–1972) |
+| `A / B` bij artiest én titel | twee opnamen op één plek | splitsen (1.115 weekregels, 1965–2026) |
 | `A / B` alleen bij de titel | de uitgave voor het nummer | de uitgave eraf (24) |
 | `A /// B` | dezelfde notering, twee schrijfwijzen | kiezen (21) |
 | `A // B` | van alles | per geval (18) |
@@ -633,6 +635,87 @@ Frieden // Een Beetje Vrede`) — en twee gevallen waar de dubbele streep gewoon
 in de naam hoort. Discogs crediteert *This Is What You Came For* zelf als
 **Calvin Harris // Rihanna**, en Outlandish' single heet echt *Warrior //
 Worrier*. Daar viel niets te repareren.
+
+### Eén plek, meerdere uitvoeringen
+
+In de jaren zestig kwam het geregeld voor dat een nummer in meerdere
+uitvoeringen tegelijk populair was, en de Top 40 zette die dan **samen op één
+plek**. In het archief stonden ze als één regel met schuine strepen:
+
+```
+1965 wk 4   #29  Orkest Gudrun Jankis / Stig Rauno / Jan Rohde & The Wild Ones
+                 Let Kiss / Letkis / Letka Jenka
+```
+
+Voor een DJ zijn dat drie platen. Ze staan nu als drie regels, **allemaal op
+plek 29 en allemaal met de punten van plek 29** — niet opgeteld, net als bij de
+dubbele A-kant. Dat raakte 993 weekregels in de Top 40 (die 2.229 werden) en
+122 in de Tipparade (242). De Top 40 groeide van 129.170 naar 130.105
+noteringen, de Tipparade van 91.397 naar 91.526.
+
+**De weeklijst beslist, niet de notering.** Dit was de eerste aanname die
+sneuvelde. Het lag voor de hand om per *nummer* te beslissen en dan alle weken
+van die notering te splitsen, maar zo werkt het niet. Ed Sheeran deelde in 2025
+maar **één** van zijn 26 weken de plek met de Googoosh-versie van *Azizam*; de
+andere 25 stond hij alleen. En andersom groeit een notering: *Let Kiss* begint
+in week 3 met drie uitvoeringen, zakt in week 5 terug naar twee en staat in
+week 8 met vier in de lijst. Wat er gesplitst wordt komt dus uit de lijst van
+die week zelf; alleen de schrijfwijze van de namen komt uit een vaste
+keuzelijst.
+
+**De volledige tekst staat in een attribuut.** De zichtbare regel op top40.nl
+is afgekapt (`Orkest Gudrun Jankis / Stig Rauno / Jan Rohde..`) en de
+aria-label — waar de gewone parser op leunt omdat die tussen weken stabiel is —
+noemt bij een gedeelde plek soms maar de eerste uitvoering. Alleen
+`title="Details ..."` bevat alles. Wie dat over het hoofd ziet splitst netjes
+in twee regels waar er drie hadden moeten staan.
+
+**Aliassen trekken de splitsing meteen weer dicht.** Eerdere opschoonrondes
+hebben aliassen aangelegd die een losse uitvoering aan de gecombineerde
+notering koppelen: `shirley bassey|goldfinger` → `shirley bassey john barry zz
+& de maskers the jets|goldfinger`. `sleutel_van()` volgt die aliassen, dus
+zolang ze er staan krijgt de verse regel "Shirley Bassey — Goldfinger"
+onmiddellijk de sleutel van de combinatie terug en is de splitsing onzichtbaar.
+Eerst opruimen dus, dan pas splitsen.
+
+Zoeken op "aliassen waarvan het doel verdwijnt" is daarbij niet genoeg. Het
+doel bestaat soms helemaal niet als sleutel: `clinton ford|dandy` wees naar
+`clinton ford the kinks herman s hermits|dandy` — met een spatie die nergens in
+de database voorkomt. De toets moet vanaf de andere kant: bereken van elke
+nieuwe regel de sleutel zónder alias, volg de alias, en kijk of daar na het
+splitsen nog een notering op staat. Zo niet, dan wijst hij in het niets en moet
+hij weg.
+
+**Twee schrijfwijzen is een samenvoeging, geen splitsing.** `Elvis / Elvis
+Presley`, `L.L. Cool J / LL Cool J`, `Guns N Roses / Guns N' Roses` — dezelfde
+artiest, dezelfde plaat, alleen de bron is inconsequent. Die worden één regel.
+Vallen twee delen zo samen, dan wint de **volledigste** schrijfwijze van de
+naam: "Guns N' Roses" verslaat "Guns N Roses", "The Spencer Davis Group"
+verslaat "Spencer Davis Group".
+
+**Op naam alleen matchen gaat mis.** Om de goede schrijfwijze bij een
+uitvoering te vinden werd elk deel met de keuzelijst vergeleken. Op artiestnaam
+alleen liep dat twee keer stuk. *Mwaki* heet in beide uitvoeringen "Zerb &
+Sofiya Nzau" en verschilt alleen in de titel — beide delen kozen dezelfde regel
+en de notering klapte in elkaar. Op artiest plus titel samen ging het
+vervolgens fout bij Rudy Bennett en Tim Hardin: de lange toevoeging achter Tim
+Hardins titel (*Titelsong uit de film "Zoeken naar Eileen"*) overstemde het
+naamverschil, zodat Tim Hardin bij Rudy Bennett belandde. Het werkt pas met
+artiest en titel apart gewogen (0,65 / 0,35) én een **één-op-één-toewijzing**:
+elk deel hoogstens één regel uit de keuzelijst, elke regel hoogstens één deel.
+
+**Dubbele blokken in de bron.** In sommige weken staat dezelfde notering twee
+keer in de opgeslagen pagina. Het plan kwam dan tweemaal langs dezelfde
+databaserij: één keer verwijderen, twee keer terugschrijven. Dat leverde 328
+dubbele regels op, die achteraf zijn opgeruimd — maar alleen op de posities die
+deze ronde raakte. Elders in het archief staan nog 39 dubbele regels (3JS in
+2011 bijvoorbeeld); die stonden er al en horen bij een andere opdracht.
+
+**De oude sleutels leiden door.** De gecombineerde sleutel verdwijnt en dus ook
+zijn adres. Alle 34 verdwenen sleutels staan in `oude_sleutels` en leiden met
+een 301 door naar de eerste uitvoering:
+`/nummer/bambis rocco granata peppino di capri|melancholie` komt uit bij
+`/nummer/bambis|melancholie`.
 
 **De Discogs-sleutel.** De zoek-API werkt zonder sleutel op 25 verzoeken per
 minuut; met een persoonlijke token (gratis, discogs.com → Settings →

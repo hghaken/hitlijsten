@@ -22,7 +22,7 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 
 | Tabel | Rijen | Waarvoor |
 |---|---|---|
-| [`noteringen`](#noteringen) | 539.163 | de gegevens: één rij per nummer per week |
+| [`noteringen`](#noteringen) | 540.352 | de gegevens: één rij per nummer per week |
 | [`opgehaald`](#opgehaald) | 7.684 | welke week wanneer is binnengehaald |
 | [`bestaat_niet`](#bestaat_niet) | 267 | weken die nooit zijn uitgezonden |
 | [`aliases`](#aliases) | 651 | twee sleutels die hetzelfde nummer zijn |
@@ -226,7 +226,8 @@ platen.
 
 **Waar hij voor is.** De sleutel staat in de URL van een nummerpagina, dus een
 wijziging in de normalisatie breekt webadressen. In augustus 2026 hernoemden
-twee ingrepen samen 4.929 sleutels. `/nummer/<sleutel>` en
+twee ingrepen samen 4.929 sleutels; het splitsen van gedeelde plekken
+liet er daarna nog 34 verdwijnen. De tabel telt nu 4.963 regels. `/nummer/<sleutel>` en
 `/artiest/<sleutel>` verwijzen bij een onbekende sleutel door met een **301**,
 na controle dat het doel bestaat; ketens worden doorgevolgd.
 
