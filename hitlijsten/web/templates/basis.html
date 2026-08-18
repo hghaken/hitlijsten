@@ -153,40 +153,41 @@
   a { color: #8ab4ff; }
   a:hover { color: var(--ink); }
 
-  /* De stipnotering van de Top 40, getekend zoals top40.nl het doet: de
-     gewone stip is een gevulde rode schijf met het cijfer eruit gespaard, de
-     superstip een open ring. Dat voelt omgekeerd -- de zwaarste
-     onderscheiding is de lichtste vorm -- maar het is wat de bron toont, en
-     wie beide naast elkaar legt moet hetzelfde zien. Vaste breedte, anders
-     springt de kolom bij het wisselen tussen een cijfer van een en van twee
-     tekens. */
-  .stip, .superstip {
+  /* Ringen om een positie. Vier soorten, en ze kunnen elkaar overlappen:
+     de stipnotering zegt iets over de plaat, een gedeelde plek over de plek.
+     Daarom deelt alles de vorm en verschilt alleen de kleur. Vaste breedte,
+     anders springt de kolom bij het wisselen tussen een cijfer van een en
+     van twee tekens. */
+  .stip, .superstip, .gedeeld, .dubbelea {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 1.75em; height: 1.75em; padding: 0 .15em;
     border-radius: 999px; border: 2px solid #ED1C24;
     font-variant-numeric: tabular-nums; font-weight: 600; line-height: 1;
   }
+  /* De stip getekend zoals top40.nl het doet: de gewone stip is een gevulde
+     rode schijf, de superstip een open ring. Dat voelt omgekeerd -- de
+     zwaarste onderscheiding is de lichtste vorm -- maar het is wat de bron
+     toont, en wie beide naast elkaar legt moet hetzelfde zien. */
   .stip { background: #ED1C24; color: #fff; }
   .superstip { color: #ED1C24; }
 
-  /* Een plek die door meer dan een uitvoering wordt gedeeld -- in de jaren
-     zestig stonden een buitenlandse hit en zijn Nederlandse cover geregeld
-     samen op een nummer. Geel, want het gaat over de plek en niet over de
-     plaat, en het mag niet met het rood van de stip verward worden. */
-  .gedeeld {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 1.75em; height: 1.75em; padding: 0 .15em;
-    border-radius: 999px; border: 2px solid var(--beheer); color: var(--beheer);
-    font-variant-numeric: tabular-nums; font-weight: 600; line-height: 1;
-  }
-  /* Draagt zo'n gedeelde plek ook een stip, dan houdt de stip zijn eigen
-     vorm en komt de gele ring er als schaduw omheen te liggen. Beide tekens
-     zeggen iets anders; een van de twee laten vallen zou informatie kosten. */
-  .stip.gedeeld, .superstip.gedeeld {
-    box-shadow: 0 0 0 2px var(--beheer); border-color: #ED1C24;
-  }
-  .stip.gedeeld { background: #ED1C24; color: #fff; }
-  .superstip.gedeeld { background: none; color: #ED1C24; }
+  /* Twee regels op één plek zijn twee verschillende dingen. Geel: meerdere
+     uitvoeringen deelden de plek (in de jaren zestig stonden een buitenlandse
+     hit en zijn Nederlandse cover geregeld samen op een nummer). Lichtblauw:
+     een dubbele A-kant, dus één plaat met twee kanten die allebei gedraaid
+     werden. Geen plek is allebei -- dat is nagerekend over het hele archief. */
+  .gedeeld  { border-color: var(--beheer); color: var(--beheer); }
+  .dubbelea { border-color: #7dd3fc;       color: #7dd3fc; }
+
+  /* Draagt zo'n plek ook een stip, dan houdt de stip zijn eigen vorm en komt
+     de ring er als schaduw omheen te liggen: allebei de tekens zeggen iets
+     anders, dus een van de twee laten vallen kost informatie. */
+  .stip.gedeeld, .superstip.gedeeld,
+  .stip.dubbelea, .superstip.dubbelea { border-color: #ED1C24; }
+  .stip.gedeeld,  .superstip.gedeeld  { box-shadow: 0 0 0 2px var(--beheer); }
+  .stip.dubbelea, .superstip.dubbelea { box-shadow: 0 0 0 2px #7dd3fc; }
+  .stip.gedeeld, .stip.dubbelea { background: #ED1C24; color: #fff; }
+  .superstip.gedeeld, .superstip.dubbelea { background: none; color: #ED1C24; }
 
   .kaart {
     background: linear-gradient(180deg, var(--glas), var(--glas2));

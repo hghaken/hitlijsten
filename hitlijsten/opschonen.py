@@ -866,13 +866,15 @@ def splits_nummer(con: sqlite3.Connection, sleutel: str,
     nieuw_aantal = 0
     for rij in rijen:
         con.execute(
-            "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE id=?",
+            "UPDATE noteringen SET artiest=?, titel=?, sleutel=?, dubbele_a=1"
+            " WHERE id=?",
             (eerste[0], eerste[1], sleutel_van(*eerste), rij["id"]))
         for artiest, titel in rest:
             con.execute(
                 "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
                 " artiest, label, weken_genoteerd, vorige_positie, site_status,"
-                " sleutel, uitjaar) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                " sleutel, uitjaar, dubbele_a)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)",
                 (rij["lijst"], rij["jaar"], rij["week"], rij["positie"], titel,
                  artiest, rij["label"], rij["weken_genoteerd"],
                  rij["vorige_positie"], rij["site_status"],
@@ -911,14 +913,16 @@ def splits_versies(con: sqlite3.Connection, lijst: str = "top40") -> dict:
                              reden="versies op een plek")
         eerste, rest = kanten[0], kanten[1:]
         con.execute(
-            "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE id=?",
+            "UPDATE noteringen SET artiest=?, titel=?, sleutel=?, dubbele_a=1"
+            " WHERE id=?",
             (eerste[0], eerste[1], sleutel_van(*eerste), rij["id"]))
         verslag["noteringen"] += 1
         for artiest, titel in rest:
             con.execute(
                 "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
                 " artiest, label, weken_genoteerd, vorige_positie, site_status,"
-                " sleutel, uitjaar) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                " sleutel, uitjaar, dubbele_a)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)",
                 (rij["lijst"], rij["jaar"], rij["week"], rij["positie"], titel,
                  artiest, rij["label"], rij["weken_genoteerd"],
                  rij["vorige_positie"], rij["site_status"],
@@ -958,14 +962,16 @@ def splits_dubbele_a_kanten(con: sqlite3.Connection) -> dict:
         db.markeer_te_bouwen(con, lijst=rij["lijst"], jaar=rij["jaar"],
                              reden="dubbele A-kant")
         con.execute(
-            "UPDATE noteringen SET artiest=?, titel=?, sleutel=? WHERE id=?",
+            "UPDATE noteringen SET artiest=?, titel=?, sleutel=?, dubbele_a=1"
+            " WHERE id=?",
             (eerste[0], eerste[1], sleutel_van(*eerste), rij["id"]))
         verslag["noteringen"] += 1
         for artiest, titel in rest:
             con.execute(
                 "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
                 " artiest, label, weken_genoteerd, vorige_positie, site_status,"
-                " sleutel, uitjaar) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                " sleutel, uitjaar, dubbele_a)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)",
                 (rij["lijst"], rij["jaar"], rij["week"], rij["positie"], titel,
                  artiest, rij["label"], rij["weken_genoteerd"],
                  rij["vorige_positie"], rij["site_status"],

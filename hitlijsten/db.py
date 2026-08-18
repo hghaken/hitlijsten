@@ -52,7 +52,13 @@ CREATE TABLE IF NOT EXISTS noteringen (
     stip             INTEGER NOT NULL DEFAULT 0,
     -- De Oranje Kroon: clip van de week bij TV Oranje. Net als de alarmschijf
     -- een eigenschap van de plaat; alleen de Oranje Top 30 kent hem.
-    kroon            INTEGER NOT NULL DEFAULT 0
+    kroon            INTEGER NOT NULL DEFAULT 0,
+    -- Deze notering is een kant van een dubbele A-kant. Twee regels op één
+    -- plek kunnen namelijk twee dingen zijn: twee kanten van dezelfde single,
+    -- of twee verschillende uitvoeringen die de plek deelden. Aan de artiest
+    -- is dat niet te zien -- 229 dubbele A-kanten hebben per kant een andere
+    -- artiest ("De Dijk ; The Scene") -- dus het staat hier vast.
+    dubbele_a        INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_noteringen_sleutel
@@ -284,6 +290,15 @@ def _voeg_kroon_toe(con: sqlite3.Connection) -> None:
         con.commit()
 
 
+def _voeg_dubbele_a_toe(con: sqlite3.Connection) -> None:
+    """Voeg de kolom `dubbele_a` toe aan een database die hem nog mist."""
+    kolommen = {r[1] for r in con.execute("PRAGMA table_info(noteringen)")}
+    if kolommen and "dubbele_a" not in kolommen:
+        con.execute("ALTER TABLE noteringen ADD COLUMN dubbele_a INTEGER"
+                    " NOT NULL DEFAULT 0")
+        con.commit()
+
+
 def _stel_in(con: sqlite3.Connection) -> None:
     """De instellingen die gelijktijdig gebruik mogelijk maken.
 
@@ -325,6 +340,7 @@ def verbinding() -> Iterator[sqlite3.Connection]:
         _voeg_alarmschijf_toe(con)
         _voeg_stip_toe(con)
         _voeg_kroon_toe(con)
+        _voeg_dubbele_a_toe(con)
         yield con
         con.commit()
     finally:

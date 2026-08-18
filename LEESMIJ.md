@@ -523,7 +523,16 @@ noteringen op dezelfde positie:
 Het schema kon dit al aan: twee noteringen op één positie bestonden al bij de
 Tipparade, die echte gedeelde posities kent. In de weeklijst staat het aantal
 er sindsdien bij als het afwijkt — "56 noteringen op 40 plekken" — want een
-Top 40 met 56 regels leest anders als een fout. Dat komt vaker voor dan je
+Top 40 met 56 regels leest anders als een fout.
+
+**Twee regels op één plek zijn twee verschillende dingen**, en dat is aan de
+lijst te zien: geel voor meerdere uitvoeringen die de plek deelden,
+lichtblauw voor een dubbele A-kant. Aan de artiest is het onderscheid niet te
+maken — 229 dubbele A-kanten hebben per kant een ándere artiest ("De Dijk ;
+The Scene") — dus het staat vast in de kolom `dubbele_a`, gevuld uit de bron:
+top40.nl scheidt de twee kanten met een puntkomma in de titel. 3.735
+noteringen op 1.817 plekken, en geen enkele plek is allebei; dat is over het
+hele archief nagerekend. Dat komt vaker voor dan je
 denkt: 1.269 Top 40-weken, 719 Tipparade-weken en 38 weken van de Oranje Top
 30 hebben meer noteringen dan plekken. **De positie telt één keer**: beide
 nummers krijgen de punten van die ene plek en dus hetzelfde totaal, precies wat

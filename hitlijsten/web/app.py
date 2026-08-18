@@ -791,7 +791,8 @@ def _registreer(app: Flask) -> None:
             rijen = list(con.execute(
                 "SELECT positie, vorige_positie, artiest, titel, label,"
                 " weken_genoteerd, site_status, sleutel, alarmschijf, stip,"
-                " kroon FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
+                " kroon, dubbele_a FROM noteringen"
+                " WHERE lijst=? AND jaar=? AND week=?"
                 " ORDER BY positie, artiest", (welke, jaar, week)))
             rijen = _alleen_nl(rijen)
             if request.args.get("nieuw"):

@@ -101,8 +101,12 @@
 {# Eenmaal per lijstblok: welke plekken worden door meer dan een uitvoering
    gedeeld? In de lus zou dit per regel opnieuw worden opgebouwd. #}
 {% set posities = deelrijen | map(attribute='positie') | list %}
-{% set heeft_gedeeld = posities | length != posities | unique | list | length %}
-{% if heeft_stip or heeft_bel or heeft_kroon or heeft_vlag %}
+{% set heeft_deling = posities | length != posities | unique | list | length %}
+{% set heeft_dubbel = heeft_deling and deelrijen | selectattr('dubbele_a') | list %}
+{% set heeft_gedeeld = heeft_deling and deelrijen | rejectattr('dubbele_a') | list
+                       | map(attribute='positie') | list %}
+{% set heeft_gedeeld = heeft_gedeeld and (heeft_gedeeld | length != heeft_gedeeld | unique | list | length) %}
+{% if heeft_stip or heeft_bel or heeft_kroon or heeft_vlag or heeft_deling %}
 <p class="hint" style="margin:.2rem 0 .6rem">
   {%- if heeft_stip %}
   <span class="stip" style="font-size:.85em">7</span>
@@ -123,7 +127,11 @@
   <span class="gedeeld" style="font-size:.85em">7</span> {{ _("gedeelde plek") }}
   <span style="opacity:.75">— {{ _("meerdere uitvoeringen op dezelfde plek") }}</span>
   {%- endif %}
-  {%- if heeft_vlag %}{% if heeft_stip or heeft_bel or heeft_kroon or heeft_gedeeld %} &nbsp;&nbsp; {% endif %}
+  {%- if heeft_dubbel %}{% if heeft_stip or heeft_bel or heeft_kroon or heeft_gedeeld %} &nbsp;&nbsp; {% endif %}
+  <span class="dubbelea" style="font-size:.85em">7</span> {{ _("dubbele A-kant") }}
+  <span style="opacity:.75">— {{ _("één plaat met twee kanten") }}</span>
+  {%- endif %}
+  {%- if heeft_vlag %}{% if heeft_stip or heeft_bel or heeft_kroon or heeft_gedeeld or heeft_dubbel %} &nbsp;&nbsp; {% endif %}
   {{ nl_vlag() }} {{ _("Nederlandstalig") }}
   {%- endif %}
 </p>
@@ -142,13 +150,15 @@
        zeldzame van de twee. Rood voor de stip, geel voor een gedeelde plek,
        en allebei tegelijk als het allebei geldt. #}
     {%- set gedeeld = posities.count(r['positie']) > 1 %}
+    {%- set soort = ('dubbelea' if r['dubbele_a'] else 'gedeeld') if gedeeld else '' %}
     {%- set ring = (('superstip' if r['stip'] == 2 else 'stip') if r['stip'] else '')
-                   ~ (' gedeeld' if gedeeld else '') %}
+                   ~ (' ' ~ soort if soort else '') %}
     {%- set uitleg = [] %}
     <td class="getal {% if not ring %}{% if r['positie'] == 1 %}top1{% elif r['positie'] <= 3 %}top3{% endif %}{% endif %}">
       {%- if ring %}<span class="{{ ring | trim }}" title="{{
         [(_("Superstip") if r['stip'] == 2 else _("Stipnotering")) if r['stip'] else None,
-         _("gedeelde plek") if gedeeld else None] | select | join(' · ') }}">{{
+         (_("dubbele A-kant") if r['dubbele_a'] else _("gedeelde plek"))
+            if gedeeld else None] | select | join(' · ') }}">{{
         r['positie'] }}</span>
       {%- else %}{{ r['positie'] }}{% endif %}</td>
     <td class="getal hint">
