@@ -2586,6 +2586,17 @@ def _registreer(app: Flask) -> None:
             jaar=jaar, week=week, top10=top10, te_vroeg=te_vroeg,
             uitgezonden=uitgezonden, vandaag=date.today().isoformat())
 
+    # LIKE-jokertekens in een sleutel onschadelijk maken. Stond twee keer
+    # bijna gelijk in deze module; een artiest met een underscore in zijn
+    # naam zou anders half Nederland matchen.
+    ONTSNAP = chr(92)
+
+    def _als_patroon(sleutel: str) -> str:
+        veilig = (sleutel.replace(ONTSNAP, ONTSNAP * 2)
+                  .replace("%", ONTSNAP + "%")
+                  .replace("_", ONTSNAP + "_"))
+        return veilig + "|%"
+
     @app.route("/artiest/<path:artiestsleutel>")
     def artiest(artiestsleutel: str):
         """Alles van één artiest: alle nummers, over alle lijsten heen.
@@ -2596,8 +2607,7 @@ def _registreer(app: Flask) -> None:
         in de noteringen zelf.
         """
         con = verbinding()
-        patroon = (artiestsleutel.replace("\\", "\\\\")
-                   .replace("%", "\\%").replace("_", "\\_")) + "|%"
+        patroon = _als_patroon(artiestsleutel)
         nummers = list(con.execute(
             "SELECT sleutel, MAX(titel) titel, COUNT(*) noteringen,"
             " MIN(jaar) van, MAX(jaar) tot, MIN(positie) hoogste,"
@@ -2607,6 +2617,23 @@ def _registreer(app: Flask) -> None:
             " FROM noteringen WHERE sleutel LIKE ? ESCAPE '\\'"
             " GROUP BY sleutel ORDER BY van, sleutel", (patroon,)))
         if not nummers:
+            # Ook een artiestsleutel kan verhuisd zijn ("simon and
+            # garfunkel" werd "simon & garfunkel"). Verhuizingen staan per
+            # nummer vastgelegd, dus pak er een van deze artiest en neem
+            # de artiestkant van zijn nieuwe sleutel.
+            verhuisd = con.execute(
+                "SELECT nieuw FROM oude_sleutels WHERE oud LIKE ?"
+                " ESCAPE ? LIMIT 1", (patroon, ONTSNAP)).fetchone()
+            if verhuisd:
+                nieuwe_artiest = verhuisd[0].split("|")[0]
+                bestaat = con.execute(
+                    "SELECT 1 FROM noteringen WHERE sleutel LIKE ?"
+                    " ESCAPE ? LIMIT 1",
+                    (_als_patroon(nieuwe_artiest), ONTSNAP)).fetchone()
+                if bestaat and nieuwe_artiest != artiestsleutel:
+                    return redirect(url_for("artiest",
+                                            artiestsleutel=nieuwe_artiest),
+                                    code=301)
             abort(404)
 
         rij = con.execute("SELECT naam FROM artiestnamen WHERE sleutel=?",
@@ -2664,6 +2691,14 @@ def _registreer(app: Flask) -> None:
             (sleutel,),
         ))
         if not rijen:
+            # Misschien is dit adres alleen verhuisd. De sleutel staat in de
+            # URL, dus elke wijziging in de normalisatie zou anders duizenden
+            # bewaarde links stilzwijgend op een 404 laten stranden.
+            elders = db.volg_verhuizing(con, sleutel)
+            if elders and elders != sleutel and con.execute(
+                    "SELECT 1 FROM noteringen WHERE sleutel=? LIMIT 1",
+                    (elders,)).fetchone():
+                return redirect(url_for("nummer", sleutel=elders), code=301)
             abort(404)
         # Punten per jaar en lijst, met de lijstlengte van die week.
         lengtes = {

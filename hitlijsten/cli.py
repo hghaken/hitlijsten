@@ -747,6 +747,12 @@ def opdracht_hersleutel(jaar: int) -> None:
         for r in rijen:
             nieuw = sleutel_van(r["artiest"], r["titel"])
             if nieuw != r["sleutel"]:
+                # Waar de oude sleutel gebleven is, zodat een bewaarde link
+                # naar de nummerpagina blijft werken: de sleutel staat in de
+                # URL, dus elke normalisatiewijziging breekt anders stilletjes
+                # duizenden adressen.
+                db.onthoud_verhuizing(con, r["sleutel"], nieuw,
+                                      "sleutel herberekend")
                 con.execute(
                     "UPDATE noteringen SET sleutel=? WHERE id=?", (nieuw, r["id"])
                 )

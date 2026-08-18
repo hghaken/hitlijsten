@@ -204,6 +204,36 @@ Waar ze vandaan komen:
 
 ---
 
+## oude_sleutels
+
+Waar een verhuisde sleutel tegenwoordig te vinden is. **Primaire sleutel
+`oud`.**
+
+| Kolom | Type | Betekenis |
+|---|---|---|
+| `oud` | TEXT | de sleutel zoals hij in oude webadressen staat |
+| `nieuw` | TEXT | waar hij nu heet |
+| `reden` | TEXT | waarom hij verhuisde |
+| `aangemaakt` | TEXT | wanneer |
+
+**Waarom apart van `aliases`.** Die tabel bevat gecureerde beslissingen ("dit
+is dezelfde plaat", nagekeken tegen MusicBrainz), telt mee bij het *berekenen*
+van sleutels en wordt elke run naar CSV geëxporteerd. Deze tabel is puur
+routering: mechanisch gevuld, bij duizenden tegelijk, en zonder enige invloed
+op wat een sleutel wordt. Ze door elkaar halen zou de curatie onleesbaar maken
+en — erger — een verhuisbericht laten meetellen bij het samenvoegen van
+platen.
+
+**Waar hij voor is.** De sleutel staat in de URL van een nummerpagina, dus een
+wijziging in de normalisatie breekt webadressen. In augustus 2026 hernoemden
+twee ingrepen samen 4.929 sleutels. `/nummer/<sleutel>` en
+`/artiest/<sleutel>` verwijzen bij een onbekende sleutel door met een **301**,
+na controle dat het doel bestaat; ketens worden doorgevolgd.
+
+`hersleutel` vult de tabel voortaan zelf bij elke sleutel die hij wijzigt.
+
+---
+
 ## niet_samenvoegen
 
 Het omgekeerde. **Primaire sleutel `(sleutel_a, sleutel_b)`.**

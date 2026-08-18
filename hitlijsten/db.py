@@ -77,6 +77,23 @@ CREATE TABLE IF NOT EXISTS aliases (
     aangemaakt TEXT
 );
 
+-- Verhuisde sleutels: waar een oude sleutel tegenwoordig te vinden is. Puur
+-- voor de webadressen -- de sleutel staat in de URL van een nummerpagina, dus
+-- verandert de normalisatie, dan breken alle bewaarde en gedeelde links. Deze
+-- tabel laat de site doorverwijzen in plaats van 404 geven.
+--
+-- Bewust NIET de tabel `aliases`: die bevat gecureerde beslissingen ("dit is
+-- dezelfde plaat", nagekeken tegen MusicBrainz), telt mee bij het berekenen
+-- van sleutels, en wordt elke run naar CSV geexporteerd. Een verhuisbericht is
+-- iets anders: mechanisch, bij duizenden tegelijk, en het mag nooit invloed
+-- hebben op wat een sleutel wordt.
+CREATE TABLE IF NOT EXISTS oude_sleutels (
+    oud        TEXT PRIMARY KEY,
+    nieuw      TEXT NOT NULL,
+    reden      TEXT,
+    aangemaakt TEXT
+);
+
 -- De vastgestelde schrijfwijze van een artiest, per artiestsleutel. Nodig
 -- omdat de bronnen het oneens zijn: "Beatles" tegen "The Beatles", "coldplay"
 -- tegen "Coldplay". Zonder deze tabel zou zo'n correctie bij de volgende
@@ -318,6 +335,38 @@ def te_bouwen(con: sqlite3.Connection) -> list[tuple[str, int]]:
     """Wat er nog gebouwd moet worden, oudste markering eerst."""
     return [(r[0], r[1]) for r in con.execute(
         "SELECT lijst, jaar FROM te_bouwen ORDER BY aangemaakt, jaar")]
+
+
+def onthoud_verhuizing(con: sqlite3.Connection, oud: str, nieuw: str,
+                       reden: str = "") -> None:
+    """Leg vast waar een sleutel naartoe is gegaan, voor de doorverwijzing."""
+    if oud == nieuw:
+        return
+    con.execute(
+        "INSERT OR REPLACE INTO oude_sleutels (oud, nieuw, reden, aangemaakt)"
+        " VALUES (?,?,?,?)",
+        (oud, nieuw, reden, datetime.now().isoformat(timespec="seconds")))
+
+
+def volg_verhuizing(con: sqlite3.Connection, sleutel: str,
+                    stappen: int = 10) -> str | None:
+    """Waar is deze sleutel nu? Volgt een keten a->b->c, of None.
+
+    Een keten ontstaat vanzelf als de normalisatie twee keer verandert; zonder
+    doorvolgen zou de eerste verhuizing naar een adres wijzen dat zelf ook al
+    verhuisd is.
+    """
+    gezien = {sleutel}
+    for _ in range(stappen):
+        rij = con.execute(
+            "SELECT nieuw FROM oude_sleutels WHERE oud=?", (sleutel,)).fetchone()
+        if rij is None:
+            return None if sleutel in gezien and len(gezien) == 1 else sleutel
+        sleutel = rij[0]
+        if sleutel in gezien:          # cyclus: hier houdt het op
+            return sleutel
+        gezien.add(sleutel)
+    return sleutel
 
 
 def gebouwd(con: sqlite3.Connection, lijst: str, jaar: int) -> None:

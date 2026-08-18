@@ -419,6 +419,36 @@ snapshotschema van de NAS, dat sinds 2 augustus 2026 ook op deze share staat.
 De twee vullen elkaar aan: een snapshot bewaart de hele share en overleeft een
 verwijderde map, deze kopieën zitten er juist in en gaan met één knop terug.
 
+### De sleutel staat in de URL, en dat heeft een prijs
+
+Een nummerpagina heet `/nummer/<sleutel>`. Dat is prettig leesbaar, maar het
+betekent ook dat **elke wijziging in de normalisatie webadressen breekt**. De
+twee ingrepen van augustus 2026 samen hernoemden **4.929 sleutels** —
+`10cc|i m not in love` werd `10cc|im not in love` — en evenzoveel bewaarde of
+gedeelde links gaven daarna een 404. Intern viel dat niet op, want alle links
+worden uit de database gebouwd; juist daarom is het pas achteraf gemeten, door
+de database tegen de momentopname te leggen.
+
+Daarvoor is er nu de tabel **`oude_sleutels`** (oud → nieuw), en beide routes
+verwijzen bij een onbekende sleutel door met een **301** in plaats van te
+stoppen bij 404. Ook de artiestpagina: `simon and garfunkel` werd
+`simon & garfunkel`. De doorverwijzing controleert eerst of het doel bestaat —
+anders zou een kapotte keten een lus worden — en volgt ketens door, want bij
+twee opeenvolgende normalisatiewijzigingen wijst de eerste verhuizing naar een
+adres dat zelf ook al verhuisd is.
+
+**Bewust een eigen tabel, niet `aliases`.** Die laatste bevat gecureerde
+beslissingen ("dit is dezelfde plaat", nagekeken tegen MusicBrainz), telt mee
+bij het *berekenen* van sleutels, en wordt elke run naar CSV geëxporteerd.
+Een verhuisbericht is iets anders: mechanisch, bij duizenden tegelijk, en het
+mag nooit invloed hebben op wat een sleutel wordt. Vierduizend regels ertussen
+zouden die curatie onleesbaar maken.
+
+`hersleutel` legt verhuizingen sinds deze ronde **zelf** vast, dus de volgende
+normalisatiewijziging regelt dit vanzelf. De 4.929 van augustus 2026 zijn
+nagekomen uit de momentopname: notering-id's zijn stabiel, dus een join tussen
+de opname en de database van nu geeft precies waar elke sleutel heen ging.
+
 ### Twee stille fouten, gevonden doordat er iets naast kwam te staan
 
 **De hoogste positie werd afgekapt op 99.** De startwaarde voor het minimum was
