@@ -169,6 +169,25 @@
   .stip { background: #ED1C24; color: #fff; }
   .superstip { color: #ED1C24; }
 
+  /* Een plek die door meer dan een uitvoering wordt gedeeld -- in de jaren
+     zestig stonden een buitenlandse hit en zijn Nederlandse cover geregeld
+     samen op een nummer. Geel, want het gaat over de plek en niet over de
+     plaat, en het mag niet met het rood van de stip verward worden. */
+  .gedeeld {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.75em; height: 1.75em; padding: 0 .15em;
+    border-radius: 999px; border: 2px solid var(--beheer); color: var(--beheer);
+    font-variant-numeric: tabular-nums; font-weight: 600; line-height: 1;
+  }
+  /* Draagt zo'n gedeelde plek ook een stip, dan houdt de stip zijn eigen
+     vorm en komt de gele ring er als schaduw omheen te liggen. Beide tekens
+     zeggen iets anders; een van de twee laten vallen zou informatie kosten. */
+  .stip.gedeeld, .superstip.gedeeld {
+    box-shadow: 0 0 0 2px var(--beheer); border-color: #ED1C24;
+  }
+  .stip.gedeeld { background: #ED1C24; color: #fff; }
+  .superstip.gedeeld { background: none; color: #ED1C24; }
+
   .kaart {
     background: linear-gradient(180deg, var(--glas), var(--glas2));
     border: 1px solid var(--rand); border-radius: 14px; padding: 1rem 1.2rem;

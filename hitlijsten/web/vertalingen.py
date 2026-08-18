@@ -310,6 +310,9 @@ EN = {
     "Binnenkomers (eerste jaar ooit)": "New entries (first year ever)",
     "Nummer-1-hits": "Number 1 hits",
     "Nederlandstalig": "Dutch-language",
+    "gedeelde plek": "shared place",
+    "meerdere uitvoeringen op dezelfde plek":
+        "several versions sharing one place",
     "Hoogst genoteerd in": "Highest charting in",
     "In allebei de jaargangen": "In both years",
     "noteringen dat jaar": "entries that year",

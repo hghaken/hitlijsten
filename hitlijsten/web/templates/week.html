@@ -98,6 +98,10 @@
 {% set heeft_bel = deelrijen | selectattr('alarmschijf') | list %}
 {% set heeft_kroon = deelrijen | selectattr('kroon') | list %}
 {% set heeft_vlag = bevat_nl(deelrijen) %}
+{# Eenmaal per lijstblok: welke plekken worden door meer dan een uitvoering
+   gedeeld? In de lus zou dit per regel opnieuw worden opgebouwd. #}
+{% set posities = deelrijen | map(attribute='positie') | list %}
+{% set heeft_gedeeld = posities | length != posities | unique | list | length %}
 {% if heeft_stip or heeft_bel or heeft_kroon or heeft_vlag %}
 <p class="hint" style="margin:.2rem 0 .6rem">
   {%- if heeft_stip %}
@@ -115,7 +119,11 @@
   <span>👑</span> {{ _("Oranje Kroon") }}
   <span style="opacity:.75">— {{ _("clip van de week bij TV Oranje") }}</span>
   {%- endif %}
-  {%- if heeft_vlag %}{% if heeft_stip or heeft_bel or heeft_kroon %} &nbsp;&nbsp; {% endif %}
+  {%- if heeft_gedeeld %}{% if heeft_stip or heeft_bel or heeft_kroon %} &nbsp;&nbsp; {% endif %}
+  <span class="gedeeld" style="font-size:.85em">7</span> {{ _("gedeelde plek") }}
+  <span style="opacity:.75">— {{ _("meerdere uitvoeringen op dezelfde plek") }}</span>
+  {%- endif %}
+  {%- if heeft_vlag %}{% if heeft_stip or heeft_bel or heeft_kroon or heeft_gedeeld %} &nbsp;&nbsp; {% endif %}
   {{ nl_vlag() }} {{ _("Nederlandstalig") }}
   {%- endif %}
 </p>
@@ -129,14 +137,19 @@
   </tr></thead><tbody>
   {% for r in deelrijen %}
   <tr>
-    {# De stip staat om het cijfer heen en vervangt daarmee de kleuring van
-       de top 3: twee dingen tegelijk om hetzelfde getal wordt onleesbaar, en
-       de stip is het zeldzame van de twee. #}
-    <td class="getal {% if not r['stip'] %}{% if r['positie'] == 1 %}top1{% elif r['positie'] <= 3 %}top3{% endif %}{% endif %}">
-      {%- if r['stip'] == 2 %}<span class="superstip"
-        title="{{ _("Superstip") }}">{{ r['positie'] }}</span>
-      {%- elif r['stip'] == 1 %}<span class="stip"
-        title="{{ _("Stipnotering") }}">{{ r['positie'] }}</span>
+    {# Een ring om het cijfer vervangt de kleuring van de top 3: twee dingen
+       tegelijk om hetzelfde getal wordt onleesbaar, en een ring is het
+       zeldzame van de twee. Rood voor de stip, geel voor een gedeelde plek,
+       en allebei tegelijk als het allebei geldt. #}
+    {%- set gedeeld = posities.count(r['positie']) > 1 %}
+    {%- set ring = (('superstip' if r['stip'] == 2 else 'stip') if r['stip'] else '')
+                   ~ (' gedeeld' if gedeeld else '') %}
+    {%- set uitleg = [] %}
+    <td class="getal {% if not ring %}{% if r['positie'] == 1 %}top1{% elif r['positie'] <= 3 %}top3{% endif %}{% endif %}">
+      {%- if ring %}<span class="{{ ring | trim }}" title="{{
+        [(_("Superstip") if r['stip'] == 2 else _("Stipnotering")) if r['stip'] else None,
+         _("gedeelde plek") if gedeeld else None] | select | join(' · ') }}">{{
+        r['positie'] }}</span>
       {%- else %}{{ r['positie'] }}{% endif %}</td>
     <td class="getal hint">
       {% if r['vorige_positie'] %}{{ r['vorige_positie'] }}
