@@ -316,7 +316,7 @@ op de NAS, achter een reverse proxy.
 | Overzicht | wat er in de database zit, in twee tabellen: weeklijsten en jaarlijkse lijsten — die laatste **per zender gegroepeerd** (zenderkolom, afgeleid uit de lijstnaam via `zender_van()`); dezelfde groepjes vullen de optgroups van de lijst-keuzelijsten |
 | Jaaroverzichten | puntenklassement en de matrix positie-per-week, per lijst en jaargang, met bladerknoppen langs de jaargangen; ook een **binnenkomers-vinkje** (nummers die dat jaar voor het éérst in de lijst verschenen — over de hele historie gerekend, dus Last Christmas telt alleen in 1984) |
 | Selecties & downloads | overal dezelfde spelregels: keuzelijst top 100/500/1000/2500/alles (standaard 100; onder de 250 nummers geen keuzelijst maar meteen alles; opties vanaf de lijstlengte vervallen en het traag-label staat alleen boven de 2500 regels), de filters NL en binnenkomers, en **wat op het scherm staat, zit in het bestand** — Excel en PDF volgen de selectie met `_topN`/`_NL`/`_nieuw` in de bestandsnaam én, sinds augustus 2026, met een **FILTER-regel ín het stuk** (bij de PDF in de ondertitel onder de banner, bij Excel als eerste zin van de toelichting boven de tabel); een doorgestuurd of uitgeprint bestand draagt zijn bestandsnaam immers niet meer, en zes regels waar er veertig horen roept dan vragen op; op "alles" zonder filter komen de rijke voorgebouwde jaarwerkboeken met weektabs, en de matrix-downloads blijven altijd volledig |
-| Alarmschijf in downloads | de weeklijst-Excel krijgt een kolom `Alarmschijf` ("ja"), de weeklijst-PDF een **ster vóór de titel** met `= Alarmschijf` in de ondertitel — allebei alleen bij de **Top 40**. De vlag is namelijk een eigenschap van de plaat en staat dus óók op de Tipparade- en Sterren NL-noteringen van hetzelfde nummer (gemeten: 2.652 en 451 stuks), maar uitgeroepen worden ze in de Top 40; een ster elders zou suggereren dat die lijst eigen Alarmschijven kent. Het belletje van de site kan niet in de PDF: dat teken zit niet in DejaVu Sans en zou een leeg blokje worden |
+| Alarmschijf in downloads | de weeklijst-Excel krijgt een kolom `Alarmschijf` ("ja"), de weeklijst-PDF een **ster vóór de titel** met `= Alarmschijf` in de ondertitel — allebei alleen bij de **Top 40**. De vlag is namelijk een eigenschap van de plaat en staat dus óók op de Tipparade- en Sterren NL-noteringen van hetzelfde nummer (gemeten: 2.651 en 451 stuks), maar uitgeroepen worden ze in de Top 40; een ster elders zou suggereren dat die lijst eigen Alarmschijven kent. Het belletje van de site kan niet in de PDF: dat teken zit niet in DejaVu Sans en zou een leeg blokje worden |
 | Decennia | het puntenklassement over tien jaargangen Top 40, met bladerknoppen langs de decennia |
 | Top 40 totaal | hetzelfde over alle jaargangen 1965–nu |
 | Zoeken | op artiest, titel of beide; `*` als jokerteken; `artiest \| titel` zoekt op allebei tegelijk (bij nul treffers met meerdere woorden stelt de pagina die schrijfwijze klikbaar voor); klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
@@ -333,9 +333,13 @@ op de NAS, achter een reverse proxy.
 | Weeklijsten | één week zoals uitgezonden, met week-keuzelijst, de extra keuze **Alle weeklijsten** (de vier onder elkaar, elk met eigen kop en posities; Excel krijgt dan een tab per lijst, de PDF de vier **doorlopend** onder elkaar — een nieuwe pagina alleen als het niet meer past, want met het nieuw-filter zijn vier hele pagina's voor zeventien binnenkomers verspilling — en de DJ Export één playlist met dubbelen eruit), bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en de nieuw/terug-spelden; het **nieuw-vinkje** betekent hier de binnenkomers van de wéék zelf (het groene speldje), niet de jaargang-binnenkomers |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
 | Alarmschijf | rood belletje 🔔 vóór de titel op de weeklijsten (Top 40, Tipparade en Sterren NL — de vlag hoort bij de plaat, dus hij reist mee); het belletje van top40.nl zelf (klasse `hitrecord`), per plaat vastgelegd in `noteringen.alarmschijf` en elke vrijdagrun bijgehouden; michajans.nl blijft de bron voor de toekenningsdatum |
+| Stipnotering | een ring om de positie op de weeklijsten van de Top 40 en Sterren NL: de gewone stip een gevulde rode schijf, de **superstip** een open ring — zoals top40.nl het tekent. Een onderscheiding voor een plaat die die week hard steeg; 39.538 en 2.901 noteringen, 1965 tot nu. Niet in de Tipparade: daar draagt ruim de helft van alle regels de markering en onderscheidt hij dus niets |
+| Oranje Kroon | kroontje 👑 vóór de titel in de Oranje Top 30: de clip van de week van TV Oranje. Als de Alarmschijf een eigenschap van de plaat — eenmaal toegekend blijft hij staan. 6.620 noteringen over 685 nummers, vanaf 2012 |
+| Gedeelde plek | een **gele** ring om de positie als meerdere uitvoeringen die plek deelden, een **lichtblauwe** als het een dubbele A-kant is. Aan de artiest is dat verschil niet te zien (229 dubbele A-kanten hebben per kant een andere artiest), dus het staat vast in `noteringen.dubbele_a`. Draagt de plek ook een stip, dan komt de ring er als schaduw omheen |
+| Legenda | onder de kop van elke weeklijst, en alleen voor de tekens die er die week ook echt staan — een Top 40 uit 1965 krijgt geen uitleg over de Alarmschijf, die toen nog niet bestond |
 | Nederlandstalig | rood-wit-blauw vlaggetje voor de titel, op elke lijstpagina én de wetenswaardigheden óók als filter (checkbox "NL"; de weetjes-ranglijsten rekenen zichzelf dan opnieuw uit over alleen Nederlandstalig, en de ter-plekke gebouwde Excel- en PDF-downloads filteren mee, met `_NL` in de bestandsnaam); herkenning in drie trappen — lijstbewijs (Oranje/Sterren NL zijn per definitie Nederlandstalig), artiestroute en titel-woordenlijst — met handmatige correctie op de nummerpagina die altijd wint |
 | Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
-| Beheer | alles wat de opdrachtregel kan, ook als knop — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen), voortgangsbalken per stap, en een taakstand die een herstart overleeft |
+| Beheer | alles wat de opdrachtregel kan, ook als knop — plus een knop **Onderhoudspagina aanzetten** (zie BEHEER.md) — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen), voortgangsbalken per stap, en een taakstand die een herstart overleeft |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Gastenboek | gepubliceerde bezoekersberichten, met eventueel een antwoord van de beheerder eronder |
 | Bericht achterlaten | formulier voor opmerkingen, tips, bugs en aanvullingen; spamwering met honeypot, invultijd en per-IP-limiet, geen CAPTCHA; alles komt privé binnen en niets staat live zonder akkoord |
@@ -670,11 +674,22 @@ noteringen, de Tipparade van 91.397 naar 91.526.
 sneuvelde. Het lag voor de hand om per *nummer* te beslissen en dan alle weken
 van die notering te splitsen, maar zo werkt het niet. Ed Sheeran deelde in 2025
 maar **één** van zijn 26 weken de plek met de Googoosh-versie van *Azizam*; de
-andere 25 stond hij alleen. En andersom groeit een notering: *Let Kiss* begint
-in week 3 met drie uitvoeringen, zakt in week 5 terug naar twee en staat in
-week 8 met vier in de lijst. Wat er gesplitst wordt komt dus uit de lijst van
-die week zelf; alleen de schrijfwijze van de namen komt uit een vaste
-keuzelijst.
+andere 25 stond hij alleen. En andersom wisselt de samenstelling van week tot
+week. *Let Kiss* stond eenentwintig weken in de lijst, en de bezetting van die
+plek veranderde drie keer:
+
+| weken | wie er op die plek stonden |
+|---|---|
+| 3–4 | Orkest Gudrun Jankis · Stig Rauno · **Jan Rohde & The Wild Ones** |
+| 5–12 | Orkest Gudrun Jankis · Stig Rauno |
+| 13–16 | Orkest Gudrun Jankis · Stig Rauno · **The Dutch Swing College Band** |
+| 17–23 | Orkest Gudrun Jankis · Stig Rauno |
+
+Was ik van de notering uitgegaan, dan had Jan Rohde in alle eenentwintig weken
+gestaan — inclusief de veertien waarin zijn versie er niet bij hoorde — en had
+de Dutch Swing College Band óf overal, óf nergens gestaan. Wat er gesplitst
+wordt komt dus uit de lijst van díé week; alleen de schrijfwijze van de namen
+komt uit een vaste keuzelijst.
 
 **De volledige tekst staat in een attribuut.** De zichtbare regel op top40.nl
 is afgekapt (`Orkest Gudrun Jankis / Stig Rauno / Jan Rohde..`) en de
