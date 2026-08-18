@@ -153,6 +153,20 @@
   a { color: #8ab4ff; }
   a:hover { color: var(--ink); }
 
+  /* De stipnotering van de Top 40: een rode ring om de positie, en bij de
+     superstip diezelfde ring gevuld met de cijfers eruit gespaard. Zo staat
+     het ook in de gedrukte lijst -- daar was het rood de enige kleur op een
+     verder zwart-witte pagina. Vaste breedte, anders springt de kolom bij
+     het wisselen tussen een cijfer van een en van twee tekens. */
+  .stip, .superstip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.75em; height: 1.75em; padding: 0 .15em;
+    border-radius: 999px; border: 2px solid #ED1C24;
+    font-variant-numeric: tabular-nums; font-weight: 600; line-height: 1;
+  }
+  .stip { color: #ED1C24; }
+  .superstip { background: #ED1C24; color: #fff; }
+
   .kaart {
     background: linear-gradient(180deg, var(--glas), var(--glas2));
     border: 1px solid var(--rand); border-radius: 14px; padding: 1rem 1.2rem;

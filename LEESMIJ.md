@@ -794,6 +794,45 @@ python -m hitlijsten opschonen              # alleen melden
 python -m hitlijsten opschonen --toepassen  # doorvoeren
 ```
 
+### De stip en de superstip
+
+De Top 40 kent sinds de jaren zestig de **stipnotering**: een onderscheiding
+voor een plaat die hard stijgt of hoog binnenkomt. De criteria zijn scherp — en
+de gegevens houden zich er precies aan:
+
+| | krijgt hem bij | staat nooit lager dan |
+|---|---|---|
+| **stip** | binnenkomen op 30 of hoger, 3+ plaatsen stijgen tussen 30 en 11, elke stijging binnen de top 10 | 30 |
+| **superstip** (sinds 1983) | binnenkomen op 25 of hoger, 10+ plaatsen stijgen tussen 25 en 11, 5+ plaatsen stijgen binnen de top 10 | 25 |
+
+Die twee grenzen zijn niet uit de documentatie overgenomen maar in het archief
+**gemeten**: over 1965–2026 komt geen enkele stip onder plek 30 voor en geen
+enkele superstip onder plek 25. Ze sluiten elkaar ook uit — geen enkele
+notering draagt ze allebei.
+
+top40.nl zet ze in de HTML als de klassen `dot` en `super` op het lijst-item,
+naast `hitrecord` (de alarmschijf), `new` en `nr1`. Ze staan dus in elke
+opgeslagen weekpagina, en daarmee kon de hele reeks 1965–2026 in één keer
+worden aangevuld zonder de site opnieuw te bevragen: 27.708 stippen en 11.830
+superstippen.
+
+**Alleen in de Top 40.** top40.nl zet dezelfde klassen ook op de Tipparade en
+op Sterren NL, maar daar betekenen ze niets: in de Tipparade draagt ruim de
+helft van alle regels een `dot` (50.295 stuks), en de stipnotering is nu juist
+een onderscheiding van de Top 40. De Oranje Top 30 heeft ze helemaal niet. De
+parser laat het veld daarom leeg voor alles wat niet `top40` heet.
+
+**De weergave is bewust omgekeerd aan die van top40.nl.** Daar is de gewone
+stip een gevuld kader en de superstip juist een open kader — Petula Clark met
+*Down Town* (8 → 3, en dus superstip) staat er in week 4 van 1965 met een open
+kader, Cliff Richard op 4 met een gevuld. Hier is het andersom: de stip is een
+open rode ring om de positie, de superstip diezelfde ring gevuld. Zwaarder
+onderscheiding, zwaarder beeld.
+
+Anders dan de alarmschijf hoort de stip bij de **week** en niet bij de plaat:
+hij zegt iets over hoe de plaat het díe week deed. De alarmschijf blijft aan
+een nummer plakken zolang het genoteerd staat.
+
 ### Wetenswaardigheden
 
 Tien ranglijsten per lijst, in `wetenswaardigheden.py`: meeste

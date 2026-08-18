@@ -101,6 +101,7 @@ De tabel waar het om gaat. **Eén rij per nummer per week per lijst.**
 | `sleutel` | TEXT | zie [De sleutel](#de-sleutel) |
 | `uitjaar` | INTEGER | jaar van uitgave; alleen de jaarlijkse lijsten leveren dit |
 | `alarmschijf` | INTEGER | het belletje van top40.nl: dit nummer is (ooit) Alarmschijf geweest; per notering zoals de bron het toont |
+| `stip` | INTEGER | de stipnotering van de Top 40: 0 geen, 1 stip (27.708), 2 superstip (11.830). Hoort bij de wéék, niet bij de plaat; buiten `top40` altijd 0 |
 
 Indexen: `(lijst, jaar, sleutel)`, `(lijst, jaar, week)` en een kale
 `(sleutel)` — die laatste draagt de artiestpagina's (alles van één artiest

@@ -46,7 +46,10 @@ CREATE TABLE IF NOT EXISTS noteringen (
     -- Het belletje van top40.nl: dit nummer is (ooit) Alarmschijf geweest.
     -- Per notering vastgelegd zoals de bron het toont; een nummer is
     -- Alarmschijf zodra één van zijn noteringen de vlag draagt.
-    alarmschijf      INTEGER NOT NULL DEFAULT 0
+    alarmschijf      INTEGER NOT NULL DEFAULT 0,
+    -- De stipnotering van de Top 40: 0 = geen, 1 = stip, 2 = superstip.
+    -- Anders dan de alarmschijf hoort dit bij de wéék, niet bij de plaat.
+    stip             INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_noteringen_sleutel
@@ -260,6 +263,15 @@ def _voeg_alarmschijf_toe(con: sqlite3.Connection) -> None:
         con.commit()
 
 
+def _voeg_stip_toe(con: sqlite3.Connection) -> None:
+    """Voeg de kolom `stip` toe aan een database die hem nog mist."""
+    kolommen = {r[1] for r in con.execute("PRAGMA table_info(noteringen)")}
+    if kolommen and "stip" not in kolommen:
+        con.execute("ALTER TABLE noteringen ADD COLUMN stip INTEGER"
+                    " NOT NULL DEFAULT 0")
+        con.commit()
+
+
 def _stel_in(con: sqlite3.Connection) -> None:
     """De instellingen die gelijktijdig gebruik mogelijk maken.
 
@@ -299,6 +311,7 @@ def verbinding() -> Iterator[sqlite3.Connection]:
         _migreer_primaire_sleutel(con)
         _voeg_uitjaar_toe(con)
         _voeg_alarmschijf_toe(con)
+        _voeg_stip_toe(con)
         yield con
         con.commit()
     finally:
@@ -400,6 +413,7 @@ def bewaar_week(
                 n.lijst, n.jaar, n.week, n.positie, titel, artiest, n.label,
                 n.weken_genoteerd, n.vorige_positie, n.site_status,
                 sleutel_van(artiest, titel), 1 if n.alarmschijf else 0,
+                n.stip,
             ))
     # Alles of niets: gaat er halverwege iets mis, dan mag er geen halve week
     # blijven staan. Die zou daarna als "al opgehaald" gelden en stil verkeerde
@@ -412,8 +426,8 @@ def bewaar_week(
         )
         con.executemany(
             "INSERT INTO noteringen (lijst, jaar, week, positie, titel, artiest, label,"
-            " weken_genoteerd, vorige_positie, site_status, sleutel, alarmschijf)"
-            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            " weken_genoteerd, vorige_positie, site_status, sleutel, alarmschijf,"
+            " stip) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
             rijen,
         )
         con.execute(

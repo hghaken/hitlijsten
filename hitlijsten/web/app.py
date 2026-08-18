@@ -779,7 +779,7 @@ def _registreer(app: Flask) -> None:
             """Eén weeklijst, met de filters van het scherm erop."""
             rijen = list(con.execute(
                 "SELECT positie, vorige_positie, artiest, titel, label,"
-                " weken_genoteerd, site_status, sleutel, alarmschijf"
+                " weken_genoteerd, site_status, sleutel, alarmschijf, stip"
                 " FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
                 " ORDER BY positie, artiest", (welke, jaar, week)))
             rijen = _alleen_nl(rijen)

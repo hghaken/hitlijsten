@@ -85,6 +85,17 @@
 {% set heeft_label = deelrijen | selectattr('label') | list %}
 {% if lijst == alle %}<h2>{{ lijst_namen.get(deze, deze) }}
   <span class="hint" style="font-weight:400">{{ deelrijen|length }} {{ _("noteringen") }}</span></h2>{% endif %}
+{# Een legenda alleen als er die week ook echt een stip staat, en alleen bij
+   de Top 40 -- de stipnotering bestaat nergens anders. #}
+{% if deze == 'top40' and deelrijen | selectattr('stip') | list %}
+<p class="hint" style="margin:.2rem 0 .6rem">
+  <span class="stip" style="font-size:.85em">7</span>
+  {{ _("stipnotering") }} &nbsp;
+  <span class="superstip" style="font-size:.85em">7</span>
+  {{ _("superstip") }}
+  <span style="opacity:.75">— {{ _("een plaat die die week hard steeg") }}</span>
+</p>
+{% endif %}
 <div class="tabelvak"><table>
   <thead><tr>
     <th class="getal">{{ _("Positie") }}</th><th class="getal">{{ _("Vorige") }}</th>
@@ -94,8 +105,15 @@
   </tr></thead><tbody>
   {% for r in deelrijen %}
   <tr>
-    <td class="getal {% if r['positie'] == 1 %}top1{% elif r['positie'] <= 3 %}top3{% endif %}">
-      {{ r['positie'] }}</td>
+    {# De stip staat om het cijfer heen en vervangt daarmee de kleuring van
+       de top 3: twee dingen tegelijk om hetzelfde getal wordt onleesbaar, en
+       de stip is het zeldzame van de twee. #}
+    <td class="getal {% if not r['stip'] %}{% if r['positie'] == 1 %}top1{% elif r['positie'] <= 3 %}top3{% endif %}{% endif %}">
+      {%- if r['stip'] == 2 %}<span class="superstip"
+        title="{{ _("Superstip") }}">{{ r['positie'] }}</span>
+      {%- elif r['stip'] == 1 %}<span class="stip"
+        title="{{ _("Stipnotering") }}">{{ r['positie'] }}</span>
+      {%- else %}{{ r['positie'] }}{% endif %}</td>
     <td class="getal hint">
       {% if r['vorige_positie'] %}{{ r['vorige_positie'] }}
       {% elif r['site_status'] == 'terug' %}<span class="speld terug">{{ _("terug") }}</span>

@@ -41,6 +41,10 @@ class Notering:
     # top40.nl zet een belletje bij elk nummer dat ooit Alarmschijf was; dat
     # is een eigenschap van de plaat, niet van de week.
     alarmschijf: bool = False
+    # De stipnotering: 0 = geen, 1 = stip, 2 = superstip. Anders dan de
+    # alarmschijf hoort dit wel bij de week -- het gaat over hoe hard de plaat
+    # die week steeg. Een notering heeft er hoogstens een van de twee.
+    stip: int = 0
 
     def __post_init__(self) -> None:
         self.titel = (self.titel or "").strip()
@@ -51,6 +55,8 @@ class Notering:
             raise ValueError(
                 f"site_status {self.site_status!r} niet in {sorted(STATUSSEN)}"
             )
+        if self.stip not in (0, 1, 2):
+            raise ValueError(f"stip moet 0, 1 of 2 zijn, kreeg {self.stip}")
         if self.positie < 1:
             raise ValueError(f"positie moet >= 1 zijn, kreeg {self.positie}")
         if not self.titel:
