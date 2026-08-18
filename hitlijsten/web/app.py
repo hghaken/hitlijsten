@@ -695,7 +695,9 @@ def _registreer(app: Flask) -> None:
         # datumprikker.
         terugblik = []
         vandaag = date.today()
-        for terug in (10, 20, 30, 40, 50):
+        # Zestig jaar terug haalt net de eerste jaargang: de Top 40 begint in
+        # 1965. Ontbreekt die week, dan slaat _week_bij_datum hem vanzelf over.
+        for terug in (10, 20, 30, 40, 50, 60):
             try:
                 toen = vandaag.replace(year=vandaag.year - terug)
             except ValueError:            # 29 februari

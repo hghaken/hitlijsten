@@ -208,6 +208,13 @@
   form.balk { display: grid; gap: .65rem; margin-bottom: 1.4rem; }
   form.balk .rij { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; }
   .kaarten .kaart { min-width: 160px; }
+  /* De terugblikkaarten smaller dan hun inhoud vraagt, anders passen de zes
+     decennia niet op een rij. Ze mogen meegroeien met de ruimte die er is,
+     en een lange titel breekt af in plaats van de kaart op te rekken. */
+  .kaarten .kaart.terugblik {
+    flex: 1 1 11rem; min-width: 11rem; max-width: 14rem;
+    overflow-wrap: break-word;
+  }
   .kaart .cijfer {
     font-size: 1.75rem; font-weight: 680; line-height: 1.1;
     background: var(--balk); -webkit-background-clip: text; background-clip: text;

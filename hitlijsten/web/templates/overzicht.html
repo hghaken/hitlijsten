@@ -7,7 +7,7 @@
   <div class="kaart"><div class="cijfer">{{ "{:,}".format(cijfers.noteringen).replace(",", ".") }}</div>
     <div class="naam">{{ _("noteringen") }}</div></div>
   {% for t in terugblik %}
-  <div class="kaart">
+  <div class="kaart terugblik">
     <div class="naam">{{ t.terug }} {{ _("JAAR GELEDEN OP 1") }}</div>
     <div style="font-weight:650; margin:.15rem 0">
       <a class="stil" href="{{ url_for('weeklijst', lijst='top40', jaar=t.jaar, week=t.week) }}"
