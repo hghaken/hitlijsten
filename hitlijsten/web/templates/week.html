@@ -68,7 +68,7 @@
   {% endif %}
 
   <span class="hint" style="margin-left:auto">
-    {% if datum %}{{ _("uitgezonden op vrijdag") }} {{ datum }} · {% endif %}{{ rijen|length }} {{ _("noteringen") }}{% if lijst == alle %} {% if taal == 'en' %}across{% else %}uit{% endif %} {{ blokken|length }} {% if taal == 'en' %}charts{% else %}lijsten{% endif %}{% endif %}
+    {% if datum %}{{ _("uitgezonden op vrijdag") }} {{ datum }} · {% endif %}{{ rijen|length }} {{ _("noteringen") }}{% if lijst != alle %}{% set plekken = rijen | map(attribute='positie') | unique | list | length %}{% if plekken != rijen|length %} {{ _("op") }} {{ plekken }} {{ _("plekken") }}{% endif %}{% endif %}{% if lijst == alle %} {% if taal == 'en' %}across{% else %}uit{% endif %} {{ blokken|length }} {% if taal == 'en' %}charts{% else %}lijsten{% endif %}{% endif %}
   </span>
   </div>
 </form>
@@ -84,7 +84,13 @@
 {% for deze, deelrijen in blokken %}
 {% set heeft_label = deelrijen | selectattr('label') | list %}
 {% if lijst == alle %}<h2>{{ lijst_namen.get(deze, deze) }}
-  <span class="hint" style="font-weight:400">{{ deelrijen|length }} {{ _("noteringen") }}</span></h2>{% endif %}
+  {# Meer noteringen dan plekken betekent dat er die week uitvoeringen een
+     plek deelden; zonder die toevoeging lijkt "42 noteringen" in een Top 40
+     een fout. #}
+  <span class="hint" style="font-weight:400">{{ deelrijen|length }} {{ _("noteringen") }}{%
+    set plekken = deelrijen | map(attribute='positie') | unique | list | length %}{%
+    if plekken != deelrijen|length %} {{ _("op") }} {{ plekken }} {{ _("plekken") }}{%
+    endif %}</span></h2>{% endif %}
 {# Een legenda alleen als er die week ook echt een stip staat. Geen toets op
    de lijst: de parser vult het veld alleen waar de stip iets betekent, dus
    waar er een staat hoort de uitleg erbij. #}
@@ -124,8 +130,9 @@
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=deze, jaar=jaar,
            markeer=r['sleutel']) }}">{{ r['artiest'] }}</a></td>
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=deze, jaar=jaar,
-           markeer=r['sleutel']) }}">{# Het belletje alleen in de Top 40 zelf,
-           vóór de titel — zoals top40.nl het ook toont. #}{% if deze == 'top40' and r['alarmschijf'] %}<span
+           markeer=r['sleutel']) }}">{# Het belletje vóór de titel, zoals
+           top40.nl het toont. Ook in de Tipparade: een plaat die daar staat
+           kan al Alarmschijf zijn, en top40.nl laat het er ook zien. #}{% if r['alarmschijf'] %}<span
            title="Alarmschijf" style="color:#ED1C24">🔔</span> {% endif %}{#
            En het kroontje bij de Oranje Top 30: de clip van de week van TV
            Oranje, die net als de alarmschijf bij de plaat blijft horen. #}{%

@@ -521,7 +521,11 @@ noteringen op dezelfde positie:
 ```
 
 Het schema kon dit al aan: twee noteringen op één positie bestonden al bij de
-Tipparade, die echte gedeelde posities kent. **De positie telt één keer**: beide
+Tipparade, die echte gedeelde posities kent. In de weeklijst staat het aantal
+er sindsdien bij als het afwijkt — "56 noteringen op 40 plekken" — want een
+Top 40 met 56 regels leest anders als een fout. Dat komt vaker voor dan je
+denkt: 1.269 Top 40-weken, 719 Tipparade-weken en 38 weken van de Oranje Top
+30 hebben meer noteringen dan plekken. **De positie telt één keer**: beide
 nummers krijgen de punten van die ene plek en dus hetzelfde totaal, precies wat
 de officiële jaarlijst de single toekent. In het jaaroverzicht staan ze naast
 elkaar als gelijkspel. De verificatie tegen de officiële jaarlijst blijft
