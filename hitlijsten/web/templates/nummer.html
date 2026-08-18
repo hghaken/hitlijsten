@@ -29,17 +29,12 @@
 </tbody></table></div>
 {% endif %}
 
-<h2>{% if taal == 'en' %}Per chart{% else %}Per lijst{% endif %}</h2>
-<p class="hint" style="margin-top:-.3rem">
-  {% if taal == 'en' %}Click a chart for the graph of this song's run
-  there. Weekly and annual charts both count here.{% else %}Klik op een
-  lijst voor de grafiek van het verloop daarin. Week- én jaarlijkse
-  lijsten tellen hier allebei mee.{% endif %}</p>
-<div class="tabelvak"><table id="perlijst">
+{% macro lijsttabel(lijsten, id) %}
+<div class="tabelvak"><table {% if id %}id="{{ id }}"{% endif %}>
   <thead><tr><th>{{ _("Lijst") }}</th><th class="getal">{{ _("Periode") }}</th>
       <th class="getal">{{ _("Jaargangen") }}</th><th class="getal">{{ _("Punten") }}</th>
       <th class="getal">{{ _("Weken") }}</th><th class="getal">{{ _("Hoogste") }}</th></tr></thead><tbody>
-  {% for lijst, pl in per_lijst.items() %}
+  {% for lijst, pl in lijsten.items() %}
   <tr data-sleutel="{{ sleutel }}" data-lijst="{{ lijst }}"
       data-jaar="{{ pl.beste_jaar }}" data-artiest="{{ rijen[-1]['artiest'] }}"
       data-titel="{{ rijen[-1]['titel'] }} — {{ lijst_namen.get(lijst, lijst) }}">
@@ -48,10 +43,54 @@
     <td class="getal">{{ pl.jaren }}</td>
     <td class="getal">{{ pl.punten }}</td>
     <td class="getal">{{ pl.weken }}</td>
-    <td class="getal {% if pl.hoogste == 1 %}top1{% endif %}">{{ pl.hoogste }}</td>
+    {# De telling erbij: "1" alleen zegt niet of het een uitschieter was of
+       een gewoonte. Bij een weeklijst zijn het weken, bij een jaarlijst
+       edities -- vandaar de neutrale maal-notatie. #}
+    <td class="getal {% if pl.hoogste == 1 %}top1{% endif %}">{{ pl.hoogste }}{%
+      if pl.op1 %} <span class="hint">({{ pl.op1 }}×)</span>{% endif %}</td>
   </tr>
   {% endfor %}
 </tbody></table></div>
+{% endmacro %}
+
+{% if week_lijsten %}
+<h2>{% if taal == 'en' %}In the weekly charts{% else %}In de weeklijsten{% endif %}</h2>
+<p class="hint" style="margin-top:-.3rem">
+  {% if taal == 'en' %}What was selling at the time — a song drops out as soon
+  as sales fall off. Click a chart for the run.{% else %}Wat er destijds
+  verkocht werd — een plaat valt eruit zodra de verkoop terugloopt. Klik op een
+  lijst voor het verloop.{% endif %}</p>
+{{ lijsttabel(week_lijsten, "perlijst") }}
+{% endif %}
+
+{% if jaar_lijsten %}
+<h2>{% if taal == 'en' %}In the annual charts{% else %}In de jaarlijsten{% endif %}</h2>
+<p class="hint" style="margin-top:-.3rem">
+  {% if taal == 'en' %}What people keep voting for, once a year. A song can be
+  modest here and huge there, or the other way round.{% else %}Waar mensen
+  jaarlijks op blijven stemmen. Een plaat kan hier bescheiden zijn en daar
+  groot, of precies andersom.{% endif %}</p>
+{{ lijsttabel(jaar_lijsten, "" if week_lijsten else "perlijst") }}
+{% endif %}
+
+{% if golven %}
+<h2>{{ _("Wetenswaardigheden") }}</h2>
+<div class="kaarten">
+  {% for g in golven %}
+  <div class="kaart">
+    <div class="naam">{{ lijst_namen.get(g.lijst, g.lijst) }}</div>
+    <div style="margin:.3rem 0 .2rem">
+      {% if taal == 'en' %}Charted in <b>{{ g.periodes|length }} separate
+      runs</b>, not one long stretch:{% else %}Stond er in
+      <b>{{ g.periodes|length }} losse periodes</b> in, niet één lange:{% endif %}
+    </div>
+    <div>{% for van, tot in g.periodes %}<span class="op">{{ van }}{%
+      if tot != van %}–{{ tot }}{% endif %}</span>{%
+      if not loop.last %} · {% endif %}{% endfor %}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
 {% if is_aangemeld() %}
 <h2>{{ _("Alle noteringen") }} ({{ rijen|length }})</h2>

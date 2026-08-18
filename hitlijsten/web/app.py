@@ -2628,6 +2628,34 @@ def _registreer(app: Flask) -> None:
             tot=totalen[2],
             nummer1s=sum(1 for n in nummers if n["hoogste"] == 1))
 
+    def _golven(per_lijst: dict, gat: int = 2) -> list[dict]:
+        """Losse periodes waarin een nummer in een WEEKlijst stond.
+
+        "Top 40, 1975-1992" suggereert zeventien jaar onafgebroken, terwijl
+        het drie golven waren met vijftien jaar stilte ertussen. Een gat van
+        twee jaargangen of meer telt als een nieuwe golf; een nummer dat over
+        de jaarwisseling heen loopt (december-januari) blijft zo één periode.
+
+        Alleen weeklijsten: bij een jaarlijst is elke editie per definitie
+        een los moment, dus daar zegt dit niets.
+        """
+        uit = []
+        for lijst, pl in per_lijst.items():
+            if is_jaarlijks(lijst) or len(pl["jaargangen"]) < 2:
+                continue
+            periodes, begin, vorige = [], None, None
+            for jaar in pl["jaargangen"]:
+                if begin is None:
+                    begin = jaar
+                elif jaar - vorige >= gat:
+                    periodes.append((begin, vorige))
+                    begin = jaar
+                vorige = jaar
+            periodes.append((begin, vorige))
+            if len(periodes) > 1:
+                uit.append({"lijst": lijst, "periodes": periodes})
+        return uit
+
     @app.route("/nummer/<path:sleutel>")
     def nummer(sleutel: str):
         con = verbinding()
@@ -2648,12 +2676,19 @@ def _registreer(app: Flask) -> None:
         samenvatting: dict[tuple[str, int], dict] = {}
         for r in rijen:
             vak = samenvatting.setdefault(
-                (r["lijst"], r["jaar"]), {"punten": 0, "weken": 0, "hoogste": 99}
+                (r["lijst"], r["jaar"]),
+                {"punten": 0, "weken": 0, "hoogste": 99, "op1": 0}
             )
             lengte = lengtes[(r["lijst"], r["jaar"], r["week"])]
             vak["punten"] += lengte - r["positie"] + 1
             vak["weken"] += 1
             vak["hoogste"] = min(vak["hoogste"], r["positie"])
+            # Hoe vaak op 1: bij een weeklijst zijn dat weken, bij een
+            # jaarlijst edities. "Hoogste 1" zegt niet of dat een uitschieter
+            # was of een gewoonte -- Bohemian Rhapsody stond 22 van de 27
+            # Top 2000-edities bovenaan, en dat is het hele verhaal.
+            if r["positie"] == 1:
+                vak["op1"] += 1
         # En opgeteld per lijst: dat is wat de bezoeker wil zien bij een
         # nummer dat in tien lijsten en 150 edities voorkwam. `beste_jaar`
         # is de jaargang van de hoogste positie -- de grafiek-route wil
@@ -2662,21 +2697,35 @@ def _registreer(app: Flask) -> None:
         for (lijst, jaar), vak in sorted(samenvatting.items()):
             pl = per_lijst.setdefault(lijst, {
                 "van": jaar, "tot": jaar, "jaren": 0, "punten": 0,
-                "weken": 0, "hoogste": 99, "beste_jaar": jaar})
+                "weken": 0, "hoogste": 99, "beste_jaar": jaar, "op1": 0,
+                "jaargangen": []})
             pl["tot"] = jaar
             pl["jaren"] += 1
             pl["punten"] += vak["punten"]
             pl["weken"] += vak["weken"]
+            pl["op1"] += vak["op1"]
+            pl["jaargangen"].append(jaar)
             if vak["hoogste"] < pl["hoogste"]:
                 pl["hoogste"] = vak["hoogste"]
                 pl["beste_jaar"] = jaar
+        # Week- en jaarlijsten uit elkaar: ze meten iets anders. Een weeklijst
+        # meet wat er nu verkoopt, een jaarlijst wat mensen blijvend mooi
+        # vinden -- door elkaar in een tabel verbergt dat verschil precies het
+        # interessantste van een klassieker.
+        week_lijsten = {k: v for k, v in per_lijst.items() if not is_jaarlijks(k)}
+        jaar_lijsten = {k: v for k, v in per_lijst.items() if is_jaarlijks(k)}
+
+        golven = _golven(per_lijst)
+
         alias = con.execute(
             "SELECT van, naar, opmerking FROM aliases WHERE naar=? OR van=?",
             (sleutel, sleutel),
         ).fetchall()
         return render_template("nummer.html", sleutel=sleutel, rijen=rijen,
                                samenvatting=sorted(samenvatting.items()),
-                               per_lijst=per_lijst, aliassen=alias)
+                               per_lijst=per_lijst, week_lijsten=week_lijsten,
+                               jaar_lijsten=jaar_lijsten, golven=golven,
+                               aliassen=alias)
 
     # --- notering met de hand corrigeren -----------------------------------
 
