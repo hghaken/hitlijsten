@@ -94,7 +94,7 @@ De tabel waar het om gaat. **Eén rij per nummer per week per lijst.**
 | `positie` | INTEGER | 1 = hoogste |
 | `titel` | TEXT | zoals getoond |
 | `artiest` | TEXT | zoals getoond |
-| `label` | TEXT | platenlabel; alleen de Oranje Top 30 levert dit (28.583 rijen) |
+| `label` | TEXT | platenlabel; alleen de Oranje Top 30 levert dit in de weeklijst (28.702 rijen). top40.nl heeft het op de detailpagina's — zie LEESMIJ |
 | `weken_genoteerd` | INTEGER | wat de bron zegt; bij de jaarlijkse lijsten het aantal edities |
 | `vorige_positie` | INTEGER | vorige week, of vorige editie; leeg bij een binnenkomer |
 | `site_status` | TEXT | `nieuw`, `stijger`, `daler`, `gelijk`, `terug`, `onbekend` |

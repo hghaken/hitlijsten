@@ -60,10 +60,11 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
   Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26) en
   Kink Top 1500 2019–2025 (7).
-- 591 Excel-bestanden en 292 PDF-jaaroverzichten gebouwd, plus 651 aliassen,
-  267 vastgelegde niet-bestaande weken en 4.044 onderscheidingen.
+- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 661 aliassen,
+  4.044 onderscheidingen, 4.963 doorverwijzingen van verhuisde sleutels en
+  7.006 taalbepalingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
-  `hitlijsten-run.timer`. Eerstvolgende keer: vrijdag 7 augustus 2026.
+  `hitlijsten-run.timer`.
 
 ## Wat er uitkomt
 
@@ -330,9 +331,11 @@ op de NAS, achter een reverse proxy.
 | Vergelijk | twee jaargangen van dezelfde lijst naast elkaar: kerngetallen (incl. het Nederlandstalig-aandeel), de hoogst genoteerde nummers van elk jaar, en wat er in allebei stond |
 | Verras me | het dobbelsteentje achteraan de tweede menuregel, naast het Gastenboek: een willekeurig nummer, gewogen naar noteringen |
 | Weekbericht | de nieuwste Top 40 samengevat (nummer 1, binnenkomers, grootste stijger/daler, terugkeerders, uitvallers) plus een kaart per **andere weeklijst** (Tipparade, Oranje Top 30, Sterren NL Top 25: nummer 1 + aantal binnenkomers/herintreders + link, alleen als die lijst die week bestond — dezelfde regel als in het Facebook-bericht), bladerbaar per week en te volgen via de **RSS-feed** `/weekbericht.rss` — schrijft zichzelf uit de vrijdagrun |
-| Weeklijsten | één week zoals uitgezonden, met week-keuzelijst, de extra keuze **Alle weeklijsten** (de vier onder elkaar, elk met eigen kop en posities; Excel krijgt dan een tab per lijst, de PDF de vier **doorlopend** onder elkaar — een nieuwe pagina alleen als het niet meer past, want met het nieuw-filter zijn vier hele pagina's voor zeventien binnenkomers verspilling — en de DJ Export één playlist met dubbelen eruit), bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en de nieuw/terug-spelden; het **nieuw-vinkje** betekent hier de binnenkomers van de wéék zelf (het groene speldje), niet de jaargang-binnenkomers |
+| Weeklijsten | één week zoals uitgezonden, met **vaste kolombreedtes** zodat de vier lijsten onder elkaar uitlijnen (alleen vanaf 761 pixels; op een telefoon zou een positiekolom van 8% de ring om het cijfer afsnijden), met week-keuzelijst, de extra keuze **Alle weeklijsten** (de vier onder elkaar, elk met eigen kop en posities; Excel krijgt dan een tab per lijst, de PDF de vier **doorlopend** onder elkaar — een nieuwe pagina alleen als het niet meer past, want met het nieuw-filter zijn vier hele pagina's voor zeventien binnenkomers verspilling — en de DJ Export één playlist met dubbelen eruit), bladeren over de jaargrens heen (een overgeslagen kerstweek wordt overgeslagen) en de nieuw/terug-spelden; het **nieuw-vinkje** betekent hier de binnenkomers van de wéék zelf (het groene speldje), niet de jaargang-binnenkomers |
 | Zoeklinks | YouTube- en Spotify-icoontje bij elk nummer, dezelfde als op de Ots Radio-webplayer |
 | Alarmschijf | rood belletje 🔔 vóór de titel op de weeklijsten (Top 40, Tipparade en Sterren NL — de vlag hoort bij de plaat, dus hij reist mee); het belletje van top40.nl zelf (klasse `hitrecord`), per plaat vastgelegd in `noteringen.alarmschijf` en elke vrijdagrun bijgehouden; michajans.nl blijft de bron voor de toekenningsdatum |
+| Merkteken | het icoontje van de Facebook-pagina staat in het tabblad: `favicon.png` (32), `favicon-180.png` (beginscherm telefoon) en `favicon.ico` (16/32/48 voor oudere browsers), plus een route op `/favicon.ico` omdat browsers en bots dat adres kaal opvragen. Achter de bestandsnaam staat `?v=1`; browsers houden een favicon hardnekkig vast, dus bij vervanging moet dat cijfer omhoog |
+| Terugblik | op de voorpagina zes kaarten met de nummer 1 van deze week, tien tot **zestig** jaar geleden. Zestig haalt net de eerste jaargang; ontbreekt zo'n week, dan valt de kaart weg in plaats van leeg te blijven |
 | Stipnotering | een ring om de positie op de weeklijsten van de Top 40 en Sterren NL: de gewone stip een gevulde rode schijf, de **superstip** een open ring — zoals top40.nl het tekent. Een onderscheiding voor een plaat die die week hard steeg; 39.538 en 2.901 noteringen, 1965 tot nu. Niet in de Tipparade: daar draagt ruim de helft van alle regels de markering en onderscheidt hij dus niets |
 | Oranje Kroon | kroontje 👑 vóór de titel in de Oranje Top 30: de clip van de week van TV Oranje. Als de Alarmschijf een eigenschap van de plaat — eenmaal toegekend blijft hij staan. 6.620 noteringen over 685 nummers, vanaf 2012 |
 | Gedeelde plek | een **gele** ring om de positie als meerdere uitvoeringen die plek deelden, een **lichtblauwe** als het een dubbele A-kant is. Aan de artiest is dat verschil niet te zien (229 dubbele A-kanten hebben per kant een andere artiest), dus het staat vast in `noteringen.dubbele_a`. Draagt de plek ook een stip, dan komt de ring er als schaduw omheen |
@@ -1577,7 +1580,20 @@ punten tot gevolg. Ze zijn herkenbaar aan de klasse `no-longer-listed`.
 **oranjetop30.nl zet het platenlabel in een eigen element** binnen de artiestnaam.
 Dat is maar goed ook, want titels bevatten zelf ook haakjes — "Er hangt iets in
 de lucht (Amore)" zou anders "Amore" als label krijgen. Deze site is de enige die
-een label toont.
+een label in de **weeklijst** toont; daarom staat `label` alleen bij de Oranje
+Top 30 gevuld (28.702 van de 28.709 noteringen).
+
+top40.nl heeft het label wél, maar op de **detailpagina** van een nummer, onder
+een kopje *Platenlabel*. Alle 79 detailpagina's die tijdens ander werk in de
+cache belandden hebben er een. Het overnemen zou dus kunnen, maar het is geen
+kleine ingreep: één detailpagina per nummer, en dat zijn er 15.386 voor de Top
+40 alleen, 27.450 met de Tipparade en Sterren NL erbij — op een beleefd tempo
+van één per seconde ruim zeven uur ophalen. En de waarden vragen dezelfde
+opschoning als de titels: `Relax / Telstar / Decca` bij een gedeelde plek,
+`Pye / Decca` per land, `Blue Horizon ((1969)) / CBS ((1974))` per hitperiode.
+Bij een gedeelde plek zou bovendien uitgezocht moeten worden welk label bij
+welke uitvoering hoort. Nog niet gedaan; eerst een proef op één jaargang is de
+verstandige volgorde.
 
 **De Tipparade kent geen dalers.** Nummers klimmen of verdwijnen — nul dalers op
 2460 noteringen over 2025 en 2026. Dat is een eigenschap van die lijst, geen
