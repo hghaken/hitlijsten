@@ -822,12 +822,14 @@ helft van alle regels een `dot` (50.295 stuks), en de stipnotering is nu juist
 een onderscheiding van de Top 40. De Oranje Top 30 heeft ze helemaal niet. De
 parser laat het veld daarom leeg voor alles wat niet `top40` heet.
 
-**De weergave is bewust omgekeerd aan die van top40.nl.** Daar is de gewone
-stip een gevuld kader en de superstip juist een open kader — Petula Clark met
-*Down Town* (8 → 3, en dus superstip) staat er in week 4 van 1965 met een open
-kader, Cliff Richard op 4 met een gevuld. Hier is het andersom: de stip is een
-open rode ring om de positie, de superstip diezelfde ring gevuld. Zwaarder
-onderscheiding, zwaarder beeld.
+**De weergave volgt top40.nl, ook waar dat tegen het gevoel in gaat.** De
+gewone stip is daar een *gevulde* rode schijf en de superstip juist een *open*
+ring — de zwaarste onderscheiding krijgt dus de lichtste vorm. Week 4 van 1965
+laat het zien: Petula Clark met *Down Town* ging van 8 naar 3, vijf plaatsen
+binnen de top 10, en dat is het superstip-criterium; zij staat er met een open
+kader, terwijl Cliff Richard op 4 met zijn gewone stip een gevuld kader
+krijgt. Hier is het net zo, want wie de twee naast elkaar legt moet hetzelfde
+zien.
 
 Anders dan de alarmschijf hoort de stip bij de **week** en niet bij de plaat:
 hij zegt iets over hoe de plaat het díe week deed. De alarmschijf blijft aan
