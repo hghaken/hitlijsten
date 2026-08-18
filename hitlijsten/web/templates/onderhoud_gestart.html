@@ -1,0 +1,29 @@
+{% extends "basis.html" %}
+{% block titel %}Onderhoud — Hitlijsten{% endblock %}
+{% block inhoud %}
+<h1>De onderhoudspagina komt eraan</h1>
+<p>
+  {% if eind %}
+    De site staat er weer om <b>{{ eind.strftime('%H:%M') }}</b>. Zolang blijft
+    de onderhoudspagina staan; daarna schakelt de NAS vanzelf terug.
+  {% else %}
+    De onderhoudspagina blijft staan tot je hem uitzet. Dat kan alleen op de
+    NAS, want deze beheerpagina is er straks niet meer:
+  {% endif %}
+</p>
+<pre style="background:var(--glas2); border:1px solid var(--rand);
+            border-radius:10px; padding:.9rem 1.1rem; overflow:auto"
+>ssh lom-nas
+cd /volume1/Hitlijsten/app && ./onderhoud.sh uit</pre>
+<p class="hint">
+  Deze pagina gaat zo vanzelf naar de voorkant van de site, zodat je ziet wat
+  een bezoeker nu te zien krijgt.
+</p>
+<p><a href="/">Nu al kijken</a></p>
+<script>
+  // De omschakeling zelf loopt op de achtergrond en duurt een tel of twee.
+  // Even wachten dus, anders komt de browser precies in het gaatje terecht
+  // waarin geen van beide diensten de poort vasthoudt.
+  setTimeout(function () { location.href = "/"; }, 6000);
+</script>
+{% endblock %}

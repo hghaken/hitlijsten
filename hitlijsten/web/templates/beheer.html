@@ -170,6 +170,27 @@
   <button type="submit">Alarmschijven en Dancesmashes ophalen</button>
 </form>
 
+<h2>Onderhoud</h2>
+<p class="hint">
+  Zet de site achter een pagina in de huisstijl in plaats van de grijze
+  foutmelding van de NAS. <b>Deze applicatie stopt daarmee</b> — je bent dus
+  ook zelf uit het beheer. Geef een tijd op, dan noemt de pagina het uur
+  waarop je terug bent en zet de site zichzelf weer aan; kies je "tot ik hem
+  uitzet", dan blijft hij staan tot <code>./onderhoud.sh uit</code> op de NAS.
+</p>
+<form class="inline" method="post" action="{{ url_for('beheer_onderhoud') }}"
+      onsubmit="return confirm('De site gaat achter de onderhoudspagina en deze beheerpagina sluit. Doorgaan?')">
+  <input type="hidden" name="csrf" value="{{ csrf_teken() }}">
+  <select name="minuten">
+    <option value="15">een kwartier</option>
+    <option value="30" selected>een half uur</option>
+    <option value="60">een uur</option>
+    <option value="120">twee uur</option>
+    <option value="0">tot ik hem uitzet</option>
+  </select>
+  <button type="submit">Onderhoudspagina aanzetten</button>
+</form>
+
 <h2>Voortgang</h2>
 <p id="stand" class="hint">niets aan de gang</p>
 <form id="opruimen" method="post" action="{{ url_for('taak_opruimen') }}"

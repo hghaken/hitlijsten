@@ -14,6 +14,9 @@ Wants=network-online.target
 Type=simple
 User=claude
 WorkingDirectory=/volume1/Hitlijsten/app
+# Zodat de eindtijd in dezelfde datamap staat als de applicatie hem
+# neerzet, en niet in de val app/data (waar een verse database ontstaat).
+Environment=HITLIJSTEN_DATA=/volume1/Hitlijsten/data
 ExecStart=/volume1/Hitlijsten/app/venv/bin/python onderhoud.py --poort 8642
 Restart=on-failure
 RestartSec=5

@@ -103,6 +103,12 @@
   }
   p { margin: 0 0 1rem; }
   .uitleg { color: var(--gedempt); }
+  .terug {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .45rem .85rem; margin: 0 0 1rem; border-radius: 9px;
+    background: var(--glas); border: 1px solid var(--rand);
+  }
+  .terug b { color: var(--accent3); font-variant-numeric: tabular-nums; }
   .engels {
     margin-top: 1.6rem; padding-top: 1.2rem;
     border-top: 1px solid var(--rand); color: var(--gedempt); font-size: .92rem;
@@ -146,6 +152,10 @@
 
     <p>Het archief wordt bijgewerkt. Over een paar minuten staan de lijsten
       er weer, en dan met de nieuwste gegevens erbij.</p>
+
+    <!-- Hier zet onderhoud.py de verwachte eindtijd neer. Blijft de plek
+         leeg, dan staat er niets -- beter dan een belofte die niet klopt. -->
+    <!--TERUG-->
 
     <p class="uitleg">Deze pagina ververst zichzelf, dus je hoeft niets te
       doen — laat het tabblad gerust openstaan.</p>

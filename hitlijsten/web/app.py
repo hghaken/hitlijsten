@@ -6,6 +6,8 @@ import gzip
 import io
 import secrets
 import sqlite3
+import subprocess
+import threading
 from datetime import date, datetime, timedelta
 from functools import wraps
 from pathlib import Path
@@ -16,8 +18,8 @@ from flask import (
 )
 
 from .. import db, excel
-from ..config import (BRON_URLS, EXCEL_DIR, LIJSTEN, ROOT, ZENDER_URLS,
-                      decennium_van, is_jaarlijks)
+from ..config import (BRON_URLS, DATA_DIR, EXCEL_DIR, LIJSTEN, ROOT,
+                      ZENDER_URLS, decennium_van, is_jaarlijks)
 from ..datums import als_tekst, vrijdag_van
 from ..db import Looptijd, looptijden
 from . import taken
@@ -3005,6 +3007,39 @@ def _registreer(app: Flask) -> None:
             gestart, melding = taken.start(naam, werk)
             flash(melding, "goed" if gestart else "fout")
         return redirect(url_for("beheer"))
+
+    @app.route("/beheer/onderhoud", methods=["POST"])
+    @vereist_aanmelding
+    def beheer_onderhoud():
+        """De site achter de onderhoudspagina zetten.
+
+        Deze knop zaagt de tak door waar hij zelf op zit: zodra systemd
+        omschakelt is deze applicatie weg. Daarom eerst antwoorden en pas
+        daarna omzetten, met een tel vertraging zodat het antwoord de browser
+        nog haalt. Een redirect zou hier niet werken -- die komt aan bij een
+        dienst die er dan niet meer is.
+        """
+        try:
+            minuten = int(request.form.get("minuten") or 0)
+        except ValueError:
+            minuten = 0
+
+        # De eindtijd gaat via een bestand naar de onderhoudsdienst, zodat de
+        # systemd-unit geen argumenten hoeft te kennen.
+        tot = DATA_DIR / "onderhoud-tot.txt"
+        eind = None
+        if minuten:
+            eind = datetime.now() + timedelta(minutes=max(5, min(480, minuten)))
+            tot.write_text(eind.isoformat(timespec="seconds"), encoding="utf-8")
+        else:
+            tot.unlink(missing_ok=True)
+
+        def omzetten() -> None:
+            subprocess.run(["sudo", "-n", "systemctl", "--no-block", "start",
+                            "hitlijsten-onderhoud"], check=False)
+
+        threading.Timer(1.5, omzetten).start()
+        return render_template("onderhoud_gestart.html", eind=eind)
 
     @app.route("/taak/opruimen", methods=["POST"])
     @vereist_aanmelding
