@@ -285,6 +285,18 @@ def opdracht_excel(jaar: int) -> list:
     bestanden = excel.bouw_alles(jaar)
     for pad in bestanden:
         log(f"geschreven: {pad.name}")
+    # De wachtrij bijwerken. `bouw_alles` doet alle lijsten van deze jaargang,
+    # dus wat er voor dit jaar openstond is nu gebouwd. Zonder deze stap blijft
+    # de markering staan: db.gebouwd() bestond wel maar werd nergens aangeroepen,
+    # en dan meldt het beheerscherm eeuwig "openstaand" voor bestanden die er
+    # allang zijn -- na een hersleutel over alle jaargangen waren dat er 380.
+    with db.verbinding() as con:
+        opgeruimd = [(lijst, j) for lijst, j in db.te_bouwen(con) if j == jaar]
+        for lijst, j in opgeruimd:
+            db.gebouwd(con, lijst, j)
+        if opgeruimd:
+            con.commit()
+            log(f"{len(opgeruimd)} markering(en) van de wachtrij gehaald")
     return bestanden
 
 
