@@ -273,6 +273,22 @@
   tbody tr:hover td { background: rgba(255,255,255,.045); }
   td.getal, th.getal { text-align: center; }
   td.breed, th.breed { white-space: normal; min-width: 14rem; }
+  /* De weeklijsten staan bij "Alle weeklijsten" onder elkaar, elk in een
+     eigen tabel. Zonder vaste breedtes bepaalt elke tabel zijn kolommen op
+     zijn eigen inhoud, en dan verspringen de koppen tussen de blokken. De
+     percentages staan in de colgroup van week.html; hier alleen de schakelaar
+     die ze laat gelden. Een titel of artiest die niet past wordt afgekapt met
+     een beletselteken -- de volledige tekst staat in de title-tekstballon. */
+  /* Alleen op een scherm dat er breed genoeg voor is. Op een telefoon zou
+     een positiekolom van acht procent (dertig pixels) de ring om het cijfer
+     afsnijden; daar mag elke tabel zijn eigen breedtes bepalen, want daar
+     staan de lijsten toch niet naast elkaar te vergelijken. */
+  @media (min-width: 761px) {
+    table.weeklijst { table-layout: fixed; }
+    table.weeklijst td, table.weeklijst th {
+      overflow: hidden; text-overflow: ellipsis;
+    }
+  }
 
   /* Een overgeslagen editie midden in een reeks; zichtbaar maar rustig. */
   .gat { color: var(--gedempt); opacity: .45; }

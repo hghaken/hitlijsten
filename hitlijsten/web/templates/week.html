@@ -135,7 +135,16 @@
   {%- endif %}
 </p>
 {% endif %}
-<div class="tabelvak"><table>
+<div class="tabelvak"><table class="weeklijst">
+  {# Vaste breedtes, zodat de vier lijsten onder elkaar dezelfde kolommen
+     hebben. De Oranje Top 30 heeft er een label bij; die haalt zijn ruimte
+     bij de titel weg, want de andere kolommen moeten op hun plek blijven. #}
+  <colgroup>
+    <col style="width:8%"><col style="width:9%"><col style="width:30%">
+    <col{% if heeft_label %} style="width:32%"{% endif %}>
+    {% if heeft_label %}<col style="width:14%">{% endif %}
+    <col style="width:7%">
+  </colgroup>
   <thead><tr>
     <th class="getal">{{ _("Positie") }}</th><th class="getal">{{ _("Vorige") }}</th>
     <th>{{ _("Artiest") }}</th><th>{{ _("Titel") }}</th>
@@ -166,9 +175,11 @@
       {% else %}<span class="speld nieuw">{{ _("nieuw") }}</span>{% endif %}</td>
     {# Klikken springt naar het jaaroverzicht met dit nummer opgelicht — daar
        staat de grafiek van het hele verloop binnen handbereik. #}
-    <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=deze, jaar=jaar,
+    <td><a class="stil" title="{{ r['artiest'] }}"
+           href="{{ url_for('jaaroverzicht', lijst=deze, jaar=jaar,
            markeer=r['sleutel']) }}">{{ r['artiest'] }}</a></td>
-    <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=deze, jaar=jaar,
+    <td><a class="stil" title="{{ r['titel'] }}"
+           href="{{ url_for('jaaroverzicht', lijst=deze, jaar=jaar,
            markeer=r['sleutel']) }}">{# Het belletje vóór de titel, zoals
            top40.nl het toont. Ook in de Tipparade: een plaat die daar staat
            kan al Alarmschijf zijn, en top40.nl laat het er ook zien. #}{% if r['alarmschijf'] %}<span
