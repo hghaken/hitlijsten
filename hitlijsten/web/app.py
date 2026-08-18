@@ -422,7 +422,18 @@ def _registreer(app: Flask) -> None:
     def _is_nl(sleutel: str) -> bool:
         return sleutel in _nl_sleutels()
 
+    def _bevat_nl(rijen) -> bool:
+        """Staat er in deze rijen minstens een Nederlandstalig nummer?
+
+        Voor de legenda onder een lijstkop. In het sjabloon zou dit een lus
+        met een namespace worden, wat de kop onleesbaar maakt; hier is het
+        een regel.
+        """
+        sleutels = _nl_sleutels()
+        return any(r["sleutel"] in sleutels for r in rijen)
+
     app.jinja_env.globals["is_nl"] = _is_nl
+    app.jinja_env.globals["bevat_nl"] = _bevat_nl
 
     def csrf_teken() -> str:
         """Het token van deze sessie; wordt vanzelf gemaakt bij het eerste

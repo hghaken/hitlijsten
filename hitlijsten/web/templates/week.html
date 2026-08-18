@@ -97,7 +97,8 @@
 {% set heeft_stip = deelrijen | selectattr('stip') | list %}
 {% set heeft_bel = deelrijen | selectattr('alarmschijf') | list %}
 {% set heeft_kroon = deelrijen | selectattr('kroon') | list %}
-{% if heeft_stip or heeft_bel or heeft_kroon %}
+{% set heeft_vlag = bevat_nl(deelrijen) %}
+{% if heeft_stip or heeft_bel or heeft_kroon or heeft_vlag %}
 <p class="hint" style="margin:.2rem 0 .6rem">
   {%- if heeft_stip %}
   <span class="stip" style="font-size:.85em">7</span>
@@ -113,6 +114,9 @@
   {%- if heeft_kroon %}{% if heeft_stip or heeft_bel %} &nbsp;&nbsp; {% endif %}
   <span>👑</span> {{ _("Oranje Kroon") }}
   <span style="opacity:.75">— {{ _("clip van de week bij TV Oranje") }}</span>
+  {%- endif %}
+  {%- if heeft_vlag %}{% if heeft_stip or heeft_bel or heeft_kroon %} &nbsp;&nbsp; {% endif %}
+  {{ nl_vlag() }} {{ _("Nederlandstalig") }}
   {%- endif %}
 </p>
 {% endif %}
