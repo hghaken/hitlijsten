@@ -312,7 +312,6 @@ EN = {
     "Nederlandstalig": "Dutch-language",
     "gedeelde plek": "shared place",
     "dubbele A-kant": "double A-side",
-    "één plaat met twee kanten": "one record, two sides",
     "meerdere uitvoeringen op dezelfde plek":
         "several versions sharing one place",
     "Hoogst genoteerd in": "Highest charting in",
