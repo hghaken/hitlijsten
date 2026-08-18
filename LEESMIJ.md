@@ -816,11 +816,27 @@ opgeslagen weekpagina, en daarmee kon de hele reeks 1965–2026 in één keer
 worden aangevuld zonder de site opnieuw te bevragen: 27.708 stippen en 11.830
 superstippen.
 
-**Alleen in de Top 40.** top40.nl zet dezelfde klassen ook op de Tipparade en
-op Sterren NL, maar daar betekenen ze niets: in de Tipparade draagt ruim de
-helft van alle regels een `dot` (50.295 stuks), en de stipnotering is nu juist
-een onderscheiding van de Top 40. De Oranje Top 30 heeft ze helemaal niet. De
-parser laat het veld daarom leeg voor alles wat niet `top40` heet.
+**In de Top 40 en in Sterren NL, niet in de Tipparade.** top40.nl zet dezelfde
+klassen op alle drie, maar of ze iets bétekenen verraadt de grens:
+
+| lijst | stip | superstip | laagste plek met een stip |
+|---|---|---|---|
+| Top 40 (40 lang) | 21% | 9% | 30 / 25 |
+| Sterren NL (25 lang) | 24% | 8% | **20 / 15** |
+| Tipparade (30 lang) | **55%** | **30%** | 30 / 25 |
+
+Sterren NL heeft zijn eigen grens, netjes geschaald naar een Top 25 — geen
+enkele stip onder plek 20, geen enkele superstip onder 15 — en ongeveer
+hetzelfde aandeel als de Top 40. Daar is het dus dezelfde onderscheiding.
+
+De Tipparade niet. Daar draagt ruim de helft van alle regels een stip, en de
+grens valt samen met de lengte van de lijst en zegt dus niets. Dat is ook
+logisch: in een lijst waarin per definitie bijna alles stijgt, onderscheidt
+"stijgt hard" niemand meer. De Oranje Top 30 komt van een andere bron en kent
+de markering niet.
+
+De parser vult het veld daarom alleen voor `top40` en `sterrennl` — 39.538 en
+2.901 noteringen.
 
 **De weergave volgt top40.nl, ook waar dat tegen het gevoel in gaat.** De
 gewone stip is daar een *gevulde* rode schijf en de superstip juist een *open*

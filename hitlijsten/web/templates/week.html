@@ -85,9 +85,10 @@
 {% set heeft_label = deelrijen | selectattr('label') | list %}
 {% if lijst == alle %}<h2>{{ lijst_namen.get(deze, deze) }}
   <span class="hint" style="font-weight:400">{{ deelrijen|length }} {{ _("noteringen") }}</span></h2>{% endif %}
-{# Een legenda alleen als er die week ook echt een stip staat, en alleen bij
-   de Top 40 -- de stipnotering bestaat nergens anders. #}
-{% if deze == 'top40' and deelrijen | selectattr('stip') | list %}
+{# Een legenda alleen als er die week ook echt een stip staat. Geen toets op
+   de lijst: de parser vult het veld alleen waar de stip iets betekent, dus
+   waar er een staat hoort de uitleg erbij. #}
+{% if deelrijen | selectattr('stip') | list %}
 <p class="hint" style="margin:.2rem 0 .6rem">
   <span class="stip" style="font-size:.85em">7</span>
   {{ _("stipnotering") }} &nbsp;

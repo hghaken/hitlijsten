@@ -240,6 +240,11 @@ def _status_en_vorige(rank_cel, positie: int, weken: int | None) -> tuple[str, i
     )
 
 
+# De lijsten waarin de stipnotering betekenis heeft; zie de toelichting bij
+# het veld hieronder.
+MET_STIP = {"top40", "sterrennl"}
+
+
 def parse(html: str, lijst: str, jaar: int, week: int) -> list[Notering]:
     """HTML van een top40.nl-lijstpagina -> lijst van Notering."""
     soup = BeautifulSoup(html, "lxml")
@@ -325,13 +330,15 @@ def parse(html: str, lijst: str, jaar: int, week: int) -> list[Notering]:
                 # kloppen met de officiele criteria: een stip nooit lager dan
                 # 30, een superstip nooit lager dan 25.
                 #
-                # Alleen voor de Top 40. top40.nl zet dezelfde klassen ook op
-                # de Tipparade (50.295 stippen) en op Sterren NL, maar daar
-                # slaan ze nergens op: in de Tipparade draagt ruim de helft
-                # van alle regels een stip, en de stipnotering is nu juist een
-                # onderscheiding voor de Top 40. De Oranje Top 30 heeft ze
-                # helemaal niet.
-                stip=(0 if lijst != "top40" else
+                # Alleen waar de stip ook echt een onderscheiding is. Dat
+                # blijkt uit de grens: in de Top 40 staat een stip nooit onder
+                # plek 30 en een superstip nooit onder 25, en Sterren NL heeft
+                # diezelfde grens geschaald naar zijn Top 25 -- 20 en 15. In
+                # beide lijsten draagt ongeveer een vijfde van de regels een
+                # stip. De Tipparade zet dezelfde klassen, maar daar draagt
+                # ruim de helft er een; in een lijst waarin per definitie
+                # bijna alles stijgt onderscheidt dat niets meer.
+                stip=(0 if lijst not in MET_STIP else
                       2 if "super" in (rij.get("class") or []) else
                       1 if "dot" in (rij.get("class") or []) else 0),
             )
