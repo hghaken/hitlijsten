@@ -1,0 +1,22 @@
+[Unit]
+Description=Hitlijsten onderhoudspagina
+# Conflicts werkt beide kanten op: `systemctl start hitlijsten-onderhoud`
+# stopt de webapplicatie en neemt poort 8642 over, en `systemctl start
+# hitlijsten-web` zet de onderhoudspagina weer uit. Zonder dit zouden ze om
+# dezelfde poort vechten en zou degene die als tweede start meteen sneuvelen.
+# Een door systemd gevraagde stop geldt niet als storing, dus de Restart=always
+# van hitlijsten-web haalt de applicatie er niet meteen weer bij.
+Conflicts=hitlijsten-web.service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=claude
+WorkingDirectory=/volume1/Hitlijsten/app
+ExecStart=/volume1/Hitlijsten/app/venv/bin/python onderhoud.py --poort 8642
+Restart=on-failure
+RestartSec=5
+
+# Geen [Install]-blok, en dus met opzet niet `enabled`: deze dienst hoort na
+# een herstart van de NAS niet vanzelf op te komen. Dan moet de site draaien.
