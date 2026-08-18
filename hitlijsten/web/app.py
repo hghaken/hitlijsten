@@ -14,7 +14,7 @@ from pathlib import Path
 
 from flask import (
     Flask, abort, flash, g, jsonify, redirect, render_template, request,
-    send_file, session, url_for,
+    send_file, send_from_directory, session, url_for,
 )
 
 from .. import db, excel
@@ -894,6 +894,13 @@ def _registreer(app: Flask) -> None:
     def sitemap_deel(nr: int):
         return app.response_class(_sitemap_xml(nr),
                                   mimetype="application/xml")
+
+    @app.route("/favicon.ico")
+    def favicon():
+        """Browsers en bots vragen dit adres kaal op de root op, ook al staan
+        de link-regels in de kop."""
+        return send_from_directory(app.static_folder, "favicon.ico",
+                                   mimetype="image/x-icon")
 
     @app.route("/robots.txt")
     def robots():

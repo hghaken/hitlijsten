@@ -10,6 +10,14 @@
    onbruikbaar. #}
 <meta name="description" content="{% block beschrijving %}{% if taal == 'en' %}Sixty years of Dutch music charts, fully searchable: the Top 40 since 1965, the Top 2000 and nineteen other charts, with every song's chart run in a graph.{% else %}Zestig jaar Nederlandse hitlijsten doorzoekbaar: de Top 40 vanaf 1965, de Top 2000 en negentien andere lijsten, met het verloop van elk nummer in een grafiek.{% endif %}{% endblock %}">
 <link rel="canonical" href="{{ canoniek() }}">
+{# Het merkteken van de Facebook-pagina, ook in het tabblad. De ?v achter de
+   naam is er omdat browsers een favicon hardnekkig vasthouden: zonder die
+   toevoeging blijft een oude versie soms weken staan. #}
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}?v=1" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32"
+      href="{{ url_for('static', filename='favicon.png') }}?v=1">
+<link rel="apple-touch-icon"
+      href="{{ url_for('static', filename='favicon-180.png') }}?v=1">
 <meta property="og:site_name" content="Hitlijsten">
 {# Eigenaarschapsbewijs voor Bing Webmaster Tools; moet blijven staan. #}
 <meta name="msvalidate.01" content="35060C5E9AB68258E53B712B7DFACB0B">

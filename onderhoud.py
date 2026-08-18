@@ -35,6 +35,7 @@ from pathlib import Path
 HIER = Path(__file__).resolve().parent
 PAGINA = HIER / "hitlijsten" / "web" / "static" / "onderhoud.html"
 BANNER = HIER / "hitlijsten" / "web" / "static" / "banner.jpg"
+FAVICON = HIER / "hitlijsten" / "web" / "static" / "favicon.png"
 # Wie de onderhoudsstand aanzet schrijft hier de eindtijd neer (ISO-8601).
 # Zo hoeft de systemd-unit geen argumenten te kennen: hij start altijd
 # hetzelfde commando en de eindtijd komt uit het bestand.
@@ -68,6 +69,9 @@ def bouw_pagina(eind: dt.datetime | None = None) -> bytes:
         # draagt hem prima. Een ontbrekend bestand mag geen dienst tegenhouden.
         html = html.replace('url("BANNER") center/cover no-repeat', "none")
         logging.warning("banner niet gevonden: %s", BANNER)
+    if FAVICON.exists():
+        data = base64.b64encode(FAVICON.read_bytes()).decode("ascii")
+        html = html.replace("FAVICON", f"data:image/png;base64,{data}")
     if eind is not None:
         html = html.replace(
             "<!--TERUG-->",
