@@ -12,6 +12,20 @@ regels is onleesbaar en onvindbaar.
 """
 
 EN = {
+    # -- tekens in de weeklijsten ------------------------------------------
+    "stipnotering": "bullet",
+    "superstip": "super bullet",
+    "Stipnotering": "Bullet",
+    "Superstip": "Super bullet",
+    "een plaat die die week hard steeg": "a record that climbed fast that week",
+    "alarmschijf": "Alarmschijf",
+    "een potentiële hit": "a likely future hit",
+    "Oranje Kroon": "Oranje Kroon",
+    "clip van de week bij TV Oranje": "TV Oranje's video of the week",
+    "Oranje Kroon: clip van de week bij TV Oranje":
+        "Oranje Kroon: TV Oranje's video of the week",
+    "op": "across",
+    "plekken": "places",
     # -- menubalk en voetregel ---------------------------------------------
     "Overzicht": "Overview",
     "Weeklijsten": "Weekly charts",
