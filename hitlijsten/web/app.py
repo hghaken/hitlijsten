@@ -2677,12 +2677,15 @@ def _registreer(app: Flask) -> None:
         for r in rijen:
             vak = samenvatting.setdefault(
                 (r["lijst"], r["jaar"]),
-                {"punten": 0, "weken": 0, "hoogste": 99, "op1": 0}
+                # Geen 99 als startwaarde: min() maakt daar nooit meer
+                # 1279 van, en dan toont een Top 4000-notering "99".
+                {"punten": 0, "weken": 0, "hoogste": None, "op1": 0}
             )
             lengte = lengtes[(r["lijst"], r["jaar"], r["week"])]
             vak["punten"] += lengte - r["positie"] + 1
             vak["weken"] += 1
-            vak["hoogste"] = min(vak["hoogste"], r["positie"])
+            vak["hoogste"] = (r["positie"] if vak["hoogste"] is None
+                              else min(vak["hoogste"], r["positie"]))
             # Hoe vaak op 1: bij een weeklijst zijn dat weken, bij een
             # jaarlijst edities. "Hoogste 1" zegt niet of dat een uitschieter
             # was of een gewoonte -- Bohemian Rhapsody stond 22 van de 27
@@ -2697,7 +2700,7 @@ def _registreer(app: Flask) -> None:
         for (lijst, jaar), vak in sorted(samenvatting.items()):
             pl = per_lijst.setdefault(lijst, {
                 "van": jaar, "tot": jaar, "jaren": 0, "punten": 0,
-                "weken": 0, "hoogste": 99, "beste_jaar": jaar, "op1": 0,
+                "weken": 0, "hoogste": None, "beste_jaar": jaar, "op1": 0,
                 "jaargangen": []})
             pl["tot"] = jaar
             pl["jaren"] += 1
@@ -2705,7 +2708,7 @@ def _registreer(app: Flask) -> None:
             pl["weken"] += vak["weken"]
             pl["op1"] += vak["op1"]
             pl["jaargangen"].append(jaar)
-            if vak["hoogste"] < pl["hoogste"]:
+            if pl["hoogste"] is None or vak["hoogste"] < pl["hoogste"]:
                 pl["hoogste"] = vak["hoogste"]
                 pl["beste_jaar"] = jaar
         # Week- en jaarlijsten uit elkaar: ze meten iets anders. Een weeklijst
