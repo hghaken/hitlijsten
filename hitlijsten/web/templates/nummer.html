@@ -8,7 +8,9 @@
   href="{{ url_for('artiest', artiestsleutel=sleutel.split('|')[0]) }}"
   title="{{ _("Alle hits van") }} {{ rijen[-1]['artiest'] }}">{{ rijen[-1]['artiest'] }}</a></span>{{ zoeklinks(rijen[-1]['artiest'], rijen[-1]['titel']) }}{% if rijen | selectattr('alarmschijf') | list %}
   <span title="Alarmschijf van de Nederlandse Top 40 (bron: top40.nl)"
-        style="font-size:.55em; vertical-align:middle; color:#ED1C24">🔔 Alarmschijf</span>{% endif %}</h1>
+        style="font-size:.55em; vertical-align:middle; color:#ED1C24">🔔 Alarmschijf</span>{% endif %}{% if rijen | selectattr('kroon') | list %}
+  <span title="{{ _("Oranje Kroon: clip van de week bij TV Oranje") }}"
+        style="font-size:.55em; vertical-align:middle">👑 {{ _("Oranje Kroon") }}</span>{% endif %}</h1>
 {% if is_aangemeld() %}<p class="sleutel">{{ sleutel }}</p>
 <form method="post" action="{{ url_for('taal_zet') }}" style="margin:-.4rem 0 .8rem">
   <input type="hidden" name="csrf" value="{{ csrf_teken() }}">

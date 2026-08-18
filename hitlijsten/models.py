@@ -45,6 +45,10 @@ class Notering:
     # alarmschijf hoort dit wel bij de week -- het gaat over hoe hard de plaat
     # die week steeg. Een notering heeft er hoogstens een van de twee.
     stip: int = 0
+    # De Oranje Kroon: de clip van de week van TV Oranje. Net als de
+    # alarmschijf een eigenschap van de plaat -- eenmaal toegekend blijft het
+    # kroontje bij het nummer staan zolang het genoteerd is.
+    kroon: bool = False
 
     def __post_init__(self) -> None:
         self.titel = (self.titel or "").strip()

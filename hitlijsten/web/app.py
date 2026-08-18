@@ -779,8 +779,8 @@ def _registreer(app: Flask) -> None:
             """Eén weeklijst, met de filters van het scherm erop."""
             rijen = list(con.execute(
                 "SELECT positie, vorige_positie, artiest, titel, label,"
-                " weken_genoteerd, site_status, sleutel, alarmschijf, stip"
-                " FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
+                " weken_genoteerd, site_status, sleutel, alarmschijf, stip,"
+                " kroon FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
                 " ORDER BY positie, artiest", (welke, jaar, week)))
             rijen = _alleen_nl(rijen)
             if request.args.get("nieuw"):
@@ -2615,7 +2615,7 @@ def _registreer(app: Flask) -> None:
             " MIN(jaar) van, MAX(jaar) tot, MIN(positie) hoogste,"
             " COUNT(DISTINCT lijst) lijsten,"
             " GROUP_CONCAT(DISTINCT lijst) lijst_namen,"
-            " MAX(alarmschijf) alarmschijf"
+            " MAX(alarmschijf) alarmschijf, MAX(kroon) kroon"
             " FROM noteringen WHERE sleutel LIKE ? ESCAPE '\\'"
             " GROUP BY sleutel ORDER BY van, sleutel", (patroon,)))
         if not nummers:

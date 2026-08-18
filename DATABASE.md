@@ -102,6 +102,7 @@ De tabel waar het om gaat. **Eén rij per nummer per week per lijst.**
 | `uitjaar` | INTEGER | jaar van uitgave; alleen de jaarlijkse lijsten leveren dit |
 | `alarmschijf` | INTEGER | het belletje van top40.nl: dit nummer is (ooit) Alarmschijf geweest; per notering zoals de bron het toont |
 | `stip` | INTEGER | de stipnotering: 0 geen, 1 stip, 2 superstip. Hoort bij de wéék, niet bij de plaat. Alleen gevuld voor `top40` (39.538) en `sterrennl` (2.901) — elders heeft de markering geen betekenis |
+| `kroon` | INTEGER | de Oranje Kroon: clip van de week bij TV Oranje. Als de alarmschijf een eigenschap van de plaat; alleen `oranje` (6.620 noteringen, 685 nummers, vanaf 2012) |
 
 Indexen: `(lijst, jaar, sleutel)`, `(lijst, jaar, week)` en een kale
 `(sleutel)` — die laatste draagt de artiestpagina's (alles van één artiest

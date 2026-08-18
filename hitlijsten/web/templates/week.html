@@ -126,7 +126,10 @@
     <td><a class="stil" href="{{ url_for('jaaroverzicht', lijst=deze, jaar=jaar,
            markeer=r['sleutel']) }}">{# Het belletje alleen in de Top 40 zelf,
            vóór de titel — zoals top40.nl het ook toont. #}{% if deze == 'top40' and r['alarmschijf'] %}<span
-           title="Alarmschijf" style="color:#ED1C24">🔔</span> {% endif %}{% if is_nl(r['sleutel']) %}{{ nl_vlag() }} {% endif %}{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
+           title="Alarmschijf" style="color:#ED1C24">🔔</span> {% endif %}{#
+           En het kroontje bij de Oranje Top 30: de clip van de week van TV
+           Oranje, die net als de alarmschijf bij de plaat blijft horen. #}{%
+           if r['kroon'] %}<span title="{{ _("Oranje Kroon") }}">👑</span> {% endif %}{% if is_nl(r['sleutel']) %}{{ nl_vlag() }} {% endif %}{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
     {% if heeft_label %}<td class="hint">{{ r['label'] or '' }}</td>{% endif %}
     <td class="getal hint">{{ r['weken_genoteerd'] or '' }}</td>
   </tr>

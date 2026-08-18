@@ -851,6 +851,39 @@ Anders dan de alarmschijf hoort de stip bij de **week** en niet bij de plaat:
 hij zegt iets over hoe de plaat het díe week deed. De alarmschijf blijft aan
 een nummer plakken zolang het genoteerd staat.
 
+### De Oranje Kroon
+
+De Oranje Top 30 zet een kroontje bij sommige nummers, en nergens op
+oranjetop30.nl staat wat dat betekent. Het is de **clip van de week van TV
+Oranje**: elke week krijgt één nummer hem, en daarna blijft het kroontje bij
+die plaat horen zolang hij genoteerd staat — net als de Alarmschijf bij de
+Top 40.
+
+Dat is niet aangenomen maar getoetst, op twee manieren. Week 33 van 2026 tegen
+de winnaarslijst van TV Oranje gelegd, acht van acht raak, inclusief de enige
+zonder kroon:
+
+| | nummer | kroon | toegekend in |
+|---|---|---|---|
+| 1 | Justen de Wildt — Cheerio | ja | week 11, 2026 |
+| 2 | Rutger van Barneveld — Zwoele zomernachten | ja | week 23 |
+| 3 | Corry Konings — Er hangt iets in de lucht | ja | week 25 |
+| 4 | Helemaal Hollands — Titanic | ja | week 30 |
+| 5 | Tino Martin — Jong & dom | **nee** | — |
+| 6 | Gebroeders Ko — Proud to be fout | ja | week 31 |
+| 7 | Ferry de Lits & SHQQ — Baco in Monaco | ja | week 26 |
+| 8 | Marco Schuitmaker — Loesoe | ja | week 32 |
+
+En de aantallen: over 2012–2026 dragen **685 verschillende nummers** een kroon,
+verdeeld over 6.620 noteringen. Dat is bijna precies één per week over die
+periode — wat je verwacht bij een wekelijkse toekenning. Vóór 2012 staat het
+plaatje niet in de pagina's; die weken lezen wel, maar hebben geen kroon.
+
+In de HTML zit hij als een genest `<span>` binnen de titel, met
+`<img class="ok">` voor het scherm en `<img class="okprint">` voor de
+printversie. De parser haalde dat geneste span al weg om de titel schoon te
+krijgen; nu leest hij er ook de kroon uit.
+
 ### Wetenswaardigheden
 
 Tien ranglijsten per lijst, in `wetenswaardigheden.py`: meeste

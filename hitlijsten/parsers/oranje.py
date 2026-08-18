@@ -141,6 +141,14 @@ def parse(html: str, lijst: str, jaar: int, week: int) -> list[Notering]:
             if m:
                 vorige_positie = int(m.group(1))
 
+        # --- de Oranje Kroon -------------------------------------------------
+        # De clip van de week van TV Oranje; het plaatje zit in het geneste
+        # span binnen de titel en staat er alleen bij de nummers die hem ooit
+        # gekregen hebben. `img.ok` is het scherm-plaatje, `img.okprint` de
+        # variant voor de printversie -- die twee horen bij elkaar, dus een
+        # van de twee volstaat.
+        kroon = entry.select_one("img.ok") is not None
+
         # --- bewegingsaanduiding --------------------------------------------
         icoon = _icoon_naam(entry.select_one("div.nummer.dif"))
         site_status = _status(icoon, positie, vorige_positie, weken_genoteerd)
@@ -157,6 +165,7 @@ def parse(html: str, lijst: str, jaar: int, week: int) -> list[Notering]:
                 weken_genoteerd=weken_genoteerd,
                 vorige_positie=vorige_positie,
                 site_status=site_status,
+                kroon=kroon,
             )
         )
 
