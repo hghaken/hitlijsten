@@ -9,9 +9,11 @@ onderhoud niemand op poort 8642, dan komt nginx niet verder dan zijn eigen
 foutpagina -- die grijze Synology-pagina.
 
 Dit serverje pakt die poort over zolang de applicatie stilstaat, zodat de
-bezoeker een nette pagina krijgt in plaats van een gat. Het antwoordt op elk
-adres met **503** en een `Retry-After`, zodat zoekmachines begrijpen dat het
-tijdelijk is en de pagina niet in de plaats van de site komt te staan.
+bezoeker een nette pagina krijgt in plaats van een gat. Het antwoordt met
+**503** en een `Retry-After`, zodat zoekmachines begrijpen dat het tijdelijk
+is en de pagina niet in de plaats van de site komt te staan. Komt een verzoek
+binnen op een van de oude adressen, dan gaat de doorverwijzing voor: die geldt
+ook tijdens onderhoud.
 
 De banner wordt bij het starten in de pagina gebakken als data-URI: één
 antwoord, geen vervolgverzoeken, dus het maakt niet uit dat er verder niets
@@ -46,6 +48,19 @@ TOT = Path(os.environ.get("HITLIJSTEN_DATA") or HIER / "data") / "onderhoud-tot.
 
 # Een halve minuut: hetzelfde ritme als de meta-refresh in de pagina zelf.
 WACHTTIJD = 30
+
+# De verhuizing geldt ook tijdens onderhoud. Zonder dit serveert het oude
+# adres de onderhoudspagina zelf, en dan staat dezelfde inhoud een uur lang
+# op drie adressen -- precies wat de omleiding moet voorkomen.
+#
+# Uit config, zodat de namen op één plek staan. Met een terugval, want als dat
+# bestand stuk is start deze dienst anders niet, en dan luistert er niemand op
+# 8642: juist het gat dat deze pagina moet dichten.
+try:
+    from hitlijsten.config import HOOFD_URL, VERHUISDE_HOSTS
+except Exception:                                        # noqa: BLE001
+    HOOFD_URL = "https://www.nl-hitlijsten.nl"
+    VERHUISDE_HOSTS = {"hitlijsten.hhaken.nl", "nl-hitlijsten.nl"}
 
 
 def lees_eindtijd() -> dt.datetime | None:
@@ -104,7 +119,22 @@ class Onderhoud(BaseHTTPRequestHandler):
     sys_version = ""
     pagina = b""
 
+    def _verhuisd(self) -> str | None:
+        """Het adres waar dit verzoek hoort, als het op een oude naam binnenkomt."""
+        host = (self.headers.get("Host") or "").split(":")[0].lower()
+        # self.path is nog zoals hij over de lijn kwam, dus percent-gecodeerd;
+        # er hoeft niets aan gerekend te worden.
+        return HOOFD_URL + self.path if host in VERHUISDE_HOSTS else None
+
     def _antwoord(self, met_inhoud: bool) -> None:
+        doel = self._verhuisd()
+        if doel:
+            self.send_response(302)
+            self.send_header("Location", doel)
+            self.send_header("Content-Length", "0")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return
         self.send_response(503)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(self.pagina)))
