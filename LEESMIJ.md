@@ -727,6 +727,26 @@ de Dutch Swing College Band óf overal, óf nergens gestaan. Wat er gesplitst
 wordt komt dus uit de lijst van díé week; alleen de schrijfwijze van de namen
 komt uit een vaste keuzelijst.
 
+**Waar het één keer misging.** De koppeling van een blok aan een regel uit de
+keuzelijst ging op naamgelijkenis van de hele artiestenreeks, en dat is een
+keer te grof gebleken. *Ed Sheeran / Ed Sheeran & Beyoncé — Perfect* (2017)
+lijkt als reeks sterk op *Ed Sheeran / Ed Sheeran & Googoosh — Azizam* (2025):
+alleen het laatste woord verschilt. Negentien noteringen van Perfect kregen
+daardoor de titel Azizam.
+
+Het viel niet op aan de lijst zelf — het tweede deel van de plek bleef gewoon
+"Ed Sheeran & Beyoncé | Perfect" — maar wel aan de **jaargangen**: Azizam stond
+met 45 weken en 1466 punten bovenaan het puntenklassement aller tijden, met een
+binnenkomst in december 2017 terwijl de plaat uit 2025 is. Een nummer dat pas
+bestaat kan niet acht jaar eerder binnenkomen, en dat is precies het soort
+tegenspraak waarop je zulke fouten vindt.
+
+De controle achteraf is simpel en had meteen gemoeten: leg van elke gesplitste
+plek de titel in de database naast de titel die de bron die week toonde. Over
+alle 1.115 gesplitste weekregels leverde dat precies dit ene geval op. De
+sleutel van Perfect blijft trouwens de gecombineerde: dezelfde plaat staat in
+de Top 2000, Top 4000 en Veronica nog als één regel, en die hoort bij elkaar.
+
 **De volledige tekst staat in een attribuut.** De zichtbare regel op top40.nl
 is afgekapt (`Orkest Gudrun Jankis / Stig Rauno / Jan Rohde..`) en de
 aria-label — waar de gewone parser op leunt omdat die tussen weken stabiel is —
