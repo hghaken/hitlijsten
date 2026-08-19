@@ -1,0 +1,28 @@
+[Unit]
+Description=Hitlijsten onderhoudspagina (permanente reserve op 8641)
+# Dit is de reservekaart van de nginx-upstream: valt de webapplicatie weg of
+# antwoordt hij niet op tijd, dan stuurt de reverse proxy het verkeer naar
+# 8641 en ziet de bezoeker de onderhoudspagina in plaats van de grijze
+# Synology-fout. Anders dan hitlijsten-onderhoud (dat poort 8642 overneemt
+# bij gepland onderhoud) draait dit dienstje ALTIJD, op zijn eigen poort,
+# en conflicteert het met niets.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=claude
+WorkingDirectory=/volume1/Hitlijsten/app
+Environment=HITLIJSTEN_DATA=/volume1/Hitlijsten/data
+# Eerst het nginx-failoverblok terugzetten als een DSM-upgrade het wiste;
+# daarna pas de pagina serveren. Volgorde is wezenlijk: zonder dat blok
+# wijzen de proxyregels naar 8640 waar niemand luistert.
+ExecStartPre=/bin/sh /volume1/Hitlijsten/app/herstel-nginx.sh
+ExecStart=/volume1/Hitlijsten/app/venv/bin/python onderhoud.py --poort 8641
+Restart=always
+RestartSec=5
+
+[Install]
+# Wél enabled, in tegenstelling tot hitlijsten-onderhoud: een vangnet dat na
+# een herstart van de NAS niet vanzelf terugkomt, is geen vangnet.
+WantedBy=multi-user.target
