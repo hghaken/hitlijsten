@@ -5,7 +5,7 @@
     python -m hitlijsten.web --debug    ontwikkelserver, herlaadt bij wijziging
 
 Op de NAS draait dit als dienst achter de reverse proxy van DSM; die regelt
-HTTPS en het adres hitlijsten.hhaken.nl.
+HTTPS en het adres www.nl-hitlijsten.nl.
 
 WAAROM WAITRESS, EN WAAROM ÉÉN PROCES
 -------------------------------------

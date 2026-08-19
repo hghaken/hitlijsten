@@ -27,6 +27,17 @@ ALIASES_PATH = ROOT / "aliases.csv"
 NIET_SAMENVOEGEN_PATH = ROOT / "niet-samenvoegen.csv"
 LOG_PATH = ROOT / "run.log"
 
+# Het publieke adres van de site, op één plek. Het stond verspreid over elf
+# bestanden -- de webapplicatie, het Facebook-bericht, drie PDF-generatoren,
+# de DJ Export en de User-Agent naar MusicBrainz -- en bij de verhuizing naar
+# nl-hitlijsten.nl in augustus 2026 bleek dat je er dan zeker één vergeet.
+HOOFD_HOST = "www.nl-hitlijsten.nl"
+HOOFD_URL = f"https://{HOOFD_HOST}"
+# Namen die naar HOOFD_HOST doorverwijzen: het oude adres, en de kale vorm
+# zonder www. Eén site hoort op één adres te staan, anders telt een zoekmachine
+# hem als twee.
+VERHUISDE_HOSTS = {"hitlijsten.hhaken.nl", "nl-hitlijsten.nl"}
+
 # Het lopende jaar, niet vastgezet: begin januari publiceren de sites soms nog
 # een week van de vorige jaargang. Welk jaar er echt bij een week hoort bepaalt
 # de site, niet de kalender -- zie fetch.laatst_gepubliceerd().

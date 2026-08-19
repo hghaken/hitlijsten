@@ -32,7 +32,7 @@ from typing import Optional
 
 import requests
 
-from .config import ROOT
+from .config import HOOFD_URL, ROOT
 
 __all__ = ["zoek_artiest", "canonieke_artiest", "zoek_opname",
            "wikipedia_bestaat", "zoek_uitgave"]
@@ -40,7 +40,7 @@ __all__ = ["zoek_artiest", "canonieke_artiest", "zoek_opname",
 CACHE = ROOT / ".cache" / "muziekbron"
 BASIS = "https://musicbrainz.org/ws/2"
 # Wie er klopt. MusicBrainz weigert verzoeken zonder herkenbare afzender.
-KOP = {"User-Agent": "hitlijsten/1.0 (https://hitlijsten.hhaken.nl; heye@hhaken.nl)"}
+KOP = {"User-Agent": f"hitlijsten/1.0 ({HOOFD_URL}; heye@hhaken.nl)"}
 PAUZE = 1.2          # seconden tussen twee verzoeken; de bron staat er één toe
 POGINGEN = 4         # bij een 503 opnieuw, met oplopende pauze
 _laatste = 0.0

@@ -3,7 +3,7 @@
 Verzamelt wekelijks de vier Nederlandse hitlijsten en houdt zeventien
 jaarlijkse lijsten bij, bewaart ze in sqlite en
 maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
-**[hitlijsten.hhaken.nl](https://hitlijsten.hhaken.nl)**.
+**[www.nl-hitlijsten.nl](https://www.nl-hitlijsten.nl)**.
 
 | Lijst | Bron | Archief |
 |---|---|---|

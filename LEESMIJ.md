@@ -2,7 +2,7 @@
 
 Haalt elke week de vier hitlijsten op, schrijft ze naar Excel en PDF, mailt wat
 er nieuw binnenkwam, en zet zestig jaar archief online op
-**[hitlijsten.hhaken.nl](https://hitlijsten.hhaken.nl)**.
+**[www.nl-hitlijsten.nl](https://www.nl-hitlijsten.nl)**.
 
 | Lijst | Bron | Lengte | Archief vanaf |
 |---|---|---|---|
@@ -306,7 +306,7 @@ punten, dus die hebben een eigen vorm nodig.
 
 ## De webapplicatie
 
-**https://hitlijsten.hhaken.nl** — dezelfde gegevens als de Excel-bestanden,
+**https://www.nl-hitlijsten.nl** — dezelfde gegevens als de Excel-bestanden,
 maar doorzoekbaar en zonder download. Draait als systemd-dienst `hitlijsten-web`
 op de NAS, achter een reverse proxy.
 
@@ -425,6 +425,39 @@ opdracht helpt het, tegen een kapot volume niet — daarvoor is er het
 snapshotschema van de NAS, dat sinds 2 augustus 2026 ook op deze share staat.
 De twee vullen elkaar aan: een snapshot bewaart de hele share en overleeft een
 verwijderde map, deze kopieën zitten er juist in en gaan met één knop terug.
+
+### Verhuisd naar nl-hitlijsten.nl
+
+De site draaide op `hitlijsten.hhaken.nl` — een subdomein van een privédomein,
+wat voor een publiek archief een vreemde plek is. Sinds 19 augustus 2026 heet
+hij **www.nl-hitlijsten.nl**. Het oude adres blijft bestaan en stuurt door.
+
+Het adres staat sindsdien op **één plek**, `config.HOOFD_URL`. Daarvoor stond
+het letterlijk in elf bestanden — de webapplicatie, het Facebook-bericht, drie
+PDF-generatoren, de DJ Export en zelfs de User-Agent waarmee MusicBrainz wordt
+bevraagd. Bij zo'n verhuizing vergeet je er dan gegarandeerd een.
+
+De doorverwijzing zit in de **applicatie**, niet in de reverse proxy: DSM
+schrijft `ReverseProxy.json` bij elke wijziging opnieuw uit, dus een regel die
+je daar met de hand inzet is bij de eerstvolgende aanpassing weg. Een
+`before_request` stuurt alles wat op `hitlijsten.hhaken.nl` of op de kale
+`nl-hitlijsten.nl` binnenkomt door naar de hoofdnaam, met pad en queryreeks —
+via dezelfde `_canoniek()` die ook de canonical-link bouwt, zodat
+`/nummer/golden earring|radar love` netjes percent-gecodeerd overkomt.
+
+**Voorlopig een 302 en geen 301.** Een 301 wordt door browsers hard onthouden;
+gaat er iets mis, dan zit dat dagen vast in caches die niemand kan legen. Zodra
+de verhuizing een dag goed loopt gaan de omleiding in de applicatie én de regel
+in `/volume1/web/.htaccess` samen op 301 — pas dan telt Google de verhuizing
+mee, en pas dan hoort de adreswijziging in Search Console te worden ingediend.
+
+Drie dingen die bij de verhuizing hoorden en makkelijk te missen zijn: het
+wildcard `*.hhaken.nl` dekt de nieuwe naam **niet** (er is een eigen
+Let's Encrypt-certificaat voor `nl-hitlijsten.nl` + `www.nl-hitlijsten.nl`), de
+`.htaccess` die http naar https tilt toetst op hostnaam en liet de nieuwe naam
+dus aanvankelijk op de persoonlijke startpagina landen, en de kale vorm zonder
+www hoort ook door te sturen — anders staat dezelfde site op drie adressen en
+telt een zoekmachine hem als drie.
 
 ### De sleutel staat in de URL, en dat heeft een prijs
 
@@ -1459,13 +1492,13 @@ geheugen, dus dat probleem bestaat niet. Met `--debug` start nog steeds de
 Flask-server, en die zet dan ook `Secure` van het sessiecookie uit, want
 zonder HTTPS kun je je lokaal anders niet aanmelden.
 
-**HTTP stuurt door naar HTTPS.** In de reverse proxy staat voor
-hitlijsten.hhaken.nl alleen een HTTPS-regel (443 naar 10.10.8.20:8642). Wie
+**HTTP stuurt door naar HTTPS.** In de reverse proxy staat voor elk hostname
+van de site alleen een HTTPS-regel (443 naar 10.10.8.20:8642). Wie
 `http://` intikte viel daardoor door naar de standaard-site van Web Station en
 kreeg de persoonlijke startpagina van hhaken.nl te zien — met een keurige 200,
 dus zonder enig teken dat hij verkeerd zat, en onversleuteld. Opgelost met een
-`.htaccess` in `/volume1/web/` die alléén dit hostname 301't naar https, met
-behoud van pad en queryreeks; de voorwaarde kijkt naar de Host-kop, dus
+`.htaccess` in `/volume1/web/` die alléén deze hostnames doorstuurt naar
+https, met behoud van pad en queryreeks; de voorwaarde kijkt naar de Host-kop, dus
 www.hhaken.nl en de andere sites in die docroot merken er niets van. Een lus
 kan niet ontstaan: HTTPS voor dit hostname eindigt in de proxy en bereikt
 Apache nooit.

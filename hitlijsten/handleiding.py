@@ -21,7 +21,7 @@ from pathlib import Path
 
 from fpdf import FPDF
 
-from .config import LIJSTEN, ROOT
+from .config import HOOFD_HOST, LIJSTEN, ROOT
 from .pdf import (ACCENT, BANNER, BANNER_AFBEELDING, GRIJS, KANTLIJN,
                   LETTERTYPEN, LIJN)
 
@@ -77,7 +77,7 @@ class _Boek(FPDF):
         self.add_font("dejavu", "B", LETTERTYPEN / "DejaVuSans-Bold.ttf")
         self.set_title("Hitlijsten - visitor manual" if taal == "en"
                        else "Hitlijsten - handleiding voor bezoekers")
-        self.set_creator("hitlijsten.hhaken.nl")
+        self.set_creator(HOOFD_HOST)
         self.set_margins(KANTLIJN, BANNER + 10, KANTLIJN)
         self.set_auto_page_break(True, margin=16)
 
@@ -93,9 +93,9 @@ class _Boek(FPDF):
         self.cell(120, 8, "Hitlijsten")
         self.set_font("dejavu", "", 8.5)
         self.set_xy(KANTLIJN, BANNER / 2 + 1)
-        self.cell(120, 5, "Visitor manual · hitlijsten.hhaken.nl"
+        self.cell(120, 5, f"Visitor manual · {HOOFD_HOST}"
                   if self.taal == "en"
-                  else "Handleiding voor bezoekers · hitlijsten.hhaken.nl")
+                  else f"Handleiding voor bezoekers · {HOOFD_HOST}")
         if self.hoofdstuk:
             self.set_font("dejavu", "B", 10)
             self.set_xy(105, BANNER / 2 - 3)
@@ -111,9 +111,9 @@ class _Boek(FPDF):
         self.set_text_color(*GRIJS)
         self.set_font("dejavu", "", 7.5)
         self.set_xy(KANTLIJN, 286)
-        self.cell(90, 6, "hitlijsten.hhaken.nl · manual"
+        self.cell(90, 6, f"{HOOFD_HOST} · manual"
                   if self.taal == "en" else
-                  "hitlijsten.hhaken.nl · handleiding")
+                  f"{HOOFD_HOST} · handleiding")
         self.set_xy(210 - KANTLIJN - 90, 286)
         self.cell(90, 6, (f"page {self.page_no()} of {{nb}}"
                           if self.taal == "en"
@@ -236,7 +236,7 @@ def _omslag(pdf: _Boek, versie: str, c: dict) -> None:
     pdf.ln(9)
     pdf.set_text_color(*(round(k * 0.55) for k in ACCENT))
     pdf.set_font("dejavu", "B", 12)
-    pdf.cell(BREED, 8, "hitlijsten.hhaken.nl", align="C")
+    pdf.cell(BREED, 8, HOOFD_HOST, align="C")
     pdf.set_text_color(0, 0, 0)
 
     pdf.set_y(140)
@@ -323,7 +323,7 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     # -- 1 · Welkom ---------------------------------------------------------
     h += 1
     _hoofdstuk(pdf, toc, links, h, "Welkom")
-    pdf.p("hitlijsten.hhaken.nl is een doorzoekbaar archief van "
+    pdf.p(f"{HOOFD_HOST} is een doorzoekbaar archief van "
           f"Nederlandse hitlijsten: **{c['noteringen']} noteringen** "
           f"uit **{c['lijsten']} lijsten**, van de allereerste Top 40 "
           f"uit {c['van']} tot de lijst van afgelopen vrijdag. De site "
@@ -697,7 +697,7 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     # -- 1 · Welcome --------------------------------------------------------
     h += 1
     _hoofdstuk(pdf, toc, links, h, "Welcome")
-    pdf.p("hitlijsten.hhaken.nl is a searchable archive of Dutch music "
+    pdf.p(f"{HOOFD_HOST} is a searchable archive of Dutch music "
           f"charts: **{c['noteringen']} chart entries** from "
           f"**{c['lijsten']} charts**, from the very first Top 40 of "
           f"{c['van']} to last Friday's chart. The site is free, has no "

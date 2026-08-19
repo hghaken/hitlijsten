@@ -1,6 +1,6 @@
 """Webapplicatie voor het beheer van de hitlijstenverzameling.
 
-Draait op de NAS achter hitlijsten.hhaken.nl en biedt wat de opdrachtregel ook
+Draait op de NAS achter www.nl-hitlijsten.nl en biedt wat de opdrachtregel ook
 kan, maar dan aanwijsbaar: noteringen zoeken, aliassen beheren, Excel bouwen,
 weken ophalen, controles draaien en vrije query's.
 

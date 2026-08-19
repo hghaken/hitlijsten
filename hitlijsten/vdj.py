@@ -37,6 +37,8 @@ from difflib import SequenceMatcher
 from typing import Iterable, Optional
 from xml.sax.saxutils import quoteattr
 
+from .config import HOOFD_HOST
+
 from .normalize import sleutel_van
 
 __all__ = ["lees_database", "lees_upload", "match", "bouw_vdjfolder",
@@ -472,7 +474,7 @@ def bouw_rapport(koppels: list[dict], titel: str, bibliotheek: int,
         for k in ontbreekt:
             regels.append(f"{k['hoogste']:>4}  {k['artiest']} - {k['titel']}")
 
-    regels += ["", "", "hitlijsten.hhaken.nl"]
+    regels += ["", "", HOOFD_HOST]
     return "\n".join(regels) + "\n"
 
 

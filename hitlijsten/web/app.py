@@ -18,8 +18,9 @@ from flask import (
 )
 
 from .. import db, excel
-from ..config import (BRON_URLS, DATA_DIR, EXCEL_DIR, LIJSTEN, ROOT,
-                      ZENDER_URLS, decennium_van, is_jaarlijks)
+from ..config import (BRON_URLS, DATA_DIR, EXCEL_DIR, HOOFD_URL, LIJSTEN,
+                      ROOT, VERHUISDE_HOSTS, ZENDER_URLS, decennium_van,
+                      is_jaarlijks)
 from ..datums import als_tekst, vrijdag_van
 from ..db import Looptijd, looptijden
 from . import taken
@@ -29,7 +30,6 @@ INSTELLINGEN = ROOT / "webapp.ini"
 # Waar de site voor de buitenwereld woont; voor canonical-links, Open
 # Graph-tags en de sitemap. Achter de reverse proxy is request.url_root
 # onbetrouwbaar (http, intern adres), dus dit staat vast.
-HOOFD_URL = "https://hitlijsten.hhaken.nl"
 
 # Vrije query's zijn alleen-lezen. Een typefout in een UPDATE zonder WHERE is
 # onherstelbaar, en daar staat geen enkel gemak tegenover: wijzigen kan via de
@@ -121,7 +121,7 @@ def maak_app() -> Flask:
     # Het sessiecookie hoort niet over een onversleutelde verbinding en niet
     # vanaf een andere site meegestuurd te worden. SECURE geldt voor de hele
     # sessie, dus niet alleen het aanmelden werkt voortaan uitsluitend via
-    # https://hitlijsten.hhaken.nl: ook de DJ Export leunt erop (de verwijzing
+    # het publieke adres: ook de DJ Export leunt erop (de verwijzing
     # naar je geladen bibliotheek zit in dezelfde sessie). Rechtstreeks op
     # http://<nas>:8642 werkt daarmee alleen nog het lezen van lijsten.
     app.config.update(
@@ -353,6 +353,32 @@ def _registreer(app: Flask) -> None:
             con.close()
 
     # --- aanmelden ---------------------------------------------------------
+
+    @app.before_request
+    def _naar_de_hoofdnaam():
+        """Eén site, één adres.
+
+        De site verhuisde in augustus 2026 van hitlijsten.hhaken.nl naar
+        www.nl-hitlijsten.nl. Het oude adres blijft bestaan en stuurt door,
+        net als de kale vorm zonder www -- anders is dezelfde site op drie
+        plekken te vinden en telt een zoekmachine hem als drie.
+
+        Dit staat in de applicatie en niet in de reverse proxy, want DSM
+        schrijft die configuratie bij elke wijziging opnieuw uit
+        ReverseProxy.json; een regel die je daar met de hand inzet is bij de
+        eerstvolgende aanpassing weg.
+
+        Voorlopig een 302 en geen 301. Een 301 wordt door browsers hard
+        onthouden, en dan zit een fout dagen vast in caches die niemand kan
+        legen. Zodra de verhuizing een dag goed loopt mag dit een 301 worden --
+        pas dan telt Google hem ook echt mee.
+        """
+        host = (request.host or "").split(":")[0].lower()
+        if host in VERHUISDE_HOSTS:
+            # _canoniek() zet het pad weer netjes percent-gecodeerd terug;
+            # zonder dat zou /nummer/golden earring|radar love sneuvelen.
+            return redirect(_canoniek(), code=302)
+        return None
 
     @app.route("/aanmelden", methods=["GET", "POST"])
     def aanmelden():

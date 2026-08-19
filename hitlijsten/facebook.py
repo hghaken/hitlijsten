@@ -9,7 +9,7 @@ de pagina kan schrijven.
     pagina_id = 123456789012345
     token     = EAAG...                ; page access token, langlevend
     api       = v26.0                  ; optioneel
-    link      = https://hitlijsten.hhaken.nl/weekbericht
+    link      = https://www.nl-hitlijsten.nl/weekbericht
 
 **Zonder dat bestand doet deze module niets.** Dat is met opzet: publiceren is
 naar buiten treden, en dat hoort niet te gebeuren doordat iemand toevallig de
@@ -25,10 +25,9 @@ import sqlite3
 
 import requests
 
-from .config import ROOT
+from .config import HOOFD_URL, ROOT
 
 FACEBOOK_INI = ROOT / "facebook.ini"
-HOOFD_URL = "https://hitlijsten.hhaken.nl"
 
 STANDAARD = {
     "pagina_id": "",

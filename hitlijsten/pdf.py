@@ -22,7 +22,7 @@ from typing import Optional
 
 from fpdf import FPDF
 
-from .config import LIJSTEN, ROOT, excel_map
+from .config import HOOFD_HOST, LIJSTEN, ROOT, excel_map
 from .db import looptijden
 from .excel import BestandInGebruik, verzamel_lijst
 
@@ -72,7 +72,7 @@ class _Blad(FPDF):
         self.add_font("dejavu", "B", LETTERTYPEN / "DejaVuSans-Bold.ttf")
         self.set_auto_page_break(False)
         self.set_title(f"{naam} {jaar} - jaaroverzicht")
-        self.set_creator("hitlijsten.hhaken.nl")
+        self.set_creator(HOOFD_HOST)
 
     def header(self) -> None:
         if BANNER_AFBEELDING.exists():
@@ -109,7 +109,7 @@ class _Blad(FPDF):
         self.set_text_color(*GRIJS)
         self.set_font("dejavu", "", 7.5)
         self.set_xy(KANTLIJN, 286)
-        self.cell(90, 6, "hitlijsten.hhaken.nl")
+        self.cell(90, 6, HOOFD_HOST)
         self.set_xy(210 - KANTLIJN - 90, 286)
         self.cell(90, 6, f"pagina {self.page_no()} van {{nb}}", align="R")
         self.set_text_color(0, 0, 0)
