@@ -636,6 +636,10 @@ def _registreer(app: Flask) -> None:
         zet_hand(verbinding(), sleutel,
                  request.form.get("nederlandstalig") == "1")
         _taal_cache.clear()
+        # De sneltoets op de lijstpagina's werkt hem live in de pagina bij;
+        # een redirect zou de bladerstand en de scrollpositie weggooien.
+        if request.form.get("stil"):
+            return "", 204
         return redirect(_eigen_pad(request.referrer) or url_for("overzicht"))
 
     # --- overzicht ---------------------------------------------------------

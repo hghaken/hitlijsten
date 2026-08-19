@@ -793,5 +793,55 @@
     addEventListener("resize", meet);
   })();
 </script>
+{% if is_aangemeld() %}
+<script>
+/* Sneltoets voor het beheer: wijs een regel aan en druk N om het
+   NL-vlaggetje te wisselen. Werkt op elke tabel waarvan de rijen een
+   data-sleutel dragen (weeklijsten, jaaroverzichten). De wijziging gaat
+   naar dezelfde route als het formulier op de nummerpagina en telt dus
+   als handmatige correctie die van de automatiek wint. */
+(function () {
+  var VLAG = '<svg class="nlvlag" width="15" height="10" viewBox="0 0 15 10"'
+    + ' aria-label="Nederlandstalig"><title>Nederlandstalig</title>'
+    + '<rect width="15" height="10" fill="#21468B"/>'
+    + '<rect width="15" height="6.7" fill="#ffffff"/>'
+    + '<rect width="15" height="3.4" fill="#AE1C28"/></svg> ';
+  var rij = null, druk = false;
+
+  document.addEventListener("mouseover", function (e) {
+    var tr = e.target.closest && e.target.closest("tr[data-sleutel]");
+    if (tr) rij = tr;
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "n" && e.key !== "N") return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA"
+              || t.tagName === "SELECT" || t.isContentEditable)) return;
+    if (!rij || !rij.isConnected || druk) return;
+    var plek = rij.querySelector(".vlagplek");
+    if (!plek) return;
+
+    druk = true;                       /* geen dubbele post bij toets-herhaling */
+    var was = !!plek.querySelector(".nlvlag");
+    var vorm = new URLSearchParams();
+    vorm.set("csrf", {{ csrf_teken() | tojson }});
+    vorm.set("sleutel", rij.dataset.sleutel);
+    vorm.set("nederlandstalig", was ? "0" : "1");
+    vorm.set("stil", "1");
+    fetch({{ url_for('taal_zet') | tojson }}, {method: "POST", body: vorm})
+      .then(function (antwoord) {
+        if (!antwoord.ok) throw new Error(antwoord.status);
+        plek.innerHTML = was ? "" : VLAG;
+      })
+      .catch(function () {
+        alert("Vlag wisselen mislukte \u2014 ben je nog aangemeld?");
+      })
+      .finally(function () { druk = false; });
+  });
+})();
+</script>
+{% endif %}
 </body>
 </html>

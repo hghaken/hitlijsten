@@ -91,6 +91,11 @@
     set plekken = deelrijen | map(attribute='positie') | unique | list | length %}{%
     if plekken != deelrijen|length %} {{ _("op") }} {{ plekken }} {{ _("plekken") }}{%
     endif %}</span></h2>{% endif %}
+{% if is_aangemeld() %}
+<p class="hint" style="margin:.2rem 0 .4rem">{{ nl_vlag() }}
+  {{ _("wijs een regel aan en druk") }} <b>N</b>
+  {{ _("om het vlaggetje te wisselen") }}</p>
+{% endif %}
 {# De legenda legt alleen uit wat er die week ook echt staat. Geen toets op
    de lijst: de velden worden alleen gevuld waar het teken iets betekent, dus
    waar er een staat hoort de uitleg erbij. #}
@@ -152,7 +157,7 @@
     <th class="getal">{{ _("Weken") }}</th>
   </tr></thead><tbody>
   {% for r in deelrijen %}
-  <tr>
+  <tr data-sleutel="{{ r['sleutel'] }}">
     {# Een ring om het cijfer vervangt de kleuring van de top 3: twee dingen
        tegelijk om hetzelfde getal wordt onleesbaar, en een ring is het
        zeldzame van de twee. Rood voor de stip, geel voor een gedeelde plek,
@@ -186,7 +191,7 @@
            title="Alarmschijf" style="color:#ED1C24">🔔</span> {% endif %}{#
            En het kroontje bij de Oranje Top 30: de clip van de week van TV
            Oranje, die net als de alarmschijf bij de plaat blijft horen. #}{%
-           if r['kroon'] %}<span title="{{ _("Oranje Kroon") }}">👑</span> {% endif %}{% if is_nl(r['sleutel']) %}{{ nl_vlag() }} {% endif %}{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
+           if r['kroon'] %}<span title="{{ _("Oranje Kroon") }}">👑</span> {% endif %}<span class="vlagplek">{% if is_nl(r['sleutel']) %}{{ nl_vlag() }} {% endif %}</span>{{ r['titel'] }}</a>{{ zoeklinks(r['artiest'], r['titel']) }}</td>
     {% if heeft_label %}<td class="hint">{{ r['label'] or '' }}</td>{% endif %}
     <td class="getal hint">{{ r['weken_genoteerd'] or '' }}</td>
   </tr>
