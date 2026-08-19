@@ -1146,9 +1146,21 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("run", parents=[jaar_ouder], help="bijwerken + excel + mail")
     r.add_argument("--geen-mail", action="store_true")
 
+    # De uitvoerkant van de beheerknoppen: de webapplicatie spawnt dit als
+    # eigen proces, zodat zwaar werk niet met de webdraden om de processor
+    # vecht. Geen mens typt dit met de hand, vandaar geen nette --opties
+    # maar de drie rauwe velden van het formulier.
+    w = sub.add_parser("webtaak", help="(intern) een beheerknop uitvoeren")
+    w.add_argument("wat")
+    w.add_argument("taak_jaar", nargs="?", default="")
+    w.add_argument("taak_bestand", nargs="?", default="")
+
     args = p.parse_args(argv)
 
-    jaar = args.jaar if args.jaar is not None else JAAR
+    # webtaak heeft de gedeelde --jaar-optie niet; getattr in plaats van een
+    # kaal attribuut, anders valt elke webtaak hier al om.
+    jaar = getattr(args, "jaar", None)
+    jaar = jaar if jaar is not None else JAAR
 
     if args.opdracht == "backfill":
         opdracht_backfill(jaar, args.vanaf, args.tot)
@@ -1191,6 +1203,23 @@ def main(argv: list[str] | None = None) -> int:
         opdracht_facebook(plaatsen=args.plaats)
     elif args.opdracht == "run":
         opdracht_run(jaar, stuur_mail=not args.geen_mail)
+    elif args.opdracht == "webtaak":
+        from .web import taken
+        from .web.werk import bouw_werk
+
+        naam, werk = bouw_werk(args.wat, args.taak_jaar or None,
+                               args.taak_bestand or None)
+        if werk is None:
+            # De webapplicatie valideert al voor het spawnen; dit is dus
+            # hoogstens een handmatige aanroep. Wees dan eerlijk in de
+            # taakstand in plaats van stil te verdwijnen.
+            taak = taken.Taak(
+                naam="Ongeldige opdracht",
+                gestart=datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
+            taak.klaar, taak.gelukt, taak.fout = True, False, naam
+            taken.bewaar(taak)
+            return 1
+        taken.voer_uit(naam, werk)
     return 0
 
 

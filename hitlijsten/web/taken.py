@@ -25,6 +25,17 @@ zeggen is eerlijker dan eeuwig "bezig" blijven tonen.
 Er draait er bewust maar een tegelijk: twee ophaalrondes tegelijk zouden
 dezelfde weken dubbel halen, en twee Excel-bouwen tegelijk vechten om dezelfde
 bestanden.
+
+WAAROM HET WERK EEN EIGEN PROCES IS EN GEEN DRAAD
+--------------------------------------------------
+Tot augustus 2026 draaide het werk als draad in de webapplicatie zelf. Een
+herbouw van 256 edities deelde toen de processor en de GIL met de acht
+webdraden, en bezoekers kregen timeouts. Nu spawnt `start` een kindproces
+(`python -m hitlijsten webtaak ...`) dat via `voer_uit` hetzelfde doet, met
+drie gevolgen: de site blijft vlot (het kind draait met `nice`), de taak
+overleeft een herstart van de webapplicatie -- de onderhoudsknop kan dus
+gewoon tijdens een taak -- en de bestaande stand-in-de-database plus
+pid-controle werkte hier al ongewijzigd voor.
 """
 from __future__ import annotations
 
@@ -90,8 +101,13 @@ def _leeft(proces: Optional[int]) -> bool:
     return True
 
 
-def bewaar(taak: Taak) -> None:
-    """Schrijf de stand weg. Een fout hierin mag het werk nooit stoppen."""
+def bewaar(taak: Taak, proces: Optional[int] = None) -> None:
+    """Schrijf de stand weg. Een fout hierin mag het werk nooit stoppen.
+
+    `proces` is normaal dit proces; de webapplicatie geeft bij het starten
+    het procesnummer van het kind mee, zodat de rij vanaf de eerste tel bij
+    de echte uitvoerder hoort.
+    """
     from .. import db
 
     try:
@@ -102,7 +118,8 @@ def bewaar(taak: Taak) -> None:
                 " stap_naam, deel, deel_van)"
                 " VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (taak.naam, taak.gestart,
-                 datetime.now().isoformat(timespec="seconds"), os.getpid(),
+                 datetime.now().isoformat(timespec="seconds"),
+                 proces or os.getpid(),
                  int(taak.klaar),
                  None if taak.gelukt is None else int(taak.gelukt),
                  taak.fout, "\n".join(taak.regels[-REGELS_BEWAARD:]),
@@ -166,27 +183,82 @@ def bezig() -> bool:
     return taak is not None and not taak.klaar
 
 
-def start(naam: str, werk: Callable[[Taak], None]) -> tuple[bool, str]:
-    """Start werk in de achtergrond. Geeft (gestart, melding)."""
+def voer_uit(naam: str, werk: Callable[[Taak], None]) -> None:
+    """Draai het werk in DIT proces en houd de stand in de database bij.
+
+    De uitvoerkant van `start`: die spawnt `python -m hitlijsten webtaak ...`
+    en dat kind komt hier terecht. Eerst de rij claimen -- dan staat er vanaf
+    de eerste tel een levend procesnummer in -- en dan pas het zware werk.
+    """
+    taak = Taak(naam=naam,
+                gestart=datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
+    bewaar(taak)
+    try:
+        # De webapplicatie mag altijd voorgaan: dit werk is per definitie
+        # geduldig, een bezoeker niet. Toen dit nog een draad was vocht een
+        # herbouw met de acht webdraden om dezelfde processor en zag de
+        # bezoeker na anderhalve minuut de onderhoudspagina.
+        os.nice(10)
+    except OSError:
+        pass
+    try:
+        werk(taak)
+        taak.gelukt = True
+    except Exception:
+        taak.gelukt = False
+        taak.fout = traceback.format_exc()
+        taak.meld("MISLUKT -- zie de foutmelding onderaan")
+    finally:
+        taak.klaar = True
+        bewaar(taak)
+
+
+def start(wat: str, jaar: str, bestand: str, naam: str) -> tuple[bool, str]:
+    """Start werk als eigen proces. Geeft (gestart, melding).
+
+    Een eigen proces en geen draad, om twee redenen. Een draad deelt de
+    processor en de GIL met de acht webdraden, dus een herbouw maakte de
+    hele site traag. En een draad sterft met de dienst: de onderhoudsknop
+    stopte tot nu toe elke lopende taak. Het kind krijgt een eigen sessie
+    (`start_new_session`) en overleeft daardoor elke herstart van de
+    webapplicatie; de voortgang liep toch al via de database.
+
+    Het werk wordt niet meegegeven maar in het kind opnieuw opgebouwd uit
+    (wat, jaar, bestand) -- een closure overleeft een procesgrens niet.
+    """
+    import subprocess
+    import sys
+
+    from ..config import DATA_DIR, ROOT
+
     with _slot:
         lopend = huidige()
         if lopend is not None and not lopend.klaar:
             return False, f"Er loopt al iets: {lopend.naam}"
+
+        # Crasht het kind nog voor zijn eerste schrijfactie (importfout,
+        # volle schijf), dan staat de stderr hier; de taakrij toont dan
+        # alleen "het proces bestaat niet meer" en dit logboek zegt waarom.
+        logpad = DATA_DIR / "webtaak.log"
+        try:
+            logboek = open(logpad, "ab")
+        except OSError:
+            logboek = None
+        proces = subprocess.Popen(
+            [sys.executable, "-m", "hitlijsten", "webtaak",
+             wat, jaar or "", bestand or ""],
+            cwd=str(ROOT),
+            stdout=logboek if logboek else subprocess.DEVNULL,
+            stderr=logboek if logboek else subprocess.DEVNULL,
+            start_new_session=True)
+        if logboek:
+            logboek.close()
+
+        # De rij meteen op het kind zetten. Zou het kind hem eerst claimen
+        # en deze regel er daarna overheen schrijven, dan kost dat hoogstens
+        # de eerste logregel -- het procesnummer is in beide gevallen dat
+        # van het kind.
         taak = Taak(naam=naam,
                     gestart=datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
-        bewaar(taak)
-
-    def draaier() -> None:
-        try:
-            werk(taak)
-            taak.gelukt = True
-        except Exception:
-            taak.gelukt = False
-            taak.fout = traceback.format_exc()
-            taak.meld("MISLUKT -- zie de foutmelding onderaan")
-        finally:
-            taak.klaar = True
-            bewaar(taak)
-
-    threading.Thread(target=draaier, name=f"taak:{naam}", daemon=True).start()
+        bewaar(taak, proces=proces.pid)
     return True, f"'{naam}' gestart"

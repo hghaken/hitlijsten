@@ -3047,11 +3047,14 @@ def _registreer(app: Flask) -> None:
         bestand = request.form.get("bestand")
         from .werk import bouw_werk
 
+        # bouw_werk dient hier alleen ter validatie; het werk zelf wordt
+        # in het kindproces opnieuw opgebouwd uit dezelfde drie velden.
         naam, werk = bouw_werk(wat, jaar, bestand)
         if werk is None:
             flash(naam, "fout")
         else:
-            gestart, melding = taken.start(naam, werk)
+            gestart, melding = taken.start(wat or "", jaar or "",
+                                           bestand or "", naam)
             flash(melding, "goed" if gestart else "fout")
         return redirect(url_for("beheer"))
 
