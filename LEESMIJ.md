@@ -1463,6 +1463,40 @@ De sleutel wordt namelijk bij het opslaan berekend en in de database gezet;
 alleen Excel opnieuw bouwen verandert dus niets. Daarna
 `python -m hitlijsten excel`.
 
+## Bronnen en naslagwerken
+
+Alles wat van buiten komt, op een rij — met per site de rol én de valkuil.
+
+**Bronnen** (waar de gegevens vandaan komen):
+
+| site | wat |
+|---|---|
+| top40.nl | Top 40, Tipparade en Sterren NL: weeklijsten, detailpagina's (platenlabel), Alarmschijf (`hitrecord`), stip/superstip (`dot`/`super`) |
+| oranjetop30.nl | Oranje Top 30: weeklijsten, platenlabels, Oranje Kroon (`img.ok`) |
+| datastats.nl (Music Datastats) | de zeventien jaarlijkse lijsten (CSV), het uitgavejaar, de `((GBR))`-naamgenoot-markering |
+
+**Verificatie** (geautomatiseerd, via `muziekbron.py` en de kruiscontrole):
+
+| site | rol | valkuil |
+|---|---|---|
+| musicbrainz.org | catalogus van *nummers*: canonieke artiestnamen, lidwoorden, spatiëring, typefouten | onbruikbaar voor uitgavejaren — de zoekresultaten zitten vol heruitgaven (gemeten: 4 van 20 goed) |
+| api.discogs.com | catalogus van *platen*: uitgaven per land, jaar, label, credit zoals op de hoes | het vroegste jaar over **alle** landen nemen, nooit de NL-persing (vaak een latere heruitgave); jaar komt als tekst; token in `discogs.ini` |
+| nl/en.wikipedia.org (API) | bestaat deze artiest; spellingscontrole waar MusicBrainz mager is | |
+| michajans.nl | kruiscontrole Top 40-cijfers, uitzenddatums, toekenningsdatums Alarmschijf/Dancesmash | |
+
+**Naslagwerken** (handmatig, bij twijfelgevallen):
+
+| site | rol |
+|---|---|
+| hitdossier-online.nl | onafhankelijke Top 40-aggregaties (puntenlijsten, jaaroverzichten) om de eigen berekeningen tegen te leggen; de 1965-steekproef bevestigde eerder dat onze cijfers klopten |
+| tvoranje.nl | de winnaarslijst van de Oranje Kroon, terug tot 2009 |
+| wikipedia (artikelen) | definities en criteria, zoals de stipnotering |
+
+De vuistregel boven alles: **de eigen lijsten zijn het beste ijkpunt.** Een
+plaat kan niet noteren vóór hij bestaat en niet uitkomen nadat hij genoteerd
+stond — dat bewijs verslaat elke catalogus. De YouTube- en Spotify-knopjes
+zijn géén verificatiebron, alleen uitgaande zoeklinks.
+
 ## Kruiscontrole met michajans.nl
 
 Micha Jans publiceert de jaarlijsten van de Werkgroep Hitlijsten (top40web.nl),
