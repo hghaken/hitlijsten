@@ -652,6 +652,38 @@ kan. De 33 die er *na* lagen zijn teruggezet op het jaar van hun eerste Top
 40-notering. Daar zaten grove gevallen bij: *Space Oddity* van David Bowie stond
 volgens de bron uit 1975 terwijl het in 1969 al in de Top 40 stond.
 
+**En die correctie verdampte.** Bij een tweede ronde in augustus 2026 stonden
+er weer 299 nummers met een onmogelijk uitjaar — Space Oddity incluis, maar nu
+alleen nog in Toplijst jaren 60, de lijst die er op 12 augustus bijkwam. De
+negen andere lijsten zeiden keurig 1969. Elke nieuwe import brengt namelijk het
+uitjaar van de bron mee, en een losse correctie achteraf overleeft dat niet.
+**Deze toets hoort dus bij het inlezen te horen**, niet bij een opschoonronde.
+
+Die tweede ronde is nu wel breder gedaan: niet alleen tegen de Top 40 maar ook
+tegen de Tipparade, wat het aantal toetsbare nummers van 6.004 op **8.221**
+brengt. 299 nummers gecorrigeerd, samen 7.175 noteringen, waarna er nul
+tegenspraken over zijn. De verdeling is geruststellend: 281 zaten er één jaar
+naast — jaargrensruis, of een bron die het albumjaar noemt — en maar 18 meer
+dan dat. Die achttien waren wel grof: *Drop The Pressure* van Mylo stond op
+2022 terwijl het in 2004 al noteerde, *If It Makes You Happy* van Sheryl Crow
+op 2009 tegen 1996.
+
+De andere kant is óók bekeken en daar is niets mis: twaalf nummers hebben een
+uitjaar meer dan 25 jaar vóór hun eerste notering, en dat klopt allemaal —
+*White Christmas* (1947) werd hier pas in 1977 een hit, *Heartbreak Hotel*
+(1956) pas in 1987.
+
+**Voor de 5.447 nummers zonder eigen notering helpt MusicBrainz niet.** Die
+staan in geen enkele weeklijst, dus daar is geen ijkpunt. Een steekproef van
+twintig bekende nummers liep stuk op de aard van de catalogus: een zoekopdracht
+op opname levert vooral heruitgaven en verzamelaars op. *No Woman, No Cry*
+kwam terug als 1990, *Wish You Were Here* als 2001, *Paradise By The Dashboard
+Light* als 2013. Vijf keer breder zoeken hielp maar half — *Desperado* en
+*Eye Of The Tiger* kwamen dan wél goed uit, maar de eerste twee nog steeds
+niet, en twee zoekopdrachten gaven helemaal niets meer terug. Op 5.447 nummers
+zou dat meer bederven dan repareren, terwijl de bron juist betrouwbaar blijkt
+waar we hem kúnnen controleren. Dus niet gedaan.
+
 **De sleutel is waar het pijn doet.** Een verkeerd leesteken is lelijk maar
 onschuldig: de sleutel gooit leestekens toch al weg. Erger is wat de sleutel
 wél raakt. "Beatles" en "The Beatles" leverden twee gescheiden geschiedenissen
