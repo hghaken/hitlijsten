@@ -807,11 +807,44 @@
     + '<rect width="15" height="6.7" fill="#ffffff"/>'
     + '<rect width="15" height="3.4" fill="#AE1C28"/></svg> ';
   var rij = null, druk = false;
+  var teken = {{ csrf_teken() | tojson }};
 
   document.addEventListener("mouseover", function (e) {
     var tr = e.target.closest && e.target.closest("tr[data-sleutel]");
     if (tr) rij = tr;
   });
+
+  function verstuur(plek, was, opnieuw) {
+    var vorm = new URLSearchParams();
+    vorm.set("csrf", teken);
+    vorm.set("sleutel", rij.dataset.sleutel);
+    vorm.set("nederlandstalig", was ? "0" : "1");
+    vorm.set("stil", "1");
+    return fetch({{ url_for('taal_zet') | tojson }}, {method: "POST", body: vorm})
+      .then(function (antwoord) {
+        /* Een verlopen aanmelding geeft geen fout maar een redirect naar
+           het aanmeldscherm -- en die zou er als "gelukt" uitzien. */
+        if (antwoord.redirected) {
+          throw new Error("sessie verlopen \u2014 meld je opnieuw aan");
+        }
+        /* Een 400 is vrijwel altijd een verouderd token: dit tabblad is
+           gerenderd v\u00f3\u00f3r een nieuwe aanmelding. Vers token halen en
+           \u00e9\u00e9n keer opnieuw -- zo geneest een oud tabblad zichzelf. */
+        if (antwoord.status === 400 && !opnieuw) {
+          return fetch({{ url_for('csrf_vers') | tojson }})
+            .then(function (a) {
+              if (!a.ok || a.redirected) throw new Error("aanmelding kwijt");
+              return a.json();
+            })
+            .then(function (d) {
+              teken = d.csrf;
+              return verstuur(plek, was, true);
+            });
+        }
+        if (!antwoord.ok) throw new Error("fout " + antwoord.status);
+        plek.innerHTML = was ? "" : VLAG;
+      });
+  }
 
   document.addEventListener("keydown", function (e) {
     if (e.key !== "n" && e.key !== "N") return;
@@ -823,20 +856,19 @@
     var plek = rij.querySelector(".vlagplek");
     if (!plek) return;
 
+    /* Een tabblad dat nog op het oude adres staat kan niet posten: andere
+       cookies, en de omleiding maakt van de POST een GET. Zeg dat dan. */
+    if (location.hostname !== {{ hoofd_host | tojson }}) {
+      alert("Deze pagina staat nog op het oude adres \u2014 open hem op "
+            + {{ hoofd_host | tojson }} + " en probeer het daar.");
+      return;
+    }
+
     druk = true;                       /* geen dubbele post bij toets-herhaling */
     var was = !!plek.querySelector(".nlvlag");
-    var vorm = new URLSearchParams();
-    vorm.set("csrf", {{ csrf_teken() | tojson }});
-    vorm.set("sleutel", rij.dataset.sleutel);
-    vorm.set("nederlandstalig", was ? "0" : "1");
-    vorm.set("stil", "1");
-    fetch({{ url_for('taal_zet') | tojson }}, {method: "POST", body: vorm})
-      .then(function (antwoord) {
-        if (!antwoord.ok) throw new Error(antwoord.status);
-        plek.innerHTML = was ? "" : VLAG;
-      })
-      .catch(function () {
-        alert("Vlag wisselen mislukte \u2014 ben je nog aangemeld?");
+    verstuur(plek, was, false)
+      .catch(function (fout) {
+        alert("Vlag wisselen mislukte: " + fout.message);
       })
       .finally(function () { druk = false; });
   });

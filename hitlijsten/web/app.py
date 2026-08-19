@@ -18,7 +18,8 @@ from flask import (
 )
 
 from .. import db, excel
-from ..config import (BRON_URLS, DATA_DIR, EXCEL_DIR, HOOFD_URL, LIJSTEN,
+from ..config import (BRON_URLS, DATA_DIR, EXCEL_DIR, HOOFD_HOST,
+                      HOOFD_URL, LIJSTEN,
                       ROOT, VERHUISDE_HOSTS, ZENDER_URLS, decennium_van,
                       is_jaarlijks)
 from ..datums import als_tekst, vrijdag_van
@@ -133,6 +134,7 @@ def maak_app() -> Flask:
     # Niet "lijsten" noemen: dat botst met de zoekresultaten die zo heten.
     app.jinja_env.globals["is_aangemeld"] = is_aangemeld
     app.jinja_env.globals["hoofd_url"] = HOOFD_URL
+    app.jinja_env.globals["hoofd_host"] = HOOFD_HOST
     app.jinja_env.globals["canoniek"] = _canoniek
     app.jinja_env.globals["lijst_namen"] = {
         sleutel: cfg["naam"] for sleutel, cfg in LIJSTEN.items()
@@ -623,6 +625,20 @@ def _registreer(app: Flask) -> None:
             return rijen
         nlset = _nl_sleutels()
         return [r for r in rijen if sleutel_van(r) in nlset]
+
+    @app.route("/beheer/csrf")
+    @vereist_aanmelding
+    def csrf_vers():
+        """Het token van de huidige sessie, voor de sneltoets.
+
+        Het token wordt bij het renderen in de pagina gebakken. Meld je je
+        opnieuw aan, dan draagt elk tabblad van daarvoor een verouderd token
+        en faalt elke druk op N met een 400. De sneltoets haalt bij zo'n 400
+        hier een vers token en probeert het één keer opnieuw -- oude
+        tabbladen genezen daarmee vanzelf. Een andere site kan hier niets
+        mee: zonder CORS-koppen valt het antwoord cross-origin niet te lezen.
+        """
+        return jsonify({"csrf": csrf_teken()})
 
     @app.route("/taal/zet", methods=["POST"])
     @vereist_aanmelding
