@@ -60,7 +60,7 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
   Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26) en
   Kink Top 1500 2019–2025 (7).
-- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 661 aliassen,
+- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 581 aliassen,
   4.044 onderscheidingen, 4.963 doorverwijzingen van verhuisde sleutels en
   7.006 taalbepalingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
@@ -458,6 +458,45 @@ Let's Encrypt-certificaat voor `nl-hitlijsten.nl` + `www.nl-hitlijsten.nl`), de
 dus aanvankelijk op de persoonlijke startpagina landen, en de kale vorm zonder
 www hoort ook door te sturen — anders staat dezelfde site op drie adressen en
 telt een zoekmachine hem als drie.
+
+### Aliassen die niet meer kunnen afgaan
+
+Een alias die naar een sleutel wijst die geen enkele notering draagt, ziet er
+dood uit. Dat is hij lang niet altijd. Van de 129 zulke regels bleken er drie
+soorten te bestaan:
+
+| | | |
+|---|---|---|
+| **80** | dood | weggehaald |
+| **39** | wachtend | moeten juist blijven |
+| **10** | ketenschakel | moeten blijven |
+
+**De tachtig dode zijn allemaal hetzelfde geval**, en dat is de prijs van een
+eerdere opschoning. Tot begin augustus 2026 werd een apostrof bij het
+normaliseren een **spatie**; sinds de punt-en-apostrof-ronde verdwijnt hij
+spoorloos. Elke alias die onder de oude regel geschreven was, heeft daardoor
+een bronsleutel die niets meer voortbrengt: `you ve lost that lovin feelin`
+bestaat niet meer, het is `youve lost that lovin feelin`. Die regels kunnen
+sindsdien niet meer afgaan.
+
+Dat ze echt dood waren is niet beredeneerd maar **gemeten**: van alle 36.028
+voorkomende artiest/titel-combinaties is de sleutel berekend vóór en ná het
+schrappen, en er veranderde er geen enkele.
+
+**De negenendertig "wachtende" moeten juist blijven.** Daar dragen wél
+noteringen de bronsleutel — AC/DC en Mooi Wark, samen 708 noteringen over
+1978–2026. De alias trekt `ac dc|thunderstruck` naar `acdc|thunderstruck`, de
+spatiëringsopschoning tegen MusicBrainz; alleen is `hersleutel` na die aliassen
+nooit over álle jaargangen gedraaid, dus de noteringen staan nog op de oude
+sleutel. Schrappen zou die samenvoeging ongedaan maken. Rechttrekken vraagt
+een hersleutel over alle jaren en verzet 708 sleutels — en de sleutel staat in
+de URL, dus dat is een eigen besluit waard. Nog niet gedaan.
+
+**En tien zijn ketenschakels.** Wie drie schrijfwijzen samenvoegt schrijft
+twee regels, `a→b` en `b→c`; de tussenstap draagt per definitie niets, maar
+weghalen breekt de hele samenvoeging. Een keten telt alleen als levend als er
+aan het eind ook echt noteringen hangen — anders is hij net zo dood als een
+losse regel, en zo zijn er ook een paar in de eerste groep beland.
 
 ### De sleutel staat in de URL, en dat heeft een prijs
 
