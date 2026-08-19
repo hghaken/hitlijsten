@@ -230,7 +230,7 @@ platen.
 **Waar hij voor is.** De sleutel staat in de URL van een nummerpagina, dus een
 wijziging in de normalisatie breekt webadressen. In augustus 2026 hernoemden
 twee ingrepen samen 4.929 sleutels; het splitsen van gedeelde plekken
-liet er daarna nog 34 verdwijnen. De tabel telt nu 4.963 regels. `/nummer/<sleutel>` en
+liet er daarna nog 34 verdwijnen. De tabel telt nu 4.964 regels. `/nummer/<sleutel>` en
 `/artiest/<sleutel>` verwijzen bij een onbekende sleutel door met een **301**,
 na controle dat het doel bestaat; ketens worden doorgevolgd.
 
@@ -415,6 +415,10 @@ bij elke run opnieuw bepaald. De vrijdagrun draait de herkenning mee.
 ## taak
 
 De lopende — of laatst gedraaide — achtergrondtaak. **Eén rij, `id` is altijd 1.**
+Sinds augustus 2026 is de uitvoerder een **eigen proces** (`python -m
+hitlijsten webtaak …`) in plaats van een draad in de webapplicatie; het veld
+`proces` wijst dus naar dat kind, en een taak overleeft een herstart van de
+webdienst.
 
 | Kolom | Type | Betekenis |
 |---|---|---|

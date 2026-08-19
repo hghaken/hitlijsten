@@ -62,7 +62,7 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
   Kink Top 1500 2019–2025 (7).
 - 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 581 aliassen,
   4.044 onderscheidingen, 4.963 doorverwijzingen van verhuisde sleutels en
-  7.006 taalbepalingen.
+  7.035 taalbepalingen.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
   `hitlijsten-run.timer`.
 
@@ -340,7 +340,7 @@ op de NAS, achter een reverse proxy.
 | Oranje Kroon | kroontje 👑 vóór de titel in de Oranje Top 30: de clip van de week van TV Oranje. Als de Alarmschijf een eigenschap van de plaat — eenmaal toegekend blijft hij staan. 6.620 noteringen over 685 nummers, vanaf 2012 |
 | Gedeelde plek | een **gele** ring om de positie als meerdere uitvoeringen die plek deelden, een **lichtblauwe** als het een dubbele A-kant is. Aan de artiest is dat verschil niet te zien (229 dubbele A-kanten hebben per kant een andere artiest), dus het staat vast in `noteringen.dubbele_a`. Draagt de plek ook een stip, dan komt de ring er als schaduw omheen |
 | Legenda | onder de kop van elke weeklijst, en alleen voor de tekens die er die week ook echt staan — een Top 40 uit 1965 krijgt geen uitleg over de Alarmschijf, die toen nog niet bestond |
-| Nederlandstalig | rood-wit-blauw vlaggetje voor de titel, op elke lijstpagina én de wetenswaardigheden óók als filter (checkbox "NL"; de weetjes-ranglijsten rekenen zichzelf dan opnieuw uit over alleen Nederlandstalig, en de ter-plekke gebouwde Excel- en PDF-downloads filteren mee, met `_NL` in de bestandsnaam); herkenning in drie trappen — lijstbewijs (Oranje/Sterren NL zijn per definitie Nederlandstalig), artiestroute en titel-woordenlijst — met handmatige correctie op de nummerpagina die altijd wint |
+| Nederlandstalig | rood-wit-blauw vlaggetje voor de titel, op elke lijstpagina én de wetenswaardigheden óók als filter (checkbox "NL"; de weetjes-ranglijsten rekenen zichzelf dan opnieuw uit over alleen Nederlandstalig, en de ter-plekke gebouwde Excel- en PDF-downloads filteren mee, met `_NL` in de bestandsnaam); herkenning in drie trappen — lijstbewijs (Oranje/Sterren NL zijn per definitie Nederlandstalig), artiestroute en titel-woordenlijst — met handmatige correctie die altijd wint: via de nummerpagina, of (aangemeld) met de **sneltoets N** op week- en jaarlijsten — regel aanwijzen, N, het vlaggetje wisselt ter plekke. Bij een verouderd token haalt de toets zelf een vers exemplaar en probeert hij het één keer opnieuw, zodat een oud tabblad zichzelf geneest |
 | Jaarlijsten totaal | alle zeventien jaarlijkse lijsten samen, genormaliseerd: elke notering telt (lengte − positie + 1) ÷ lengte, dus de nummer 1 van élke lijst is één punt waard |
 | Beheer | alles wat de opdrachtregel kan, ook als knop — plus een knop **Onderhoudspagina aanzetten** (zie BEHEER.md) — plus **Bijwerken wat veranderd is** (alleen de geraakte jaargangen) en voortgangsbalken per stap. Sinds aug 2026 draait elke knop als **eigen proces** (`python -m hitlijsten webtaak …`, met `nice 10` en een eigen sessie): een herbouw vecht niet meer met de acht webdraden om de processor, en niet alleen de taak*stand* maar de **taak zelf** overleeft een herstart van de webapplicatie — de onderhoudsknop kan dus gewoon terwijl er iets loopt. De stand stond al in de tabel `taak` met pid-controle; alleen de draad werd een proces |
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
@@ -373,6 +373,33 @@ daar alvast opgelicht.
 
 Wachtwoord wijzigen: pas `wachtwoord` in `app/webapp.ini` aan en herstart de
 dienst met `sudo systemctl restart hitlijsten-web`.
+
+### Onderhoud en storing
+
+Drie lagen houden de bezoeker bij een nette pagina in plaats van een kale
+proxyfout, en ze delen één ontwerpgedachte: **de reverse proxy van de NAS is
+onbewerkbaar terrein** (DSM schrijft zijn configuratie bij elke wijziging
+opnieuw uit), dus alles wat slim moet zijn leeft ernaast.
+
+- **Gepland onderhoud**: `hitlijsten-onderhoud.service` neemt de poort van de
+  webapplicatie over (`Conflicts=` regelt het omwisselen in beide richtingen)
+  en serveert een pagina in de huisstijl met de verwachte eindtijd. Aan te
+  zetten met een knop op de beheerpagina of `./onderhoud.sh aan [minuten]`;
+  met een tijd erbij zet hij zichzelf terug.
+- **Storing of overbelasting**: de proxyregels wijzen naar een eigen
+  doorgeefblok (nginx-upstream in `http.zz-hitlijsten.conf`) dat bij een
+  kapotte of hangende applicatie binnen enkele seconden uitwijkt naar
+  `hitlijsten-standby.service` — dezelfde pagina, permanent aan op een eigen
+  poort. `herstel-nginx.sh` zet het blok terug mocht een DSM-upgrade de
+  conf.d-map legen.
+- **Zware taken** draaien sinds augustus 2026 als **eigen proces** buiten de
+  webapplicatie (zie Beheer in de tabel hierboven), zodat de oorzaak van de
+  overbelasting — een herbouw die met de webdraden om de processor vocht —
+  ook echt weg is in plaats van alleen opgevangen.
+
+De pagina zelf antwoordt met 503 en `Retry-After`, zodat een zoekmachine
+begrijpt dat het tijdelijk is; de doorverwijzing van de oude domeinnaam werkt
+ook tijdens onderhoud.
 
 ### De disclaimer
 
@@ -1251,6 +1278,12 @@ Top 30 van 1965" die in werkelijkheid de lijst van vorige week is.
   hitlijsten-web.service      systemd-unit van de webapplicatie
   hitlijsten-run.service      systemd-unit van de wekelijkse run
   hitlijsten-run.timer        vrijdag 22:00
+  onderhoud.py         de onderhoudspagina als minidienst (zie onderaan)
+  onderhoud.sh         aan [minuten] / uit / stand
+  hitlijsten-onderhoud.service   neemt bij gepland onderhoud poort 8642 over
+  hitlijsten-standby.service     dezelfde pagina, permanent op 8641 (failover)
+  herstel-nginx.sh     zet het failover-blok terug na een DSM-upgrade
+  http.zz-hitlijsten.conf        nginx-upstream + doorgeefblok (leeft in conf.d)
   venv/                Python 3.14.5 met de afhankelijkheden
   run.log              logboek van alle runs
   hitlijsten/
