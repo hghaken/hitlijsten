@@ -483,14 +483,24 @@ Dat ze echt dood waren is niet beredeneerd maar **gemeten**: van alle 36.028
 voorkomende artiest/titel-combinaties is de sleutel berekend vóór en ná het
 schrappen, en er veranderde er geen enkele.
 
-**De negenendertig "wachtende" moeten juist blijven.** Daar dragen wél
-noteringen de bronsleutel — AC/DC en Mooi Wark, samen 708 noteringen over
-1978–2026. De alias trekt `ac dc|thunderstruck` naar `acdc|thunderstruck`, de
-spatiëringsopschoning tegen MusicBrainz; alleen is `hersleutel` na die aliassen
-nooit over álle jaargangen gedraaid, dus de noteringen staan nog op de oude
-sleutel. Schrappen zou die samenvoeging ongedaan maken. Rechttrekken vraagt
-een hersleutel over alle jaren en verzet 708 sleutels — en de sleutel staat in
-de URL, dus dat is een eigen besluit waard. Nog niet gedaan.
+**De negenendertig "wachtende" bleken helemaal niet te wachten.** Daar staat
+zowel `ac dc|thunderstruck → acdc|thunderstruck` als de omgekeerde regel. Zo'n
+lus is met opzet onschadelijk: `_volg_alias` ziet hem, stopt, en geeft
+`min(gezien)` terug — "kies een vaste vertegenwoordiger, zodat alle leden er in
+elk geval op dezelfde uitkomen". Een spatie sorteert vóór een letter, dus de
+uitkomst is altijd `ac dc|…`. Beide schrijfwijzen belanden op dezelfde sleutel,
+de samenvoeging wérkt, en daarom verzette een hersleutel over alle 62
+jaargangen precies nul sleutels.
+
+Ik heb daar één keer de verkeerde conclusie aan verbonden en de "tegenrichting"
+weggehaald, waarna AC/DC, Mooi Wark en OG3NE op een samengetrokken sleutel
+uitkwamen. Dat is teruggedraaid. De richting in deze database is namelijk
+consequent: een alias wijst naar de sleutel van de **vastgestelde schrijfwijze**,
+hoe die er na het normaliseren ook uitziet. "AC/DC" levert `ac dc` op, en dus
+wijst alles daarheen — er staan drieënnegentig soortgelijke aliassen die dat
+bevestigen (`beegees → bee gees`, `duranduran → duran duran`,
+`no doubt|dont speak → no doubt|don t speak`). Aan die lussen valt niets te
+verbeteren; ze zijn lelijk maar correct.
 
 **En tien zijn ketenschakels.** Wie drie schrijfwijzen samenvoegt schrijft
 twee regels, `a→b` en `b→c`; de tussenstap draagt per definitie niets, maar
