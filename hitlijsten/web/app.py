@@ -733,6 +733,21 @@ def _registreer(app: Flask) -> None:
         }
         return _overzicht_cache["waarden"]
 
+    def _verwachte_week() -> tuple[int, int]:
+        """De weeklijst die er nu hoort te zijn: die van de laatste vrijdag.
+
+        De vrijdagrun draait om 22:00; tot 23:00 die avond rekenen we de
+        vorige week nog goed, anders kleurt het overzicht elke vrijdagavond
+        een uur lang ten onrechte wit.
+        """
+        nu = datetime.now()
+        d = nu.date()
+        d -= timedelta(days=(d.weekday() - 4) % 7)      # de laatste vrijdag
+        if d == nu.date() and nu.hour < 23:
+            d -= timedelta(days=7)
+        iso = d.isocalendar()
+        return iso[0], iso[1]
+
     @app.route("/")
     def overzicht():
         con = verbinding()
@@ -764,6 +779,16 @@ def _registreer(app: Flask) -> None:
         gegevens = _overzicht_cijfers(con)
         lijsten = gegevens["lijsten"]
 
+        # Versheid, voor de kleuren in de twee tabellen. Een weeklijst is
+        # actueel als de laatst binnengehaalde week de verwachte is; een
+        # jaarlijkse lijst kleurt op de afstand tussen zijn laatste editie en
+        # het lopende jaar.
+        vw = _verwachte_week()
+        actueel_week = {
+            r["lijst"] for r in lijsten
+            if not is_jaarlijks(r["lijst"])
+            and (r["tot"], gegevens["laatste_week"].get(r["lijst"])) == vw}
+
         # Groeperen gebeurt hier en niet in het sjabloon: een sqlite3.Row kent
         # geen attributen, dus selectattr() vindt er niets in.
         return render_template(
@@ -782,6 +807,7 @@ def _registreer(app: Flask) -> None:
             editielengtes=gegevens["editielengtes"],
             laatst_op=gegevens["laatst_op"],
             laatste_week=gegevens["laatste_week"],
+            actueel_week=actueel_week, nu_jaar=date.today().year,
         )
 
     @app.route("/week")

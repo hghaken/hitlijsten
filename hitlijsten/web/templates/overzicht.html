@@ -46,8 +46,12 @@
       {%- else %}{{ lijst_namen.get(r['lijst'], r['lijst']) }}{% endif %}</td>
     <td class="getal">{{ r['jaren'] }}</td>
     <td class="getal">{{ r['van'] }}</td>
-    <td class="getal">{{ r['tot'] }}
-      <span class="hint" style="margin-left:.5rem; font-size:.82rem"
+    {# Groen zodra de verwachte week (die van de laatste vrijdagrun) er
+       echt is -- in één oogopslag: alles vers. De tijd-span krijgt de kleur
+       apart, want zijn hint-klasse dempt hem anders weer. #}
+    {%- set vers = r['lijst'] in actueel_week %}
+    <td class="getal"{% if vers %} style="color:#4ade80"{% endif %}>{{ r['tot'] }}
+      <span class="hint" style="margin-left:.5rem; font-size:.82rem{% if vers %}; color:#4ade80{% endif %}"
         >wk {{ laatste_week.get(r['lijst']) }} ·
         {{ laatst_op.get(r['lijst']) | tijd }}</span></td>
     <td class="getal">{{ r['weken'] }}</td>
@@ -79,7 +83,11 @@
     <td>{{ lijst_namen.get(r['lijst'], r['lijst']).split(' (')[0] }}</td>
     <td class="getal">{{ r['jaren'] }}</td>
     <td class="getal">{{ r['van'] }}</td>
-    <td class="getal">{{ r['tot'] }}</td>
+    {# De afstand tot het lopende jaar als kleur: groen = editie van dit
+       jaar, geel = een jaar oud, oranje = ouder. Zo zie je meteen welke
+       lijst op een nieuwe editie wacht. #}
+    <td class="getal" style="color:{% if r['tot'] == nu_jaar %}#4ade80{%
+        elif r['tot'] == nu_jaar - 1 %}#ffc857{% else %}#fb923c{% endif %}">{{ r['tot'] }}</td>
     <td class="getal">{{ editielengtes.get(r['lijst'], '') }}</td>
     <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
   </tr>
