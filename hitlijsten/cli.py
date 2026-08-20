@@ -357,6 +357,57 @@ def opdracht_jaarlijks(lijst: str, pad: str, jaar: int | None = None) -> dict:
     return uitkomst
 
 
+def opdracht_hitdossier(lijst: str, jaren: list[int] | None = None, *,
+                        doen: bool = False, verversen: bool = False) -> dict:
+    """Haal een jaarlijkse lijst op bij hitdossier-online.nl.
+
+    Zonder `--doen` alleen ophalen, controleren en de matrix-CSV schrijven --
+    dan zie je wat er zou gebeuren voordat er iets in de database staat.
+    """
+    from . import hitdossier
+    from .jaarlijks import importeer
+    from .momentopnames import maak
+
+    naam = LIJSTEN.get(lijst, {}).get("naam", lijst)
+    beschikbaar = hitdossier.edities(lijst, verversen=verversen)
+    log(f"{naam}: hitdossier heeft {len(beschikbaar)} edities "
+        f"({min(beschikbaar)}-{max(beschikbaar)})")
+    per_jaar = hitdossier.alle_edities(lijst, jaren=jaren, verversen=verversen)
+    for jaar, rijen in per_jaar.items():
+        log(f"  {jaar}: {len(rijen)} noteringen")
+
+    klachten = hitdossier.controleer(per_jaar)
+    for klacht in klachten:
+        log(f"  LET OP: {klacht}")
+    if klachten:
+        raise ValueError("de bron klopt niet; er is niets geïmporteerd")
+
+    with db.verbinding() as con:
+        pad, verslag = hitdossier.schrijf_matrix(con, lijst, per_jaar)
+        log(f"{verslag['noteringen']} noteringen, {verslag['nummers']} nummers"
+            f" -> {pad}")
+        log(f"  {verslag['artiesten_vertaald']} artiestennamen en "
+            f"{verslag['titels_vertaald']} titels naar de archiefschrijfwijze;"
+            f" {verslag['uitjaar_uit_archief']} uitgavejaren uit het archief")
+        for botsing in verslag["botsingen"]:
+            log(f"  LET OP: {botsing}")
+        if verslag["nieuw"]:
+            log(f"  {len(verslag['nieuw'])} nummers kent het archief nog niet:")
+            for positie, artiest, titel in verslag["nieuw"][:20]:
+                log(f"    #{positie:>4} {artiest} — {titel}")
+        if not doen:
+            log("PROEF -- er is niets geïmporteerd. Voeg --doen toe.")
+            return verslag
+
+        log(f"momentopname: {maak(f'voor {lijst} van hitdossier').name}")
+        uitkomst = importeer(con, lijst, pad)
+        for editiejaar, aantal in sorted(uitkomst["geschreven"].items()):
+            log(f"  {editiejaar}: {aantal} noteringen geschreven")
+        for waarschuwing in uitkomst["waarschuwingen"]:
+            log(f"  let op: {waarschuwing}")
+    return verslag
+
+
 def opdracht_decennium(decennium: int | None) -> list:
     """Het decenniumklassement naar de decenniummap.
 
@@ -1102,6 +1153,16 @@ def main(argv: list[str] | None = None) -> int:
     jl.add_argument("--lijst", required=True,
                     help="welke lijst, bv. top2000 of evergreen")
     jl.add_argument("--bestand", required=True, help="pad naar de CSV")
+    hd = sub.add_parser("hitdossier",
+                        help="een jaarlijkse lijst ophalen bij "
+                             "hitdossier-online.nl (de Veronica 80's)")
+    hd.add_argument("--lijst", required=True, help="welke lijst, bv. veronica80s")
+    hd.add_argument("--jaren", type=int, nargs="+",
+                    help="alleen deze edities; standaard alle die er zijn")
+    hd.add_argument("--doen", action="store_true",
+                    help="ook echt importeren (zonder dit alleen een proef)")
+    hd.add_argument("--verversen", action="store_true",
+                    help="de cache negeren en de pagina's opnieuw ophalen")
     pd = sub.add_parser("pdf", parents=[jaar_ouder],
                         help="de jaaroverzichten als PDF naar de jaarmappen")
     pd.add_argument("--alle", action="store_true",
@@ -1177,6 +1238,9 @@ def main(argv: list[str] | None = None) -> int:
         opdracht_excel(jaar)
     elif args.opdracht == "jaarlijks":
         opdracht_jaarlijks(args.lijst, args.bestand, args.jaar)
+    elif args.opdracht == "hitdossier":
+        opdracht_hitdossier(args.lijst, args.jaren, doen=args.doen,
+                            verversen=args.verversen)
     elif args.opdracht == "pdf":
         opdracht_pdf(None if args.alle else jaar, altijd=args.opnieuw)
     elif args.opdracht == "decennium":

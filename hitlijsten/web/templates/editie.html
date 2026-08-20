@@ -84,7 +84,8 @@
   <span class="hint" style="margin-left:auto">
     {{ jaren|length }} {{ _("edities beschikbaar") }}{% if jaren %}
       ({{ jaren[-1] }}–{{ jaren[0] }}){% endif %} ·
-    {{ _('gegevens via') }} <a href="https://www.datastats.nl/" target="_blank" rel="noopener">datastats.nl</a>
+    {%- set herkomst = herkomst_van(lijst) %}
+    {{ _('gegevens via') }} <a href="{{ herkomst[1] }}" target="_blank" rel="noopener">{{ herkomst[0] }}</a>
   </span>
   </div>
 </form>
@@ -142,7 +143,10 @@
   Click an artist or title for the graph across all
   {{ edities|length }} editions; skipped years stay visible as an empty
   column with a dotted line across the gap.
-  {% else %}De Top 2000 is één uitzending per jaar, tussen kerst en oud en nieuw, dus geen
+  {# Deze uitleg staat boven elke jaarlijkse lijst, dus hij kan niet over de
+     Top 2000 gaan: de Kink Top 1500 draait in december, de Zomer Top 500 in
+     juli en de Veronica 80's in januari. #}
+  {% else %}Dit is één uitzending per jaar, dus geen
   weken en geen punten — alleen de positie. <b>Vorige editie</b> is de plek van
   vorig jaar, <b>edities</b> het aantal jaren waarin het nummer stond, en
   <b>hoogste</b> de beste positie ooit.

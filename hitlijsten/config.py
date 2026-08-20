@@ -57,6 +57,14 @@ BRON_URLS = {
     "oranje": "https://www.oranjetop30.nl/",
 }
 
+# Waar de noteringen zelf vandaan komen. Vrijwel alles komt uit de CSV's van
+# Music Datastats; dit is de uitzondering, en de bezoeker hoort de juiste bron
+# te zien. Een lijst die hier niet in staat krijgt de standaardvermelding.
+HERKOMST = {
+    "veronica80s": ("hitdossier-online.nl", "https://www.hitdossier-online.nl/"),
+}
+STANDAARD_HERKOMST = ("datastats.nl", "https://www.datastats.nl/")
+
 # De zender achter een jaarlijkse lijst. De sleutel is wat zender_van() uit
 # de lijstnaam haalt, dus die twee moeten gelijk blijven lopen.
 ZENDER_URLS = {
@@ -327,6 +335,27 @@ LIJSTEN = {
         "vanaf_jaar": 2012,
         "jaarlijks": True,
         "editie_week": 30,
+    },
+    # Een lijst die vier keer van naam en lengte veranderde: 80's Top 880
+    # (2005-2013), Top 750 (2014-2016), Top 500 (2017-2019) en sinds 2024 de
+    # Top 1000 van de 80s. Het is dezelfde jaarlijkse uitzending van dezelfde
+    # zender, dus hij staat hier als een reeks -- anders zou je van een plaat
+    # vier losse geschiedenissen van drie edities zien in plaats van een van
+    # achttien. `lengte` is de langste vorm; de editie zelf bepaalt hoe ver
+    # hij loopt. Tussen 2019 en 2024 zat een pauze: in die jaren zond
+    # Veronica de 80s & 90s Top 890 en een 80s Top 100 uit, andere lijsten.
+    # `editie_week` is een grove benadering -- de uitzending zwierf van week
+    # 4 tot week 46; de laatste edities vallen eind januari.
+    "veronica80s": {
+        "naam": "80's Top 500/750/880/1000 (Veronica)",
+        "site": None,
+        "slug": None,
+        "lengte": 1000,
+        "bestand": "Veronica80s",
+        "heeft_label": False,
+        "vanaf_jaar": 2005,
+        "jaarlijks": True,
+        "editie_week": 5,
     },
 }
 

@@ -53,13 +53,13 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 540.569 noteringen over
-  eenentwintig lijsten. Top 40
+- **Het hele archief staat in de database**: 555.239 noteringen over
+  tweeëntwintig lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
-  Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26) en
-  Kink Top 1500 2019–2025 (7).
+  Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26),
+  Kink Top 1500 2019–2025 (7) en de Veronica 80's 2005–2026 (18).
 - 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 581 aliassen,
   4.044 onderscheidingen, 4.963 doorverwijzingen van verhuisde sleutels en
   7.035 taalbepalingen.
@@ -202,12 +202,13 @@ De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
 ### De jaarlijkse lijsten
 
-De vier weeklijsten komen van een website. De zeventien jaarlijkse lijsten —
+De vier weeklijsten komen van een website. De achttien jaarlijkse lijsten —
 van de Top 2000 en de Top 4000 tot de Festival Top 1003, de Sublime Soul
 Top 1000 en de Toplijsten van de jaren 60 en 70 — zijn één
-uitzending per jaar en komen binnen als CSV van Music
-Datastats ([datastats.nl](https://www.datastats.nl/)) — een matrix met een regel
-per nummer en een kolom per editie.
+uitzending per jaar en komen binnen als matrix met een regel per nummer en een
+kolom per editie: meestal als CSV van Music Datastats
+([datastats.nl](https://www.datastats.nl/)), en voor de Veronica 80's van
+[hitdossier-online.nl](https://www.hitdossier-online.nl/).
 
 ```bash
 python -m hitlijsten.cli jaarlijks --lijst top2000  --bestand .../top2000.csv
@@ -221,10 +222,13 @@ een van dertig nodigt uit tot vergelijkingen die nergens op slaan.
 
 Alle lijsten met `jaarlijks` in hun definitie lopen door hetzelfde bestand
 (`hitlijsten/jaarlijks.py`), dus **een lijst toevoegen is een regel in
-`config.LIJSTEN` en één keer importeren** — geen nieuwe code. In dezelfde map staat er nog één klaar: de Rock Top 500.
+`config.LIJSTEN` en één keer importeren** — geen nieuwe code. De Veronica 80's
+kwam er in augustus 2026 zo bij: alleen het ophalen en gelijktrekken van de
+bron kostte werk, de import zelf was één aanroep.
 
-Elke editie wordt weggeschreven als jaargang met **week 52**, de week van de
-uitzending. Daardoor werken de sleutels, het jaaroverzicht en de database
+Elke editie wordt weggeschreven als jaargang met de **`editie_week`** uit de
+lijstdefinitie, de week waarin de uitzending doorgaans valt (52 als die
+ontbreekt). Daardoor werken de sleutels, het jaaroverzicht en de database
 zonder uitzondering mee. In de lijstdefinitie staat `site: None`; daaraan
 herkent de wekelijkse run dat hij deze lijst met rust moet laten.
 
@@ -1494,6 +1498,73 @@ import vervangt per (lijst, jaar, week).
 De kruisverwijzing na afloop was het bewijs dat de koppeling klopt: alle 217
 nummers delen een sleutel met andere lijsten, 206 met de Top 2000.
 
+### Vier namen, één lijst: de Veronica 80's
+
+Radio Veronica zendt sinds 2005 elk jaar een 80's-lijst uit, maar onder vier
+namen en vier lengtes: **80's Top 880** (2005–2013), **Top 750** (2014–2016),
+**Top 500** (2017–2019) en sinds 2024 de **Top 1000 van de 80s**. Datastats
+heeft hem niet; hitdossier-online.nl heeft alle achttien edities compleet.
+
+Het staat hier als **één reeks**, sleutel `veronica80s`. Dat is de hele winst:
+anders zie je van *Purple Rain* vier losse geschiedenissen van drie edities in
+plaats van één van achttien — waarin hij van 24 in 2005 klimt naar 1 in 2026.
+De configuratie kan dat gewoon aan, want de lengte komt per editie uit de data
+en `lengte` is een bovengrens.
+
+Tussen 2019 en 2024 zit een pauze: Veronica zond toen de 80s & 90s Top 890
+(2020, 2021) en een 80s Top 100 (2022, 2023) uit — andere lijsten, niet
+meegenomen. Dat gat kost één correctie: de importeur zoekt de vorige editie op
+`jaar - 1`, dus zonder ingrijpen zou heel 2024 als nieuw binnenkomen. Na de
+import wordt `vorige_positie` voor 2024 uit 2019 gehaald.
+
+**De schrijfwijze was de klus, niet het ophalen.** Hitdossier voert een eigen
+huisstijl: het lidwoord gaat eraf (*Cure*, *Police*, en ook Nederlands —
+*Dijk* is De Dijk, *Goede Doel* is Het Goede Doel), namen krijgen kapitalen
+(*Chris De Burgh*) en leestekens wijken af (*10cc*, *Salt-n-Pepa*). Sluit dat
+niet aan op het archief, dan krijgt hetzelfde nummer twee sleutels. Van de 629
+namen zijn er 88 vertaald, in drie lagen: het lidwoord terug, daarna een
+vergelijking op de *losse vorm* (kleine letters, zonder leestekens en spaties),
+en ten slotte dertien credits met de hand — elk nagelopen door de titel in het
+archief op te zoeken. Twee daarvan verraadden een ligatuur die het archief
+gebruikt en hitdossier niet: *George Michæl* en *Orchestral Manœuvres In The
+Dark*.
+
+Bij de titels is bewust **veel minder** vertaald. De sleutel negeert
+hoofdletters en leestekens al, dus *Word Up* en *Word Up!* komen vanzelf samen;
+overnemen zou daar alleen de slordigere archiefspelling binnenhalen (*Back in
+black*). Alleen waar de sleutel écht uiteenliep — een spatie die er wel of niet
+staat, zoals *Papa's Got A Brand New Pigbag* tegenover *Pig Bag* — is de
+archieftitel overgenomen: vier stuks.
+
+Resultaat: **1.268 van de 1.302 nummers sluiten aan op het archief**. De 34 die
+overblijven zijn grotendeels versievarianten die het archief anders noemt
+(*Slippery People (Live)*, *Situation (Remix)*, *Don't Stop Believing* naast
+*Don't Stop Believin'*). Die zijn met opzet blijven staan zoals Veronica ze
+noemt: samenvoegen of niet is een keuze voor de aliaslijst, niet voor een
+script.
+
+Het ophalen zit in de repo (`hitlijsten/hitdossier.py`), want er komt elk jaar
+een editie bij. Welke edities er zijn wordt van de overzichtspagina gelezen en
+niet vastgelegd, dus de volgende komt er vanzelf bij:
+
+```bash
+python -m hitlijsten hitdossier --lijst veronica80s              # proef
+python -m hitlijsten hitdossier --lijst veronica80s --doen       # importeren
+python -m hitlijsten hitdossier --lijst veronica80s --jaren 2027 --verversen
+```
+
+Zonder `--doen` wordt alleen opgehaald, gecontroleerd en de matrix-CSV
+geschreven — je ziet dan eerst welke namen vertaald worden en welke nummers
+het archief nog niet kent. De pagina's blijven in de cache staan; `--verversen`
+haalt ze opnieuw op.
+
+Het **uitgavejaar** kwam ook van hitdossier, maar het archief wint waar het al
+een waarde heeft. Veronica noemt vaak het jaar van de plaat en het archief dat
+van de Nederlandse uitgave: *Billie Jean* is bij Veronica 1982 (album
+*Thriller*) en hier 1983. Het archief is daar deze zomer kritisch op nagelopen,
+dus dat blijft staan; Veronica's jaar vulde de 92 nummers die het archief nog
+niet kende. Geen enkele notering bleef zonder jaar.
+
 ## Bronnen en naslagwerken
 
 Alles wat van buiten komt, op een rij — met per site de rol én de valkuil.
@@ -1519,7 +1590,7 @@ Alles wat van buiten komt, op een rij — met per site de rol én de valkuil.
 
 | site | rol |
 |---|---|
-| hitdossier-online.nl | onafhankelijke Top 40-aggregaties (puntenlijsten, jaaroverzichten) om de eigen berekeningen tegen te leggen; de 1965-steekproef bevestigde eerder dat onze cijfers klopten |
+| hitdossier-online.nl | onafhankelijke Top 40-aggregaties (puntenlijsten, jaaroverzichten) om de eigen berekeningen tegen te leggen; de 1965-steekproef bevestigde eerder dat onze cijfers klopten. **Sinds augustus 2026 ook echte bron**: de achttien edities van de Veronica 80's-lijst komen hiervandaan |
 | tvoranje.nl | de winnaarslijst van de Oranje Kroon, terug tot 2009 |
 | wikipedia (artikelen) | definities en criteria, zoals de stipnotering |
 

@@ -18,8 +18,8 @@ from flask import (
 )
 
 from .. import db, excel
-from ..config import (BRON_URLS, DATA_DIR, EXCEL_DIR, HOOFD_HOST,
-                      HOOFD_URL, LIJSTEN,
+from ..config import (BRON_URLS, DATA_DIR, EXCEL_DIR, HERKOMST, HOOFD_HOST,
+                      HOOFD_URL, LIJSTEN, STANDAARD_HERKOMST,
                       ROOT, VERHUISDE_HOSTS, ZENDER_URLS, decennium_van,
                       is_jaarlijks)
 from ..datums import als_tekst, vrijdag_van
@@ -146,6 +146,8 @@ def maak_app() -> Flask:
     app.jinja_env.globals["is_jaarlijks"] = is_jaarlijks
     app.jinja_env.globals["bron_urls"] = BRON_URLS
     app.jinja_env.globals["zender_urls"] = ZENDER_URLS
+    app.jinja_env.globals["herkomst_van"] = (
+        lambda lijst: HERKOMST.get(lijst, STANDAARD_HERKOMST))
     app.jinja_env.filters["tijd"] = leesbare_tijd
     app.jinja_env.globals["weeklijsten"] = [
         s for s in LIJSTEN if not is_jaarlijks(s)]
