@@ -129,7 +129,11 @@ class Onderhoud(BaseHTTPRequestHandler):
     def _antwoord(self, met_inhoud: bool) -> None:
         doel = self._verhuisd()
         if doel:
-            self.send_response(302)
+            # 301, net als in de applicatie zelf: dat een oud adres verhuisd
+            # is blijft waar, ook terwijl de site in onderhoud staat. De
+            # no-store hieronder gaat over deze omleiding niet bewaren zolang
+            # het onderhoud duurt, niet over de verhuizing.
+            self.send_response(301)
             self.send_header("Location", doel)
             self.send_header("Content-Length", "0")
             self.send_header("Cache-Control", "no-store")

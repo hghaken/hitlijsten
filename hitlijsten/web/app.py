@@ -372,16 +372,17 @@ def _registreer(app: Flask) -> None:
         ReverseProxy.json; een regel die je daar met de hand inzet is bij de
         eerstvolgende aanpassing weg.
 
-        Voorlopig een 302 en geen 301. Een 301 wordt door browsers hard
-        onthouden, en dan zit een fout dagen vast in caches die niemand kan
-        legen. Zodra de verhuizing een dag goed loopt mag dit een 301 worden --
-        pas dan telt Google hem ook echt mee.
+        De eerste dagen stond dit op 302. Een 301 wordt door browsers hard
+        onthouden, en dan zit een fout vast in caches die niemand kan legen --
+        dus eerst kijken of de keten klopt. Sinds 20 augustus 2026 is het een
+        301: pas daarmee telt een zoekmachine de verhuizing echt mee en gaat
+        de waarde van het oude adres over op het nieuwe.
         """
         host = (request.host or "").split(":")[0].lower()
         if host in VERHUISDE_HOSTS:
             # _canoniek() zet het pad weer netjes percent-gecodeerd terug;
             # zonder dat zou /nummer/golden earring|radar love sneuvelen.
-            return redirect(_canoniek(), code=302)
+            return redirect(_canoniek(), code=301)
         return None
 
     @app.route("/aanmelden", methods=["GET", "POST"])

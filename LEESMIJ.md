@@ -478,11 +478,25 @@ je daar met de hand inzet is bij de eerstvolgende aanpassing weg. Een
 via dezelfde `_canoniek()` die ook de canonical-link bouwt, zodat
 `/nummer/golden earring|radar love` netjes percent-gecodeerd overkomt.
 
-**Voorlopig een 302 en geen 301.** Een 301 wordt door browsers hard onthouden;
-gaat er iets mis, dan zit dat dagen vast in caches die niemand kan legen. Zodra
-de verhuizing een dag goed loopt gaan de omleiding in de applicatie én de regel
-in `/volume1/web/.htaccess` samen op 301 — pas dan telt Google de verhuizing
-mee, en pas dan hoort de adreswijziging in Search Console te worden ingediend.
+**Eerst een 302, sinds 20 augustus 2026 een 301.** Een 301 wordt door browsers
+hard onthouden; gaat er iets mis, dan zit dat dagen vast in caches die niemand
+kan legen. Vandaar de eerste dagen een 302, met de keten dagelijks nagelopen.
+Nu staan ze alle drie op 301 — de `before_request` in de applicatie, de
+standby-server (`onderhoud.py`, want dat een adres verhuisd is blijft waar,
+ook tijdens onderhoud) en de regel in `/volume1/web/.htaccess`. Elk oud adres
+komt in **één sprong** op de nieuwe naam uit, met pad en queryreeks intact:
+
+```
+https://hitlijsten.hhaken.nl/jaar?lijst=top40&jaar=2026
+  -> 301 https://www.nl-hitlijsten.nl/jaar?lijst=top40&jaar=2026
+https://nl-hitlijsten.nl/   -> 301 https://www.nl-hitlijsten.nl/
+http://www.nl-hitlijsten.nl/ -> 301 https://www.nl-hitlijsten.nl/
+http://nl-hitlijsten.nl/     -> 301 https://www.nl-hitlijsten.nl/
+```
+
+Pas met die 301 telt Google de verhuizing mee en gaat de waarde van het oude
+adres over op het nieuwe. De adreswijziging in Search Console hoort daar
+achteraan.
 
 Drie dingen die bij de verhuizing hoorden en makkelijk te missen zijn: het
 wildcard `*.hhaken.nl` dekt de nieuwe naam **niet** (er is een eigen
