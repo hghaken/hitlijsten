@@ -25,13 +25,13 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 | [`noteringen`](#noteringen) | 568.119 | de gegevens: één rij per nummer per week |
 | [`opgehaald`](#opgehaald) | 7.830 | welke week wanneer is binnengehaald |
 | [`bestaat_niet`](#bestaat_niet) | 267 | weken die nooit zijn uitgezonden |
-| [`aliases`](#aliases) | 581 | twee sleutels die hetzelfde nummer zijn |
+| [`aliases`](#aliases) | 625 | twee sleutels die hetzelfde nummer zijn |
 | [`niet_samenvoegen`](#niet_samenvoegen) | 4 | het omgekeerde: lijkt hetzelfde, is het niet |
-| [`artiestnamen`](#artiestnamen-en-titelnamen) | 1.131 | de vastgestelde schrijfwijze per artiest |
-| [`titelnamen`](#artiestnamen-en-titelnamen) | 1.975 | idem per nummer |
+| [`artiestnamen`](#artiestnamen-en-titelnamen) | 1.384 | de vastgestelde schrijfwijze per artiest |
+| [`titelnamen`](#artiestnamen-en-titelnamen) | 2.361 | idem per nummer |
 | [`onderscheidingen`](#onderscheidingen) | 4.044 | Alarmschijven en Dancesmashes |
 | [`correcties`](#correcties) | 0 | jaartotalen van een tweede bron |
-| [`te_bouwen`](#te_bouwen) | 0 | welke jaargang opnieuw gebouwd moet |
+| [`te_bouwen`](#te_bouwen) | 356 | welke jaargang opnieuw gebouwd moet |
 | [`wijzigingen`](#wijzigingen) | 11.437 | logboek van elke correctie |
 | [`taak`](#taak) | 0–1 | de lopende (of laatst gedraaide) achtergrondtaak |
 | [`berichten`](#berichten) | groeit | bezoekersberichten voor gastenboek en postbus |

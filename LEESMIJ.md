@@ -60,9 +60,9 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
   Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26),
   Kink Top 1500 2019–2025 (7), de Veronica 80's 2005–2026 (19) en De Foute 1500 2020–2026 (8 edities in 7 jaar).
-- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 581 aliassen,
-  4.044 onderscheidingen, 4.963 doorverwijzingen van verhuisde sleutels en
-  7.035 taalbepalingen.
+- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 625 aliassen,
+  4.044 onderscheidingen, 5.010 doorverwijzingen van verhuisde sleutels en
+  7.035 taalbepalingen. De 568.119 noteringen gaan over **35.955 nummers**.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
   `hitlijsten-run.timer`.
 
@@ -609,7 +609,7 @@ ruimt nu op wat het gebouwd heeft — voor de hele jaargang tegelijk, want
 
 ### Opschonen
 
-De bronnen zijn niet schoon, en dat zie je pas als je eenentwintig lijsten naast elkaar
+De bronnen zijn niet schoon, en dat zie je pas als je drieëntwintig lijsten naast elkaar
 legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 
 | Soort | Gevonden | Beslist door |
@@ -628,6 +628,81 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Versies die een plek deelden | 1.115 weekregels → 2.471 | de weeklijst zelf + eigen keuzelijst |
 | ///-schrijfwijzen en /-hernoemingen | 21 + 16 gevallen | MusicBrainz, Discogs, hoezen |
 | Ondertitel achter een streepje → tussen haken | 321 titels | versie-/themawoorden |
+| Zelfde plaat, andere volgorde in de credit | 43 platen, 639 noteringen | de weeklijst als primaire bron |
+| Credits volledig in kleine letters | 129 credits, 939 noteringen | het archief zelf |
+
+### Dezelfde plaat onder twee credits
+
+De bronnen zijn het niet eens over de vólgorde van een samenwerking. Music
+Datastats schrijft *Ali B & Partysquad & Yes-R*, de Top 40 van 2006 schreef
+*Ali B & Yes-R & The Partysquad* — dezelfde plaat, twee sleutels, en dus twee
+halve geschiedenissen die elkaar niet kennen.
+
+**`verdachte_paren` vindt deze klasse niet**, en dat is geen bug maar een
+grens: die vergelijkt sleutels op tekstgelijkenis met een drempel van 0,90, en
+twee credits met een andere volgorde lijken als tekst maar matig op elkaar.
+Verlaag je die drempel, dan haal je juist paren binnen die niets met elkaar te
+maken hebben.
+
+De gerichte zoekopdracht kijkt daarom niet naar gelijkenis maar naar
+**samenstelling**: de titel moet exact gelijk zijn, en de credit valt op `" & "`
+uiteen — net als in de sleutel — waarna het lidwoord er per deelnaam af gaat.
+Blijft dezelfde verzameling namen over, dan is het dezelfde plaat. Dat leverde
+**43 platen** op: Zonder Jou (99 + 17 noteringen), Window Of My Eyes (89 + 15),
+Stiekem (43 + 16), Say Say Say (37 + 22).
+
+De richting is een regel met één uitzondering: **de weeklijst wint**, want dat
+is de credit zoals hij destijds op de plaat stond; staan ze allebei of geen van
+beide in een weeklijst, dan wint het aantal noteringen. Drie keer overruled,
+omdat die regel een schrijfwijze koos die het archief nergens anders aanhoudt —
+*Bolland* in plaats van *Bolland & Bolland*, en een credit die volledig in
+kleine letters stond.
+
+**Een alias alleen is niet genoeg.** Die voegt de sleutels samen, maar elke
+notering blijft de credit dragen die zijn eigen bron schreef, en de zoekpagina
+toont een regel per lijst. Zonder de weergave gelijk te trekken zie je dus nog
+steeds twee artiesten bij één plaat. Vandaar 649 namen erachteraan.
+
+> **En dan de valkuil van dat gelijktrekken.** Je kunt er een nieuwe splitsing
+> mee maken. De credit van *Zonder Jou* kwam uit de Top 40 van 1995 en spelt
+> hem "Paul **De** Leeuw", terwijl het archief 631 keer "Paul de Leeuw"
+> schrijft — die uitzondering zou over 116 noteringen zijn uitgesmeerd. Loop na
+> afloop dus per deelnaam na of de gekozen schrijfwijze strookt met wat het
+> archief verder aanhoudt.
+
+Wat blijft liggen zijn **267 twijfelgevallen** van de soort *de ene bezetting
+zit in de andere*. Daar zitten echte splitsingen tussen (*Moonlight Shadow* met
+en zonder Maggie Reilly, *When Doves Cry* met en zonder The Revolution) maar net
+zo goed platen die écht verschillen (*One* van U2 tegenover die met Mary J.
+Blige, *Living Doll* van 1959 tegenover de Comic Relief-versie van 1986). Die
+horen stuk voor stuk beoordeeld te worden.
+
+### Namen die hun hoofdletters kwijt waren
+
+129 credits stonden volledig in onderkast — *macklemore & ryan lewis*, *daft
+punk & pharrell williams*, *showtek* — samen 939 noteringen. Dat is puur
+weergave: de sleutel is ongevoelig voor hoofdletters, dus er valt niets uiteen
+en er hoeft niets hersleuteld te worden.
+
+Het archief lost het meeste zelf op. Een credit valt op `" & "` uiteen en per
+deelnaam wordt opgezocht welke schrijfwijze er elders het vaakst staat; zo
+wordt *martin garrix & jay hardway* weer *Martin Garrix & Jay Hardway*. Voor 42
+credits was dat genoeg. Bij de overige 87 was minstens één naam nergens goed
+geschreven; die krijgen een voorzichtige kapitalisatie — alleen de eerste
+letter van een woord en wat op een punt volgt, zodat *t.i.* netjes *T.I.* wordt
+en verbindingswoorden klein blijven (*Naughty Boy starring Sam Smith*).
+
+**Een naam die met een cijfer begint blijft met rust**, en dat is met opzet:
+*6ix9ine*, *49ers*, *89ers* en *3robi* schrijven zichzelf zo. Die vier staan er
+nog steeds in kleine letters, en dat hoort.
+
+**Bijvangst: een bron die zijn spaties kwijtraakte.** Bij het nalopen bleek
+`therollingstones` geen hoofdletterprobleem maar iets ergers — top40.nl leverde
+in 2005 zowel de artiest als de titel zonder spaties aan (`streetsoflove`).
+*Streets Of Love* stond daardoor negen weken lang los van al het andere werk
+van The Rolling Stones: niet op hun artiestpagina, en onvindbaar op de echte
+titel. Hersteld, met de oude sleutel bewaard in `oude_sleutels` zodat een
+opgeslagen link niet doodloopt.
 
 **Eén credit-stijl.** De bronnen schrijven een samenwerking op vijf manieren
 (feat., feat, ft., ft, featuring) plus de x, de komma en het Nederlandse "met".
