@@ -53,7 +53,7 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 540.352 noteringen over
+- **Het hele archief staat in de database**: 540.569 noteringen over
   eenentwintig lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
@@ -1462,6 +1462,31 @@ python -m hitlijsten hersleutel
 De sleutel wordt namelijk bij het opslaan berekend en in de database gezet;
 alleen Excel opnieuw bouwen verandert dus niets. Daarna
 `python -m hitlijsten excel`.
+
+### Een editie rechtstreeks van de zender
+
+De jaarlijkse lijsten komen normaal als matrix van Music Datastats, maar de
+**Toplijst van de jaren 60, editie 2026** (uitgezonden 10 april 2026) stond
+daar nog niet in — wel als Excel op nporadio5.nl zelf. Die is rechtstreeks
+geïntegreerd, en dat vroeg drie dingen die de matrix normaal meebrengt:
+
+- **Het uitgavejaar** zit niet in de NPO-Excel. Per sleutel opgezocht in het
+  eigen archief: 215 van de 217 in eerdere jaren60-edities, 2 elders, 0 open.
+- **Vorige positie en editieteller** rekent de importeur uit de kolommen van
+  de CSV — en die had er hier maar één. Na de import rechtgezet vanuit de
+  bestaande edities.
+- **Vijftien schrijfwijzen** weken af van de vastgestelde archief-spelling,
+  van *The Sound Of Silence* (archief: *The Sounds Of Silence*) tot een
+  "(albumversie)"-markering die eerdere edities nooit droegen. Vertaald vóór
+  de import, anders waren die nummers losgeraakt van hun eigen historie.
+
+De uitzending was in april (week 15), maar de editie staat op de vaste
+`editie_week` 24 van deze lijst: een afwijkende week zou een dubbele editie
+opleveren zodra Datastats 2026 later alsnog in zijn matrix opneemt — die
+import vervangt per (lijst, jaar, week).
+
+De kruisverwijzing na afloop was het bewijs dat de koppeling klopt: alle 217
+nummers delen een sleutel met andere lijsten, 206 met de Top 2000.
 
 ## Bronnen en naslagwerken
 

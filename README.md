@@ -29,7 +29,7 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 | Sublime Soul Top 1000 (Sublime) | datastats.nl | vanaf 2021 |
 | De Koninklijke 500 (NPO Radio 2) | datastats.nl | vanaf 2022 |
 
-540.352 noteringen over eenentwintig lijsten: 7.545 weken en 253 jaaredities.
+540.569 noteringen over eenentwintig lijsten: 7.545 weken en 254 jaaredities.
 De namen en titels zijn opgeschoond en geverifieerd tegen MusicBrainz,
 Discogs en Wikipedia; elke correctie staat met reden in een logboek. Elk
 nummer draagt bovendien zijn Alarmschijf-belletje (bron: top40.nl) en een
