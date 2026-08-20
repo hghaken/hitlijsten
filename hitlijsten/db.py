@@ -657,12 +657,15 @@ def jaarlijkse_totalen(con: sqlite3.Connection) -> list[dict]:
     jaarlijks = [naam for naam in LIJSTEN if is_jaarlijks(naam)]
     plek = ",".join("?" for _ in jaarlijks)
     rijen = list(con.execute(
-        f"SELECT lijst, jaar, positie, artiest, titel, sleutel FROM noteringen"
-        f" WHERE lijst IN ({plek})", jaarlijks))
+        f"SELECT lijst, jaar, week, positie, artiest, titel, sleutel"
+        f" FROM noteringen WHERE lijst IN ({plek})", jaarlijks))
 
+    # De lengte hoort bij de editie en niet bij het jaar: een lijst kan twee
+    # keer in een jaar zijn uitgezonden, en dan hoeven die twee niet even lang
+    # te zijn.
     lengte: dict[tuple, int] = {}
     for r in rijen:
-        paar = (r["lijst"], r["jaar"])
+        paar = (r["lijst"], r["jaar"], r["week"])
         lengte[paar] = max(lengte.get(paar, 0), r["positie"])
 
     nummers: dict[str, dict] = {}
@@ -674,7 +677,7 @@ def jaarlijkse_totalen(con: sqlite3.Connection) -> list[dict]:
             "hoogste_jaar": None,
         })
         n["artiest"], n["titel"] = r["artiest"], r["titel"]
-        deler = lengte[(r["lijst"], r["jaar"])]
+        deler = lengte[(r["lijst"], r["jaar"], r["week"])]
         n["punten"] += (deler - r["positie"] + 1) / deler
         n["edities"] += 1
         n["lijsten"].add(r["lijst"])
@@ -866,7 +869,7 @@ def looptijden(
 
 
 def editie_klassement(
-    con: sqlite3.Connection, lijst: str, jaar: int
+    con: sqlite3.Connection, lijst: str, jaar: int, week: Optional[int] = None
 ) -> list[dict]:
     """De noteringen van een editie, op positie, met de historie erbij.
 
@@ -875,17 +878,39 @@ def editie_klassement(
     tweede query over alle jaargangen, maar zonder die cijfers is een editie
     alleen een lijst namen.
     """
+    # Zonder week de eerste editie van dat jaar; dat houdt elke bestaande
+    # verwijzing (?lijst=X&jaar=2021) geldig, ook nu een jaar twee edities kan
+    # hebben.
+    if week is None:
+        gevonden = con.execute(
+            "SELECT MIN(week) FROM noteringen WHERE lijst=? AND jaar=?",
+            (lijst, jaar)).fetchone()[0]
+        if gevonden is None:
+            return []
+        week = gevonden
     dit_jaar = list(con.execute(
         "SELECT positie, artiest, titel, sleutel, uitjaar FROM noteringen"
-        " WHERE lijst=? AND jaar=? ORDER BY positie", (lijst, jaar)))
+        " WHERE lijst=? AND jaar=? AND week=? ORDER BY positie",
+        (lijst, jaar, week)))
     if not dit_jaar:
         return []
 
+    # De historie loopt over edities, niet over jaren: in een jaar met twee
+    # uitzendingen zijn dat twee losse punten.
+    op_volgorde = [(e["jaar"], e["week"]) for e in edities_van(con, lijst)]
+    hier = op_volgorde.index((jaar, week)) if (jaar, week) in op_volgorde else 0
+    # De matrix op de pagina zet de edities naast elkaar in de tijd en moet
+    # kunnen zien of een leeg vakje een gat is of het begin van de reeks.
+    # Vandaar dat de posities op volgnummer staan en niet op jaartal: met twee
+    # edities in een jaar is een jaartal geen volgorde meer.
+    nummer_van = {editie: i for i, editie in enumerate(op_volgorde)}
     historie: dict[str, dict[int, int]] = {}
-    for sleutel, rij_jaar, positie in con.execute(
-            "SELECT sleutel, jaar, MIN(positie) FROM noteringen WHERE lijst=?"
-            " GROUP BY sleutel, jaar", (lijst,)):
-        historie.setdefault(sleutel, {})[rij_jaar] = positie
+    for sleutel, rij_jaar, rij_week, positie in con.execute(
+            "SELECT sleutel, jaar, week, MIN(positie) FROM noteringen"
+            " WHERE lijst=? GROUP BY sleutel, jaar, week", (lijst,)):
+        nummer = nummer_van.get((rij_jaar, rij_week))
+        if nummer is not None:
+            historie.setdefault(sleutel, {})[nummer] = positie
 
     uit = []
     for rij in dit_jaar:
@@ -894,15 +919,15 @@ def editie_klassement(
         # terugkeer. Dat verschil is groot -- in 2025 waren van de 127 nummers
         # zonder vorige notering er 74 nieuw en 53 terug -- en zonder `eerder`
         # zou de pagina ze allemaal "nieuw" noemen.
-        eerder = [j for j in alles if j < jaar]
+        eerder = [nr for nr in alles if nr < hier]
         uit.append({
             "positie": rij["positie"],
             "artiest": rij["artiest"],
             "titel": rij["titel"],
             "sleutel": rij["sleutel"],
             "uitjaar": rij["uitjaar"],
-            "vorige": alles.get(jaar - 1),
-            "eerder": max(eerder) if eerder else None,
+            "vorige": alles.get(hier - 1) if hier else None,
+            "eerder": op_volgorde[max(eerder)][0] if eerder else None,
             "edities": len(alles),
             "hoogste": min(alles.values()) if alles else rij["positie"],
             "posities": alles,
@@ -910,11 +935,44 @@ def editie_klassement(
     return uit
 
 
-def edities_van(con: sqlite3.Connection, lijst: str) -> list[int]:
-    """Alle jaargangen waarvan we een editie hebben, oplopend."""
-    return [r[0] for r in con.execute(
-        "SELECT DISTINCT jaar FROM noteringen WHERE lijst=? ORDER BY jaar",
-        (lijst,))]
+# Voor het etiket van een editie in een jaar met meer dan een uitzending.
+_MAANDEN = ("januari", "februari", "maart", "april", "mei", "juni", "juli",
+            "augustus", "september", "oktober", "november", "december")
+
+
+def _etiket(jaar: int, week: int, alleen: bool) -> str:
+    """Hoe een editie heet op de pagina.
+
+    Een jaar met één uitzending is gewoon het jaartal -- zo staat het overal
+    en zo blijft het. Zijn er twee, dan moet de bezoeker ze uit elkaar kunnen
+    houden, en de maand van uitzending doet dat het duidelijkst: De Foute 1500
+    van 2021 draaide in juni en nog eens tussen kerst en oud en nieuw.
+    """
+    if alleen:
+        return str(jaar)
+    try:
+        maand = date.fromisocalendar(jaar, max(1, min(week, 52)), 1).month
+    except ValueError:
+        return f"{jaar} (week {week})"
+    return f"{jaar} ({_MAANDEN[maand - 1]})"
+
+
+def edities_van(con: sqlite3.Connection, lijst: str) -> list[dict]:
+    """Alle edities die we hebben, oplopend in de tijd.
+
+    Een editie is (jaar, week) en niet alleen een jaar: een jaarlijkse lijst
+    kan twee keer in hetzelfde jaar zijn uitgezonden. `etiket` is wat de
+    bezoeker ziet -- het kale jaartal zolang er maar één editie is.
+    """
+    rijen = list(con.execute(
+        "SELECT DISTINCT jaar, week FROM noteringen WHERE lijst=?"
+        " ORDER BY jaar, week", (lijst,)))
+    aantal_per_jaar: dict[int, int] = {}
+    for jaar, _ in rijen:
+        aantal_per_jaar[jaar] = aantal_per_jaar.get(jaar, 0) + 1
+    return [{"jaar": jaar, "week": week,
+             "etiket": _etiket(jaar, week, aantal_per_jaar[jaar] == 1)}
+            for jaar, week in rijen]
 
 
 def editie_reeks(
@@ -929,18 +987,24 @@ def editie_reeks(
     edities = edities_van(con, lijst)
     if not edities:
         return None
-    eigen = {jaar: positie for jaar, positie in con.execute(
-        "SELECT jaar, MIN(positie) FROM noteringen WHERE lijst=? AND sleutel=?"
-        " GROUP BY jaar", (lijst, sleutel))}
+    eigen = {(jaar, week): positie for jaar, week, positie in con.execute(
+        "SELECT jaar, week, MIN(positie) FROM noteringen WHERE lijst=?"
+        " AND sleutel=? GROUP BY jaar, week", (lijst, sleutel))}
     if not eigen:
         return None
 
     # Alleen het venster van de eerste tot de laatste editie waarin het stond;
-    # de jaren ervoor en erna zeggen niets.
-    van, tot = min(eigen), max(eigen)
-    binnen = [j for j in edities if van <= j <= tot]
-    reeks = [{"jaar": j, "week": None, "datum": str(j),
-              "positie": eigen.get(j)} for j in binnen]
+    # de edities ervoor en erna zeggen niets. Het venster loopt over de
+    # volgorde en niet over het jaartal, want een jaar kan twee edities hebben.
+    plek = {(e["jaar"], e["week"]): i for i, e in enumerate(edities)}
+    genummerd = sorted(plek[k] for k in eigen if k in plek)
+    if not genummerd:
+        return None
+    eerste, laatste = genummerd[0], genummerd[-1]
+    binnen = edities[eerste:laatste + 1]
+    van, tot = edities[eerste]["jaar"], edities[laatste]["jaar"]
+    reeks = [{"jaar": e["jaar"], "week": None, "datum": e["etiket"],
+              "positie": eigen.get((e["jaar"], e["week"]))} for e in binnen]
     genoteerd = list(eigen.values())
     return {
         "as": "editie",

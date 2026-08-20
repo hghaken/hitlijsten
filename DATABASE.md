@@ -22,8 +22,8 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 
 | Tabel | Rijen | Waarvoor |
 |---|---|---|
-| [`noteringen`](#noteringen) | 556.119 | de gegevens: één rij per nummer per week |
-| [`opgehaald`](#opgehaald) | 7.822 | welke week wanneer is binnengehaald |
+| [`noteringen`](#noteringen) | 568.119 | de gegevens: één rij per nummer per week |
+| [`opgehaald`](#opgehaald) | 7.830 | welke week wanneer is binnengehaald |
 | [`bestaat_niet`](#bestaat_niet) | 267 | weken die nooit zijn uitgezonden |
 | [`aliases`](#aliases) | 581 | twee sleutels die hetzelfde nummer zijn |
 | [`niet_samenvoegen`](#niet_samenvoegen) | 4 | het omgekeerde: lijkt hetzelfde, is het niet |
@@ -90,7 +90,7 @@ De tabel waar het om gaat. **Eén rij per nummer per week per lijst.**
 | `id` | INTEGER | primaire sleutel, een rijteller |
 | `lijst` | TEXT | `top40`, `tipparade`, `oranje`, `sterrennl`, `top2000`, `top4000`, `veronica`, `qtop1500`, `evergreen`, `arrow`, `kink` |
 | `jaar` | INTEGER | de jaargang |
-| `week` | INTEGER | het weeknummer; bij een jaarlijkse lijst de `editie_week` uit de configuratie (52 als die ontbreekt) |
+| `week` | INTEGER | het weeknummer; bij een jaarlijkse lijst de `editie_week` uit de configuratie (52 als die ontbreekt), of de echte uitzendweek als een jaar meer dan één editie had |
 | `positie` | INTEGER | 1 = hoogste |
 | `titel` | TEXT | zoals getoond |
 | `artiest` | TEXT | zoals getoond |

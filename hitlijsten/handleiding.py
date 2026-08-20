@@ -666,7 +666,8 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "oranjetop30.nl; Alarmschijf-markeringen via top40.nl. De "
           "jaarlijkse lijsten worden samengesteld "
           "door de radiozenders en verzameld via datastats.nl; de "
-          "80's-lijst van Veronica via hitdossier-online.nl. Deze "
+          "80's-lijst van Veronica en De Foute 1500 via "
+          "hitdossier-online.nl. Deze "
           "site toont hun gegevens; de rechten liggen bij de "
           "samenstellers. Zie de disclaimer op de site voor het "
           "volledige verhaal.")
@@ -1028,7 +1029,7 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "Tipparade, Sterren NL Top 25) and oranjetop30.nl; "
           "Alarmschijf markings via top40.nl. The annual charts are "
           "compiled by the radio stations and collected via "
-          "datastats.nl, with Veronica's 80s chart via "
+          "datastats.nl, with Veronica's 80s chart and De Foute 1500 via "
           "hitdossier-online.nl. This site shows their data; the rights remain "
           "with the compilers. See the site's disclaimer for the full "
           "story.")

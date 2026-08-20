@@ -20,6 +20,7 @@ if str(ROOT) not in sys.path:
 
 from hitlijsten import db, jaarlijks  # noqa: E402
 from hitlijsten.config import LIJSTEN, is_jaarlijks, wordt_opgehaald  # noqa: E402
+from hitlijsten.jaarlijks import Editie  # noqa: E402
 from hitlijsten.normalize import sleutel_van  # noqa: E402
 
 MAP = Path(tempfile.mkdtemp(prefix="hitlijsten-jaarlijks-"))
@@ -88,9 +89,9 @@ def test_matrix_wordt_per_editie_uit_elkaar_getrokken():
     pad = _csv([("Queen", "Bohemian Rhapsody", 1975, 1, 2),
                 ("Eagles", "Hotel California", 1977, 2, 1)] + _volle_editie()[2:])
     edities, regels = jaarlijks.lees_csv(pad)
-    assert edities == [2024, 2025]
+    assert edities == [Editie(2024), Editie(2025)]
     queen = next(r for r in regels if r.artiest == "Queen")
-    assert queen.posities == {2024: 1, 2025: 2}
+    assert queen.posities == {Editie(2024): 1, Editie(2025): 2}
     assert queen.uitjaar == 1975
 
 
@@ -99,7 +100,7 @@ def test_nul_betekent_niet_genoteerd():
     rijen.append(("Eendagsvlieg", "Alleen In 2025", 2025, 0, 1500))
     _, regels = jaarlijks.lees_csv(_csv(rijen))
     vlieg = next(r for r in regels if r.artiest == "Eendagsvlieg")
-    assert vlieg.posities == {2025: 1500}, "0 is geen positie maar een gat"
+    assert vlieg.posities == {Editie(2025): 1500}, "0 is geen positie maar een gat"
 
 
 def test_nummer_zonder_enkele_notering_valt_weg():
@@ -199,7 +200,7 @@ def test_een_typefout_houdt_de_import_niet_tegen():
     rijen[277] = (rijen[277][0], rijen[277][1], 1980, 279, 279)
     con = _database()
     uitkomst = jaarlijks.importeer(con, LIJST, _csv(rijen))
-    assert uitkomst["geschreven"][2025] == 2000
+    assert uitkomst["geschreven"][Editie(2025)] == 2000
     assert any("278" in w or "ontbreken" in w for w in uitkomst["waarschuwingen"]),         uitkomst["waarschuwingen"]
 
 
@@ -209,13 +210,54 @@ def test_een_typefout_houdt_de_import_niet_tegen():
 def test_import_schrijft_elke_editie_als_jaargang():
     con = _database()
     uitkomst = jaarlijks.importeer(con, LIJST, _csv(_volle_editie()))
-    assert uitkomst["geschreven"] == {2024: 2000, 2025: 2000}
+    assert uitkomst["geschreven"] == {Editie(2024): 2000, Editie(2025): 2000}
     week = LIJSTEN[LIJST]["editie_week"]
     for jaar in (2024, 2025):
         rij = con.execute(
             "SELECT COUNT(*), MIN(week), MAX(week) FROM noteringen"
             " WHERE lijst='top2000' AND jaar=?", (jaar,)).fetchone()
         assert tuple(rij) == (2000, week, week), tuple(rij)
+
+
+def test_twee_edities_in_een_jaar_staan_naast_elkaar():
+    """De Foute 1500 van 2021: een in juni, een tussen kerst en oud en nieuw.
+
+    Zonder week zouden die twee dezelfde plek in de database hebben en zou de
+    tweede de eerste wissen. Met "2021w25" en "2021w52" in de kolomkop passen
+    ze er allebei in.
+    """
+    edities = ("2024", "2025w25", "2025w52")
+    con = _database()
+    uitkomst = jaarlijks.importeer(
+        con, LIJST, _csv(_volle_editie(edities=edities), edities=edities))
+
+    assert uitkomst["geschreven"] == {Editie(2024): 2000,
+                                      Editie(2025, 25): 2000,
+                                      Editie(2025, 52): 2000}
+    weken = [r[0] for r in con.execute(
+        "SELECT DISTINCT week FROM noteringen WHERE lijst=? AND jaar=2025"
+        " ORDER BY week", (LIJST,))]
+    assert weken == [25, 52], weken
+    assert con.execute("SELECT COUNT(*) FROM noteringen").fetchone()[0] == 6000
+    # Ook de ophaalregistratie houdt ze uit elkaar.
+    assert con.execute("SELECT COUNT(*) FROM opgehaald WHERE lijst=? AND"
+                       " jaar=2025", (LIJST,)).fetchone()[0] == 2
+
+
+def test_de_vorige_editie_is_de_vorige_en_niet_het_jaar_ervoor():
+    """Een reeks met een gat: de Veronica 80's sloeg 2021 t/m 2023 over.
+
+    Zoekt de import de vorige editie op `jaar - 1`, dan komt zo'n editie in
+    zijn geheel als nieuw binnen terwijl de helft er gewoon in stond.
+    """
+    edities = ("2019", "2024")
+    con = _database()
+    jaarlijks.importeer(
+        con, LIJST, _csv(_volle_editie(edities=edities), edities=edities))
+    zonder = con.execute(
+        "SELECT COUNT(*) FROM noteringen WHERE lijst=? AND jaar=2024"
+        " AND vorige_positie IS NULL", (LIJST,)).fetchone()[0]
+    assert zonder == 0, f"{zonder} noteringen zonder vorige editie"
 
 
 def test_opnieuw_importeren_vervangt_in_plaats_van_verdubbelt():

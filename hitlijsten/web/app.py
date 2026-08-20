@@ -1208,7 +1208,25 @@ def _registreer(app: Flask) -> None:
         # dan de omgekeerde positie; die jaargang krijgt dus een eigen opzet,
         # met de matrix over de edities heen.
         if is_jaarlijks(lijst):
-            alle_nummers = db.editie_klassement(con, lijst, jaar)
+            # Een jaar kan twee edities hebben: De Foute 1500 draaide in 2021
+            # in juni en nog eens tussen kerst en oud en nieuw. De keuzelijst
+            # stuurt daarom `editie` ("2021-52"), maar een kaal `jaar` blijft
+            # gewoon werken -- dan wint de eerste editie van dat jaar. Zo
+            # blijft elke verwijzing van elders op de site geldig.
+            edities = db.edities_van(con, lijst)
+            week = None
+            gevraagde = request.args.get("editie", "")
+            welk_jaar, _, welke_week = gevraagde.partition("-")
+            if welk_jaar.isdigit() and welke_week.isdigit():
+                if any(e["jaar"] == int(welk_jaar)
+                       and e["week"] == int(welke_week) for e in edities):
+                    jaar, week = int(welk_jaar), int(welke_week)
+            elif welk_jaar.isdigit() and int(welk_jaar) in jaren:
+                jaar = int(welk_jaar)
+            if week is None:
+                van_dit_jaar = [e for e in edities if e["jaar"] == jaar]
+                week = van_dit_jaar[0]["week"] if van_dit_jaar else None
+            alle_nummers = db.editie_klassement(con, lijst, jaar, week)
             # Een editie van vierduizend regels is 2,9 MB HTML. Dezelfde
             # keuzelijst als overal (100/500/..., standaard 100); tot 250
             # nummers is er niets te kiezen en staat gewoon alles er.
@@ -1243,7 +1261,9 @@ def _registreer(app: Flask) -> None:
             return render_template(
                 "editie.html", lijst=lijst, jaren=jaren, jaar=jaar,
                 nummers=nummers, totaal=len(alle_nummers),
-                edities=db.edities_van(con, lijst),
+                edities=edities, week=week,
+                # Aflopend, want zo staat de keuzelijst ook: nieuwste eerst.
+                keuzes=list(reversed(edities)),
                 matrix=nummers[:matrix_tot], matrix_tot=matrix_tot,
                 matrix_keuzes=MATRIX_KEUZES, toon=toon,
                 aantallen=AANTALLEN, markeer=markeer,

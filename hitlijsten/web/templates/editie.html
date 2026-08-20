@@ -27,9 +27,13 @@
     </optgroup>
     {% endfor %}
   </select>
-  <select name="jaar" onchange="this.form.submit()">
-    {% for j in jaren %}
-      <option value="{{ j }}" {% if jaar == j %}selected{% endif %}>{{ j }}</option>
+  {# Een jaar kan twee edities hebben, dus de waarde draagt ook de week mee.
+     Het etiket blijft het kale jaartal zolang er maar één editie is. #}
+  <select name="editie" onchange="this.form.submit()">
+    {% for e in keuzes %}
+      <option value="{{ e.jaar }}-{{ e.week }}"
+        {% if jaar == e.jaar and week == e.week %}selected{% endif %}
+        >{{ e.etiket }}</option>
     {% endfor %}
   </select>
   {% if totaal > 250 %}
@@ -50,15 +54,21 @@
 
   </div>
   <div class="rij">
-  {% if jaar and jaar in jaren %}
-  {% set plek = jaren.index(jaar) %}
-  {% if plek + 1 < jaren|length %}
-    <a class="knop" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaren[plek + 1]) }}"
-       title="{{ jaren[plek + 1] }}">‹ {{ _('vorige') }}</a>
+  {# `keuzes` staat nieuwste eerst, dus "vorige" is een plek verderop. Het
+     loopt over edities en niet over jaren: bij twee uitzendingen in een jaar
+     brengt de pijl je naar de andere. #}
+  {% set nu = keuzes|selectattr('jaar', 'equalto', jaar)|selectattr('week', 'equalto', week)|list %}
+  {% if nu %}
+  {% set plek = keuzes.index(nu[0]) %}
+  {% if plek + 1 < keuzes|length %}
+    <a class="knop" href="{{ url_for('jaaroverzicht', lijst=lijst,
+         editie=keuzes[plek + 1].jaar ~ '-' ~ keuzes[plek + 1].week) }}"
+       title="{{ keuzes[plek + 1].etiket }}">‹ {{ _('vorige') }}</a>
   {% endif %}
   {% if plek > 0 %}
-    <a class="knop" href="{{ url_for('jaaroverzicht', lijst=lijst, jaar=jaren[plek - 1]) }}"
-       title="{{ jaren[plek - 1] }}">{{ _('volgende') }} ›</a>
+    <a class="knop" href="{{ url_for('jaaroverzicht', lijst=lijst,
+         editie=keuzes[plek - 1].jaar ~ '-' ~ keuzes[plek - 1].week) }}"
+       title="{{ keuzes[plek - 1].etiket }}">{{ _('volgende') }} ›</a>
   {% endif %}
   {% endif %}
 
@@ -82,8 +92,8 @@
      zeggen bij een jaarlijkse lijst niets. Die krijgen een eigen vorm. #}
 
   <span class="hint" style="margin-left:auto">
-    {{ jaren|length }} {{ _("edities beschikbaar") }}{% if jaren %}
-      ({{ jaren[-1] }}–{{ jaren[0] }}){% endif %} ·
+    {{ edities|length }} {{ _("edities beschikbaar") }}{% if edities %}
+      ({{ edities[0].jaar }}–{{ edities[-1].jaar }}){% endif %} ·
     {%- set herkomst = herkomst_van(lijst) %}
     {{ _('gegevens via') }} <a href="{{ herkomst[1] }}" target="_blank" rel="noopener">{{ herkomst[0] }}</a>
   </span>
@@ -119,7 +129,7 @@
     <div class="naam">{{ _("nieuw + terug") }}</div>
   </div>
   <div class="kaart" style="min-width:20rem">
-    <div class="naam">{{ _("nummer 1 van") }} {{ jaar }}</div>
+    <div class="naam">{{ _("nummer 1 van") }} {{ nu[0].etiket if nu else jaar }}</div>
     <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
       {{ nummers[0].titel }}</div>
     <div class="hint">{{ nummers[0].artiest }}{% if nummers[0].uitjaar %}
@@ -127,7 +137,7 @@
   </div>
 </div>
 
-<h2>{{ _("De editie van") }} {{ jaar }}</h2>
+<h2>{{ _("De editie van") }} {{ nu[0].etiket if nu else jaar }}</h2>
 <p class="hint" style="margin-top:-.3rem">
   {% if taal == 'en' %}This is one broadcast per year, so no weeks and no
   points — just the position. <b>Previous edition</b> is last year's
@@ -234,7 +244,7 @@
     <thead>
       <tr>
         <th class="breed" style="position:sticky; left:0; z-index:3; background:#131a2b">{{ _("Artiest — titel") }}</th>
-        {% for e in edities %}<th class="getal">{{ e }}</th>{% endfor %}
+        {% for e in edities %}<th class="getal">{{ e.etiket }}</th>{% endfor %}
       </tr>
     </thead>
     <tbody>
@@ -251,12 +261,14 @@
            niet in de lijst (of niet meer), of het sloeg dat jaar over. Alleen
            dat tweede is een gat, en dat krijgt een streepje -- anders lijkt een
            onderbroken reeks precies op een korte reeks. #}
+        {# De posities staan op volgnummer van de editie, niet op jaartal:
+           met twee edities in een jaar is een jaartal geen volgorde meer. #}
         {% for e in edities %}
-          {% set p = n.posities.get(e) %}
+          {% set p = n.posities.get(loop.index0) %}
           <td class="getal {% if p == 1 %}top1{% elif p and p <= 10 %}top3{% endif %}">
-            {% if p %}{{ p }}{% elif n.posities and e > n.posities.keys()|min
-              and e < n.posities.keys()|max %}<span class="gat"
-              title="{% if taal == 'en' %}not charting in {{ e }}{% else %}in {{ e }} niet genoteerd{% endif %}">–</span>{% endif %}</td>
+            {% if p %}{{ p }}{% elif n.posities and loop.index0 > n.posities.keys()|min
+              and loop.index0 < n.posities.keys()|max %}<span class="gat"
+              title="{% if taal == 'en' %}not charting in {{ e.etiket }}{% else %}in {{ e.etiket }} niet genoteerd{% endif %}">–</span>{% endif %}</td>
         {% endfor %}
       </tr>
       {% endfor %}

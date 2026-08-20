@@ -53,13 +53,13 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 556.119 noteringen over
-  tweeëntwintig lijsten. Top 40
+- **Het hele archief staat in de database**: 568.119 noteringen over
+  drieëntwintig lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
   Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26),
-  Kink Top 1500 2019–2025 (7) en de Veronica 80's 2005–2026 (19).
+  Kink Top 1500 2019–2025 (7), de Veronica 80's 2005–2026 (19) en De Foute 1500 2020–2026 (8 edities in 7 jaar).
 - 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 581 aliassen,
   4.044 onderscheidingen, 4.963 doorverwijzingen van verhuisde sleutels en
   7.035 taalbepalingen.
@@ -202,7 +202,7 @@ De totaallijst kent geen bestand op schijf — die haal je op met de knop.
 
 ### De jaarlijkse lijsten
 
-De vier weeklijsten komen van een website. De achttien jaarlijkse lijsten —
+De vier weeklijsten komen van een website. De negentien jaarlijkse lijsten —
 van de Top 2000 en de Top 4000 tot de Festival Top 1003, de Sublime Soul
 Top 1000 en de Toplijsten van de jaren 60 en 70 — zijn één
 uitzending per jaar en komen binnen als matrix met een regel per nummer en een
@@ -228,7 +228,8 @@ bron kostte werk, de import zelf was één aanroep.
 
 Elke editie wordt weggeschreven als jaargang met de **`editie_week`** uit de
 lijstdefinitie, de week waarin de uitzending doorgaans valt (52 als die
-ontbreekt). Daardoor werken de sleutels, het jaaroverzicht en de database
+ontbreekt). Een jaar mag meer dan één editie hebben — zie *Twee edities in één
+jaar* hieronder; dan telt de echte uitzendweek. Daardoor werken de sleutels, het jaaroverzicht en de database
 zonder uitzondering mee. In de lijstdefinitie staat `site: None`; daaraan
 herkent de wekelijkse run dat hij deze lijst met rust moet laten.
 
@@ -1498,6 +1499,55 @@ import vervangt per (lijst, jaar, week).
 De kruisverwijzing na afloop was het bewijs dat de koppeling klopt: alle 217
 nummers delen een sleutel met andere lijsten, 206 met de Top 2000.
 
+### Twee edities in één jaar: De Foute 1500
+
+Qmusic zendt De Foute 1500 sinds 2020 uit, en in 2021 **twee keer**: van 18 tot
+25 juni, en nog eens van 26 tot 31 december. Acht edities in zeven jaar dus. Dat
+was de eerste keer dat het archief tegen zijn eigen aanname aanliep — één
+uitzending per jaar — en die aanname zat dieper dan verwacht.
+
+De database zelf had er geen moeite mee: `noteringen` sleutelt op **(lijst,
+jaar, week)**, dus twee edities in een jaar passen er gewoon in zolang ze niet
+dezelfde week krijgen. Het probleem zat in de laag erboven, die overal *jaar*
+las waar *editie* bedoeld werd:
+
+* De **matrix-CSV** heeft een kolom per jaar. Een editiekolom mag nu een week
+  dragen: `2021w25` naast `2021w52`. Staat er alleen een jaartal, dan valt de
+  import terug op de `editie_week` van de lijst — precies zoals het altijd al
+  ging, dus voor de achttien andere jaarlijkse lijsten verandert er niets.
+* De **importeur** wiste per jaargang binnen de lus, waardoor de tweede editie
+  de eerste meteen weer had weggegooid. Nu wordt er één keer per jaargang
+  opgeruimd en worden daarna alle edities van dat jaar geschreven.
+* **`vorige_positie`** werd opgezocht op `jaar - 1`. Dat is nu de editie die er
+  echt vóór zat. Twee vliegen in één klap: de Veronica 80's sloeg 2021 tot en
+  met 2023 over, en daar deed een losse correctie na afloop het werk. Die kon
+  weg.
+* Op de **pagina** koos je een jaar. Dat is nu een editie: de keuzelijst stuurt
+  `editie=2021-52`, en de vorige/volgende-pijlen lopen over edities. Een kaal
+  `?jaar=2021` blijft werken en levert de eerste editie van dat jaar, zodat
+  elke verwijzing van elders op de site geldig blijft.
+* In de **matrix** stonden de posities op jaartal. Nu op volgnummer van de
+  editie, want met twee edities in een jaar is een jaartal geen volgorde meer.
+
+Het etiket is het kale jaartal zolang een jaar één editie heeft — zo staat het
+overal en zo blijft het. Alleen bij een dubbel jaar komt de maand erachter:
+*2021 (juni)* en *2021 (december)*. Dat leest meteen goed, ook in de grafiek:
+K3's *Oya Lele* klom van 23 in 2020 via 13 (juni) en 5 (december) naar 1 in
+2026.
+
+De lijst zelf is een buitenbeentje in het archief. Van de 1.969 nummers kent
+het de meeste al, maar 99 niet — feesttentmuziek die nooit een Top 40-notering
+haalde. Dat is geen tekortkoming maar precies wat een fout-uur-lijst is. Een
+handvol credits is wél rechtgezet, want dat waren schrijfwijzen en geen andere
+platen: hitdossier schrijft ABBA als *ABBA (Björn & Benny & Anna & Frida)* en
+zet een `&` waar het archief *Acda en De Munnik* schrijft. Wat een cover of een
+remix is bleef eigen — de *Frozen* van Da Tweekaz is niet die van Madonna, en
+de *Zombie* van Ran-D niet die van The Cranberries.
+
+> **Qmusic zelf is geen bron.** qmusic.nl zet een toestemmingsmuur van DPG
+> Media voor de lijstpagina's. Hitdossier heeft alle acht de edities, met
+> allebei de 2021-versies apart, dus dat is de route.
+
 ### Vier namen, één lijst: de Veronica 80's
 
 Radio Veronica zendt sinds 2005 elk jaar een 80's-lijst uit, maar onder vier
@@ -1617,7 +1667,7 @@ Alles wat van buiten komt, op een rij — met per site de rol én de valkuil.
 
 | site | rol |
 |---|---|
-| hitdossier-online.nl | onafhankelijke Top 40-aggregaties (puntenlijsten, jaaroverzichten) om de eigen berekeningen tegen te leggen; de 1965-steekproef bevestigde eerder dat onze cijfers klopten. **Sinds augustus 2026 ook echte bron**: de negentien edities van de Veronica 80's-lijst komen hiervandaan |
+| hitdossier-online.nl | onafhankelijke Top 40-aggregaties (puntenlijsten, jaaroverzichten) om de eigen berekeningen tegen te leggen; de 1965-steekproef bevestigde eerder dat onze cijfers klopten. **Sinds augustus 2026 ook echte bron**: de negentien edities van de Veronica 80's-lijst en de acht van De Foute 1500 komen hiervandaan |
 | tvoranje.nl | de winnaarslijst van de Oranje Kroon, terug tot 2009 |
 | wikipedia (artikelen) | definities en criteria, zoals de stipnotering |
 

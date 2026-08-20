@@ -10,7 +10,18 @@ in hun definitie lopen door dit ene bestand; een lijst toevoegen is dus een
 regel in `config.LIJSTEN` en een keer importeren, geen nieuwe code.
 
 Dat past met een kleine kunstgreep in hetzelfde schema: elke editie wordt
-weggeschreven als jaargang met `week = 52`, de week waarin de uitzending valt.
+weggeschreven als jaargang met de `editie_week` van de lijst, de week waarin de
+uitzending doorgaans valt.
+
+TWEE EDITIES IN EEN JAAR
+------------------------
+Dat mag, en het gebeurt: De Foute 1500 van 2021 werd twee keer uitgezonden, in
+juni en tussen kerst en oud en nieuw. De database sleutelt op (lijst, jaar,
+week), dus die twee passen er gewoon naast elkaar in -- zolang ze niet dezelfde
+week krijgen. Een editiekolom in de CSV mag daarom een week dragen: "2021w25"
+naast "2021w52". Staat er alleen een jaartal, dan valt de import terug op de
+`editie_week` van de lijst, en verandert er niets voor de lijsten die één
+uitzending per jaar hebben.
 Zo werken de jaaroverzichten, de sleutels en de Excel-bouwer zonder uitzondering
 mee. Wat er NIET in past is de weekmatrix -- binnen een jaargang is er maar een
 meting. Voor deze lijst is de zinvolle matrix nummer x editie, en die staat al
@@ -27,6 +38,7 @@ lijsten; de rest zijn vooral albumnummers die nooit als single noteerden.
 from __future__ import annotations
 
 import csv
+import re
 import sqlite3
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -39,11 +51,45 @@ from .opschonen import (eenduidige_credit, komma_is_samenwerking,
                         met_is_samenwerking, ondertitel_tussen_haken,
                         schoon_tekst, x_is_samenwerking)
 
-__all__ = ["Regel", "lees_csv", "importeer", "kruisverwijzing", "controleer"]
+__all__ = ["Editie", "Regel", "lees_csv", "importeer",
+           "kruisverwijzing", "controleer"]
 # Music Datastats levert windows-1252; UTF-8 wordt eerst geprobeerd omdat een
 # latere versie dat best kan gaan doen.
 CODERINGEN = ("utf-8-sig", "windows-1252")
 SCHEIDING = ";"
+
+
+# Een editiekolom is een jaartal, eventueel met een weeknummer erachter:
+# "2021" of "2021w52". Dat weeknummer is er alleen als het nodig is, en dat is
+# precies één keer: De Foute 1500 van 2021 werd twee keer uitgezonden, in juni
+# en tussen kerst en oud en nieuw. Zonder week zouden die twee edities
+# dezelfde plek in de database hebben en elkaar overschrijven.
+_KOLOM = re.compile(r"^(?P<jaar>[0-9]{4})(?:w(?P<week>[0-9]{1,2}))?$")
+
+
+@dataclass(frozen=True)
+class Editie:
+    """Eén uitzending: een jaar, en de week erbinnen.
+
+    `week` is None als de bron er niets over zegt; dan valt de import terug op
+    de `editie_week` van de lijst. Zo verandert er niets voor de zeventien
+    lijsten die één uitzending per jaar hebben.
+    """
+
+    jaar: int
+    week: Optional[int] = None
+
+    def week_in(self, lijst: str) -> int:
+        return self.week or LIJSTEN.get(lijst, {}).get("editie_week", 52)
+
+    @property
+    def op_volgorde(self) -> tuple[int, int]:
+        """Sorteersleutel. Niet `order=True`: dan zou een editie zonder week
+        vergeleken worden met een editie mét, en botst None op een int."""
+        return (self.jaar, self.week or 0)
+
+    def __str__(self) -> str:
+        return str(self.jaar) if self.week is None else f"{self.jaar}w{self.week}"
 
 
 @dataclass
@@ -53,8 +99,8 @@ class Regel:
     artiest: str
     titel: str
     uitjaar: Optional[int]
-    # editiejaar -> positie
-    posities: dict[int, int] = field(default_factory=dict)
+    # editie -> positie
+    posities: dict[Editie, int] = field(default_factory=dict)
 
     @property
     def sleutel(self) -> str:
@@ -72,7 +118,7 @@ def _lees_tekst(pad: Path) -> str:
                      f"{', '.join(CODERINGEN)})")
 
 
-def lees_csv(pad: Path | str) -> tuple[list[int], list[Regel]]:
+def lees_csv(pad: Path | str) -> tuple[list[Editie], list[Regel]]:
     """Lees de matrix. Geeft de editiejaren en een regel per nummer terug.
 
     De structuurcontrole is streng met opzet: als de bron ooit van vorm
@@ -88,12 +134,18 @@ def lees_csv(pad: Path | str) -> tuple[list[int], list[Regel]]:
     if kop[:4] != verwacht:
         raise ValueError(f"{pad.name}: eerste kolommen zijn {kop[:4]}, "
                          f"verwacht {verwacht}")
-    try:
-        edities = [int(j) for j in kop[4:]]
-    except ValueError as fout:
-        raise ValueError(f"{pad.name}: kolomkop is geen jaartal ({fout})") from fout
+    edities = []
+    for kolom in kop[4:]:
+        m = _KOLOM.match(kolom.strip())
+        if not m:
+            raise ValueError(f"{pad.name}: kolomkop {kolom!r} is geen jaartal "
+                             f"(verwacht 2025 of 2025w52)")
+        edities.append(Editie(int(m["jaar"]),
+                              int(m["week"]) if m["week"] else None))
     if not edities:
         raise ValueError(f"{pad.name}: geen editiekolommen gevonden")
+    if len(set(edities)) != len(edities):
+        raise ValueError(f"{pad.name}: dezelfde editie staat er tweemaal in")
 
     uit: list[Regel] = []
     for nr, rij in enumerate(rijen, start=2):
@@ -104,16 +156,16 @@ def lees_csv(pad: Path | str) -> tuple[list[int], list[Regel]]:
             raise ValueError(f"{pad.name} regel {nr}: artiest of titel ontbreekt")
         regel = Regel(artiest=artiest, titel=titel,
                       uitjaar=int(rij[3]) if rij[3].strip().isdigit() else None)
-        for i, jaar in enumerate(edities):
+        for i, editie in enumerate(edities):
             waarde = rij[4 + i].strip() if 4 + i < len(rij) else ""
             if waarde and waarde != "0":
-                regel.posities[jaar] = int(waarde)
+                regel.posities[editie] = int(waarde)
         if regel.posities:
             uit.append(regel)
     return edities, uit
 
 
-def controleer(lijst: str, edities: list[int],
+def controleer(lijst: str, edities: list[Editie],
                regels: list[Regel]) -> tuple[list[str], list[str]]:
     """Klopt elke editie? Geeft (fouten, waarschuwingen).
 
@@ -133,8 +185,9 @@ def controleer(lijst: str, edities: list[int],
     waarschuwingen: list[str] = []
     nominaal = LIJSTEN.get(lijst, {}).get("lengte")
 
-    for jaar in edities:
-        posities = [r.posities[jaar] for r in regels if jaar in r.posities]
+    for editie in edities:
+        jaar = editie
+        posities = [r.posities[editie] for r in regels if editie in r.posities]
         if not posities:
             fouten.append(f"{jaar}: geen enkele notering")
             continue
@@ -182,17 +235,26 @@ def kruisverwijzing(con: sqlite3.Connection, lijst: str,
     return {"raak": raak, "per_lijst": per_lijst}
 
 
-def _noteringen(lijst: str, regels: list[Regel], jaar: int) -> Iterator[tuple]:
-    week = LIJSTEN[lijst].get("editie_week", 52)
+def _noteringen(lijst: str, regels: list[Regel], editie: Editie,
+                vorige: Optional[Editie]) -> Iterator[tuple]:
+    """De rijen van één editie, klaar om weg te schrijven.
+
+    `vorige` is de editie die er echt vóór zat en niet simpelweg het jaar
+    ervoor. Dat scheelt bij een reeks met een gat -- de Veronica 80's sloeg
+    2021 tot en met 2023 over, en anders zou de editie van 2024 in zijn geheel
+    als nieuw binnenkomen.
+    """
+    week = editie.week_in(lijst)
     for regel in regels:
-        positie = regel.posities.get(jaar)
+        positie = regel.posities.get(editie)
         if positie is None:
             continue
         artiest = met_is_samenwerking(komma_is_samenwerking(
             x_is_samenwerking(eenduidige_credit(schoon_tekst(regel.artiest)))))
         titel = ondertitel_tussen_haken(schoon_tekst(regel.titel))
-        yield (lijst, jaar, week, positie, titel, artiest,
-               None, len(regel.posities), regel.posities.get(jaar - 1),
+        yield (lijst, editie.jaar, week, positie, titel, artiest,
+               None, len(regel.posities),
+               regel.posities.get(vorige) if vorige else None,
                "onbekend", sleutel_van(artiest, titel), regel.uitjaar)
 
 
@@ -211,15 +273,28 @@ def importeer(con: sqlite3.Connection, lijst: str, pad: Path | str, *,
     if fouten:
         raise ValueError("de CSV klopt niet:\n  " + "\n  ".join(fouten))
 
+    op_volgorde = sorted(edities, key=lambda e: e.op_volgorde)
+    vorige_van = dict(zip(op_volgorde[1:], op_volgorde))
+
     con.execute("SAVEPOINT jaarlijks")
     try:
         geschreven = {}
-        for jaar in edities:
-            if alleen_jaar is not None and jaar != alleen_jaar:
+        # Per jaargang opruimen en dan alle edities van dat jaar schrijven.
+        # Weggooien per (jaar, week) zou een editie laten staan waarvan de
+        # week sindsdien veranderd is; weggooien per jaar binnen de lus zou de
+        # eerste editie van een dubbel jaar meteen weer wissen.
+        gewist = set()
+        for editie in op_volgorde:
+            if alleen_jaar is not None and editie.jaar != alleen_jaar:
                 continue
-            rijen = list(_noteringen(lijst, regels, jaar))
-            con.execute("DELETE FROM noteringen WHERE lijst=? AND jaar=?",
-                        (lijst, jaar))
+            rijen = list(_noteringen(lijst, regels, editie,
+                                     vorige_van.get(editie)))
+            if editie.jaar not in gewist:
+                con.execute("DELETE FROM noteringen WHERE lijst=? AND jaar=?",
+                            (lijst, editie.jaar))
+                con.execute("DELETE FROM opgehaald WHERE lijst=? AND jaar=?",
+                            (lijst, editie.jaar))
+                gewist.add(editie.jaar)
             con.executemany(
                 "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
                 " artiest, label, weken_genoteerd, vorige_positie, site_status,"
@@ -231,13 +306,13 @@ def importeer(con: sqlite3.Connection, lijst: str, pad: Path | str, *,
             con.execute(
                 "INSERT OR REPLACE INTO opgehaald (lijst, jaar, week, aantal,"
                 " opgehaald_op) VALUES (?,?,?,?,?)",
-                (lijst, jaar, LIJSTEN[lijst].get("editie_week", 52), len(rijen),
+                (lijst, editie.jaar, editie.week_in(lijst), len(rijen),
                  datetime.now().isoformat(timespec="seconds")))
             # In de bouwwachtrij, zodat "Bijwerken wat veranderd is" op de
             # beheerpagina de Excel en PDF van deze editie oppakt -- met
             # voortgangsbalk, in plaats van een losse commandoregel-klus.
-            markeer_te_bouwen(con, lijst=lijst, jaar=jaar, reden="import")
-            geschreven[jaar] = len(rijen)
+            markeer_te_bouwen(con, lijst=lijst, jaar=editie.jaar, reden="import")
+            geschreven[editie] = len(rijen)
     except Exception:
         con.execute("ROLLBACK TO SAVEPOINT jaarlijks")
         raise

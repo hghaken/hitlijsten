@@ -61,6 +61,7 @@ BRON_URLS = {
 # Music Datastats; dit is de uitzondering, en de bezoeker hoort de juiste bron
 # te zien. Een lijst die hier niet in staat krijgt de standaardvermelding.
 HERKOMST = {
+    "foute1500": ("hitdossier-online.nl", "https://www.hitdossier-online.nl/"),
     "veronica80s": ("hitdossier-online.nl", "https://www.hitdossier-online.nl/"),
 }
 STANDAARD_HERKOMST = ("datastats.nl", "https://www.datastats.nl/")
@@ -349,6 +350,22 @@ LIJSTEN = {
     # `hitlijsten/hitdossier.py`.
     # `editie_week` is een grove benadering -- de uitzending zwierf van week
     # 4 tot week 46; de laatste edities vallen eind januari.
+    # De enige lijst met twee edities in een jaar: in 2021 draaide De Foute
+    # 1500 in juni (week 25) en nog eens tussen kerst en oud en nieuw (week
+    # 52). Die twee staan los in de database, want die sleutelt op
+    # (lijst, jaar, week). `editie_week` geldt voor alle andere jaren; de
+    # uitzending valt doorgaans eind juni.
+    "foute1500": {
+        "naam": "De Foute 1500 (Qmusic)",
+        "site": None,
+        "slug": None,
+        "lengte": 1500,
+        "bestand": "Foute1500",
+        "heeft_label": False,
+        "vanaf_jaar": 2020,
+        "jaarlijks": True,
+        "editie_week": 25,
+    },
     "veronica80s": {
         "naam": "80's Top 500/750/880/1000 (Veronica)",
         "site": None,

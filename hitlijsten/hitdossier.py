@@ -2,16 +2,23 @@
 
 WAAROM EEN TWEEDE BRON
 ----------------------
-De jaarlijkse lijsten komen als matrix van Music Datastats. Eén lijst staat
-daar niet in: de 80's-lijst van Radio Veronica. Die loopt sinds 2005 en heeft
-in die tijd vier namen en vier lengtes gehad -- 80's Top 880 (2005-2013),
-Top 750 (2014-2016), Top 500 (2017-2019) en sinds 2024 de Top 1000 van de 80s.
-hitdossier-online.nl heeft alle edities compleet, met per notering ook het
-uitgavejaar.
+De jaarlijkse lijsten komen als matrix van Music Datastats. Twee staan daar
+niet in, en die komen hiervandaan:
 
-Het archief voert ze als één reeks (`veronica80s`). Dat is de hele winst: van
-*Purple Rain* zie je zo één geschiedenis van achttien edities -- van 24 in 2005
-naar 1 in 2026 -- in plaats van vier losse van drie.
+* De **80's-lijst van Radio Veronica** (`veronica80s`). Die loopt sinds 2005 en
+  heeft in die tijd vier namen en vier lengtes gehad -- 80's Top 880
+  (2005-2013), Top 750 (2014-2016), Top 500 (2017-2019) en sinds 2024 de
+  Top 1000 van de 80s. Het archief voert ze als één reeks, en dat is de hele
+  winst: van *Purple Rain* zie je zo één geschiedenis van negentien edities --
+  van 24 in 2005 naar 1 in 2026 -- in plaats van vier losse van drie.
+* **De Foute 1500 van Qmusic** (`foute1500`), sinds 2020. Qmusic zelf zet een
+  toestemmingsmuur van DPG Media voor zijn lijstpagina's, dus dat is geen
+  bruikbare bron. Bijzonder aan deze lijst: 2021 werd **twee keer** uitgezonden,
+  in juni en tussen kerst en oud en nieuw. `edities()` leest dan de uitzendweek
+  van de pagina, zodat de twee elk een eigen plek in de database krijgen.
+
+hitdossier heeft van allebei alle edities compleet, met per notering ook het
+uitgavejaar.
 
 DE PAGINA LEZEN
 ---------------
@@ -46,10 +53,13 @@ import time
 import unicodedata
 import urllib.request
 from collections import Counter, defaultdict
+from datetime import date
 from html import unescape
 from pathlib import Path
+from typing import Optional
 
 from .config import CACHE_DIR, DATA_DIR
+from .jaarlijks import Editie
 from .normalize import sleutel_van
 from .opschonen import (eenduidige_credit, komma_is_samenwerking,
                         met_is_samenwerking, ondertitel_tussen_haken,
@@ -83,6 +93,11 @@ BASIS = "https://www.hitdossier-online.nl"
 #
 # 2021, 2022 en 2023 blijven daardoor leeg in deze reeks.
 SLUGS = {
+    # De Foute 1500 staat onder één naam, met acht edities. Het bijzondere zit
+    # in 2021: die draaide twee keer, in juni en tussen kerst en oud en nieuw.
+    # `edities()` leest dan de uitzendweek van de pagina, zodat ze allebei een
+    # eigen plek in de database krijgen.
+    "foute1500": ("qmusic-nl-de-foute-1500",),
     "veronica80s": (
         "radio-veronica-80s-top-880",
         "radio-veronica-80s-top-750",
@@ -97,6 +112,39 @@ SLUGS = {
 # historie op de langste reeks aansluit. Twee ervan verraadden een ligatuur die
 # het archief wel gebruikt en hitdossier niet.
 MET_DE_HAND = {
+    # Bij De Foute 1500 gaat het vooral om credits die het archief korter of
+    # anders schrijft: "en" waar hitdossier "&" zet, een uitgebreide
+    # gastenlijst tegenover de naam op de hoes. Alleen wat aantoonbaar
+    # dezelfde opname is staat hier. Wat een cover of een remix is blijft
+    # eigen -- Frozen van Da Tweekaz is niet dat van Madonna, en de Zombie van
+    # Ran-D niet die van The Cranberries.
+    "foute1500": {
+        "ABBA (Björn & Benny & Anna & Frida)": "ABBA",
+        "Acda & De Munnik": "Acda en De Munnik",
+        "André Hazes & Het Nederlands Elftal":
+            "André Hazes en Het Nederlands Elftal",
+        "Benny Benassi & The Biz": "Benny Benassi presents 'The Biz'",
+        "Bob Sinclar & Cutee-B & Dollarman & Big Ali & Makedah": "Bob Sinclar",
+        "Bob Sinclar & Goleo VI & Gary Pine": "Bob Sinclar",
+        "C'est Tout & Anthonius Hapt": "C'est Tout m.m.v. Anthonius Hapt",
+        "Cliff Richard, The Young Ones & Hank Marvin":
+            "Cliff Richard & The Young Ones",
+        "Corry Konings": "Corry",
+        "Fat Boys & Chubby Checker":
+            "Fat Boys with stupid def vocals by Chubby Checker",
+        "Jeremy Jackson": "Jeremy Jackson - Hobie from Baywatch",
+        "Judeska & Ali B & Poke": "Ali B & Poke & Judeska",
+        "Kenny Dope & The Bucketheads": "Bucketheads",
+        "Kraantje Pappie & MC Jiggy Djé": "Kraantje Pappie & Jiggy Dje",
+        "MC Sar & The Real McCoy": "M.C.Sar & The Real McCoy",
+        "New Kids & DJ Paul Elstak": "New Kids & Paul Elstak",
+        "Philip Bailey & Phil Collins": "Phil Collins & Philip Bailey",
+        "Schnappi": "Iris Gruttmann presents Schnappi",
+        "Scorpions": "Scorpions (du)",
+        "Stefan & Sean & Bram Krikke": "Stefan en Sean & Bram Krikke",
+        "Yves Larock & Jaba": "Yves Larock",
+        "2Pac & Dr. Dre & Roger Troutman": "2Pac & Dr. Dre",
+    },
     "veronica80s": {
         "Orchestral Manoeuvres In The Dark": "Orchestral Manœuvres In The Dark",
         "George Michael": "George Michæl",
@@ -118,6 +166,13 @@ MET_DE_HAND = {
 # Twee platen van dezelfde band staan in het archief onder twee credits, dus
 # hier is de titel nodig om te weten welke.
 MET_DE_HAND_PER_TITEL = {
+    # Credits die alleen voor die ene plaat gelden -- de artiest zelf staat
+    # elders in het archief onder een andere naam.
+    "foute1500": {
+        ("2 Brothers On The 4th Floor", "One Day"):
+            "2 Brothers On The 4th Floor & Des'ray and D-Rock",
+        ("Wax", "Rosana"): "Wax (2013)",
+    },
     "veronica80s": {
         ("Wax", "Building A Bridge To Your Heart"): "Wax (1986)",
         ("Wax", "Right Between The Eyes"): "Wax (en)",
@@ -133,7 +188,18 @@ MET_DE_HAND_TITELS = {
     },
 }
 
-_JAARLINK = re.compile(r'href="(?P<slug>[a-z0-9-]+)-(?P<jaar>20[0-9]{2})"')
+# Een editielink is de naam met een jaartal erachter, soms met een staartje:
+# de tweede uitzending van 2021 staat op "...-de-foute-1500-2021-extra-editie".
+_JAARLINK = re.compile(
+    r'href="(?P<pad>(?P<slug>[a-z0-9-]+)-(?P<jaar>20[0-9]{2})'
+    r'(?:-[a-z][a-z-]*)?)"')
+_MAANDEN = ("januari", "februari", "maart", "april", "mei", "juni", "juli",
+            "augustus", "september", "oktober", "november", "december")
+# De koptekst zegt wanneer de lijst draaide. Het jaarmenu staat ervoor, dus er
+# wordt pas gezocht na "terug naar alle lijsten" -- anders leest de regex de
+# jaartallen uit dat menu als datum.
+_PERIODE = re.compile(
+    r"(?:(\d{1,2}) (\w+) (\d{4}) t/m )?(\d{1,2}) (\w+) (\d{4})")
 _ARTIEST = re.compile(r'<td class="_artiesten">')
 # Alles behalve de twee kolommen die geen positie zijn.
 _POSITIE = re.compile(r'<th class="(_(?!vw|aw)[a-z]+)"[^>]*>\s*([0-9]+)\s*</th>')
@@ -169,26 +235,65 @@ def _haal(pad_op_de_site: str, *, verversen: bool = False) -> str:
     return h
 
 
-def edities(lijst: str, *, verversen: bool = False) -> dict[int, str]:
-    """Welke edities er zijn, als {jaar: pad op de site}.
+def uitzending(h: str) -> Optional[date]:
+    """De laatste dag van de uitzending, uit de koptekst van de pagina.
+
+    Het jaarmenu staat vóór de datum en bestaat uit jaartallen, dus er wordt
+    pas gezocht ná "terug naar alle lijsten". Zonder dat anker leest de regex
+    dat menu als datum.
+    """
+    kop = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", h[:h.find("_artiesten")]))
+    _, _, na = kop.partition("terug naar alle lijsten")
+    m = _PERIODE.search(na or kop)
+    if not m:
+        return None
+    dag, maand, jaar = m.group(4), m.group(5).lower(), m.group(6)
+    if maand not in _MAANDEN:
+        return None
+    return date(int(jaar), _MAANDEN.index(maand) + 1, int(dag))
+
+
+def edities(lijst: str, *, verversen: bool = False) -> dict[Editie, str]:
+    """Welke edities er zijn, als {editie: pad op de site}.
 
     Niet vastgelegd maar van de overzichtspagina gelezen, zodat de editie van
     volgend januari er vanzelf bij komt. Het pad is meestal `slug-jaar`, maar
     een naam die maar één editie kende (Back To The 80s Top 880) heeft geen
-    jaartal in de URL: dan is het de kale slug.
+    jaartal in de URL, en een tweede uitzending in hetzelfde jaar krijgt een
+    staartje ("-2021-extra-editie").
+
+    De week zit er alleen in als een jaar meer dan één editie heeft. Dan is
+    hij nodig om ze uit elkaar te houden -- De Foute 1500 draaide in 2021 in
+    juni en nog eens tussen kerst en oud en nieuw. Voor alle andere jaren
+    blijft de `editie_week` van de lijst gelden, zoals bij elke andere
+    jaarlijkse lijst.
     """
-    gevonden: dict[int, str] = {}
+    paden: dict[str, int] = {}
     for slug in SLUGS[lijst]:
         h = _haal(slug, verversen=verversen)
         for m in _JAARLINK.finditer(h):
             if m["slug"] == slug:
-                gevonden[int(m["jaar"])] = f"{slug}-{m['jaar']}"
+                paden[m["pad"]] = int(m["jaar"])
         # De overzichtspagina toont de editie die hij zelf is niet altijd in
         # zijn jaarlijst; het jaar in de titel vult dat aan.
         titel = re.search(r"<title>[^<]*editie (20[0-9]{2})", h)
         if titel:
-            gevonden.setdefault(int(titel.group(1)), slug)
-    return dict(sorted(gevonden.items()))
+            paden.setdefault(slug, int(titel.group(1)))
+
+    per_jaar: Counter[int] = Counter(paden.values())
+    gevonden: dict[Editie, str] = {}
+    for pad, jaar in paden.items():
+        week = None
+        if per_jaar[jaar] > 1:
+            dag = uitzending(_haal(pad, verversen=verversen))
+            if dag is None:
+                raise ValueError(
+                    f"{pad}: {jaar} heeft meer dan een editie, maar de "
+                    f"uitzenddatum staat niet op de pagina -- zonder week "
+                    f"zouden ze elkaar overschrijven")
+            week = dag.isocalendar()[1]
+        gevonden[Editie(jaar, week)] = pad
+    return dict(sorted(gevonden.items(), key=lambda p: p[0].op_volgorde))
 
 
 def haal_editie(pad_op_de_site: str, *,
@@ -215,24 +320,29 @@ def haal_editie(pad_op_de_site: str, *,
 
 
 def alle_edities(lijst: str, *, jaren: list[int] | None = None,
-                 verversen: bool = False) -> dict[int, list[dict]]:
-    """Alle edities van een lijst, of alleen de gevraagde jaren."""
+                 verversen: bool = False) -> dict[Editie, list[dict]]:
+    """Alle edities van een lijst, of alleen die van de gevraagde jaren.
+
+    Een jaar met twee uitzendingen levert er dan ook twee -- ze horen bij
+    elkaar en apart importeren zou de ander wissen.
+    """
     beschikbaar = edities(lijst, verversen=verversen)
     if jaren:
-        ontbreekt = [j for j in jaren if j not in beschikbaar]
+        aanwezig = {e.jaar for e in beschikbaar}
+        ontbreekt = [j for j in jaren if j not in aanwezig]
         if ontbreekt:
             raise ValueError(f"hitdossier heeft geen editie {ontbreekt} van "
-                             f"{lijst}; beschikbaar: "
-                             f"{sorted(beschikbaar)}")
-        beschikbaar = {j: s for j, s in beschikbaar.items() if j in jaren}
-    return {j: haal_editie(p, verversen=verversen)
-            for j, p in beschikbaar.items()}
+                             f"{lijst}; beschikbaar: {sorted(aanwezig)}")
+        beschikbaar = {e: p for e, p in beschikbaar.items()
+                       if e.jaar in jaren}
+    return {e: haal_editie(p, verversen=verversen)
+            for e, p in beschikbaar.items()}
 
 
-def controleer(per_jaar: dict[int, list[dict]]) -> list[str]:
+def controleer(per_editie: dict[Editie, list[dict]]) -> list[str]:
     """Is elke editie een aaneengesloten 1..N zonder lege velden?"""
     klachten = []
-    for jaar, rijen in per_jaar.items():
+    for jaar, rijen in per_editie.items():
         if not rijen:
             klachten.append(f"{jaar}: geen enkele notering gelezen")
             continue
@@ -265,7 +375,7 @@ def _los(naam: str) -> str:
 
 
 def vertaaltabel(con: sqlite3.Connection, lijst: str,
-                 per_jaar: dict[int, list[dict]]) -> tuple[dict, dict]:
+                 per_editie: dict[Editie, list[dict]]) -> tuple[dict, dict]:
     """De brug tussen hitdossier en de archiefschrijfwijze.
 
     Geeft (artiesten, titels) terug: de eerste per naam, de tweede per
@@ -285,7 +395,7 @@ def vertaaltabel(con: sqlite3.Connection, lijst: str,
     met_de_hand = MET_DE_HAND.get(lijst, {})
     per_titel = MET_DE_HAND_PER_TITEL.get(lijst, {})
     artiesten: dict[str, str] = {}
-    for naam in {r["artiest"] for rijen in per_jaar.values() for r in rijen}:
+    for naam in {r["artiest"] for rijen in per_editie.values() for r in rijen}:
         if naam in met_de_hand:
             artiesten[naam] = met_de_hand[naam]
             continue
@@ -317,7 +427,7 @@ def vertaaltabel(con: sqlite3.Connection, lijst: str,
         sleutels.add(sleutel_van(a, t))
     titels: dict[tuple[str, str], str] = {}
     for naam_ruw, titel_ruw in {(r["artiest"], r["titel"])
-                                for rijen in per_jaar.values() for r in rijen}:
+                                for rijen in per_editie.values() for r in rijen}:
         naam = per_titel.get((naam_ruw, titel_ruw)) \
             or artiesten.get(naam_ruw, naam_ruw)
         a, t = _poets(naam, titel_ruw)
@@ -331,7 +441,7 @@ def vertaaltabel(con: sqlite3.Connection, lijst: str,
 
 
 def schrijf_matrix(con: sqlite3.Connection, lijst: str,
-                   per_jaar: dict[int, list[dict]],
+                   per_editie: dict[Editie, list[dict]],
                    pad: Path | None = None) -> tuple[Path, dict]:
     """Zet de edities om in de matrix-CSV die `jaarlijks.importeer` leest.
 
@@ -342,14 +452,14 @@ def schrijf_matrix(con: sqlite3.Connection, lijst: str,
     Het jaar van de bron vult alleen aan wat het archief nog niet kent.
     """
     pad = pad or DATA_DIR / f"{lijst}.csv"
-    jaren = sorted(per_jaar)
-    artiesten, titels = vertaaltabel(con, lijst, per_jaar)
+    jaren = sorted(per_editie, key=lambda e: e.op_volgorde)
+    artiesten, titels = vertaaltabel(con, lijst, per_editie)
     per_titel = MET_DE_HAND_PER_TITEL.get(lijst, {})
 
     nummers: dict[str, dict] = {}
     botsingen = []
     for jaar in jaren:
-        for r in per_jaar[jaar]:
+        for r in per_editie[jaar]:
             naam = per_titel.get((r["artiest"], r["titel"])) \
                 or artiesten.get(r["artiest"], r["artiest"])
             titel = titels.get((naam, r["titel"]), r["titel"])
@@ -385,14 +495,14 @@ def schrijf_matrix(con: sqlite3.Connection, lijst: str,
     with pad.open("w", encoding="utf-8", newline="") as bestand:
         schrijver = csv.writer(bestand, delimiter=";")
         schrijver.writerow(["TotaalPositie", "Artiest", "Titel", "Uitjaar"]
-                           + [str(j) for j in jaren])
+                           + [str(j) for j in jaren])  # "2021" of "2021w52"
         for i, n in enumerate(op_volgorde, start=1):
             schrijver.writerow([i, n["artiest"], n["titel"], n["uitjaar"]]
                                + [n["posities"].get(j, 0) for j in jaren])
 
     return pad, {
         "edities": jaren,
-        "noteringen": sum(len(r) for r in per_jaar.values()),
+        "noteringen": sum(len(r) for r in per_editie.values()),
         "nummers": len(nummers),
         "nieuw": sorted(
             (min(n["posities"].values()), n["artiest"], n["titel"])
