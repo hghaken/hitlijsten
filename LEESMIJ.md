@@ -1470,8 +1470,13 @@ De jaarlijkse lijsten komen normaal als matrix van Music Datastats, maar de
 daar nog niet in — wel als Excel op nporadio5.nl zelf. Die is rechtstreeks
 geïntegreerd, en dat vroeg drie dingen die de matrix normaal meebrengt:
 
-- **Het uitgavejaar** zit niet in de NPO-Excel. Per sleutel opgezocht in het
-  eigen archief: 215 van de 217 in eerdere jaren60-edities, 2 elders, 0 open.
+- **Het uitgavejaar** zit niet in de NPO-Excel, maar wél in hun PDF. Eerst
+  per sleutel uit het eigen archief gevuld en daarna tegen de PDF gelegd:
+  193 gelijk, 13 van NPO overgenomen (*White Rabbit* 1967, *Arnold Layne*
+  1967), en **elf keer had NPO het zelf mis** — hun jaar lag ná de eerste
+  notering hier (*Nights In White Satin* op 1968 terwijl hij in 1967 al
+  noteerde). Die elf hield het eigen ijkpunt tegen; precies waarvoor die
+  regel bestaat.
 - **Vorige positie en editieteller** rekent de importeur uit de kolommen van
   de CSV — en die had er hier maar één. Na de import rechtgezet vanuit de
   bestaande edities.
