@@ -22,8 +22,8 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 
 | Tabel | Rijen | Waarvoor |
 |---|---|---|
-| [`noteringen`](#noteringen) | 555.239 | de gegevens: één rij per nummer per week |
-| [`opgehaald`](#opgehaald) | 7.821 | welke week wanneer is binnengehaald |
+| [`noteringen`](#noteringen) | 556.119 | de gegevens: één rij per nummer per week |
+| [`opgehaald`](#opgehaald) | 7.822 | welke week wanneer is binnengehaald |
 | [`bestaat_niet`](#bestaat_niet) | 267 | weken die nooit zijn uitgezonden |
 | [`aliases`](#aliases) | 581 | twee sleutels die hetzelfde nummer zijn |
 | [`niet_samenvoegen`](#niet_samenvoegen) | 4 | het omgekeerde: lijkt hetzelfde, is het niet |

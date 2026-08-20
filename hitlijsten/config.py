@@ -337,13 +337,16 @@ LIJSTEN = {
         "editie_week": 30,
     },
     # Een lijst die vier keer van naam en lengte veranderde: 80's Top 880
-    # (2005-2013), Top 750 (2014-2016), Top 500 (2017-2019) en sinds 2024 de
-    # Top 1000 van de 80s. Het is dezelfde jaarlijkse uitzending van dezelfde
-    # zender, dus hij staat hier als een reeks -- anders zou je van een plaat
-    # vier losse geschiedenissen van drie edities zien in plaats van een van
-    # achttien. `lengte` is de langste vorm; de editie zelf bepaalt hoe ver
-    # hij loopt. Tussen 2019 en 2024 zat een pauze: in die jaren zond
-    # Veronica de 80s & 90s Top 890 en een 80s Top 100 uit, andere lijsten.
+    # (2005-2013, plus 2020 als Back To The 80s Top 880), Top 750 (2014-2016),
+    # Top 500 (2017-2019) en sinds 2024 de Top 1000 van de 80s. Het is
+    # dezelfde jaarlijkse uitzending van dezelfde zender, dus hij staat hier
+    # als een reeks -- anders zou je van een plaat vier losse geschiedenissen
+    # van drie edities zien in plaats van een van negentien. `lengte` is de
+    # langste vorm; de editie zelf bepaalt hoe ver hij loopt.
+    # 2021 t/m 2023 ontbreken met opzet: toen zond Veronica de 80s & 90s
+    # Top 890 uit (maar voor 57% jaren 80 -- een andere lijst) en een 80s
+    # Top 100, te kort om als editie mee te tellen. De afweging staat in
+    # `hitlijsten/hitdossier.py`.
     # `editie_week` is een grove benadering -- de uitzending zwierf van week
     # 4 tot week 46; de laatste edities vallen eind januari.
     "veronica80s": {

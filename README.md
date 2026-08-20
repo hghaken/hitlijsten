@@ -30,7 +30,7 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 | De Koninklijke 500 (NPO Radio 2) | datastats.nl | vanaf 2022 |
 | 80's Top 500/750/880/1000 (Veronica) | hitdossier-online.nl | vanaf 2005 |
 
-555.239 noteringen over tweeëntwintig lijsten: 7.549 weken en 272 jaaredities.
+556.119 noteringen over tweeëntwintig lijsten: 7.549 weken en 273 jaaredities.
 De namen en titels zijn opgeschoond en geverifieerd tegen MusicBrainz,
 Discogs en Wikipedia; elke correctie staat met reden in een logboek. Elk
 nummer draagt bovendien zijn Alarmschijf-belletje (bron: top40.nl) en een

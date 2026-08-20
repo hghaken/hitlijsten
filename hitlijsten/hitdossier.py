@@ -61,11 +61,33 @@ __all__ = ["BASIS", "edities", "haal_editie", "alle_edities", "vertaaltabel",
 BASIS = "https://www.hitdossier-online.nl"
 # Onder welke namen een lijst daar staat. De volgorde doet er niet toe; welke
 # jaren er per naam zijn wordt van de site zelf gelezen.
+#
+# Vijf namen voor één reeks. Wat er wel en niet bij hoort is niet op de naam
+# beslist maar op de inhoud: elke notering draagt zijn uitgavejaar, dus je kunt
+# tellen.
+#
+# De **Back To The 80s Top 880 (2020)** is de Top 880 onder een andere naam:
+# 880 noteringen, voor 96% jaren 80, en Purple Rain / Thriller / Under Pressure
+# bovenaan. Die hoort er dus in.
+#
+# Twee lijsten uit dezelfde jaren staan er bewust NIET in:
+#
+# * **De 80s & 90s Top 890 (2020, 2021)** is een andere lijst. Maar 57% jaren
+#   80, 355 noteringen uit de jaren 90, en Thunderstruck op 1. Het bewijs zit
+#   in 2020 zelf: toen zond Veronica ze allebei uit, de 890 in juni en de 880
+#   in augustus.
+# * De **80s Top 100 (2022, 2023)** is inhoudelijk wél deze lijst (97 en 99%
+#   jaren 80), maar met honderd noteringen te kort om als editie mee te tellen
+#   naast lijsten van 500 tot 1000: de editieteller en het verloop per nummer
+#   zouden er alleen maar schever van worden.
+#
+# 2021, 2022 en 2023 blijven daardoor leeg in deze reeks.
 SLUGS = {
     "veronica80s": (
         "radio-veronica-80s-top-880",
         "radio-veronica-80s-top-750",
         "radio-veronica-80s-top-500",
+        "radio-veronica-back-to-the-80s-top-880",
         "radio-veronica-top-1000-van-de-80s",
     ),
 }
@@ -99,6 +121,15 @@ MET_DE_HAND_PER_TITEL = {
     "veronica80s": {
         ("Wax", "Building A Bridge To Your Heart"): "Wax (1986)",
         ("Wax", "Right Between The Eyes"): "Wax (en)",
+    },
+}
+# Titels die de losse vergelijking niet vindt omdat de bron er iets aan
+# vastplakt. Hazes' plaat uit 1981 heet bij hitdossier "Zij Gelooft In Mij
+# '81"; dat jaartal is hun manier om hem aan te duiden, geen andere opname --
+# het archief kent hem ruim honderd keer als "Zij Gelooft In Mij".
+MET_DE_HAND_TITELS = {
+    "veronica80s": {
+        ("André Hazes", "Zij Gelooft In Mij '81"): "Zij Gelooft In Mij",
     },
 }
 
@@ -139,25 +170,31 @@ def _haal(pad_op_de_site: str, *, verversen: bool = False) -> str:
 
 
 def edities(lijst: str, *, verversen: bool = False) -> dict[int, str]:
-    """Welke edities er zijn, als {jaar: slug}, van de site zelf gelezen."""
+    """Welke edities er zijn, als {jaar: pad op de site}.
+
+    Niet vastgelegd maar van de overzichtspagina gelezen, zodat de editie van
+    volgend januari er vanzelf bij komt. Het pad is meestal `slug-jaar`, maar
+    een naam die maar één editie kende (Back To The 80s Top 880) heeft geen
+    jaartal in de URL: dan is het de kale slug.
+    """
     gevonden: dict[int, str] = {}
     for slug in SLUGS[lijst]:
         h = _haal(slug, verversen=verversen)
         for m in _JAARLINK.finditer(h):
             if m["slug"] == slug:
-                gevonden[int(m["jaar"])] = slug
-        # De overzichtspagina van de eerste naam toont zichzelf niet altijd in
-        # de jaarlijst; het jaar in de titel vult dat aan.
+                gevonden[int(m["jaar"])] = f"{slug}-{m['jaar']}"
+        # De overzichtspagina toont de editie die hij zelf is niet altijd in
+        # zijn jaarlijst; het jaar in de titel vult dat aan.
         titel = re.search(r"<title>[^<]*editie (20[0-9]{2})", h)
         if titel:
             gevonden.setdefault(int(titel.group(1)), slug)
     return dict(sorted(gevonden.items()))
 
 
-def haal_editie(slug: str, jaar: int, *,
+def haal_editie(pad_op_de_site: str, *,
                 verversen: bool = False) -> list[dict]:
     """Eén editie: een regel per notering, in de volgorde van de pagina."""
-    h = _haal(f"{slug}-{jaar}", verversen=verversen)
+    h = _haal(pad_op_de_site, verversen=verversen)
     grenzen = [m.start() for m in _ARTIEST.finditer(h)]
     rijen = []
     for i, start in enumerate(grenzen):
@@ -188,8 +225,8 @@ def alle_edities(lijst: str, *, jaren: list[int] | None = None,
                              f"{lijst}; beschikbaar: "
                              f"{sorted(beschikbaar)}")
         beschikbaar = {j: s for j, s in beschikbaar.items() if j in jaren}
-    return {j: haal_editie(s, j, verversen=verversen)
-            for j, s in beschikbaar.items()}
+    return {j: haal_editie(p, verversen=verversen)
+            for j, p in beschikbaar.items()}
 
 
 def controleer(per_jaar: dict[int, list[dict]]) -> list[str]:
@@ -289,6 +326,7 @@ def vertaaltabel(con: sqlite3.Connection, lijst: str,
         anders = bekend.get(a, {}).get(_los(t))
         if anders and sleutel_van(a, _poets(naam, anders)[1]) in sleutels:
             titels[(naam, titel_ruw)] = anders
+    titels.update(MET_DE_HAND_TITELS.get(lijst, {}))
     return artiesten, titels
 
 

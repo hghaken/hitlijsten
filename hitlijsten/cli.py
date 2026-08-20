@@ -405,6 +405,24 @@ def opdracht_hitdossier(lijst: str, jaren: list[int] | None = None, *,
             log(f"  {editiejaar}: {aantal} noteringen geschreven")
         for waarschuwing in uitkomst["waarschuwingen"]:
             log(f"  let op: {waarschuwing}")
+
+        # De importeur zoekt de vorige editie op `jaar - 1`. Een reeks met een
+        # overgeslagen jaar -- de Veronica 80's miste 2021, en tussen 2020 en
+        # 2024 zat een pauze -- zou daardoor een hele editie als nieuw
+        # binnenkrijgen. Hier wordt per gat de echte vorige editie gepakt.
+        beschikbaar = sorted(uitkomst["geschreven"])
+        for vorig, huidig in zip(beschikbaar, beschikbaar[1:]):
+            if huidig - vorig == 1:
+                continue
+            aantal = con.execute(
+                "UPDATE noteringen SET vorige_positie = ("
+                "  SELECT n2.positie FROM noteringen n2 WHERE n2.lijst=?"
+                "  AND n2.jaar=? AND n2.sleutel = noteringen.sleutel)"
+                " WHERE lijst=? AND jaar=?",
+                (lijst, vorig, lijst, huidig)).rowcount
+            log(f"  {huidig}: vorige editie is {vorig}, niet {huidig - 1}"
+                f" -- {aantal} rijen bijgewerkt")
+        con.commit()
     return verslag
 
 
