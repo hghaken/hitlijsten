@@ -745,6 +745,23 @@ Days)` — want daar is de projectnaam wél de artiest.
 > tussen twee bronnen ziet er niet uit als een dubbele.** Het valt pas op als
 > je de credits naast elkaar zet, en dan is de titel het bewijs.
 
+**Een bezetting is ook een identiteit.** Bij De Toppers wisselt de
+samenstelling door de jaren, en het archief houdt ze uit elkaar op precies
+dezelfde manier als naamgenoten — met de bezetting tussen haakjes. Er staat
+sinds augustus 2026 geen kale `Toppers` meer:
+
+| credit | nummers | jaar |
+|---|---|---|
+| `Toppers (Gerard & Rene & Gordon)` | Live At The ArenA · Over De Top! · Toppers Party! | 2004–05 |
+| `Toppers Voor Oranje (Gerard & Rene & Gordon)` | Wir Sind Die Holländer | 2006 |
+| `Toppers (Gerard & Rene & Gordon & John Marks)` | Can You Feel It? | 2007 |
+| `Toppers (Gordon & Rene & Jeroen)` | Shine | 2009–2026 |
+| `Toppers (Gerard & Rene & Jeroen)` | 1001 nacht | 2013 |
+
+*Shine* zat ook hier in tweeën: elf noteringen in de Top 40 van 2009 (**#14**)
+naast acht in de Foute 1500 van 2020–2026 (#699), omdat de ene bron de
+voornamen schrijft en de andere de volledige namen.
+
 Verder niets: hoe veel er tussen de haakjes staat hangt af van wat nodig is om iemand thuis te brengen — `Nikki (Kerkhof)` genoeg, `Sasha (Sabina Agha)` niet. Het **isgelijkteken** dat er bij zeven credits stond (`Amber (= Marie Claire Cremers)`) is er in augustus 2026 uit: het zei niets wat de haakjes niet al zeggen, en het maakte van één conventie twee. Voor de sleutel maakte het toch al niets uit — `normaliseer` veegt het teken weg — dus dat was zuiver de schrijfwijze.
 
 Zeventien jaartallen blijven, en terecht: dat zijn **bands**, en die hebben
