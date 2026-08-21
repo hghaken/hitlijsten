@@ -714,7 +714,9 @@ al (`Nikki (Kerkhof)`, `Linda (De Mol)`, `Anita (Doth)`). In augustus 2026 zijn
 er tien opgezocht en omgezet: Dave (Levenbach) — de Amsterdammer die in het
 Frans zong — naast Dave (Omoregie) de Britse rapper, Sophia (Wezer) naast
 Sophia (Kruithof), Linda (Beusekamp), Nikki (Van Beveren), Pebbles
-(McKissack), Ronnie (Lutam), Alberto (Gemerts) en Sasha (Sabina Agha) — die laatste met de volledige naam, want "Agha" alleen zegt niets. Het archief kent daar drie vormen voor, en welke je kiest is smaak: `Nikki (Kerkhof)` (alleen de achternaam), `Frank Lammers (Ferry Bouman)` (de hele naam) en `Amber (= Marie Claire Cremers)` (met een isgelijkteken).
+(McKissack), Ronnie (Lutam), Alberto (Gemerts) en Sasha (Sabina Agha) — die laatste met de volledige naam, want "Agha" alleen zegt niets.
+
+De vorm is **`Naam (identiteit)`**, en verder niets: hoe veel er tussen de haakjes staat hangt af van wat nodig is om iemand thuis te brengen — `Nikki (Kerkhof)` genoeg, `Sasha (Sabina Agha)` niet. Het **isgelijkteken** dat er bij zeven credits stond (`Amber (= Marie Claire Cremers)`) is er in augustus 2026 uit: het zei niets wat de haakjes niet al zeggen, en het maakte van één conventie twee. Voor de sleutel maakte het toch al niets uit — `normaliseer` veegt het teken weg — dus dat was zuiver de schrijfwijze.
 
 Zeventien jaartallen blijven, en terecht: dat zijn **bands**, en die hebben
 geen achternaam — All Stars, De Bumpers, Divine (een Amerikaanse meidengroep),
