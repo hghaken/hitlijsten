@@ -5,9 +5,9 @@ import os
 import sys
 import tempfile
 
-os.environ.setdefault("HITLIJSTEN_DATA", tempfile.mkdtemp())
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten import db  # noqa: E402
 from hitlijsten.taal import (herken_alles, nederlandstalige_sleutels,  # noqa: E402
                              titel_lijkt_nederlands, titel_lijkt_vreemd,

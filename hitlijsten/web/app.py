@@ -927,7 +927,7 @@ def _registreer(app: Flask) -> None:
         """
         deel1 = ["/", "/jaar", "/week", "/dag", "/weekbericht",
                  "/vergelijk", "/vdj", "/decennium", "/totaal",
-                 "/jaarlijksen", "/wetenswaardigheden", "/records",
+                 "/jaarlijksen", "/wetenswaardigheden", "/artiesten", "/records",
                  "/versies", "/zoek", "/gastenboek", "/feedback",
                  "/disclaimer"]
         for r in con.execute(

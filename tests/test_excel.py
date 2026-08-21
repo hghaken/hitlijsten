@@ -42,6 +42,7 @@ if str(ROOT) not in sys.path:
 
 from openpyxl import Workbook, load_workbook  # noqa: E402
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten import db, excel  # noqa: E402
 from hitlijsten.models import Notering  # noqa: E402
 from hitlijsten.normalize import sleutel_van  # noqa: E402

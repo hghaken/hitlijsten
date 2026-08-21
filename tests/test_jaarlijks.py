@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten import db, jaarlijks  # noqa: E402
 from hitlijsten.config import LIJSTEN, is_jaarlijks, wordt_opgehaald  # noqa: E402
 from hitlijsten.jaarlijks import Editie  # noqa: E402

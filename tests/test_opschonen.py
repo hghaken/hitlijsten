@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten.normalize import normaliseer, artiestsleutel   # noqa: E402
 from hitlijsten.opschonen import (_kaal, _UITGAVE,              # noqa: E402
                                   meerderheidsnaam, naamvarianten,

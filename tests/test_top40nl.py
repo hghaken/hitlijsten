@@ -24,6 +24,7 @@ try:
 except (AttributeError, OSError):  # pragma: no cover
     pass
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten.config import LIJSTEN  # noqa: E402
 from hitlijsten.fetch import cache_pad, in_cache  # noqa: E402
 from hitlijsten.models import ParseFout, controleer_lijst  # noqa: E402

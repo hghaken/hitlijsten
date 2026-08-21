@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten.fetch import cache_pad                       # noqa: E402
 from hitlijsten.models import ParseFout, controleer_lijst    # noqa: E402
 from hitlijsten.parsers import oranje                        # noqa: E402

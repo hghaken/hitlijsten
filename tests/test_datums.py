@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten.datums import (  # noqa: E402
     eerste_zaterdag, vrijdag_tekst, vrijdag_van, zaterdag_van,
 )

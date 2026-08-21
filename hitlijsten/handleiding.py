@@ -47,17 +47,24 @@ def _cijfers() -> dict:
     ontwikkelmachine) vallen de laatst bekende aantallen in.
     """
     uit = {"noteringen": "539.163", "lijsten": str(len(LIJSTEN)),
-           "jaarlijks": str(len(LIJSTEN) - 4), "van": "1965"}
+           "jaarlijks": str(len(LIJSTEN) - 4), "van": "1965",
+           "artiesten": "13.900"}
     try:
         from .db import verbinding
         with verbinding() as con:
             aantal = con.execute(
                 "SELECT COUNT(*) FROM noteringen").fetchone()[0]
             van = con.execute("SELECT MIN(jaar) FROM noteringen").fetchone()[0]
+            # Hetzelfde deel van de sleutel waarop /artiesten groepeert.
+            artiesten = con.execute(
+                "SELECT COUNT(DISTINCT substr(sleutel, 1,"
+                " instr(sleutel, '|') - 1)) FROM noteringen").fetchone()[0]
         if aantal:
             uit["noteringen"] = f"{aantal:,}".replace(",", ".")
         if van:
             uit["van"] = str(van)
+        if artiesten:
+            uit["artiesten"] = f"{artiesten:,}".replace(",", ".")
     except Exception:
         pass
     vandaag = date.today()
@@ -341,8 +348,8 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "bevat de lijstweergaven: Overzicht, Weeklijsten, "
           "Jaaroverzichten, Decennia, Top 40 totaal en Jaarlijsten "
           "totaal. De **tweede rij** bevat de specials: Zoeken, Jouw "
-          "dag, Weekbericht, Wetenswaardigheden, Records, Versies, "
-          "Vergelijk, VirtualDJ, het Gastenboek, Feedback en — "
+          "dag, Weekbericht, Wetenswaardigheden, Artiesten, Records, "
+          "Versies, Vergelijk, VirtualDJ, het Gastenboek, Feedback en — "
           "helemaal achteraan — een dobbelsteen: die opent een "
           "willekeurig nummer uit het archief. **Feedback** neemt de "
           "pagina mee waar je vandaan komt, dus meld een fout het "
@@ -483,7 +490,9 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     pdf.kop2("Artiestpagina's")
     pdf.p("Klik op een artiestnaam en je ziet de complete "
           "hitgeschiedenis van die artiest over alle lijsten heen — "
-          "ruim 13.000 artiesten hebben zo'n eigen pagina.")
+          f"alle {c['artiesten']} artiesten hebben zo'n eigen pagina. "
+          "Wil je ze naast elkaar zien in plaats van één voor één, kijk "
+          "dan op **Artiesten** in de menubalk.")
     pdf.kop2("Wat de symbolen betekenen")
     pdf.p("Boven elke weeklijst staat een legenda, en die toont alleen "
           "wat er die week ook werkelijk in staat — geen kroontje boven "
@@ -553,6 +562,58 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     pdf.kop2("Wetenswaardigheden")
     pdf.p("Een verzameling opvallende feiten uit het archief, per "
           "lijst en met het NL-filter te verfijnen.")
+    pdf.kop2("Artiesten")
+    pdf.p("Waar de artiestpagina één artiest laat zien, zet deze "
+          f"pagina ze allemaal naast elkaar: alle {c['artiesten']} "
+          "artiesten uit het archief op één rij, met per artiest het "
+          "aantal nummers, het aantal noteringen, hoe vaak ze op 1 "
+          "stonden, hun punten, in hoeveel verschillende lijsten ze "
+          "voorkwamen en de periode waarin ze scoorden. Klik op een "
+          "kolomkop om te sorteren, of op een naam voor de volledige "
+          "geschiedenis.")
+    pdf.p("**Punten** is de eerlijkste kolom, en de uitleg is het "
+          "waard. Wie de meeste noteringen heeft is namelijk niet wie "
+          "het grootst was: in die telling weegt een 2000e plek in de "
+          "Top 2000 even zwaar als een nummer 1 in de Top 40, en dan "
+          "wint wie de meeste platen maakte in plaats van wie de beste "
+          "maakte. Daarom telt een notering hier (lengte − positie + "
+          "1) / lengte punten, zodat **de nummer 1 van élke lijst "
+          "precies één punt waard is** en de laatste plek bijna niets. "
+          "Dat verschuift de ranglijst zichtbaar: op noteringen staan "
+          "de Rolling Stones vóór Queen, op punten is het andersom — "
+          "Queen maakte minder platen maar kwam hoger.")
+    pdf.p("**Op 1** telt alleen de vier weeklijsten. Een eerste plek "
+          "in de Top 2000 is een mooie prestatie, maar het is iets "
+          "anders dan een week lang de bestverkochte plaat van het "
+          "land zijn.")
+    pdf.p("Drie knoppen bepalen wat je ziet:")
+    pdf.punten([
+        "**Minimaal … nummers** (standaard 5) bepaalt hoe klein de "
+        "lijst wordt. Deze knop is geen luxe: twee derde van de "
+        "artiesten heeft precies één nummer, dus zonder ondergrens is "
+        "het vooral een telefoonboek van eendagsvliegen. Zet hem op 1 "
+        "als je juist die wilt zien.",
+        "**Eigen naam** verbergt de credits die onder een grotere "
+        "artiest vallen. Michael Jackson staat veertien keer in de "
+        "lijst: één keer op eigen naam met tweeënvijftig nummers, en "
+        "dertien keer als duet met precies één plaat. Echte bandnamen "
+        "met een &-teken — Nick & Simon, Earth, Wind & Fire, Kool & "
+        "The Gang — blijven gewoon staan; er wordt alleen verborgen "
+        "wat begint met de volledige naam van een artiest die zelf "
+        "meer nummers heeft.",
+        "**Het vlaggetje** werkt hier anders dan elders op de site. "
+        "Per nummer is Nederlandstalig een ja of nee, maar een artiest "
+        "zingt zelden maar in één taal. Daarom geldt hier een "
+        "aandeel: minstens een kwart van zijn nummers moet "
+        "Nederlandstalig zijn. Eén Nederlandstalige plaat maakt van "
+        "Anouk (één van de negenveertig) nog geen Nederlandstalige "
+        "zangeres, terwijl tweetalige artiesten als René Froger en "
+        "Ben Cramer er wél in horen.",
+    ])
+    pdf.tip("Het rekenwerk gaat over een half miljoen noteringen, dus "
+            "het eerste bezoek duurt een paar seconden. Daarna is de "
+            "pagina direct, ook als je aan de knoppen draait — tot er "
+            "nieuwe gegevens bij komen.")
     pdf.kop2("Verras me (de dobbelsteen)")
     pdf.p("De dobbelsteen achteraan de menubalk opent een willekeurig "
           f"nummer uit de {c['noteringen']} noteringen — met zijn "
@@ -742,7 +803,8 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "chart views: Overview, Weekly charts, Year charts, Decades, "
           "Top 40 all-time and Annual all-time. The **second row** "
           "holds the specials: Search, Your day, Week report, Fun "
-          "facts, Records, Versions, Compare, DJ Export, the Guestbook, "
+          "facts, Artists, Records, Versions, Compare, DJ Export, the "
+          "Guestbook, "
           "Feedback and — at the very end — a die that opens a random "
           "song from the archive. **Feedback** carries along the page "
           "you came from, so report a mistake from the page where you "
@@ -876,8 +938,9 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "silence in between.")
     pdf.kop2("Artist pages")
     pdf.p("Click an artist name for that artist's complete chart "
-          "history across all charts — over 13,000 artists have such "
-          "a page.")
+          f"history across all charts — all {c['artiesten']} artists "
+          "have one. To see them side by side rather than one at a "
+          "time, use **Artists** in the menu bar.")
     pdf.kop2("What the symbols mean")
     pdf.p("Every weekly chart carries a legend above it, showing only "
           "what that week actually contains — no crown above a Top 40, "
@@ -948,6 +1011,54 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
     pdf.kop2("Fun facts (Wetenswaardigheden)")
     pdf.p("A collection of striking facts from the archive, per chart "
           "and refinable with the NL filter.")
+    pdf.kop2("Artists (Artiesten)")
+    pdf.p("Where an artist page shows one artist, this page puts them "
+          f"all side by side: every one of the {c['artiesten']} "
+          "artists in the archive on a single list, each with their "
+          "number of songs, chart entries, weeks at number one, "
+          "points, how many different charts they appear in and the "
+          "period they scored in. Click a column heading to sort, or a "
+          "name for the full history.")
+    pdf.p("**Points** is the fairest column, and worth explaining. "
+          "Whoever has the most entries is not whoever was biggest: in "
+          "that count a 2000th place in the Top 2000 weighs as much as "
+          "a number one in the Top 40, and then whoever made the most "
+          "records wins rather than whoever made the best. So an entry "
+          "here is worth (length − position + 1) / length points, "
+          "which makes **the number one of every chart worth exactly "
+          "one point** and the last place almost nothing. That shifts "
+          "the ranking visibly: on entries the Rolling Stones come "
+          "before Queen, on points it is the other way round — Queen "
+          "made fewer records but charted higher.")
+    pdf.p("**At 1** counts the four weekly charts only. Topping the "
+          "Top 2000 is an achievement, but it is a different thing "
+          "from being the country's best-selling record for a week.")
+    pdf.p("Three controls decide what you see:")
+    pdf.punten([
+        "**At least … songs** (5 by default) decides how short the "
+        "list gets. It is not a luxury: two thirds of all artists have "
+        "exactly one song, so without a floor this is mostly a phone "
+        "book of one-hit wonders. Set it to 1 if those are what you "
+        "are after.",
+        "**Own name** hides the credits that belong to a bigger "
+        "artist. Michael Jackson appears fourteen times: once under "
+        "his own name with fifty-two songs, and thirteen times as a "
+        "duet with exactly one record. Genuine band names containing "
+        "an ampersand — Nick & Simon, Earth, Wind & Fire, Kool & The "
+        "Gang — stay put; only credits starting with the full name of "
+        "an artist who has more songs of their own are hidden.",
+        "**The flag** works differently here than elsewhere on the "
+        "site. Per song, Dutch-language is a yes or no, but an artist "
+        "rarely sings in one language only. So this is a share: at "
+        "least a quarter of their songs must be in Dutch. One Dutch "
+        "record does not make Anouk (one out of forty-nine) a "
+        "Dutch-language singer, while bilingual artists such as René "
+        "Froger and Ben Cramer do belong in the list.",
+    ])
+    pdf.tip("The calculation covers half a million entries, so the "
+            "first visit takes a few seconds. After that the page is "
+            "instant, including when you work the controls — until new "
+            "data comes in.")
     pdf.kop2("Surprise me (the die)")
     pdf.p("The die at the end of the menu bar opens a random song "
           f"from the {c['noteringen']} entries — complete with its "

@@ -22,9 +22,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 _TIJDELIJK = tempfile.mkdtemp(prefix="hitlijsten-pdf-")
-os.environ.setdefault("HITLIJSTEN_DATA", _TIJDELIJK)
 os.environ.setdefault("HITLIJSTEN_EXCEL", _TIJDELIJK)
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten import db, pdf  # noqa: E402
 
 MAP = Path(_TIJDELIJK)

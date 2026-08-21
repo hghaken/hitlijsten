@@ -6,9 +6,9 @@ import sqlite3
 import sys
 import tempfile
 
-os.environ.setdefault("HITLIJSTEN_DATA", tempfile.mkdtemp())
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import veilig  # noqa: F401  -- moet vóór hitlijsten, zie veilig.py
 from hitlijsten import db  # noqa: E402
 from hitlijsten.artiesten import NL_AANDEEL, verzamel  # noqa: E402
 from hitlijsten.taal import SCHEMA as TAALSCHEMA, zet_hand  # noqa: E402
