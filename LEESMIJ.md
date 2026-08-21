@@ -623,12 +623,13 @@ legt. `opschonen.py` spoort vier soorten fouten op, met een oplopend risico:
 | Uitgave voor het nummer | 24 titels | een regel |
 | Dubbele A-kanten | 210 nummers, 1.817 noteringen | een regel |
 | Dubbele haken | 225 nummers, 1.703 noteringen | een regel |
-| Eén samenwerkingscredit (feat./ft./featuring/x/komma/met → &) | 2.796 namen, ~30.000 noteringen | regels met beschermlijsten |
+| Eén samenwerkingscredit (feat./ft./featuring/**w/**/x/komma/met → &) | 2.796 namen, ~30.000 noteringen | regels met beschermlijsten |
 | Gastartiest uit de titel naar de artiest | 2 nummers | een smalle regel |
 | Versies die een plek deelden | 1.115 weekregels → 2.471 | de weeklijst zelf + eigen keuzelijst |
 | ///-schrijfwijzen en /-hernoemingen | 21 + 16 gevallen | MusicBrainz, Discogs, hoezen |
 | Ondertitel achter een streepje → tussen haken | 321 titels | versie-/themawoorden |
 | Zelfde plaat, andere volgorde in de credit | 43 platen, 639 noteringen | de weeklijst als primaire bron |
+| Schuine streep als scheidingsteken | per set beoordeeld | met de hand, want AC/DC |
 | Credits volledig in kleine letters | 129 credits, 939 noteringen | het archief zelf |
 
 ### Dezelfde plaat onder twee credits
@@ -703,6 +704,21 @@ in 2005 zowel de artiest als de titel zonder spaties aan (`streetsoflove`).
 van The Rolling Stones: niet op hun artiestpagina, en onvindbaar op de echte
 titel. Hersteld, met de oude sleutel bewaard in `oude_sleutels` zodat een
 opgeslagen link niet doodloopt.
+
+**De schuine streep gaat niet mee in een regel.** Hij is bij de ene credit een
+scheidingsteken (*Chris Rea/Shirley Bassey*) en bij de andere deel van de naam:
+**AC/DC**, Huntr/x, Au/Ra, Ki/Ki, en het Vlaamse *Raymond v/h Groenewoud*. Er
+is geen patroon dat die twee uit elkaar houdt, dus dit gaat per set met de
+hand — en dan nog met een controle erbij, want soms is de streep géén van
+beide: *Bobby Hebb / Cher / Georgie Fame* zijn drie uitvoeringen op één plek in
+de Top 40 van 1966, geen trio. Zie *Meerdere uitvoeringen, één credit*.
+
+**Uitzondering: `w/`.** Die afkorting van "with" is nooit deel van een naam, dus
+die gaat wél automatisch (top40.nl schrijft hem consequent bij Kygo). Zonder die
+regel kreeg *Kygo w/ OneRepublic* een eigen sleutel: de streep verdwijnt zonder
+spoor en er blijft een losse "w" staan, dus `kygo w onerepublic` naast
+`kygo & onerepublic`. Voluit geschreven blijft **"with" met rust** — dat is een
+gewoon Engels woord en geen veilig scheidingsteken.
 
 **Eén credit-stijl.** De bronnen schrijven een samenwerking op vijf manieren
 (feat., feat, ft., ft, featuring) plus de x, de komma en het Nederlandse "met".

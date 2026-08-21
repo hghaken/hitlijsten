@@ -98,11 +98,18 @@ def schoon_tekst(tekst: str) -> str:
 # "featuring" staat vooraan in de opsomming en dat is geen smaak: een regexp
 # neemt de eerste tak die past, dus met "feat" ervoor werd "featuring" gelezen
 # als "feat" plus een overgebleven "uring".
-_CREDIT = re.compile(r"\s*\b(?:featuring|feat\b\.?|ft\b\.?)\s*", re.I)
+# "w/" staat er ook bij, en dat is geen inconsequentie tegenover de opmerking
+# hierboven over "with". Voluit geschreven is "with" een gewoon Engels woord en
+# dus geen veilig scheidingsteken; de afkorting "w/" is dat nooit -- die
+# betekent in een credit altijd "samen met". top40.nl schrijft hem consequent
+# bij Kygo ("Kygo w/ OneRepublic"), en zonder deze regel kreeg die een eigen
+# sleutel: de schuine streep verdwijnt zonder spoor en er blijft een losse "w"
+# staan, dus 'kygo w onerepublic' naast 'kygo & onerepublic'.
+_CREDIT = re.compile(r"\s*\b(?:featuring|feat\b\.?|ft\b\.?|w/)\s*", re.I)
 
 
 def eenduidige_credit(artiest: str) -> str:
-    """feat. / feat / ft. / ft / featuring -> &"""
+    """feat. / feat / ft. / ft / featuring / w/ -> &"""
     if not artiest:
         return artiest
     return _MEERVOUDIGE_SPATIE.sub(" ", _CREDIT.sub(" & ", artiest)).strip()

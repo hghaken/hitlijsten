@@ -27,7 +27,8 @@ from .config import ALIASES_PATH, NIET_SAMENVOEGEN_PATH
 # zijn "Calvin Harris feat. Rihanna" en "Calvin Harris & Rihanna" twee
 # artiesten. Dat is een verschil zonder betekenis: het gaat om dezelfde twee
 # mensen op dezelfde plaat. 162 samenwerkingen stonden er los van elkaar door.
-_FEAT = re.compile(r"\s*(?:\bfeat\b\.?|\bft\b\.?|\bfeaturing\b|\bwith\b|\bmet\b)\s*", re.I)
+_FEAT = re.compile(r"\s*(?:\bfeat\b\.?|\bft\b\.?|\bfeaturing\b|\bwith\b|\bw/|\bmet\b)\s*",
+                   re.I)
 # Samenwerkingstekens gelijktrekken: "x", "&", "+", "and", "vs" -> "&".
 # "and" zat er lang niet in, en dat liep dwars door het archief: top40.nl
 # schrijft "Simon and Garfunkel", Music Datastats "Simon & Garfunkel". Daardoor
