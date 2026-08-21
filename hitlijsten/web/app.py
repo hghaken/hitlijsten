@@ -146,6 +146,23 @@ def maak_app() -> Flask:
     app.jinja_env.globals["is_jaarlijks"] = is_jaarlijks
     app.jinja_env.globals["bron_urls"] = BRON_URLS
     app.jinja_env.globals["zender_urls"] = ZENDER_URLS
+    def _versie_van(bestandsnaam: str) -> str:
+        """Het bouwmoment van een statisch bestand, als cachebreker.
+
+        Een browser houdt een PDF op een vaste URL hardnekkig vast -- de
+        handleiding heet al maanden handleiding.pdf, dus wie hem ooit opende
+        kreeg na een herbouw nog steeds zijn eigen exemplaar. Het cijfer
+        hierachter verandert zodra de vrijdagrun een nieuwe versie zet, en dan
+        haalt hij hem vanzelf opnieuw op. Ontbreekt het bestand, dan liever
+        geen cachebreker dan een uitzondering in de menubalk.
+        """
+        try:
+            stempel = (Path(app.static_folder) / bestandsnaam).stat().st_mtime
+        except OSError:
+            return ""
+        return datetime.fromtimestamp(stempel).strftime("%Y%m%d%H%M")
+
+    app.jinja_env.globals["versie_van"] = _versie_van
     app.jinja_env.globals["herkomst_van"] = (
         lambda lijst: HERKOMST.get(lijst, STANDAARD_HERKOMST))
     app.jinja_env.filters["tijd"] = leesbare_tijd

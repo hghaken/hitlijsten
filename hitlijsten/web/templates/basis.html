@@ -532,7 +532,11 @@
       <a href="{{ url_for('jaarlijksen_lijst') }}">{{ _("Jaarlijsten totaal") }}</a>
     </nav>
     <span class="rechts">
-      <a href="{{ url_for('static', filename=('manual.pdf' if taal == 'en' else 'handleiding.pdf')) }}"
+      {# Cachebreker op de bouwdatum: zonder dat blijft een bezoeker die de
+         handleiding ooit opende zijn eigen exemplaar houden, want de
+         bestandsnaam verandert nooit. #}
+      {%- set boekje = 'manual.pdf' if taal == 'en' else 'handleiding.pdf' %}
+      <a href="{{ url_for('static', filename=boekje) }}?v={{ versie_van(boekje) }}"
          target="_blank" rel="noopener"
          title="{{ _("De gebruiksaanwijzing voor bezoekers, als PDF") }}">{{ _("Handleiding") }}</a>
       <a href="{{ url_for('disclaimer') }}">{{ _("Disclaimer") }}</a>
