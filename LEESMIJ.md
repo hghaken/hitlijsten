@@ -716,7 +716,15 @@ Frans zong — naast Dave (Omoregie) de Britse rapper, Sophia (Wezer) naast
 Sophia (Kruithof), Linda (Beusekamp), Nikki (Van Beveren), Pebbles
 (McKissack), Ronnie (Lutam), Alberto (Gemerts) en Sasha (Sabina Agha) — die laatste met de volledige naam, want "Agha" alleen zegt niets.
 
-De vorm is **`Naam (identiteit)`**, en verder niets: hoe veel er tussen de haakjes staat hangt af van wat nodig is om iemand thuis te brengen — `Nikki (Kerkhof)` genoeg, `Sasha (Sabina Agha)` niet. Het **isgelijkteken** dat er bij zeven credits stond (`Amber (= Marie Claire Cremers)`) is er in augustus 2026 uit: het zei niets wat de haakjes niet al zeggen, en het maakte van één conventie twee. Voor de sleutel maakte het toch al niets uit — `normaliseer` veegt het teken weg — dus dat was zuiver de schrijfwijze.
+De vorm is **`Naam (identiteit)`** — met **ronde** haakjes. 37 credits
+schreven hem met blokhaken (`FYC [Fine Young Cannibals]`, `112 [One Twelve]`,
+`Silk Sonic [Bruno Mars & Anderson .Paak]`); die zijn in augustus 2026
+gelijkgetrokken. Ook dat raakte de sleutel niet, want `normaliseer` maakt van
+elk leesteken een spatie. **Titels** houden hun blokhaken: daar staan ze om
+een versie-aanduiding (`Dreamer [Live]`, `Macarena [Bayside Boys Remix]`) en
+dat is een andere afspraak — 98 stuks.
+
+Verder niets: hoe veel er tussen de haakjes staat hangt af van wat nodig is om iemand thuis te brengen — `Nikki (Kerkhof)` genoeg, `Sasha (Sabina Agha)` niet. Het **isgelijkteken** dat er bij zeven credits stond (`Amber (= Marie Claire Cremers)`) is er in augustus 2026 uit: het zei niets wat de haakjes niet al zeggen, en het maakte van één conventie twee. Voor de sleutel maakte het toch al niets uit — `normaliseer` veegt het teken weg — dus dat was zuiver de schrijfwijze.
 
 Zeventien jaartallen blijven, en terecht: dat zijn **bands**, en die hebben
 geen achternaam — All Stars, De Bumpers, Divine (een Amerikaanse meidengroep),
