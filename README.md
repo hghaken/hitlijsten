@@ -31,7 +31,7 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 | 80's Top 500/750/880/1000 (Veronica) | hitdossier-online.nl | vanaf 2005 |
 | De Foute 1500 (Qmusic) | hitdossier-online.nl | vanaf 2020 |
 
-568.013 noteringen over drieëntwintig lijsten: 7.549 weken en 281 jaaredities.
+568.012 noteringen over drieëntwintig lijsten: 7.549 weken en 281 jaaredities.
 De namen en titels zijn opgeschoond en geverifieerd tegen MusicBrainz,
 Discogs en Wikipedia; elke correctie staat met reden in een logboek. Elk
 nummer draagt bovendien zijn Alarmschijf-belletje (bron: top40.nl) en een
@@ -54,6 +54,8 @@ vermelding, en de overwegingen bij elke keuze staan in de commitberichten.
 **De documentatie staat in [LEESMIJ.md](LEESMIJ.md)** — opzet, opdrachten,
 ontwerpkeuzes en de valkuilen van de bronsites. De database zelf, tabel voor
 tabel en kolom voor kolom, staat in [DATABASE.md](DATABASE.md).
+De losse scripts om credits en titels op te schonen staan in
+[gereedschap/](gereedschap/LEESMIJ.md).
 
 ## Licentie
 

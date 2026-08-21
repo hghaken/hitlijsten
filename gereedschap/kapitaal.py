@@ -25,8 +25,10 @@ WOORD = re.compile(r"[^\W_]+[\w']*", re.UNICODE)
 # Alleen hierna begint een nieuw woord. Let op: geen punt en geen uitroepteken,
 # anders wordt P!nk P!Nk en d.c. D.c.
 NA = set(' 	([{<"-/|+' + chr(92) + chr(0xab) + chr(0x2013) + chr(0x2014))
-# Afkortingen die klein horen te blijven, na afloop teruggezet.
-KLEIN = {"O.l.v.": "o.l.v.", "O.l.v": "o.l.v", "U.a.": "u.a."}
+# Een afkorting met punten ertussen die in de bron klein stond -- o.l.v.,
+# m.m.v., a.k.a. -- hoort klein te blijven. D.R.O.P., F.C. en 5 P.K. staan
+# helemaal in hoofdletters en vallen hier dus buiten.
+GEPUNT = re.compile(r"^[A-Z](?:\.[a-z])+\.?[:,;]?$")
 
 
 def kapitaal(tekst: str) -> str:
@@ -41,7 +43,8 @@ def kapitaal(tekst: str) -> str:
             continue
         uit.append(woord[0].upper() + woord[1:])
     uit.append(tekst[eind:])
-    return " ".join(KLEIN.get(w, w) for w in "".join(uit).split(" "))
+    return " ".join(w.lower() if GEPUNT.match(w) else w
+                    for w in "".join(uit).split(" "))
 
 
 def main() -> int:

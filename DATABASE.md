@@ -484,6 +484,22 @@ die niemand controleert. De samenhang zit in `sleutel` en in `(lijst, jaar,
 week)`, en die worden bewaakt door de controles (`python -m hitlijsten controle`
 en `kruiscontrole`).
 
+**Artiest en titel staan in kapitalen**: elk woord begint met een hoofdletter.
+Dat is puur weergave -- `sleutel` is kleingeletterd, dus twee schrijfwijzen van
+dezelfde naam zijn altijd al hetzelfde record. Het gereedschap dat het
+doortrekt staat in `gereedschap/kapitaal.py`, met de uitzonderingen (afkortingen
+in kapitalen, `o.l.v.`, een woord na een apostrof) in de LEESMIJ.
+
+**Twee controles horen altijd nul te geven.** Een sleutel met twee
+schrijfwijzen van de artiest, en een sleutel met twee schrijfwijzen van de
+titel:
+
+    SELECT sleutel FROM noteringen GROUP BY sleutel HAVING COUNT(DISTINCT artiest) > 1;
+    SELECT sleutel FROM noteringen GROUP BY sleutel HAVING COUNT(DISTINCT titel)   > 1;
+
+Staat er iets in, dan spellen twee bronnen dezelfde plaat verschillend. De
+weeklijstvorm wint; zie `gereedschap/titelvorm.py`.
+
 **Alles wat afgeleid kan worden staat er niet in**: punten, uitzenddatums,
 lijstlengtes, decennium- en totaallijsten. Dat scheelt niet alleen ruimte maar
 vooral onderhoud — een alias verschuift punten, en dan hoeft er niets

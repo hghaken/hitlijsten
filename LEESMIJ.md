@@ -53,16 +53,17 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 568.143 noteringen over
+- **Het hele archief staat in de database**: 568.012 noteringen over
   drieëntwintig lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
   Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26),
   Kink Top 1500 2019–2025 (7), de Veronica 80's 2005–2026 (19) en De Foute 1500 2020–2026 (8 edities in 7 jaar).
-- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 643 aliassen,
-  4.044 onderscheidingen, 5.010 doorverwijzingen van verhuisde sleutels en
-  7.035 taalbepalingen. De 568.143 noteringen gaan over **35.946 nummers**.
+- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 665 aliassen,
+  4.044 onderscheidingen, 5.704 doorverwijzingen van verhuisde sleutels en
+  7.033 taalbepalingen. De 568.012 noteringen gaan over **35.808 nummers**
+  van **13.796 artiesten**.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
   `hitlijsten-run.timer`.
 
@@ -1197,6 +1198,66 @@ Frieden // Een Beetje Vrede`) — en twee gevallen waar de dubbele streep gewoon
 in de naam hoort. Discogs crediteert *This Is What You Came For* zelf als
 **Calvin Harris // Rihanna**, en Outlandish' single heet echt *Warrior //
 Worrier*. Daar viel niets te repareren.
+
+### Elk woord een hoofdletter
+
+De vorige twee kopjes gaan over namen die hun hoofdletters kwijt waren; dit
+gaat over de vraag die daarna telkens terugkwam. Schrijf je *Paul de Leeuw* of
+*Paul De Leeuw*, *Dennis van Veen* of *Dennis Van Veen*? De bronnen doen het
+allebei, en per credit beslissen betekent dat je het elke week opnieuw beslist.
+Het is daarom in één keer doorgetrokken: **elk woord in artiest en titel begint
+met een hoofdletter**, 888 artiestnamen en 5.013 titels.
+
+**De regel is bewust eenzijdig.** Een kleine letter mag naar een hoofdletter,
+nooit andersom. Een woord dat al érgens een hoofdletter heeft blijft ongemoeid,
+en daarmee overleven ABBA, E.L.O., D.R.O.P., T.O.T.T., McCloud, AC/DC, VOF, de
+landcodes `(NLD)` / `(BEL)` / `(DEU)` en `5 P.K.` De omgekeerde regel — alles
+eerst naar onderkast en dan kapitaliseren — zou die allemaal slopen.
+
+Drie uitzonderingen, alle drie uit een proefdraai gekomen en niet bedacht:
+
+* **Alleen na een spatie, haakje, koppelteken of schuine streep.** Anders wordt
+  *P!nk* `P!Nk` en *$hirak* `$Hirak`. Een woord midden in een naam blijft dus
+  zoals het staat.
+* **Na een apostrof blijft het klein**, want dat is een weglating en geen nieuw
+  woord: `'k Heb Je Lief`, `'n Steelgitaar`, `Rock 'n' Roll`.
+* **Afkortingen met punten ertussen blijven klein**: `o.l.v.`, `m.m.v.`,
+  `a.k.a.` Die derde regel was er eerst niet, en dat ging mis — de eerste ronde
+  maakte er `M.m.v.` en `A.k.a.` van, 19 credits waaronder *Prince a.k.a. The
+  (Love) Symbol* met 91 noteringen. Het lijstje met uitzonderingen is daarna
+  vervangen door een patroon: een woord dat begint met een hoofdletter en
+  daarna alleen met punten en kleine letters doorloopt, gaat terug naar
+  onderkast. `F.C. Den Bosch` en `D.R.O.P.` vallen daarbuiten, want die staan
+  helemaal in kapitalen.
+
+Dit raakt **alleen de weergave**. De sleutel is kleingeletterd, dus er verandert
+geen enkele URL, er valt niets samen en er splitst niets. Wel is de vraag
+"welke schrijfwijze wint" hiermee van tafel — inclusief de twaalf credits die
+*Zijn* met een hoofdletter schreven tegenover de ene die `zijn` klein hield.
+
+**En de les die het duurst was.** De eerste versie deed per naam een `UPDATE`
+en dus per naam een volledige scan over 568.000 regels: bijna twaalfduizend
+scans. Na een kwartier op volle kracht was hij nog niet halverwege. Afgebroken
+— de commit gebeurt pas aan het eind, dus dat rolde schoon terug — en
+herschreven met een koppeltabel: twee scans, negen seconden. Wie hier ooit een
+massale hernoeming doet, begint daarmee.
+
+### Dezelfde titel, twee schrijfwijzen
+
+Een record kan één sleutel hebben en tóch twee titels op het scherm, doordat de
+weeklijst en de jaarlijst hem anders spellen. Elf gevallen: *Oh Lori* naast
+*Oh, Lori*, *How Much Is The Fish* naast *How Much Is The Fish?*, *Du Cote De
+Chez Swann* naast *Du Côté De Chez Swann*. Voor de sleutel maakt het niets uit
+— leestekens en accenten gaan er toch uit — maar per notering wisselde de
+weergave.
+
+**De weeklijst wint**, want die staat dichter bij de plaat: de jaarlijst is een
+latere hertelling en spelt slordiger. Dat pakt meestal goed uit (*Oh, Lori*,
+*Wishing Well*, *Waarheen, Waarvoor...*) en soms tegen — bij *Du Côté De Chez
+Swann* zaten de accenten juist in de jaarlijst, en die zijn dus gesneuveld.
+Dezelfde regel geldt bij het samenvoegen van credits: staat een plaat onder
+twee namen, dan wint de naam uit de weeklijst.
+
 
 ### Eén plek, meerdere uitvoeringen
 
