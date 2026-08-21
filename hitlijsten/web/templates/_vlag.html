@@ -5,6 +5,6 @@
   aria-label="Nederlandstalig"><title>Nederlandstalig</title
   ><rect width="15" height="10" fill="#21468B"/><rect width="15" height="6.7" fill="#ffffff"
   /><rect width="15" height="3.4" fill="#AE1C28"/></svg>{% endmacro %}
-{% macro nl_filter() %}<label class="nlfilter" title="{{ _("Alleen Nederlandstalige nummers tonen") }}">
+{% macro nl_filter(uitleg=None) %}<label class="nlfilter" title="{{ uitleg or _("Alleen Nederlandstalige nummers tonen") }}">
   <input type="checkbox" name="nl" value="1" onchange="this.form.submit()"
          {% if nl_filter_aan %}checked{% endif %}> {{ nl_vlag() }} NL</label>{% endmacro %}

@@ -29,11 +29,17 @@ from __future__ import annotations
 
 import sqlite3
 
-__all__ = ["verzamel", "WEEKLIJSTEN"]
+from .taal import nederlandstalige_sleutels
+
+__all__ = ["verzamel", "WEEKLIJSTEN", "NL_AANDEEL"]
 
 # Los van config.is_jaarlijks(), want dit is een vaste afspraak over wat "op 1
 # staan" betekent en geen afgeleide van de lijstdefinitie.
 WEEKLIJSTEN = ("top40", "tipparade", "oranje", "sterrennl")
+
+# Vanaf welk aandeel Nederlandstalige nummers een artiest in het
+# NL-filter meetelt. Zie de opmerking bij de berekening.
+NL_AANDEEL = 0.25
 
 
 def verzamel(con: sqlite3.Connection) -> list[dict]:
@@ -61,10 +67,12 @@ def verzamel(con: sqlite3.Connection) -> list[dict]:
         if rij is None:
             rij = artiesten[kant] = {
                 "sleutel": kant, "naam": kant, "nummers": set(),
+                "alle_sleutels": set(),
                 "noteringen": 0, "op_1": 0, "punten": 0.0,
                 "lijsten": set(), "van": jaar, "tot": jaar,
             }
         rij["nummers"].add(sleutel)
+        rij["alle_sleutels"].add(sleutel)
         rij["noteringen"] += 1
         rij["lijsten"].add(lijst)
         if jaar < rij["van"]:
@@ -88,8 +96,19 @@ def verzamel(con: sqlite3.Connection) -> list[dict]:
         if kant in artiesten:
             artiesten[kant]["naam"] = namen.get(kant) or artiest
 
+    # Het aandeel Nederlandstalig werk. Een artiest is Nederlandstalig als hij
+    # in het Nederlands zingt, niet als hij hier geboren is -- en ook niet als
+    # er ooit een keer een Nederlandstalige plaat tussen zat. Anouk heeft er
+    # een van de negenveertig (Dominique), en dan hoort ze niet in een filter
+    # dat Nederlandstalige artiesten toont.
+    nederlands = nederlandstalige_sleutels(con)
+
     uit = []
     for rij in artiesten.values():
+        rij["nl_nummers"] = sum(1 for s in rij["alle_sleutels"]
+                                if s in nederlands)
+        rij["nl_deel"] = rij["nl_nummers"] / len(rij["alle_sleutels"])
+        del rij["alle_sleutels"]
         rij["nummers"] = len(rij["nummers"])
         rij["lijsten"] = len(rij["lijsten"])
         rij["punten"] = round(rij["punten"], 1)

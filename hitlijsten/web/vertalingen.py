@@ -40,6 +40,8 @@ EN = {
     "Artiesten": "Artists",
     "Op 1": "At 1",
     "minimaal": "at least",
+    "Artiesten die minstens een kwart van hun nummers in het Nederlands zongen":
+        "Artists who sang at least a quarter of their songs in Dutch",
     "nummers": "songs",
     "Geen artiest voldoet aan deze keuze.":
         "No artist matches this selection.",

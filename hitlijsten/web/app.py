@@ -2648,6 +2648,7 @@ def _registreer(app: Flask) -> None:
         verandert alleen als er gegevens bij komen.
         """
         from .. import artiesten as artiestenmodule
+        from ..artiesten import NL_AANDEEL
 
         con = verbinding()
         stempel = tuple(con.execute(
@@ -2673,11 +2674,13 @@ def _registreer(app: Flask) -> None:
         if request.args.get("eigen"):
             rijen = [r for r in rijen if not r["neven"]]
 
-        # Nederlandstalig geldt per nummer; een artiest telt mee zodra een
-        # van zijn nummers het vlaggetje draagt.
+        # Nederlandstalig geldt per nummer, dus voor een artiest is het een
+        # kwestie van aandeel. Een kwart is de grens: Anouk (1 van 49) en
+        # Queen vallen af, terwijl tweetalige artiesten als René Froger
+        # (14 van 48) en Ben Cramer (10 van 29) blijven staan -- die horen in
+        # een lijst van Nederlandstalige artiesten thuis.
         if request.args.get("nl"):
-            van_ons = {s.split("|")[0] for s in _nl_sleutels()}
-            rijen = [r for r in rijen if r["sleutel"] in van_ons]
+            rijen = [r for r in rijen if r["nl_deel"] >= NL_AANDEEL]
 
         totaal = len(rijen)
         top = _gekozen_top()

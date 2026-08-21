@@ -40,7 +40,9 @@
     <input type="checkbox" name="eigen" value="1" onchange="this.form.submit()"
            {% if eigen_aan %}checked{% endif %}>
     {{ _("eigen naam") }}</label>
-  {{ nl_filter() }}
+  {# Per nummer is Nederlandstalig een ja of nee, maar een artiest zingt zelden
+     maar in één taal. Zie de drempel in artiesten.py. #}
+  {{ nl_filter(_("Artiesten die minstens een kwart van hun nummers in het Nederlands zongen")) }}
   <noscript><button class="hoofd" type="submit">{{ _("Toon") }}</button></noscript>
   <span class="hint" style="margin-left:auto">
     {% if toon < totaal %}{{ '{:,}'.format(toon).replace(',', '.') }}
@@ -60,13 +62,20 @@
   as a number one in the Top 40. <b>At 1</b> counts the weekly charts only.
   <b>Own name</b> hides credits that belong to a bigger artist — Michael
   Jackson appears fourteen times, thirteen of them a duet with one record.
+  The <b>flag</b> works per song everywhere else on this site; here it takes
+  the artists who sang <b>at least a quarter</b> of their songs in Dutch, so
+  one Dutch record does not make Anouk a Dutch-language singer.
   {% else %}<b>Punten</b> wegen hoogte én volhouden: een notering is
   (lengte − positie + 1) / lengte waard, dus de nummer 1 van <i>elke</i> lijst
   is precies één punt waard en de laatste plek bijna niets. Zonder die
   weging zou een 2000e plek in de Top 2000 even zwaar tellen als een nummer 1
   in de Top 40. <b>Op 1</b> telt alleen de weeklijsten. <b>Eigen naam</b>
   verbergt credits die onder een grotere artiest vallen — Michael Jackson
-  staat veertien keer in de lijst, dertien keer als duet met één plaat.{% endif %}
+  staat veertien keer in de lijst, dertien keer als duet met één plaat. Het
+  <b>vlaggetje</b> geldt overal op de site per nummer; hier pakt het de
+  artiesten die <b>minstens een kwart</b> van hun nummers in het Nederlands
+  zongen, zodat één Nederlandstalige plaat van Anouk nog geen
+  Nederlandstalige zangeres maakt.{% endif %}
 </p>
 
 <div class="tabelvak"><table>
