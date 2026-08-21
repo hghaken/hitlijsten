@@ -2637,6 +2637,62 @@ def _registreer(app: Flask) -> None:
         return render_template("records.html",
                                blokken=_records_cache["blokken"])
 
+    _artiesten_cache: dict = {}
+
+    @app.route("/artiesten")
+    def artiestenlijst():
+        """Alle artiesten op een rij, met hun cijfers over alle lijsten heen.
+
+        Gecachet op hetzelfde stempel als de records: het rekenwerk gaat over
+        een half miljoen noteringen en kost enkele seconden, en de uitkomst
+        verandert alleen als er gegevens bij komen.
+        """
+        from .. import artiesten as artiestenmodule
+
+        con = verbinding()
+        stempel = tuple(con.execute(
+            "SELECT COUNT(*), MAX(opgehaald_op) FROM opgehaald").fetchone()
+        ) + tuple(con.execute(
+            "SELECT COUNT(*) FROM wijzigingen").fetchone())
+        if _artiesten_cache.get("stempel") != stempel:
+            _artiesten_cache["stempel"] = stempel
+            _artiesten_cache["rijen"] = artiestenmodule.verzamel(con)
+        rijen = _artiesten_cache["rijen"]
+
+        # De knop waarmee de bezoeker de lijst kort houdt. Twee derde van de
+        # artiesten heeft precies een nummer, dus zonder ondergrens is dit
+        # vooral een telefoonboek van eendagsvliegen. Vijf laat de artiesten
+        # met een verhaal over; op een staat er iedereen in.
+        ruw = request.args.get("minimaal", "")
+        minimaal = int(ruw) if ruw.isdigit() and 1 <= int(ruw) <= 99 else 5
+        rijen = [r for r in rijen if r["nummers"] >= minimaal]
+
+        # Samenwerkingen verbergen: alleen de credits die aantoonbaar bij een
+        # grotere artiest horen. Zie artiesten._markeer_nevencredits() voor
+        # waarom dat niet op de ampersand kan.
+        if request.args.get("eigen"):
+            rijen = [r for r in rijen if not r["neven"]]
+
+        # Nederlandstalig geldt per nummer; een artiest telt mee zodra een
+        # van zijn nummers het vlaggetje draagt.
+        if request.args.get("nl"):
+            van_ons = {s.split("|")[0] for s in _nl_sleutels()}
+            rijen = [r for r in rijen if r["sleutel"] in van_ons]
+
+        totaal = len(rijen)
+        top = _gekozen_top()
+        # Bij een top-N gaat het om de grootsten, niet om de eerste N van het
+        # alfabet -- dus daarvoor eerst op punten sorteren en pas daarna weer
+        # op naam, zodat de pagina opent zoals hij hoort.
+        if top and totaal > top:
+            rijen = sorted(rijen, key=lambda r: -r["punten"])[:top]
+            rijen = sorted(rijen, key=lambda r: r["naam"].lower())
+        return render_template(
+            "artiesten.html", rijen=rijen, totaal=totaal, minimaal=minimaal,
+            toon=len(rijen), aantallen=AANTALLEN,
+            nl_filter_aan=bool(request.args.get("nl")),
+            eigen_aan=bool(request.args.get("eigen")))
+
     _versies_cache: dict = {}
 
     @app.route("/versies")

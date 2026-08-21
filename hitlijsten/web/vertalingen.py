@@ -37,6 +37,12 @@ EN = {
     "Jouw dag": "Your day",
     "Weekbericht": "Week report",
     "Wetenswaardigheden": "Fun facts",
+    "Artiesten": "Artists",
+    "Op 1": "At 1",
+    "minimaal": "at least",
+    "nummers": "songs",
+    "Geen artiest voldoet aan deze keuze.":
+        "No artist matches this selection.",
     "Records": "Records",
     "Versies": "Versions",
     "Vergelijk": "Compare",

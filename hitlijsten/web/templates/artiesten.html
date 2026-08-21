@@ -1,0 +1,104 @@
+{% extends "basis.html" %}
+{% from "_vlag.html" import nl_filter with context %}
+{% block titel %}Artiesten — Hitlijsten{% endblock %}
+{% block beschrijving %}Alle artiesten uit de Nederlandse hitlijsten op een rij, met per artiest het aantal nummers, noteringen, weken op 1 en de periode waarin ze scoorden.{% endblock %}
+{% block inhoud %}
+
+<h1>{{ _("Artiesten") }}</h1>
+<p class="onder">{% if taal == 'en' %}Everyone who ever charted, with their
+  figures across all charts. Click a column heading to sort, or a name for
+  that artist's complete history.{% else %}Iedereen die ooit noteerde, met zijn cijfers over alle lijsten heen.
+  Klik op een kolomkop om te sorteren, of op een naam voor de volledige
+  geschiedenis van die artiest.{% endif %}</p>
+
+{# Twee knoppen die samen de omvang bepalen. De ondergrens is de belangrijkste:
+   twee derde van de artiesten heeft precies een nummer, dus zonder die grens
+   is dit vooral een telefoonboek. De keuzelijst eronder werkt zoals overal --
+   maar pakt hier de artiesten met de meeste punten, niet de eerste van het
+   alfabet. #}
+<form method="get" class="kaart" style="display:flex; gap:.7rem;
+      align-items:center; flex-wrap:wrap; margin-bottom:1.4rem">
+  <label style="display:flex; gap:.45rem; align-items:center">
+    {{ _("minimaal") }}
+    <input type="number" name="minimaal" value="{{ minimaal }}" min="1" max="99"
+           style="width:4.2rem" onchange="this.form.submit()">
+    {{ _("nummers") }}
+  </label>
+  {% if totaal > aantallen[0] %}
+  <select name="toon" onchange="this.form.submit()">
+    {% for a in aantallen %}{% if a < totaal %}
+      <option value="{{ a }}" {% if toon == a %}selected{% endif %}>top {{ a }}</option>
+    {% endif %}{% endfor %}
+    <option value="alles" {% if toon == totaal %}selected{% endif %}>
+      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
+  </select>
+  {% endif %}
+  {# Niet op de ampersand filteren: die zit net zo goed in Nick & Simon en
+     Earth, Wind & Fire. Verborgen wordt alleen een credit die begint met de
+     volledige naam van een grotere artiest -- zie artiesten.py. #}
+  <label class="nlfilter" title="{{ _("Verberg credits die onder een grotere artiest vallen, zoals Michael Jackson & Paul McCartney") }}">
+    <input type="checkbox" name="eigen" value="1" onchange="this.form.submit()"
+           {% if eigen_aan %}checked{% endif %}>
+    {{ _("eigen naam") }}</label>
+  {{ nl_filter() }}
+  <noscript><button class="hoofd" type="submit">{{ _("Toon") }}</button></noscript>
+  <span class="hint" style="margin-left:auto">
+    {% if toon < totaal %}{{ '{:,}'.format(toon).replace(',', '.') }}
+      {{ _("van") }} {% endif %}{{ '{:,}'.format(totaal).replace(',', '.') }}
+    {{ _("artiesten") }}</span>
+</form>
+
+{% if not rijen %}
+  <div class="melding fout">{{ _("Geen artiest voldoet aan deze keuze.") }}</div>
+{% else %}
+
+<p class="hint" style="margin-top:-.6rem">
+  {% if taal == 'en' %}<b>Points</b> weigh height as well as staying power:
+  an entry is worth (length − position + 1) / length, so the number one of
+  <i>any</i> chart is worth exactly one point and the last place almost
+  nothing. Without that, a 2000th place in the Top 2000 would count as much
+  as a number one in the Top 40. <b>At 1</b> counts the weekly charts only.
+  <b>Own name</b> hides credits that belong to a bigger artist — Michael
+  Jackson appears fourteen times, thirteen of them a duet with one record.
+  {% else %}<b>Punten</b> wegen hoogte én volhouden: een notering is
+  (lengte − positie + 1) / lengte waard, dus de nummer 1 van <i>elke</i> lijst
+  is precies één punt waard en de laatste plek bijna niets. Zonder die
+  weging zou een 2000e plek in de Top 2000 even zwaar tellen als een nummer 1
+  in de Top 40. <b>Op 1</b> telt alleen de weeklijsten. <b>Eigen naam</b>
+  verbergt credits die onder een grotere artiest vallen — Michael Jackson
+  staat veertien keer in de lijst, dertien keer als duet met één plaat.{% endif %}
+</p>
+
+<div class="tabelvak"><table>
+  <thead><tr>
+    <th class="breed">{{ _("Artiest") }}</th>
+    <th class="getal">{{ _("Nummers") }}</th>
+    <th class="getal">{{ _("Noteringen") }}</th>
+    <th class="getal">{{ _("Op 1") }}</th>
+    <th class="getal">{{ _("Punten") }}</th>
+    <th class="getal">{{ _("Lijsten") }}</th>
+    <th class="getal">{{ _("Van") }}</th>
+    <th class="getal">{{ _("Tot") }}</th>
+  </tr></thead>
+  <tbody>
+  {% for r in rijen %}
+  <tr>
+    <td class="breed"><a href="{{ url_for('artiest', artiestsleutel=r.sleutel) }}"
+      >{{ r.naam }}</a></td>
+    <td class="getal">{{ r.nummers }}</td>
+    <td class="getal">{{ r.noteringen }}</td>
+    {# Een nul leest als ruis in een kolom vol lege plekken; alleen wie ooit
+       op 1 stond krijgt een cijfer, de rest een streepje. Het sorteren gaat
+       via data-sorteer, anders belandt "-" tussen de getallen. #}
+    <td class="getal" data-sorteer="{{ r.op_1 }}">{{ r.op_1 or '–' }}</td>
+    <td class="getal">{{ '{:,.1f}'.format(r.punten).replace(',', '.') }}</td>
+    <td class="getal">{{ r.lijsten }}</td>
+    <td class="getal">{{ r.van }}</td>
+    <td class="getal">{{ r.tot }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endif %}
+
+{% endblock %}
