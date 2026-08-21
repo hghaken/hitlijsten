@@ -708,6 +708,31 @@ valt dan vanzelf bij de juiste act in plaats van als derde credit te ontstaan.
 > dat niet, dan lijken `Sasha (DEU)` en `The Pebbles (BEL)` alleenstaand
 > terwijl hun naamgenoot een jaartal draagt.
 
+**Een jaartal of een achternaam?** Waar de naamgenoot een persoon is, is de
+achternaam informatiever dan het debuutjaar, en het archief had die conventie
+al (`Nikki (Kerkhof)`, `Linda (De Mol)`, `Anita (Doth)`). In augustus 2026 zijn
+er tien opgezocht en omgezet: Dave (Levenbach) — de Amsterdammer die in het
+Frans zong — naast Dave (Omoregie) de Britse rapper, Sophia (Wezer) naast
+Sophia (Kruithof), Linda (Beusekamp), Nikki (Van Beveren), Pebbles
+(McKissack), Ronnie (Lutam), Alberto (Gemerts) en Sasha (Agha).
+
+Zeventien jaartallen blijven, en terecht: dat zijn **bands**, en die hebben
+geen achternaam — All Stars, De Bumpers, Divine (een Amerikaanse meidengroep),
+Gun, Holland (drie verschillende), Monsoon, Road, Amber (een duo). Twee
+personen bleven onvindbaar: Alberto (2015) van *Onno, mag ik je toyboy zijn?*
+en Ronnie (1996) van *De Clown* staan alleen op de Tipparade en verder nergens
+gedocumenteerd.
+
+> Bronnen die werkten: **nldiscografie.nl** noemt bij Nederlandse acts
+> standaard de echte naam (Linda = Agnes Beusekamp, Ronnie = Ronny Lutam), en
+> de **Discogs-API** (`api.discogs.com/releases/<id>`) geeft artiest-id en
+> aliassen waar de gewone site een 403 teruggeeft — zo bleek *People Of The
+> World* op id 297645 te staan, "Sasha (6)", alias Sabina Agha.
+>
+> En let op waar de mengelmoes vandaan komt: **top40.nl gebruikt zelf beide
+> conventies door elkaar**. Sophia Kruithof staat daar als `Sophia ((Kruithof))`
+> en Sophia Wezer als `Sophia ((1992))`. Het archief nam over wat er stond.
+
 **De val die hieronder zat.** De weeklijsten schrijven de credit mét kenmerk
 en de jaarlijsten zonder, en dan ontstaat er een derde, kale credit die
 niemand als dubbel herkent — hij heeft immers een andere naam. Zo stond
