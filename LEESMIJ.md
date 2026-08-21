@@ -718,11 +718,32 @@ Sophia (Kruithof), Linda (Beusekamp), Nikki (Van Beveren), Pebbles
 
 De vorm is **`Naam (identiteit)`** — met **ronde** haakjes. 37 credits
 schreven hem met blokhaken (`FYC [Fine Young Cannibals]`, `112 [One Twelve]`,
-`Silk Sonic [Bruno Mars & Anderson .Paak]`); die zijn in augustus 2026
-gelijkgetrokken. Ook dat raakte de sleutel niet, want `normaliseer` maakt van
-elk leesteken een spatie. **Titels** houden hun blokhaken: daar staan ze om
-een versie-aanduiding (`Dreamer [Live]`, `Macarena [Bayside Boys Remix]`) en
-dat is een andere afspraak — 98 stuks.
+`Silk Sonic [Bruno Mars & Anderson .Paak]`); die zijn in augustus 2026 langs
+geweest. Ook dat raakt de sleutel niet, want `normaliseer` maakt van elk
+leesteken een spatie. **Titels** houden hun blokhaken: daar staan ze om een
+versie-aanduiding (`Dreamer [Live]`, `Macarena [Bayside Boys Remix]`) en dat
+is een andere afspraak — 98 stuks.
+
+Bij een **afkorting** met de naam erachter is de volgorde omgedraaid: niet
+`SB4 [SonbyFour]` maar `SonbyFour (SB4)`, want de naam is de artiest en de
+afkorting de toelichting. Zestien credits gingen zo om, van `WL [Wonderland]`
+tot `T.O.C. [Touch Of Culture] & Rocca`. Bij een **projectnaam** blijft de
+volgorde juist staan — `Endless Summer (Sam Feldt & Jonas Blue & Violet
+Days)` — want daar is de projectnaam wél de artiest.
+
+> **Dat omdraaien legde zes verborgen splitsingen bloot**, steeds dezelfde:
+> de weeklijst schrijft de afkorting, de jaarlijst de volledige naam, en het
+> nummer staat als twee platen in het archief. *Ready Or Not* van de Fugees
+> stond met een **#1** uit de Top 40 én een 87e plek uit een jaarlijst;
+> *She Drives Me Crazy* met #1 naast #76; *All Over The World* van ELO met #1
+> naast #134; *Oh Sheila* met #12 naast #761. Vijftien nummers zijn zo heel
+> geworden, verdeeld over Electric Light Orchestra (E.L.O.), Fine Young
+> Cannibals (FYC), Fugees, Silk Sonic, Ready For The World (RFTW) en
+> Sutherland Brothers & Quiver (SB&Q).
+>
+> De les is niet nieuw maar wel hardnekkig: **een verschil in schrijfwijze
+> tussen twee bronnen ziet er niet uit als een dubbele.** Het valt pas op als
+> je de credits naast elkaar zet, en dan is de titel het bewijs.
 
 Verder niets: hoe veel er tussen de haakjes staat hangt af van wat nodig is om iemand thuis te brengen — `Nikki (Kerkhof)` genoeg, `Sasha (Sabina Agha)` niet. Het **isgelijkteken** dat er bij zeven credits stond (`Amber (= Marie Claire Cremers)`) is er in augustus 2026 uit: het zei niets wat de haakjes niet al zeggen, en het maakte van één conventie twee. Voor de sleutel maakte het toch al niets uit — `normaliseer` veegt het teken weg — dus dat was zuiver de schrijfwijze.
 
