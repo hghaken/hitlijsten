@@ -31,7 +31,7 @@ maakt er Excel-werkboeken en PDF's van. Het hele archief staat online op
 | 80's Top 500/750/880/1000 (Veronica) | hitdossier-online.nl | vanaf 2005 |
 | De Foute 1500 (Qmusic) | hitdossier-online.nl | vanaf 2020 |
 
-568.119 noteringen over drieëntwintig lijsten: 7.549 weken en 281 jaaredities.
+568.143 noteringen over drieëntwintig lijsten: 7.549 weken en 281 jaaredities.
 De namen en titels zijn opgeschoond en geverifieerd tegen MusicBrainz,
 Discogs en Wikipedia; elke correctie staat met reden in een logboek. Elk
 nummer draagt bovendien zijn Alarmschijf-belletje (bron: top40.nl) en een

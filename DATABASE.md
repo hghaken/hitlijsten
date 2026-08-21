@@ -22,10 +22,10 @@ tegenover. Wijzigen gaat via de bewerkschermen, en die leggen alles vast in
 
 | Tabel | Rijen | Waarvoor |
 |---|---|---|
-| [`noteringen`](#noteringen) | 568.119 | de gegevens: één rij per nummer per week |
+| [`noteringen`](#noteringen) | 568.143 | de gegevens: één rij per nummer per week |
 | [`opgehaald`](#opgehaald) | 7.830 | welke week wanneer is binnengehaald |
 | [`bestaat_niet`](#bestaat_niet) | 267 | weken die nooit zijn uitgezonden |
-| [`aliases`](#aliases) | 625 | twee sleutels die hetzelfde nummer zijn |
+| [`aliases`](#aliases) | 643 | twee sleutels die hetzelfde nummer zijn |
 | [`niet_samenvoegen`](#niet_samenvoegen) | 4 | het omgekeerde: lijkt hetzelfde, is het niet |
 | [`artiestnamen`](#artiestnamen-en-titelnamen) | 1.384 | de vastgestelde schrijfwijze per artiest |
 | [`titelnamen`](#artiestnamen-en-titelnamen) | 2.361 | idem per nummer |
