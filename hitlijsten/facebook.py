@@ -17,6 +17,12 @@ code uitrolt. Wie het aanzet, zet het bewust aan.
 
 Het token halen (eenmalig, in de browser -- niet iets wat een script kan doen):
 zie BEHEER.md.
+
+**Nooit een lege tweede regel.** Facebook klapt een bericht in na een paar
+regels en telt een lege regel mee; staat regel twee leeg, dan ziet iemand in de
+tijdlijn alleen de kop met "Meer weergeven" eronder. `plaats()` haalt zo'n
+regel weg, maar schrijf hem liever niet: regel twee is de plek waar het nieuws
+hoort te staan.
 """
 from __future__ import annotations
 
@@ -88,10 +94,9 @@ def berichttekst(con: sqlite3.Connection, jaar: int, week: int) -> str | None:
         return None
 
     top = rijen[0]
-    # Geen lege regel tussen de kop en de nummer 1: Facebook klapt het bericht
-    # in na een paar regels, en telt die lege regel gewoon mee. Dan staat er in
-    # de tijdlijn alleen een titel met "Meer weergeven" eronder, en moet iemand
-    # klikken om te zien of er nieuws is. Nu draagt regel twee het nieuws.
+    # Geen lege regel tussen de kop en de nummer 1 -- zie
+    # leesbaar_in_de_tijdlijn(). Hier staat het nieuws dus meteen op regel
+    # twee; `plaats()` haalt een lege regel daar sowieso weg.
     regels = [f"Nederlandse Top 40 — week {week} van {jaar}"]
 
     # weken_genoteerd telt weken IN de lijst, niet weken op 1. Dat verschil
@@ -184,6 +189,25 @@ def _andere_lijsten(con: sqlite3.Connection, jaar: int, week: int) -> list[str]:
     return uit
 
 
+def leesbaar_in_de_tijdlijn(tekst: str) -> str:
+    """Haal een lege tweede regel weg.
+
+    Facebook klapt een bericht in na een paar regels en telt een lege regel
+    gewoon mee. Staat regel twee leeg, dan ziet iemand in de tijdlijn alleen de
+    kop met "Meer weergeven" eronder -- en moet hij klikken om te zien of er
+    nieuws is. Regel twee hoort het nieuws te dragen.
+
+    Dit staat hier en niet in de opsteller van een bericht, want er is meer dan
+    een opsteller: het wekelijkse bericht komt uit `berichttekst()`, maar een
+    aankondiging wordt met de hand geschreven. Elk bericht gaat wel door deze
+    ene deur.
+    """
+    regels = tekst.splitlines()
+    if len(regels) > 1 and not regels[1].strip():
+        del regels[1]
+    return "\n".join(regels)
+
+
 def plaats(tekst: str, link: str | None = None) -> str:
     """Zet het bericht op de pagina. Geeft het id van het bericht terug.
 
@@ -191,6 +215,7 @@ def plaats(tekst: str, link: str | None = None) -> str:
     er een voorbeeldkaartje van met de banner en de omschrijving van de site,
     en dat valt in een tijdlijn meer op dan een kale regel.
     """
+    tekst = leesbaar_in_de_tijdlijn(tekst)
     cfg = instellingen()
     if not (cfg["pagina_id"] and cfg["token"]):
         raise RuntimeError(

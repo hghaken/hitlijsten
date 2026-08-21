@@ -333,7 +333,9 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "Top 25 — worden elke vrijdagavond automatisch bijgewerkt. "
           f"Daarnaast staan er **{c['jaarlijks']} jaarlijkse lijsten** "
           "in het archief, van de Top 2000 tot de Zomer Top 500: "
-          "lijsten die radiozenders één keer per jaar uitzenden.")
+          "lijsten die radiozenders meestal één keer per jaar "
+          "uitzenden — De Foute 1500 van Qmusic draaide in 2021 "
+          "twee keer, en dan staan beide edities er los in.")
     pdf.kop2("De menubalk")
     pdf.p("Bovenaan elke pagina staan drie rijen. De **bovenste rij** "
           "bevat de lijstweergaven: Overzicht, Weeklijsten, "
@@ -387,9 +389,16 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "tot laatste notering. Van de jaarlijkse lijsten (Top 2000 "
           "en dergelijke) staat elke **editie** er precies zoals "
           "uitgezonden. Ook hier bladeren de knoppen ‹ vorige en "
-          "volgende › langs de jaargangen, en op de Decennia-pagina "
+          "volgende › langs de edities, en op de Decennia-pagina "
           "langs de decennia. In de lijstkeuze staan de jaarlijkse "
           "lijsten per zender gegroepeerd, van Arrow tot Veronica.")
+    pdf.p("In de keuzelijst staat meestal gewoon een jaartal. Zond "
+          "een zender een lijst in hetzelfde jaar twee keer uit, "
+          "dan komt de maand erachter — bij De Foute 1500 kies je "
+          "tussen **2021 (juni)** en **2021 (december)**. Het zijn "
+          "twee losse edities: ze hebben allebei hun eigen nummer "
+          "1, en in de grafiek van een nummer krijgen ze allebei "
+          "een eigen punt.")
     pdf.kop2("Decennia en Top 40 totaal")
     pdf.p("Hetzelfde puntenklassement, maar dan over tien jaargangen "
           "(de jaren 60 tot en met nu) of over de **volledige Top "
@@ -476,6 +485,9 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "hitgeschiedenis van die artiest over alle lijsten heen — "
           "ruim 13.000 artiesten hebben zo'n eigen pagina.")
     pdf.kop2("Wat de symbolen betekenen")
+    pdf.p("Boven elke weeklijst staat een legenda, en die toont alleen "
+          "wat er die week ook werkelijk in staat — geen kroontje boven "
+          "een Top 40, geen stip boven een lijst zonder stipnoteringen.")
     pdf.tabel(
         [("Symbool", 34, "L"), ("Betekenis", BREED - 34, "L")],
         [
@@ -484,6 +496,19 @@ def _hoofdstukken_nl(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
             ["Belletje", "Alarmschijf: door de Top 40 uitgeroepen tot "
              "aandachtsplaat van de week. In de downloads heet dit een "
              "kolom (Excel) of een ster vóór de titel (PDF)."],
+            ["Rood rondje", "Stipnotering: de Top 40 en de Sterren NL "
+             "Top 25 zetten er een stip bij als een plaat die week hard "
+             "steeg. Een open rondje is een **superstip** — dezelfde "
+             "onderscheiding, maar zwaarder."],
+            ["Kroontje", "Oranje Kroon: bij de Oranje Top 30 de clip van "
+             "de week van TV Oranje."],
+            ["Geel rondje", "Gedeelde plek: meerdere uitvoeringen van "
+             "hetzelfde nummer stonden die week samen op één positie, "
+             "elk met dezelfde punten."],
+            ["Lichtblauw rondje", "Dubbele A-kant: één plaat met twee "
+             "kanten die samen één notering vormen. Ziet er in de lijst "
+             "hetzelfde uit als een gedeelde plek, maar is iets anders — "
+             "vandaar de eigen kleur."],
             ["Speldje „nieuw”", "Nieuwe binnenkomer in die "
              "week."],
             ["Speldje „terug”", "Terugkeerder: stond eerder "
@@ -709,7 +734,9 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "Top 25 — are updated automatically every Friday evening. "
           f"Alongside them the archive holds **{c['jaarlijks']} annual "
           "charts**, from the Top 2000 to the Zomer Top 500: charts "
-          "that Dutch radio stations broadcast once a year.")
+          "that Dutch radio stations usually broadcast once a year "
+          "— Qmusic's De Foute 1500 ran twice in 2021, and then "
+          "both editions are held separately.")
     pdf.kop2("The menu bar")
     pdf.p("Every page has three menu rows. The **top row** holds the "
           "chart views: Overview, Weekly charts, Year charts, Decades, "
@@ -760,10 +787,16 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "position, weeks on chart and the run from first to last "
           "entry. For the annual charts (Top 2000 and the like) every "
           "**edition** is shown exactly as broadcast. Here too the "
-          "‹ previous and next › buttons page through the years, and "
-          "on the Decades page through the decades. In the chart "
+          "‹ previous and next › buttons page through the editions, "
+          "and on the Decades page through the decades. In the chart "
           "picker the annual charts are grouped by station, from "
           "Arrow to Veronica.")
+    pdf.p("The picker usually shows a plain year. Where a station "
+          "broadcast a chart twice in the same year, the month is "
+          "added — for De Foute 1500 you choose between **2021 "
+          "(juni)** and **2021 (december)**. They are two separate "
+          "editions: each has its own number one, and each gets its "
+          "own point in a song's graph.")
     pdf.kop2("Decades and Top 40 all-time")
     pdf.p("The same points ranking, but across ten years (the sixties "
           "up to now) or across the **complete Top 40 history** since "
@@ -846,6 +879,9 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
           "history across all charts — over 13,000 artists have such "
           "a page.")
     pdf.kop2("What the symbols mean")
+    pdf.p("Every weekly chart carries a legend above it, showing only "
+          "what that week actually contains — no crown above a Top 40, "
+          "no dot above a chart without stipnoteringen.")
     pdf.tabel(
         [("Symbol", 34, "L"), ("Meaning", BREED - 34, "L")],
         [
@@ -854,6 +890,19 @@ def _hoofdstukken_en(pdf: _Boek, toc: list, links: dict, c: dict) -> None:
             ["Bell", "Alarmschijf: named record of the week by the "
              "Top 40. In the downloads this becomes a column (Excel) or "
              "a star before the title (PDF)."],
+            ["Red circle", "Stipnotering: the Top 40 and the Sterren "
+             "NL Top 25 mark a record that climbed sharply that "
+             "week. An open circle is a **superstip** — the same "
+             "distinction, but heavier."],
+            ["Crown", "Oranje Kroon: in the Oranje Top 30, TV "
+             "Oranje's clip of the week."],
+            ["Yellow circle", "Shared position: several versions of "
+             "the same song held one position together that week, "
+             "each scoring the same points."],
+            ["Light blue circle", "Double A-side: one record with "
+             "two sides forming a single entry. It looks like a "
+             "shared position but is something else — hence its own "
+             "colour."],
             ["„new” badge", "New entry that week."],
             ["„back” badge", "Re-entry: charted before, "
              "dropped out and returned."],
