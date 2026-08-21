@@ -320,6 +320,50 @@ def test_een_artiest_met_een_schrijfwijze_valt_nergens_in():
     assert all(not groepen for groepen in naamvarianten(con).values())
 
 
+# --- een scheider aan het eind ----------------------------------------------
+
+
+def test_scheider_aan_het_eind_is_geen_scheider():
+    """"Little Feat" is een bandnaam, geen samenwerking met niemand.
+
+    De scheiders (feat, ft, with, and, x, vs) maken van een naam met twee
+    kanten er een met een `&` ertussen. Staat zo'n woord aan het eind, dan is
+    er geen tweede kant en hoort het bij de naam. Zonder die eis werd Little
+    Feat "little &", Lil Nas X "lil nas &" en VS in zijn geheel "&" -- en dan
+    is de band uit het archief verdwenen.
+    """
+    from hitlijsten.normalize import normaliseer
+
+    assert normaliseer("Little Feat") == "little feat"
+    assert normaliseer("Lil Nas X") == "lil nas x"
+    assert normaliseer("Liberty X") == "liberty x"
+    assert normaliseer("VS") == "vs"
+    assert normaliseer("Trans-X") == "trans x"
+
+
+def test_een_scheider_middenin_werkt_gewoon():
+    """De eis mag de gewone gevallen niet raken."""
+    from hitlijsten.normalize import normaliseer
+
+    assert normaliseer("Jay-Z feat. Alicia Keys") == "jay z & alicia keys"
+    assert normaliseer("Nelly ft. Kelly Rowland") == "nelly & kelly rowland"
+    assert normaliseer("Simon and Garfunkel") == "simon & garfunkel"
+    assert normaliseer("Elvis Presley vs. JXL") == "elvis presley & jxl"
+    assert normaliseer("Elvis Presley with The Jordanaires") ==         "elvis presley & the jordanaires"
+    assert normaliseer("Kool & The Gang") == "kool & the gang"
+
+
+def test_a_plus_blijft_los_van_a():
+    """`&` en `+` houden hun oude gedrag, en dat is hier precies goed.
+
+    Het plusteken sneuvelt toch in _ROMMEL, dus zonder de omzetting zouden
+    "A+" en "A" op dezelfde sleutel vallen. Die "a &" is wat ze scheidt.
+    """
+    from hitlijsten.normalize import normaliseer
+
+    assert normaliseer("A+") != normaliseer("A")
+
+
 # --- dubbele A-kanten -------------------------------------------------------
 
 

@@ -792,6 +792,55 @@ credits zijn zo teruggebracht; bij **Free**, **Carlos**, **Mr. Big** en
 verschillende acts uiteen (*All Right Now* is de Britse Free, *Keep In Touch*
 de Nederlandse).
 
+### Een scheider aan het eind is geen scheider
+
+`normaliseer` maakt van *feat*, *ft*, *with*, *and*, *x* en *vs* een `&`, zodat
+"Calvin Harris feat. Rihanna" en "Calvin Harris & Rihanna" dezelfde sleutel
+krijgen. Dat werkt — behalve als zo'n woord **aan het eind** van de naam
+staat. Dan is er geen tweede kant en hoort het gewoon bij de naam:
+
+| credit | sleutel wás | is nu |
+|---|---|---|
+| Lil Nas X (105×) | `lil nas &` | `lil nas x` |
+| Liberty X (55×) | `liberty &` | `liberty x` |
+| Cygnus X · Huntr/x · Duo X · Trans-X · Club X · Team X · Triple X · Channel X | `… &` | `… x` |
+| **VS** (7×) | `&` | `vs` |
+| **Little Feat** | `little &` | `little feat` |
+
+Bij *VS* bestond de hele artiestsleutel uit één ampersand. En **Little Feat**
+was er het ergst aan toe: die stond in het archief als `Little &`, met de
+bandnaam half weggepoetst — *Long Distance Love* (Tipparade 1976) en *Willin'*
+(Veronica Top 1000 2025) hadden geen artiest meer.
+
+De oplossing is een lookahead: `(?=\s*\S)` achter de woordscheiders, zodat ze
+alleen omgezet worden als er iets achter staat. 12 credits en 316 noteringen
+kregen een nieuwe sleutel; de oude blijven werken via `oude_sleutels`.
+
+> ⚠️ **`&` en `+` houden hun oude gedrag.** Dat lijkt inconsequent maar is het
+> niet: het plusteken sneuvelt toch al in `_ROMMEL`, dus zonder de omzetting
+> vallen `A+` en `A` op dezelfde sleutel. Juist die `a &` houdt ze uit elkaar.
+>
+> ⚠️ En **herbereken niet alle sleutels in één keer** om zoiets door te
+> voeren. Dat leek de nette aanpak, maar de proefdraai vond 598 noteringen in
+> plaats van 316: 36 sleutels wijken om een heel andere reden af (zie de
+> aliascycli hieronder) en zouden stilletjes naar een lelijkere vorm zijn
+> verhuisd. Alleen de credits aanpakken die je op het oog hebt.
+
+### Cycli in de aliastabel
+
+De aliastabel bevat **59 paren die naar elkaar wijzen** (a→b én b→a).
+`_volg_alias` breekt zo'n cyclus af met `min(gezien)`, dus de uitkomst is
+stabiel en alles blijft bij elkaar — maar de gekozen vertegenwoordiger is de
+alfabetisch laagste, en dat is meestal juist de *onopgeschoonde* vorm: een
+spatie sorteert vóór een letter. Vandaar sleutels als `bl f & geike
+arnaert|zoutelande` (Bløf), `k c & the sunshine band|give it up` en
+`ac dc|highway to hell`.
+
+Het doet geen schade en de pagina's kloppen. Wel betekent het dat de opgeslagen
+sleutel bij ruim 400 noteringen afwijkt van wat `sleutel_van()` nu uitrekent —
+die aliassen zijn er ná het schrijven bij gekomen. Wie ooit alle sleutels
+herberekent, verplaatst die dus. Nog niet opgeruimd.
+
 ### Namen die hun hoofdletters kwijt waren
 
 129 credits stonden volledig in onderkast — *macklemore & ryan lewis*, *daft

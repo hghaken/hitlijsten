@@ -27,14 +27,26 @@ from .config import ALIASES_PATH, NIET_SAMENVOEGEN_PATH
 # zijn "Calvin Harris feat. Rihanna" en "Calvin Harris & Rihanna" twee
 # artiesten. Dat is een verschil zonder betekenis: het gaat om dezelfde twee
 # mensen op dezelfde plaat. 162 samenwerkingen stonden er los van elkaar door.
-_FEAT = re.compile(r"\s*(?:\bfeat\b\.?|\bft\b\.?|\bfeaturing\b|\bwith\b|\bw/|\bmet\b)\s*",
-                   re.I)
+# `(?=\s*\S)` -- er moet iets achter staan. Een scheider aan het eind van
+# een naam is namelijk geen scheider maar een stuk van de naam: "Little Feat"
+# werd zonder die eis "little &", en zo verdween de band uit het archief.
+# Zie ook _EN hieronder, waar dezelfde eis "Lil Nas X" redt.
+_FEAT = re.compile(
+    r"\s*(?:\bfeat\b\.?|\bft\b\.?|\bfeaturing\b|\bwith\b|\bw/|\bmet\b)"
+    r"(?=\s*\S)\s*", re.I)
 # Samenwerkingstekens gelijktrekken: "x", "&", "+", "and", "vs" -> "&".
 # "and" zat er lang niet in, en dat liep dwars door het archief: top40.nl
 # schrijft "Simon and Garfunkel", Music Datastats "Simon & Garfunkel". Daardoor
 # lagen 121 platen in tweeen -- de weeklijsten op de ene sleutel, de jaarlijsten
 # op de andere, en op geen van beide pagina's het hele verhaal.
-_EN = re.compile(r"\s*(?:&|\+|\band\b|\bx\b|\bvs\b\.?|\bversus\b)\s*", re.I)
+# De woorden krijgen dezelfde eis als bij _FEAT: alleen een scheider als er
+# iets achter staat. Anders eindigde elke naam op een X in een ampersand --
+# Lil Nas X, Liberty X, Cygnus X, Trans-X -- en "VS" werd in zijn geheel "&".
+# `&` en `+` houden hun oude gedrag: het plusteken sneuvelt toch al in
+# _ROMMEL, en juist die "a &" is wat A+ en A uit elkaar houdt.
+_EN = re.compile(
+    r"\s*(?:&|\+|(?:(?:\band\b|\bx\b|\bvs\b\.?|\bversus\b)(?=\s*\S)))\s*",
+    re.I)
 # Voor TITELS een smallere variant. Daar draait de normalisatie bewust met
 # samenwerking=False, want "x" is er een letter ("Malcolm X") en "vs" hoort bij
 # de titel zelf. Maar "Alive & Kicking" en "Alive And Kicking" zijn onmiskenbaar
