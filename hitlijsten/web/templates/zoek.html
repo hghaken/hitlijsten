@@ -8,6 +8,13 @@
 <form method="get">
   <input type="text" name="term" value="{{ term }}"
          placeholder="{% if taal == 'en' %}search term, * as wildcard, artist | title combined{% else %}zoekterm, * als joker, artiest | titel samen{% endif %}" autofocus>
+  {# Bevat is de goede stand zolang je weet hoe iets gespeld wordt; exact als
+     je te veel vindt, fuzzy als je niets vindt. Zie de uitleg onderaan. #}
+  <select name="manier" title="{{ _("Hoe nauw de zoekterm moet passen") }}">
+    <option value="bevat" {% if manier == 'bevat' %}selected{% endif %}>{{ _("bevat") }}</option>
+    <option value="exact" {% if manier == 'exact' %}selected{% endif %}>{{ _("exact") }}</option>
+    <option value="fuzzy" {% if manier == 'fuzzy' %}selected{% endif %}>{{ _("ongeveer") }}</option>
+  </select>
   <select name="waar">
     <option value="beide" {% if waar == 'beide' %}selected{% endif %}>{{ _("artiest en titel") }}</option>
     <option value="artiest" {% if waar == 'artiest' %}selected{% endif %}>{{ _("alleen artiest") }}</option>
@@ -24,6 +31,13 @@
 </form>
 
 {% if term %}
+  {% if randspaties %}
+  {# Een spatie aan de rand telt mee, en dat is precies de bedoeling bij " y ".
+     Maar per ongeluk getypt is het een raadsel, dus laat hem zien. #}
+  <p class="hint">{% if taal == 'en' %}Searching for{% else %}Gezocht op{% endif %}
+    <code>{{ term.replace(' ', '␣') }}</code> —
+    {% if taal == 'en' %}the spaces count{% else %}de spaties tellen mee{% endif %}</p>
+  {% endif %}
   <p class="hint">{{ resultaten|length }} {{ _("resultaten") }}{% if resultaten|length == 200 %}
     {% if taal == 'en' %}(capped at 200 — make the search term more specific){% else %}(afgekapt op 200 — maak de zoekterm specifieker){% endif %}{% endif %}</p>
   {% if suggesties %}
@@ -31,7 +45,7 @@
     {% if taal == 'en' %}Searching for artist <b>and</b> title? Put a
     pipe between them — try{% else %}Zocht je op artiest <b>én</b> titel? Zet er een pipe tussen — probeer{% endif %}
     {% for sug in suggesties %}
-      <a href="{{ url_for('zoek', term=sug, lijst=lijst, waar=waar) }}"><code>{{ sug }}</code></a>{% if not loop.last %} {{ _("of") }}{% endif %}
+      <a href="{{ url_for('zoek', term=sug, lijst=lijst, waar=waar, manier=manier) }}"><code>{{ sug }}</code></a>{% if not loop.last %} {{ _("of") }}{% endif %}
     {% endfor %}
   </div>
   {% endif %}
@@ -76,6 +90,30 @@
     Wil je op artiest <b>én</b> titel tegelijk zoeken, zet er een pipe tussen:
     <code>abba | fernando</code> — links de artiest, rechts de titel, jokers
     mogen aan beide kanten.{% endif %}
+  </p>
+  <p class="hint">
+    {% if taal == 'en' %}The dropdown decides how closely the term has to fit.
+    <b>Contains</b> is right as long as you know the spelling.
+    <b>Exact</b> means the whole field equals the term — <code>fame</code>
+    finds David Bowie and not "Fame '90" or "Hall Of Fame".
+    <b>Roughly</b> tolerates a misspelling and a missing word:
+    <code>bohemian rapsody</code> and <code>queen bohemian</code> both land on
+    the right song, ranked by how well they fit.
+    {% else %}De keuzelijst bepaalt hoe nauw de term moet passen.
+    <b>Bevat</b> is de goede stand zolang je weet hoe iets gespeld wordt.
+    <b>Exact</b> wil dat het hele veld gelijk is — <code>fame</code> geeft
+    David Bowie en niet "Fame '90" of "Hall Of Fame".
+    <b>Ongeveer</b> heeft geen last van een tikfout of een woord te veel:
+    <code>bohemian rapsody</code> en <code>queen bohemian</code> komen allebei
+    op het goede nummer uit, gesorteerd op hoe goed ze passen.{% endif %}
+  </p>
+  <p class="hint">
+    {% if taal == 'en' %}<b>Spaces count.</b> Leading and trailing spaces are
+    kept, so <code>&nbsp;y&nbsp;</code> — space, y, space — finds the Spanish
+    credits without dragging in every word containing a y.
+    {% else %}<b>Spaties tellen mee.</b> Een spatie aan het begin of eind
+    blijft staan, dus <code>&nbsp;y&nbsp;</code> — spatie, y, spatie — vindt de
+    Spaanse credits zonder elk woord met een y erin mee te nemen.{% endif %}
   </p>
 {% endif %}
 {% endblock %}

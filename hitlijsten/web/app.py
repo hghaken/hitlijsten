@@ -308,11 +308,11 @@ def leg_vast(soort: str, verwijst: str, veld: str, oud, nieuw, reden: str) -> No
     con.commit()
 
 
-def zoekpatroon(term: str) -> str:
+def zoekpatroon(term: str, manier: str = "bevat") -> str:
     """Maak van wat er is ingetypt een patroon voor LIKE.
 
     Een sterretje is het jokerteken, want dat is wat mensen typen; SQL wil er
-    een procentteken. Zonder sterretje zoeken we "bevat", want dat is bij een
+    een procentteken. Zonder sterretje zoekt `bevat`, want dat is bij een
     hitlijst bijna altijd de bedoeling -- wie "beatles" intypt wil ook "The
     Beatles" vinden.
 
@@ -321,16 +321,26 @@ def zoekpatroon(term: str) -> str:
         *beatles     eindigt op   ->  %beatles
         *beatles*    bevat        ->  %beatles%
 
-    De procent- en onderstrepingstekens die iemand zélf intypt worden ontsnapt,
+    Met `manier="exact"` moet het hele veld gelijk zijn: exact op "fame" geeft
+    David Bowie en niet "Fame '90" of "Hall Of Fame". Jokers mogen daar ook,
+    want een sterretje is een uitspraak over waar de tekst begint of eindigt
+    en dat blijft zinnig -- er komen alleen geen procenttekens omheen die je
+    niet gevraagd hebt.
+
+    De procent- en onderstrepingstekens die iemand zelf intypt worden ontsnapt,
     anders is "50%" ineens een joker en vindt hij alles.
+
+    **Spaties blijven staan.** Ze wegpoetsen lijkt hulpvaardig, maar dan kun je
+    niet zoeken op " y " -- spatie, y, spatie -- en dat is precies hoe je de
+    Spaanse credits vindt zonder elk woord met een y erin mee te nemen.
     """
-    term = (term or "").strip()
     if not term:
         return ""
-    veilig = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-    if "*" in veilig:
+    veilig = term.replace(chr(92), chr(92) * 2)
+    veilig = veilig.replace("%", chr(92) + "%").replace("_", chr(92) + "_")
+    if manier == "exact" or "*" in veilig:
         return veilig.replace("*", "%")
-    return f"%{veilig}%"
+    return "%" + veilig + "%"
 
 
 def _als_sleutel(tekst: str | None) -> str:
@@ -1952,14 +1962,60 @@ def _registreer(app: Flask) -> None:
 
     # --- noteringen zoeken -------------------------------------------------
 
+    _kandidaten_cache: dict = {}
+
+    def _fuzzy(term: str, waar: str):
+        """De sleutels die op `term` lijken, met hun score.
+
+        De kandidatenlijst is één regel per nummer -- 36.000 stuks -- en die
+        verandert alleen als er gegevens bij komen. Vandaar hetzelfde stempel
+        als bij de records en de artiesten: opbouwen kost een seconde, daarna
+        is het geheugen.
+        """
+        from .. import zoeken
+
+        con = verbinding()
+        stempel = tuple(con.execute(
+            "SELECT COUNT(*), MAX(opgehaald_op) FROM opgehaald").fetchone())
+        if _kandidaten_cache.get("stempel") != stempel:
+            _kandidaten_cache["stempel"] = stempel
+            # Meteen genormaliseerd: dat werk hangt van de gegevens af en
+            # niet van de zoekterm, en per zoekopdracht kostte het vijf
+            # seconden. Zie de uitleg bovenin zoeken.py.
+            _kandidaten_cache["rijen"] = zoeken.bereid_voor(
+                (r["sleutel"], r["artiest"], r["titel"]) for r in con.execute(
+                    "SELECT sleutel, MAX(artiest) artiest, MAX(titel) titel"
+                    " FROM noteringen GROUP BY sleutel"))
+        return zoeken.treffers(term, _kandidaten_cache["rijen"], waar)
+
     @app.route("/zoek")
     def zoek():
-        term = (request.args.get("term") or "").strip()
+        # Niet strippen. Een spatie aan het begin of eind is bij een gewone
+        # zoekterm ruis, maar het is ook de enige manier om op " y " te
+        # zoeken -- spatie, y, spatie -- en dat is hoe je de Spaanse credits
+        # vindt zonder elk woord met een y erin mee te nemen. Het sjabloon
+        # laat zien wanneer er spaties meetellen, zodat een per ongeluk
+        # ingetypte spatie geen raadsel wordt.
+        term = request.args.get("term") or ""
         lijst = request.args.get("lijst") or ""
         waar = request.args.get("waar") or "beide"
         if waar not in ("beide", "artiest", "titel"):
             waar = "beide"
+        manier = request.args.get("manier") or "bevat"
+        if manier not in ("bevat", "exact", "fuzzy"):
+            manier = "bevat"
         resultaten = []
+        scores: dict = {}
+
+        KOP = (
+            "SELECT sleutel, lijst, MAX(titel) titel, MAX(artiest) artiest,"
+            " MIN(jaar) van, MAX(jaar) tot, COUNT(*) weken, MIN(positie) hoogste,"
+            " (SELECT x.jaar FROM noteringen x WHERE x.sleutel=n.sleutel"
+            "  AND x.lijst=n.lijst ORDER BY x.positie, x.jaar LIMIT 1) piekjaar"
+            " FROM noteringen n WHERE "
+        )
+        STAART = " GROUP BY sleutel, lijst ORDER BY weken DESC LIMIT 200"
+
         # "abba | fernando" zoekt op artiest EN titel tegelijk. De pipe is
         # geen willekeurige keuze: intern is de sleutel al artiest|titel, dus
         # wie een sleutel plakt uit het beheergedeelte zoekt meteen goed.
@@ -1972,50 +2028,56 @@ def _registreer(app: Flask) -> None:
                 # gewoon op wat er wel staat.
                 term = artiest_deel or titel_deel
                 artiest_deel = titel_deel = None
+
         if artiest_deel and titel_deel:
-            vraag = (
-                "SELECT sleutel, lijst, MAX(titel) titel, MAX(artiest) artiest,"
-                " MIN(jaar) van, MAX(jaar) tot, COUNT(*) weken, MIN(positie) hoogste,"
-                " (SELECT x.jaar FROM noteringen x WHERE x.sleutel=n.sleutel"
-                "  AND x.lijst=n.lijst ORDER BY x.positie, x.jaar LIMIT 1) piekjaar"
-                " FROM noteringen n WHERE artiest LIKE ? ESCAPE '\\'"
-                " AND titel LIKE ? ESCAPE '\\'"
-            )
-            waarden = [zoekpatroon(artiest_deel), zoekpatroon(titel_deel)]
+            # De pipe is een EN over twee kolommen; fuzzy heeft daar geen
+            # eigen vorm voor, dus die valt hier terug op bevat.
+            vraag = (KOP + "artiest LIKE ? ESCAPE '\\'"
+                     " AND titel LIKE ? ESCAPE '\\'")
+            los = "bevat" if manier == "fuzzy" else manier
+            waarden = [zoekpatroon(artiest_deel, los),
+                       zoekpatroon(titel_deel, los)]
             if lijst in LIJSTEN:
                 vraag += " AND lijst=?"
                 waarden.append(lijst)
-            vraag += " GROUP BY sleutel, lijst ORDER BY weken DESC LIMIT 200"
-            resultaten = list(verbinding().execute(vraag, waarden))
+            resultaten = list(verbinding().execute(vraag + STAART, waarden))
+        elif term and manier == "fuzzy":
+            gevonden = _fuzzy(term, waar)
+            scores = dict(gevonden)
+            if gevonden:
+                plek = ",".join("?" * len(gevonden))
+                vraag = KOP + f"sleutel IN ({plek})"
+                waarden = [s for s, _ in gevonden]
+                if lijst in LIJSTEN:
+                    vraag += " AND lijst=?"
+                    waarden.append(lijst)
+                resultaten = list(verbinding().execute(vraag + STAART, waarden))
+                # Op gelijkenis, want bij fuzzy is de volgorde het halve
+                # antwoord; het aantal weken beslist binnen een gelijke score.
+                resultaten.sort(
+                    key=lambda r: (-scores.get(r["sleutel"], 0), -r["weken"]))
         elif term:
-            patroon = zoekpatroon(term)
+            patroon = zoekpatroon(term, manier)
             # `piekjaar` is de jaargang waarin het nummer zijn hoogste plek
             # haalde, en bij gelijke hoogte de eerste. Daar springt de link
             # naartoe: dat is de jaargang die naast het resultaat staat, dus je
             # komt uit waar je op klikte.
-            vraag = (
-                "SELECT sleutel, lijst, MAX(titel) titel, MAX(artiest) artiest,"
-                " MIN(jaar) van, MAX(jaar) tot, COUNT(*) weken, MIN(positie) hoogste,"
-                " (SELECT x.jaar FROM noteringen x WHERE x.sleutel=n.sleutel"
-                "  AND x.lijst=n.lijst ORDER BY x.positie, x.jaar LIMIT 1) piekjaar"
-                " FROM noteringen n WHERE "
-            )
             # ESCAPE erbij, anders blijft een ingetypt procentteken een joker.
             if waar == "artiest":
-                vraag += "artiest LIKE ? ESCAPE '\\'"
+                vraag = KOP + "artiest LIKE ? ESCAPE '\\'"
                 waarden = [patroon]
             elif waar == "titel":
-                vraag += "titel LIKE ? ESCAPE '\\'"
+                vraag = KOP + "titel LIKE ? ESCAPE '\\'"
                 waarden = [patroon]
             else:
-                vraag += ("(titel LIKE ? ESCAPE '\\'"
-                          " OR artiest LIKE ? ESCAPE '\\')")
+                vraag = KOP + ("(titel LIKE ? ESCAPE '\\'"
+                               " OR artiest LIKE ? ESCAPE '\\')")
                 waarden = [patroon, patroon]
             if lijst in LIJSTEN:
                 vraag += " AND lijst=?"
                 waarden.append(lijst)
-            vraag += " GROUP BY sleutel, lijst ORDER BY weken DESC LIMIT 200"
-            resultaten = list(verbinding().execute(vraag, waarden))
+            resultaten = list(verbinding().execute(vraag + STAART, waarden))
+
         # Wie "abba fernando" intypt bedoelt meestal artiest en titel, maar
         # dat matcht geen van beide kolommen. Bij nul treffers en meerdere
         # woorden stellen we de pipe-varianten voor, klikbaar: elke plek
@@ -2027,9 +2089,13 @@ def _registreer(app: Flask) -> None:
                 " ".join(woorden[:i]) + " | " + " ".join(woorden[i:])
                 for i in range(1, len(woorden))
             ]
-        return render_template("zoek.html", term=term, lijst=lijst, waar=waar,
-                               resultaten=_alleen_nl(resultaten),
-                               suggesties=suggesties)
+        return render_template(
+            "zoek.html", term=term, lijst=lijst, waar=waar, manier=manier,
+            resultaten=_alleen_nl(resultaten), suggesties=suggesties,
+            scores=scores,
+            # Spaties aan de rand tellen mee; laat dat zien in plaats van het
+            # de bezoeker te laten raden.
+            randspaties=bool(term) and term != term.strip())
 
     _dag_cache: dict = {}
 

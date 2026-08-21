@@ -325,7 +325,7 @@ op de NAS, achter een reverse proxy.
 | Alarmschijf in downloads | de weeklijst-Excel krijgt een kolom `Alarmschijf` ("ja"), de weeklijst-PDF een **ster vóór de titel** met `= Alarmschijf` in de ondertitel — allebei alleen bij de **Top 40**. De vlag is namelijk een eigenschap van de plaat en staat dus óók op de Tipparade- en Sterren NL-noteringen van hetzelfde nummer (gemeten: 2.651 en 451 stuks), maar uitgeroepen worden ze in de Top 40; een ster elders zou suggereren dat die lijst eigen Alarmschijven kent. Het belletje van de site kan niet in de PDF: dat teken zit niet in DejaVu Sans en zou een leeg blokje worden |
 | Decennia | het puntenklassement over tien jaargangen Top 40, met bladerknoppen langs de decennia |
 | Top 40 totaal | hetzelfde over alle jaargangen 1965–nu |
-| Zoeken | op artiest, titel of beide; `*` als jokerteken; `artiest \| titel` zoekt op allebei tegelijk (bij nul treffers met meerdere woorden stelt de pagina die schrijfwijze klikbaar voor); klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
+| Zoeken | op artiest, titel of beide, en in drie **manieren**: `bevat` (standaard), `exact` (het hele veld gelijk — *fame* geeft David Bowie en niet *Hall Of Fame*) en `ongeveer` (fuzzy, zie hieronder). `*` als jokerteken; **spaties aan de rand tellen mee**, zodat je op `␣y␣` kunt zoeken en de Spaanse credits vindt zonder elk woord met een y erin — de pagina toont het met een spatiesymbool zodat een per ongeluk getypte spatie geen raadsel wordt; `artiest \| titel` zoekt op allebei tegelijk (bij nul treffers met meerdere woorden stelt de pagina die schrijfwijze klikbaar voor); klik springt naar de jaargang van de hoogste notering — openbaar, net als de nummerpagina's (de bewerkkant blijft achter de login) |
 | Artiest | eigen pagina per artiest (±13.600): alle nummers over alle lijsten heen, met carrière-spanne, hoogste posities en nummer-1-teller; bereikbaar via artiestnamen op de nummer- en zoekpagina's |
 | Jouw dag | datumprikker: kies je geboortedag of trouwdag en zie de Top 40 die toen gold, met de nummer 1 groot in beeld; op de homepage staat "X jaar geleden op 1" voor deze week door de decennia heen |
 | DJ Export (VirtualDJ & rekordbox) | met **voortgangsbalk** bij het laden. Het formulier gaat met een XHR de deur uit, zodat het versturen een echt percentage krijgt — maar dat is op een thuisnetwerk in een tiende seconde klaar (gemeten: 29 MB in 67 ms, één enkele gebeurtenis op 100%), terwijl het verwerken zeven seconden duurt. Daarom **meldt de server zijn eigen stand**: `vdj.Budget` telt de uitgepakte bytes en de pagina vraagt ze elke 400 ms op via `/vdj/voortgang/<sleutel>` (sleutel = toevalsgetal van de bezoeker, alleen in het geheugen, weg zodra het verzoek klaar is). Dat dit werkt hangt aan de keuze voor **één proces met draden**: met losse workers zou de pollende draad een andere kopie zien. Een XHR krijgt JSON terug in plaats van een omleiding, want de XHR volgt die zelf en verbruikt de flash-melding, waarna de verversing niets meer vindt. Zonder JavaScript blijft het een gewone POST, die nu ook bij een fout omleidt in plaats van rendert (flash-melding), zodat opnieuw laden de upload niet herhaalt. Laad éénmalig je `database.xml`, een **rekordbox-collectie-export** (xml, herkend aan de DJ_PLAYLISTS-wortel) of — makkelijker — de **backup-zip** van VirtualDJ (Instellingen → Backup; met de volledige database erin, ook van losse schijven), plus je voorkeuren (streaming/netsearch wel of niet, bestandssoort — standaard alleen audio, want een mp4 wint anders elke bitrate-vergelijking — en matching-strengheid in vier niveaus, waarbij duet-credits als "Meat Loaf & Ellen Foley" tegen "Meat Loaf" al op niveau strak matchen); daarna verschijnt op elke weeklijst, elk jaaroverzicht, de decennia en de beide totaallijsten een **⤓ DJ Export-knop** die de getoonde selectie — top-keuze en filters incluis — als playlist oplevert in het formaat dat bij de geladen bron past: `.vdjfolder` bij een VirtualDJ-upload, `.m3u8` bij een rekordbox-upload (te importeren in rekordbox/Engine DJ/Traktor/Serato — de route naar Pioneer/Denon-hardware loopt via die software), met rapport en boodschappenlijst van wat ontbreekt (het rapport is ook als **.txt** te downloaden: vaste kolommen om te printen, met die boodschappenlijst er nog eens apart onder); lokaal bestand wint van streaming, hoogste bitrate bij dubbelen; de database leeft alleen tijdens je bezoek in het geheugen (max. 4 uur) en raakt nooit een schijf |
@@ -1122,6 +1122,36 @@ python -m hitlijsten opschonen              # alleen melden
 python -m hitlijsten opschonen --toepassen  # doorvoeren
 ```
 
+### Drie manieren om te zoeken
+
+`bevat` is de standaard en de juiste stand zolang je weet hoe iets gespeld
+wordt. `exact` wil dat het hele veld gelijk is — bij *fame* scheelt dat 25
+treffers tegen 11, want *Fame '90* en *Hall Of Fame* vallen weg. `ongeveer`
+is fuzzy (`hitlijsten/zoeken.py`).
+
+Fuzzy vangt twee soorten missers. **De spelling zit ernaast**: *bohemian
+rapsody* en *chubby chequer* komen allebei op het goede nummer uit, via
+`difflib.SequenceMatcher` met een drempel van 0,68. En **je typte een woord
+te veel of te weinig**: *queen bohemian* staat in geen enkel veld zo, want de
+artiest is Queen en de titel Bohemian Rhapsody — daarom telt ook een treffer
+waarbij elk zoekwoord een woord in artiest of titel benadert (drempel 0,82,
+en dan de zwakste van de zoekwoorden, niet het gemiddelde: bij twee woorden
+moeten ze allebei kloppen). De uitslag is gesorteerd op gelijkenis, want bij
+fuzzy is de volgorde het halve antwoord.
+
+> ⚠️ **De kosten zitten in het voorbereiden, niet in het vergelijken.** De
+> eerste versie deed er vijf seconden over. Dat was niet difflib maar
+> `normaliseer`, dat per zoekopdracht over alle 36.000 kandidaten liep — een
+> stuk of tien regex-vervangingen per veld, en dat werk hangt niet van de
+> zoekterm af. Nu doet `zoeken.bereid_voor()` het één keer en bewaart de
+> cache de genormaliseerde vorm. Verder gaat de zoekterm als `b` in één
+> hergebruikte `SequenceMatcher` (difflib bouwt voor `b` een index op) en
+> strepen `real_quick_ratio`/`quick_ratio` het dure werk weg. Samen: **5 s →
+> 1 s**, gelijk aan een gewone zoekopdracht.
+
+De pipe (`artiest | titel`) valt bij fuzzy terug op `bevat`: dat is een EN
+over twee kolommen en daar heeft benaderen geen eigen vorm voor.
+
 ### De stip en de superstip
 
 De Top 40 kent sinds de jaren zestig de **stipnotering**: een onderscheiding
@@ -1494,10 +1524,11 @@ cd <app-map> && . ./omgeving.sh
 ./venv/bin/python tests/test_jaarlijks.py
 ./venv/bin/python tests/test_taal.py
 ./venv/bin/python tests/test_artiesten.py
+./venv/bin/python tests/test_zoeken.py
 node tests/test_grafiek.mjs        # node staat niet op de NAS
 ```
 
-Twaalf reeksen, ruim vierduizend controles. Ze draaien op de gecachete pagina's
+Dertien reeksen, ruim vierduizend controles. Ze draaien op de gecachete pagina's
 en een tijdelijke database, dus zonder netwerk en zonder de echte data aan te
 raken. Handig na elke wijziging aan een parser of aan een bouwer.
 

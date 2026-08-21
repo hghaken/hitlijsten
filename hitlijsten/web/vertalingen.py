@@ -40,6 +40,10 @@ EN = {
     "Artiesten": "Artists",
     "Op 1": "At 1",
     "minimaal": "at least",
+    "bevat": "contains",
+    "exact": "exact",
+    "ongeveer": "roughly",
+    "Hoe nauw de zoekterm moet passen": "How closely the term must fit",
     "Per editie": "Per edition",
     "Artiesten die minstens een kwart van hun nummers in het Nederlands zongen":
         "Artists who sang at least a quarter of their songs in Dutch",
