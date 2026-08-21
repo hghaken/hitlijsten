@@ -594,6 +594,31 @@ def _registreer(app: Flask) -> None:
             vertaal = lambda tekst: tekst
         return {"taal": taal, "_": vertaal}
 
+    # Het Engelse duizendtal- en decimaalteken naar het Nederlandse.
+    _NL_SCHEIDERS = str.maketrans({",": ".", ".": ","})
+
+    @app.template_filter("getal")
+    def _getal(waarde, decimalen: int = 1) -> str:
+        """Een getal in de notatie van de lezer.
+
+        Nederlands schrijft 1.017,3 en Engels 1,017.3 -- dezelfde twee tekens,
+        omgekeerde rollen. De site deed geen van beide: `'{:,.1f}'` levert de
+        Engelse vorm en een `.replace(',', '.')` erachter maakte er "1.017.3"
+        van, met twee punten in één getal. Voor een lezer verwarrend, en voor
+        de tabelsorteerder onleesbaar (`Number()` geeft NaN, waarna de hele
+        kolom als tekst sorteert en 358.5 achter 2.147.9 belandt).
+
+        Let op: in een tabel hoort hiernaast `data-sorteer` met het rauwe
+        getal, want geen van beide notaties overleeft `Number()` zodra er een
+        duizendtalscheider in staat.
+        """
+        tekst = f"{waarde:,.{decimalen}f}"        # de Engelse vorm
+        if request.cookies.get("taal") == "en":
+            return tekst
+        # De komma's worden punten en de punt een komma. In een keer, met
+        # translate: los vervangen zou de tweede de eerste terugdraaien.
+        return tekst.translate(_NL_SCHEIDERS)
+
     @app.route("/taal/<code>")
     def taal_kies(code: str):
         """Taalkeuze vastleggen en terug naar waar de bezoeker was."""

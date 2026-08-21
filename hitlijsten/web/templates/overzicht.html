@@ -4,7 +4,7 @@
 <h1>{{ _("Overzicht") }}</h1>
 
 <div class="kaarten">
-  <div class="kaart"><div class="cijfer">{{ "{:,}".format(cijfers.noteringen).replace(",", ".") }}</div>
+  <div class="kaart"><div class="cijfer">{{ cijfers.noteringen | getal(0) }}</div>
     <div class="naam">{{ _("noteringen") }}</div></div>
   {% for t in terugblik %}
   <div class="kaart terugblik">
@@ -58,7 +58,7 @@
     {# Zonder data-sorteer leest Number() "10.500" als 10,5 en komt die
        regel onder "1000" te staan. Zie de opmerking bij de sorteerder. #}
     <td class="getal" data-sorteer="{{ r['noteringen'] }}"
-        >{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
+        >{{ r['noteringen'] | getal(0) }}</td>
   </tr>
   {% endfor %}
 </tbody></table></div>
@@ -95,7 +95,7 @@
     {# Zonder data-sorteer leest Number() "10.500" als 10,5 en komt die
        regel onder "1000" te staan. Zie de opmerking bij de sorteerder. #}
     <td class="getal" data-sorteer="{{ r['noteringen'] }}"
-        >{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
+        >{{ r['noteringen'] | getal(0) }}</td>
   </tr>
   {% endfor %}
 </tbody></table></div>

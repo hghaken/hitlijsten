@@ -43,19 +43,19 @@
 
 <div class="kaarten">
   <div class="kaart">
-    <div class="cijfer">{{ '{:,}'.format(cijfers.noteringen).replace(',', '.') }}</div>
+    <div class="cijfer">{{ cijfers.noteringen | getal(0) }}</div>
     <div class="naam">{{ _("noteringen") }}</div>
   </div>
   <div class="kaart">
-    <div class="cijfer">{{ '{:,}'.format(cijfers.nummers).replace(',', '.') }}</div>
+    <div class="cijfer">{{ cijfers.nummers | getal(0) }}</div>
     <div class="naam">{{ _("unieke nummers") }}</div>
   </div>
   <div class="kaart">
-    <div class="cijfer">{{ '{:,}'.format(cijfers.artiesten).replace(',', '.') }}</div>
+    <div class="cijfer">{{ cijfers.artiesten | getal(0) }}</div>
     <div class="naam">{{ _("artiesten") }}</div>
   </div>
   <div class="kaart">
-    <div class="cijfer">{{ '{:,}'.format(cijfers.weken).replace(',', '.') }}</div>
+    <div class="cijfer">{{ cijfers.weken | getal(0) }}</div>
     <div class="naam">{{ _('edities') if jaarlijks else _('uitgezonden weken') }}</div>
   </div>
   <div class="kaart">

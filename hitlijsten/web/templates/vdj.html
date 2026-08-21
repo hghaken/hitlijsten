@@ -38,8 +38,8 @@
 <div class="kaarten">
   <div class="kaart"><div class="cijfer">{{ stand.soort }}</div>
     <div class="naam">{{ _("bron") }}</div></div>
-  <div class="kaart"><div class="cijfer">{{ '{:,}'.format(stand.aantal).replace(',', '.') }}</div>
-    <div class="naam">{{ _("nummers geladen") }} ({{ '{:,}'.format(stand.lokaal).replace(',', '.') }} {{ _("lokaal") }})</div></div>
+  <div class="kaart"><div class="cijfer">{{ stand.aantal | getal(0) }}</div>
+    <div class="naam">{{ _("nummers geladen") }} ({{ stand.lokaal | getal(0) }} {{ _("lokaal") }})</div></div>
   <div class="kaart"><div class="cijfer">{{ _('aan') if stand.streaming else _('uit') }}</div>
     <div class="naam">{{ _("streaming (netsearch)") }}</div></div>
   <div class="kaart"><div class="cijfer">{{ _(stand.media) }}</div>

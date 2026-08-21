@@ -38,7 +38,7 @@
       <option value="{{ a }}" {% if toon == a %}selected{% endif %}>top {{ a }}</option>
     {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
+      {{ _('alle') }} {{ totaal | getal(0) }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
   </select>
   {% endif %}
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
@@ -119,7 +119,7 @@
     <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
       {{ hoogtepunten.koploper.titel }}</div>
     <div class="hint">{{ hoogtepunten.koploper.artiest }} —
-      {{ hoogtepunten.koploper.punten }} {{ _("punten over") }}
+      {{ hoogtepunten.koploper.punten | getal }} {{ _("punten over") }}
       {{ hoogtepunten.koploper.weken }} {{ _("weken") }}</div>
   </div>
   {% endif %}
@@ -168,7 +168,8 @@
         <td class="breed klikbaar" title="{{ _("Klik voor de grafiek") }}">{{ n.artiest }}</td>
         <td class="breed klikbaar" title="{{ _("Klik voor de grafiek") }}"><span class="vlagplek">{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}</span>{{ n.titel }}{{ zoeklinks(n.artiest, n.titel) }}</td>
         {% if nummers[0].label %}<td class="hint">{{ n.label or '' }}</td>{% endif %}
-        <td class="getal">{{ n.punten }}</td>
+        <td class="getal" data-sorteer="{{ n.punten }}"
+            >{{ n.punten | getal }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
         <td class="getal">{{ n.weken }}</td>
         {# Een reeks die over de jaarwisseling loopt begint of eindigt buiten

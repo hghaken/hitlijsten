@@ -23,7 +23,7 @@
         top {{ a }}</option>
     {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
+      {{ _('alle') }} {{ totaal | getal(0) }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
   </select>
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
 
@@ -32,9 +32,9 @@
   <div class="rij">
   {% set top = toon if toon != totaal else None %}
   <a class="knop" href="{{ url_for('download_jaarlijksen', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}All {{ '{:,}'.format(totaal).replace(',', '.') }} songs{% endif %} as a workbook{% else %}{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als werkboek{% endif %}">⤓ Excel</a>
+     title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}All {{ totaal | getal(0) }} songs{% endif %} as a workbook{% else %}{% if top %}De top {{ top }}{% else %}Alle {{ totaal | getal(0) }} nummers{% endif %} als werkboek{% endif %}">⤓ Excel</a>
   <a class="knop" href="{{ url_for('download_jaarlijksen_pdf', toon=top, nl=('1' if nl_filter_aan else None)) }}"
-     title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}All {{ '{:,}'.format(totaal).replace(',', '.') }} songs{% endif %} as a PDF{% if not top %} — building takes a while{% endif %}{% else %}{% if top %}De top {{ top }}{% else %}Alle {{ '{:,}'.format(totaal).replace(',', '.') }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}{% endif %}">⤓ PDF</a>
+     title="{% if taal == 'en' %}{% if top %}The top {{ top }}{% else %}All {{ totaal | getal(0) }} songs{% endif %} as a PDF{% if not top %} — building takes a while{% endif %}{% else %}{% if top %}De top {{ top }}{% else %}Alle {{ totaal | getal(0) }} nummers{% endif %} als PDF{% if not top %} — bouwen duurt even{% endif %}{% endif %}">⤓ PDF</a>
   {% if vdj_geladen %}
   <a class="knop" href="{{ url_for('vdj_maak', soort='jaarlijksen', toon=top, nl=('1' if nl_filter_aan else None)) }}"
      title="{{ _("De getoonde selectie als VirtualDJ-playlist uit je eigen bibliotheek") }}">⤓ DJ Export</a>
@@ -51,7 +51,7 @@
 
 <div class="kaarten">
   <div class="kaart">
-    <div class="cijfer">{{ '{:,}'.format(totaal).replace(',', '.') }}</div>
+    <div class="cijfer">{{ totaal | getal(0) }}</div>
     <div class="naam">{{ _("unieke nummers") }}</div>
   </div>
   <div class="kaart">
@@ -63,7 +63,7 @@
     <div class="naam">{{ _("edities") }}</div>
   </div>
   <div class="kaart">
-    <div class="cijfer">{{ nummers[0].punten }}</div>
+    <div class="cijfer">{{ nummers[0].punten | getal }}</div>
     <div class="naam">{{ _("hoogste score") }} ({{ nummers[0].titel[:24] }})</div>
   </div>
 </div>
@@ -117,13 +117,14 @@
         title="{{ _("Alle noteringen en de grafiek") }}">{{ n.artiest }}</a></td>
     <td class="breed"><a class="stil" href="{{ doel }}"
         title="{{ _("Alle noteringen en de grafiek") }}">{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
-    <td class="getal sterk">{{ n.punten }}</td>
+    <td class="getal sterk" data-sorteer="{{ n.punten }}"
+        >{{ n.punten | getal }}</td>
     <td class="getal">{{ n.edities }}</td>
     <td class="getal">{{ n.lijsten }}</td>
     {# Onder de vijf edities grijs: het getal klopt, maar het zegt niets --
        één notering op 1 geeft een perfecte 1,000. #}
     <td class="getal{% if n.edities < 5 %} hint{% endif %}"
-        >{{ '{:.3f}'.format(n.per_editie) }}</td>
+        data-sorteer="{{ n.per_editie }}">{{ n.per_editie | getal(3) }}</td>
     <td class="getal hint {% if n.hoogste == 1 %}top1{% endif %}"
         title="{% if taal == 'en' %}in the {{ lijst_namen.get(n.hoogste_lijst, n.hoogste_lijst) }} of {{ n.hoogste_jaar }}{% else %}in de {{ lijst_namen.get(n.hoogste_lijst, n.hoogste_lijst) }} van {{ n.hoogste_jaar }}{% endif %}">
       <a class="stil" href="{{ url_for('jaaroverzicht', lijst=n.hoogste_lijst,

@@ -21,7 +21,7 @@
       <option value="{{ a }}" {% if toon == a %}selected{% endif %}>top {{ a }}</option>
     {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
+      {{ _('alle') }} {{ totaal | getal(0) }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
   </select>
   {% endif %}
   <noscript><button class="hoofd" type="submit">Toon</button></noscript>
@@ -86,7 +86,7 @@
     <div style="font-size:1.05rem; font-weight:600; margin:.25rem 0">
       {{ nummers[0].titel }}</div>
     <div class="hint">{{ nummers[0].artiest }} —
-      {{ nummers[0].punten }} {{ _("punten over") }} {{ nummers[0].weken }} {{ _("weken") }}</div>
+      {{ nummers[0].punten | getal }} {{ _("punten over") }} {{ nummers[0].weken }} {{ _("weken") }}</div>
   </div>
 </div>
 
@@ -129,7 +129,8 @@
             title="{{ _("Naar") }} {{ n.beste_jaar }}">{{ n.artiest }}</a></td>
         <td class="breed"><a class="stil" href="{{ doel }}"
             title="{{ _("Naar") }} {{ n.beste_jaar }}">{% if is_nl(n.sleutel) %}{{ nl_vlag() }} {% endif %}{{ n.titel }}</a>{{ zoeklinks(n.artiest, n.titel) }}</td>
-        <td class="getal">{{ n.punten }}</td>
+        <td class="getal" data-sorteer="{{ n.punten }}"
+            >{{ n.punten | getal }}</td>
         <td class="getal {% if n.hoogste == 1 %}top1{% endif %}">{{ n.hoogste }}</td>
         <td class="getal">{{ n.weken }}</td>
         <td class="getal" data-sorteer="{{ n.jaren[0] }}">

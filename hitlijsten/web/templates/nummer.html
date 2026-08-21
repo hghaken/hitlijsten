@@ -43,12 +43,15 @@
     <td class="breed klikbaar" title="{{ _("Klik voor het verloop") }}">{{ lijst_namen.get(lijst, lijst) }}</td>
     <td class="getal">{{ pl.van }}{% if pl.tot != pl.van %}–{{ pl.tot }}{% endif %}</td>
     <td class="getal">{{ pl.jaren }}</td>
-    <td class="getal">{{ pl.punten }}</td>
+    <td class="getal" data-sorteer="{{ pl.punten }}"
+        >{{ pl.punten | getal }}</td>
     <td class="getal">{{ pl.weken }}</td>
     {# De telling erbij: "1" alleen zegt niet of het een uitschieter was of
        een gewoonte. Bij een weeklijst zijn het weken, bij een jaarlijst
        edities -- vandaar de neutrale maal-notatie. #}
-    <td class="getal {% if pl.hoogste == 1 %}top1{% endif %}">{{ pl.hoogste }}{%
+    {# "1 (3×)" is tekst, dus zonder data-sorteer zou 10 vóór 2 komen. #}
+    <td class="getal {% if pl.hoogste == 1 %}top1{% endif %}"
+        data-sorteer="{{ pl.hoogste }}">{{ pl.hoogste }}{%
       if pl.op1 %} <span class="hint">({{ pl.op1 }}×)</span>{% endif %}</td>
   </tr>
   {% endfor %}

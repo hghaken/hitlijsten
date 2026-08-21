@@ -14,7 +14,7 @@
     <div class="naam">{{ _("nummers") }}</div>
   </div>
   <div class="kaart">
-    <div class="cijfer">{{ '{:,}'.format(noteringen).replace(',', '.') }}</div>
+    <div class="cijfer">{{ noteringen | getal(0) }}</div>
     <div class="naam">{{ _("noteringen") }}</div>
   </div>
   <div class="kaart">

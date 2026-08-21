@@ -15,7 +15,7 @@
   <div class="kaart"><div class="cijfer">{{ uitkomst.twijfel }}</div>
     <div class="naam">{{ _("twijfelgevallen (zeer soepel gematcht)") }}</div></div>
   {% endif %}
-  <div class="kaart"><div class="cijfer">{{ '{:,}'.format(uitkomst.bibliotheek).replace(',', '.') }}</div>
+  <div class="kaart"><div class="cijfer">{{ uitkomst.bibliotheek | getal(0) }}</div>
     <div class="naam">{{ _("nummers in je bibliotheek") }}</div></div>
 </div>
 

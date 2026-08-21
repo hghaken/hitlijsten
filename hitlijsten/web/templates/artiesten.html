@@ -30,7 +30,7 @@
       <option value="{{ a }}" {% if toon == a %}selected{% endif %}>top {{ a }}</option>
     {% endif %}{% endfor %}
     <option value="alles" {% if toon == totaal %}selected{% endif %}>
-      {{ _('alle') }} {{ '{:,}'.format(totaal).replace(',', '.') }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
+      {{ _('alle') }} {{ totaal | getal(0) }}{% if totaal > 2500 %} — {{ _('traag') }}{% endif %}</option>
   </select>
   {% endif %}
   {# Niet op de ampersand filteren: die zit net zo goed in Nick & Simon en
@@ -45,8 +45,8 @@
   {{ nl_filter(_("Artiesten die minstens een kwart van hun nummers in het Nederlands zongen")) }}
   <noscript><button class="hoofd" type="submit">{{ _("Toon") }}</button></noscript>
   <span class="hint" style="margin-left:auto">
-    {% if toon < totaal %}{{ '{:,}'.format(toon).replace(',', '.') }}
-      {{ _("van") }} {% endif %}{{ '{:,}'.format(totaal).replace(',', '.') }}
+    {% if toon < totaal %}{{ toon | getal(0) }}
+      {{ _("van") }} {% endif %}{{ totaal | getal(0) }}
     {{ _("artiesten") }}</span>
 </form>
 
@@ -105,7 +105,7 @@
        de sorteerder terug op tekst: "999.5" komt dan ná "1.017.3". Vandaar
        het rauwe getal in data-sorteer. #}
     <td class="getal" data-sorteer="{{ r.punten }}"
-        >{{ '{:,.1f}'.format(r.punten).replace(',', '.') }}</td>
+        >{{ r.punten | getal }}</td>
     <td class="getal">{{ r.lijsten }}</td>
     <td class="getal">{{ r.van }}</td>
     <td class="getal">{{ r.tot }}</td>
