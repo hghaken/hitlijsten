@@ -651,6 +651,15 @@ def jaarlijkse_totalen(con: sqlite3.Connection) -> list[dict]:
     Wat overblijft weegt hoogte én trouw: wie hoog staat verdient veel per
     editie, wie er elk jaar in staat stapelt edities. Het maximum is dus het
     aantal edities dat er ooit was.
+
+    Dat die twee samen in één getal zitten heeft een keerzijde, en `per_editie`
+    is de tegenhanger. De lijsten zijn namelijk niet even oud: de Top 2000
+    levert 27 edities, de Rock Top 500 26, maar de Kink 80's maar vier en de
+    Sublime Soul Top 1000 vijf. Van de 281 edities zit 61% in lijsten die
+    vóór 2011 begonnen, dus een plaat die in het klassieke repertoire past kan
+    aan tien keer zoveel edities meedoen als een soulplaat. `per_editie` deelt
+    de punten door het aantal edities en meet dus alleen hoogte -- met het
+    omgekeerde bezwaar: één notering op 1 geeft een perfecte 1,000.
     """
     from .config import LIJSTEN, is_jaarlijks
 
@@ -689,6 +698,12 @@ def jaarlijkse_totalen(con: sqlite3.Connection) -> list[dict]:
     uit = sorted(nummers.values(),
                  key=lambda n: (-n["punten"], n["hoogste"]))
     for n in uit:
+        # Hoogte zonder trouw: de gemiddelde genormaliseerde positie. De
+        # puntenkolom beloont wie vaak én hoog staat, en dat bevoordeelt de
+        # oude lijsten -- de Top 2000 levert 27 edities, de Kink 80's vier.
+        # Deze kolom haalt die scheefheid eruit, maar zegt pas iets bij
+        # genoeg edities: wie één keer op 1 stond staat hier op 1,000.
+        n["per_editie"] = round(n["punten"] / n["edities"], 3)
         n["punten"] = round(n["punten"], 1)
         n["lijsten"] = len(n["lijsten"])
     return uit

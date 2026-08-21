@@ -1506,9 +1506,13 @@ def _registreer(app: Flask) -> None:
         toon = (len(nummers) if gevraagd == "alles"
                 else int(gevraagd) if gevraagd.isdigit() and int(gevraagd) in AANTALLEN
                 else AANTALLEN[0])
+        # Per editie, niet per jaargang: De Foute 1500 draaide in 2021 twee
+        # keer, en de punten worden voor beide edities toegekend. Op
+        # lijst+jaar tellen gaf 280 terwijl er 281 te verdienen zijn -- en
+        # de uitleg eronder noemt dat getal als het maximum.
         edities = con.execute(
-            f"SELECT COUNT(DISTINCT lijst || '-' || jaar) FROM noteringen"
-            f" WHERE lijst IN ({plek})", namen).fetchone()[0]
+            f"SELECT COUNT(DISTINCT lijst || '-' || jaar || '-' || week)"
+            f" FROM noteringen WHERE lijst IN ({plek})", namen).fetchone()[0]
         return render_template(
             "jaarlijksen.html", nummers=nummers[:toon],
             aantallen=AANTALLEN, toon=toon, totaal=len(nummers),

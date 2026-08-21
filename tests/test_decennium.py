@@ -340,6 +340,47 @@ def test_jaarlijkse_totalen_normaliseren_op_lijstlengte():
     assert uit[0]["sleutel"] == "led zeppelin|stairway"
 
 
+def test_per_editie_haalt_de_ouderdom_van_een_lijst_eruit():
+    """Punten belonen hoogte én trouw, en trouw kan alleen bij oude lijsten.
+
+    De Top 2000 levert 27 edities, de Kink 80's vier -- dus een plaat die in
+    het klassieke repertoire past kan aan tien keer zoveel edities meedoen.
+    `per_editie` deelt de punten door de edities en meet dus alleen hoogte,
+    met het omgekeerde bezwaar: een enkele notering op 1 geeft een perfecte
+    1,0. Vandaar dat het een kolom is en geen sortering.
+    """
+    con = _database([])
+    rijen = []
+    # Trouwe middenmoter: tien edities, elke keer op 5 van de 10 -> 0,6 per
+    # editie, 6 punten.
+    for jaar in range(2010, 2020):
+        rijen.append(("top2000", jaar, 5, "Trouw", "Werkpaard",
+                      "werkpaard|trouw"))
+        for p in (1, 2, 3, 4, 6, 7, 8, 9, 10):
+            rijen.append(("top2000", jaar, p, f"Vul {p}", "Iemand",
+                          f"iemand|vul {jaar} {p}"))
+    # Eenmalige nummer 1 in een jonge lijst: 1 punt, maar wel een volle 1,0.
+    rijen.append(("kink80s", 2021, 1, "Nieuw", "Nieuwkomer",
+                  "nieuwkomer|nieuw"))
+    con.executemany(
+        "INSERT INTO noteringen (lijst, jaar, week, positie, titel, artiest,"
+        " sleutel) VALUES (?,?,52,?,?,?,?)",
+        [(lijst, jaar, positie, titel, artiest, sleutel)
+         for lijst, jaar, positie, titel, artiest, sleutel in rijen])
+    from hitlijsten.db import jaarlijkse_totalen
+
+    uit = jaarlijkse_totalen(con)
+    trouw = next(n for n in uit if n["sleutel"] == "werkpaard|trouw")
+    nieuw = next(n for n in uit if n["sleutel"] == "nieuwkomer|nieuw")
+
+    assert trouw["punten"] == 6.0 and trouw["edities"] == 10, trouw
+    assert trouw["per_editie"] == 0.6, trouw["per_editie"]
+    assert nieuw["punten"] == 1.0 and nieuw["per_editie"] == 1.0, nieuw
+    # Op punten wint het werkpaard, per editie de nieuwkomer. Precies het
+    # verschil dat de kolom zichtbaar maakt.
+    assert uit.index(trouw) < uit.index(nieuw)
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     mislukt = 0

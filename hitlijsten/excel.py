@@ -719,26 +719,28 @@ def bouw_jaarlijksen_werkboek(
         nummers = nummers[:top]
 
     kolommen = ["#", "Artiest", "Titel", "Punten", "Edities", "Lijsten",
-                "Hoogste positie", "Hoogste in", "Sleutel"]
+                "Per editie", "Hoogste positie", "Hoogste in", "Sleutel"]
     rijen: list[list[Any]] = []
     for nr, n in enumerate(nummers, start=1):
         naam = LIJSTEN.get(n["hoogste_lijst"], {}).get("naam", n["hoogste_lijst"])
         rijen.append([nr, n["artiest"], n["titel"], n["punten"], n["edities"],
-                      n["lijsten"], n["hoogste"], f"{naam} {n['hoogste_jaar']}",
-                      n["sleutel"]])
+                      n["lijsten"], n["per_editie"], n["hoogste"],
+                      f"{naam} {n['hoogste_jaar']}", n["sleutel"]])
 
     toelichting = (
         (f"{melding} " if melding else "") +
         "Alle jaarlijkse lijsten samen, genormaliseerd op lijstlengte: elke "
         "notering telt (lengte - positie + 1) / lengte punten, dus de nummer 1 "
         "van elke lijst is precies één punt waard. Het maximum is het aantal "
-        "edities."
+        "edities. De lijsten zijn niet even oud (de Top 2000 levert er 27, de "
+        "Kink 80's vier), dus ouderdom telt mee in de punten; de kolom Per "
+        "editie deelt de punten door de edities en meet alleen hoogte."
     )
     wb = Workbook()
     wb.remove(wb.active)
     ws = wb.create_sheet(tabnaam("Jaarlijsten totaal"))
     _schrijf_tabel(ws, kolommen, rijen, toelichting=toelichting,
-                   centreer=("#", "Punten", "Edities", "Lijsten",
+                   centreer=("#", "Punten", "Edities", "Lijsten", "Per editie",
                              "Hoogste positie"))
     return wb
 

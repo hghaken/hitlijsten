@@ -545,13 +545,21 @@ def bouw_jaarlijksen(con: sqlite3.Connection, top: Optional[int] = None,
     if top:
         nummers = nummers[:top]
 
-    kolommen = [("#", 10, "C"), ("Artiest", 46, "L"), ("Titel", 58, "L"),
-                ("Punten", 14, "C"), ("Edities", 13, "C"), ("Lijsten", 12, "C"),
-                ("Hoogste", 14, "C"), ("Hoogste in", 19, "L")]
+    # Samen 186 mm, de bladbreedte. De Per editie-kolom kwam erbij ten koste
+    # van artiest en titel: de enige twee waar een paar millimeter minder
+    # alleen een afkapping scheelt. De getalkolommen niet -- een kopregel
+    # wordt niet afgekapt maar loopt over de buur heen, en LIJSTEN, HOOGSTE
+    # en HOOGSTE IN zaten al krap (die eerste twee liepen al een streepje
+    # over, vandaar dat ze er hier een millimeter bij krijgen).
+    kolommen = [("#", 10, "C"), ("Artiest", 38, "L"), ("Titel", 47, "L"),
+                ("Punten", 14, "C"), ("Edities", 13, "C"), ("Lijsten", 13, "C"),
+                ("Per editie", 17, "C"),
+                ("Hoogste", 15, "C"), ("Hoogste in", 19, "L")]
     rijen = []
     for nr, n in enumerate(nummers, start=1):
         rijen.append([nr, n["artiest"], n["titel"], n["punten"], n["edities"],
-                      n["lijsten"], n["hoogste"],
+                      n["lijsten"], f"{n['per_editie']:.3f}",
+                      n["hoogste"],
                       f"{n['hoogste_lijst']} {n['hoogste_jaar']}"])
 
     kop = f"top {top} van alle" if top else "alle"

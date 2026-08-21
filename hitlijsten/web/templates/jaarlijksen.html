@@ -75,12 +75,20 @@
   length</b> points: number&nbsp;1 of ány chart is worth exactly one
   point, the last spot almost zero. Charting high earns a lot per
   edition; charting every year stacks up. The maximum is therefore the
-  number of editions: {{ edities }}.{% else %}<b>Hoe er geteld wordt.</b> De lijsten verschillen van lengte — 500 tot
+  number of editions: {{ edities }}. But the charts are not equally old —
+  the Top 2000 offers 27 editions, the Kink 80's four — so age counts along.
+  <b>Per edition</b> divides the points by the editions and measures height
+  alone; that column only says something once a song has a handful of
+  editions behind it.{% else %}<b>Hoe er geteld wordt.</b> De lijsten verschillen van lengte — 500 tot
   4.000 — dus punten optellen zou de langste lijst laten winnen. Daarom telt
   elke notering <b>(lengte − positie + 1) ÷ lengte</b> punten: de nummer&nbsp;1
   van élke lijst is precies één punt waard, de laatste plek bijna nul. Wie hoog
   staat verdient veel per editie; wie er elk jaar in staat, stapelt. Het
-  maximum is dus het aantal edities: {{ edities }}.{% endif %}
+  maximum is dus het aantal edities: {{ edities }}. Maar de lijsten zijn niet
+  even oud — de Top 2000 levert er 27, de Kink 80's vier — dus ouderdom telt
+  mee. <b>Per editie</b> deelt de punten door de edities en meet alleen
+  hoogte; die kolom zegt pas iets als een nummer een handvol edities achter
+  zich heeft.{% endif %}
 </p>
 
 <div class="tabelvak"><table id="jaarlijksen" data-markeer="{{ markeer }}">
@@ -92,6 +100,9 @@
     <th class="getal">{{ _("Punten") }}</th>
     <th class="getal" title="{% if taal == 'en' %}in how many annual-chart editions this song appeared (weekly charts don't count here){% else %}in hoeveel edities van de jaarlijkse lijsten dit nummer stond (weeklijsten tellen hier niet mee){% endif %}">{{ _("Edities") }}</th>
     <th class="getal" title="{% if taal == 'en' %}in how many of the {{ aantal_lijsten }} annual charts (weekly charts don't count here){% else %}in hoeveel van de {{ aantal_lijsten }} jaarlijkse lijsten (weeklijsten tellen hier niet mee){% endif %}">{{ _("Lijsten") }}</th>
+    {# De punten gedeeld door de edities: hoogte zonder trouw. Zie de uitleg
+       boven de tabel voor waarom die kolom er staat en wat hij niet kan. #}
+    <th class="getal" title="{% if taal == 'en' %}points ÷ editions: how high this song charted on average, without rewarding age. Only meaningful with enough editions{% else %}punten ÷ edities: hoe hoog dit nummer gemiddeld stond, zonder ouderdom te belonen. Zegt pas iets bij genoeg edities{% endif %}">{{ _("Per editie") }}</th>
     <th class="getal">{{ _("Hoogste") }}</th>
   </tr></thead><tbody>
   {% for n in nummers %}
@@ -109,6 +120,10 @@
     <td class="getal sterk">{{ n.punten }}</td>
     <td class="getal">{{ n.edities }}</td>
     <td class="getal">{{ n.lijsten }}</td>
+    {# Onder de vijf edities grijs: het getal klopt, maar het zegt niets --
+       één notering op 1 geeft een perfecte 1,000. #}
+    <td class="getal{% if n.edities < 5 %} hint{% endif %}"
+        >{{ '{:.3f}'.format(n.per_editie) }}</td>
     <td class="getal hint {% if n.hoogste == 1 %}top1{% endif %}"
         title="{% if taal == 'en' %}in the {{ lijst_namen.get(n.hoogste_lijst, n.hoogste_lijst) }} of {{ n.hoogste_jaar }}{% else %}in de {{ lijst_namen.get(n.hoogste_lijst, n.hoogste_lijst) }} van {{ n.hoogste_jaar }}{% endif %}">
       <a class="stil" href="{{ url_for('jaaroverzicht', lijst=n.hoogste_lijst,
