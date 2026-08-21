@@ -772,6 +772,26 @@ de officiële jaarlijst de single toekent. In het jaaroverzicht staan ze naast
 elkaar als gelijkspel. De verificatie tegen de officiële jaarlijst blijft
 overeind, want sinds 2020 komt er geen dubbele A-kant meer voor.
 
+> ⚠️ **De splitsing moet je twee keer kunnen draaien**, en dat ging een keer
+> mis. `splits_dubbele_a_kanten` deed een kale `INSERT` voor de tweede kant,
+> zonder te kijken of die er al stond. Op zich logisch — het schema laat twee
+> regels op één positie juist toe, want dat is precies wat een dubbele A-kant
+> is, en dus houdt geen enkele sleutel een identieke tweede regel tegen. Maar
+> zodra de wekelijkse run een jaargang opnieuw ophaalt, levert de bron de
+> gecombineerde titel weer aan, staat er weer een puntkomma in de titel, en
+> zet de volgende `opschonen` er nóg een B-kant naast. Elke ronde één erbij.
+>
+> Zo groeide *3JS — Never Alone* in de Oranje Top 30 van 2011 tot **achttien
+> dubbele weken**, en het archief tot **130 regels te veel** verdeeld over
+> negen nummers — allemaal op elk veld identiek aan hun tweeling, dus allemaal
+> dubbel meegeteld in noteringen én punten. De momentopnames dateren het: 0 op
+> 2 augustus 2026, 49 op 7 augustus, 130 op 21 augustus. Opgeruimd op
+> 21-08-2026 (568.143 → 568.013), met de reden per plek in `wijzigingen`.
+>
+> De routine slaat nu over wat er al staat en telt dat als `stond_er_al`.
+> `tests/test_opschonen.py` legt het vast: twee keer splitsen mag niets
+> toevoegen.
+
 Staat er ook in de artiest een puntkomma en zijn het er evenveel, dan horen ze
 bij elkaar: "De Dijk ; The Scene" levert De Dijk bij de eerste titel en The
 Scene bij de tweede. Klopt het aantal niet, dan krijgen beide kanten de hele

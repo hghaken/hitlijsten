@@ -346,6 +346,58 @@ def test_zonder_puntkomma_verandert_er_niets():
         ("Simon & Garfunkel", "The Boxer")]
 
 
+def _met_een_dubbele_a_kant():
+    """Eén notering met twee nummers erin, in een echt schema."""
+    from hitlijsten import db as dbmod
+
+    con = sqlite3.connect(":memory:")
+    con.row_factory = sqlite3.Row
+    con.executescript(dbmod.SCHEMA)
+    con.execute(
+        "INSERT INTO noteringen (lijst, jaar, week, positie, artiest, titel,"
+        " site_status, sleutel) VALUES ('oranje',2011,5,1,'3JS',"
+        "'Je Vecht Nooit Alleen ; Never Alone','ok','3js|je vecht')")
+    return con
+
+
+def test_splitsing_maakt_twee_noteringen_op_een_positie():
+    from hitlijsten.opschonen import splits_dubbele_a_kanten
+
+    con = _met_een_dubbele_a_kant()
+    verslag = splits_dubbele_a_kanten(con)
+    assert verslag["nieuw"] == 1, verslag
+    rijen = sorted(r["titel"] for r in con.execute(
+        "SELECT titel FROM noteringen WHERE lijst='oranje'"))
+    assert rijen == ["Je Vecht Nooit Alleen", "Never Alone"], rijen
+
+
+def test_tweede_keer_splitsen_maakt_geen_dubbele_regel():
+    """De wekelijkse run haalt een jaargang opnieuw op en de bron levert de
+    gecombineerde titel weer aan. Dan draait deze routine nog een keer over
+    dezelfde week -- en dat mag niets toevoegen.
+
+    Zonder die controle groeide 3JS - Never Alone in de Oranje Top 30 van 2011
+    tot achttien dubbele weken, en het archief tot 130 regels te veel.
+    """
+    from hitlijsten.opschonen import splits_dubbele_a_kanten
+
+    con = _met_een_dubbele_a_kant()
+    splits_dubbele_a_kanten(con)
+    # De bron levert de gecombineerde titel opnieuw aan.
+    con.execute("UPDATE noteringen SET titel=?, artiest='3JS'"
+                " WHERE titel='Je Vecht Nooit Alleen'",
+                ("Je Vecht Nooit Alleen ; Never Alone",))
+    verslag = splits_dubbele_a_kanten(con)
+
+    assert verslag["stond_er_al"] == 1, verslag
+    assert verslag["nieuw"] == 0, verslag
+    n = con.execute("SELECT COUNT(*) FROM noteringen WHERE"
+                    " titel='Never Alone'").fetchone()[0]
+    assert n == 1, f"{n} keer Never Alone, dat hoort er een te zijn"
+    totaal = con.execute("SELECT COUNT(*) FROM noteringen").fetchone()[0]
+    assert totaal == 2, totaal
+
+
 # --- de uitgave voor het nummer ---------------------------------------------
 
 

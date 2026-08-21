@@ -958,11 +958,16 @@ def splits_dubbele_a_kanten(con: sqlite3.Connection) -> dict:
 
     Het schema kan dit al aan: twee noteringen op dezelfde positie in dezelfde
     week bestonden al bij de Tipparade, die echte gedeelde posities kent.
+
+    Juist omdat het schema het aankan moet deze routine zelf opletten: er is
+    geen sleutel die een tweede identieke regel tegenhoudt. Draaien mag dus
+    zonder gevolgen -- wat er al staat wordt overgeslagen en geteld als
+    `stond_er_al`.
     """
     from .normalize import sleutel_van
 
     gevallen = dubbele_a_kanten(con)
-    verslag = {"noteringen": 0, "nieuw": 0}
+    verslag = {"noteringen": 0, "nieuw": 0, "stond_er_al": 0}
     for geval in gevallen:
         rij, kanten = geval["rij"], geval["kanten"]
         eerste, rest = kanten[0], kanten[1:]
@@ -974,6 +979,21 @@ def splits_dubbele_a_kanten(con: sqlite3.Connection) -> dict:
             (eerste[0], eerste[1], sleutel_van(*eerste), rij["id"]))
         verslag["noteringen"] += 1
         for artiest, titel in rest:
+            # Deze routine moet je twee keer kunnen draaien. Dat is geen
+            # theorie: de wekelijkse run haalt een jaargang opnieuw op, de bron
+            # levert de gecombineerde titel weer aan, en dan staat er hier weer
+            # een regel met een puntkomma. Zonder deze controle kwam er elke
+            # ronde nog een B-kant naast de vorige. Zo groeide 3JS - Never
+            # Alone in de Oranje Top 30 van 2011 tot achttien dubbele weken,
+            # en het archief in totaal tot 130 regels te veel.
+            al_er = con.execute(
+                "SELECT 1 FROM noteringen WHERE lijst=? AND jaar=? AND week=?"
+                " AND positie=? AND artiest=? AND titel=? AND id<>?",
+                (rij["lijst"], rij["jaar"], rij["week"], rij["positie"],
+                 artiest, titel, rij["id"])).fetchone()
+            if al_er:
+                verslag["stond_er_al"] += 1
+                continue
             con.execute(
                 "INSERT INTO noteringen (lijst, jaar, week, positie, titel,"
                 " artiest, label, weken_genoteerd, vorige_positie, site_status,"
