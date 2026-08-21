@@ -683,6 +683,42 @@ zo goed platen die écht verschillen (*One* van U2 tegenover die met Mary J.
 Blige, *Living Doll* van 1959 tegenover de Comic Relief-versie van 1986). Die
 horen stuk voor stuk beoordeeld te worden.
 
+### Naamgenoten: wie draagt het kenmerk?
+
+Honderd namen worden door meer dan één act gedragen — drie Hollands, twee
+Roads, twee Nirvana's — en het archief onderscheidt ze op twee manieren:
+een **jaartal** (het jaar van de eerste notering) of een **ISO-landcode**.
+Beide zijn consequent: alle 29 jaartalcredits kloppen op het debuutjaar en
+hebben een naamgenoot.
+
+**De regel voor landcodes** (augustus 2026): binnen een groep hoeft de act met
+de meeste noteringen geen code. Het kenmerk is er om naamgenoten uit elkaar te
+houden, en dan is het genoeg dat de kleinere hem draagt. Dus `Nirvana` (662)
+naast `Nirvana (GBR)` (7), `Heart` (449) naast `Heart (NLD)` (15). Het scheelt
+bovendien werk bij het inlezen: de jaarlijsten schrijven de naam kaal, en die
+valt dan vanzelf bij de juiste act in plaats van als derde credit te ontstaan.
+26 credits raakten hun code kwijt.
+
+> ⚠️ **Test niet op `[A-Z]{3}`.** Dat lijkt een landcode maar vangt ook
+> `Deutsch Amerikanische Freundschaft (DAF)` en `Emerson, Lake & Palmer (ELP)`,
+> waar de haakjes de afkorting van de bandnaam zijn. Alleen de codes die hier
+> echt voorkomen tellen: GBR, NLD, USA, DEU, FRA, BEL, ESP, SWE, AUS, ISR.
+>
+> En groepeer over **alle** naamgenoten, niet alleen die met een code. Doe je
+> dat niet, dan lijken `Sasha (DEU)` en `The Pebbles (BEL)` alleenstaand
+> terwijl hun naamgenoot een jaartal draagt.
+
+**De val die hieronder zat.** De weeklijsten schrijven de credit mét kenmerk
+en de jaarlijsten zonder, en dan ontstaat er een derde, kale credit die
+niemand als dubbel herkent — hij heeft immers een andere naam. Zo stond
+`Heart` met 387 noteringen los van `Heart (USA)` met 62, terwijl het over
+dezelfde zes platen ging. De toets is de titel: deelt de kale credit zijn
+nummers met een van de naamgenoten, dan is het geen derde act. Achttien
+credits zijn zo teruggebracht; bij **Free**, **Carlos**, **Mr. Big** en
+**Nilsson** moest dat per nummer, want daar viel de kale credit over twee
+verschillende acts uiteen (*All Right Now* is de Britse Free, *Keep In Touch*
+de Nederlandse).
+
 ### Namen die hun hoofdletters kwijt waren
 
 129 credits stonden volledig in onderkast — *macklemore & ryan lewis*, *daft
