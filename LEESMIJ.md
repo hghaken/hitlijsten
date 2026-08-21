@@ -841,6 +841,62 @@ sleutel bij ruim 400 noteringen afwijkt van wat `sleutel_van()` nu uitrekent —
 die aliassen zijn er ná het schrijven bij gekomen. Wie ooit alle sleutels
 herberekent, verplaatst die dus. Nog niet opgeruimd.
 
+### De artiestnamen doorgelicht
+
+Augustus 2026, over alle 13.855 credits. Zeven controles, en de meeste kwamen
+schoon door: geen dubbele spaties, geen randspaties, geen onzichtbare tekens,
+en op vier na (`49ers`, `89ers`, `3robi`, `6ix9ine`) geen credits die volledig
+in kleine letters staan. Wat er wél uitkwam:
+
+| | |
+|---|---|
+| `X ( & Y)` — een haakje dat met een scheider begint | 89 credits |
+| `3J's` naast `3JS` | 511 noteringen |
+| `David A. Stewart **and &** Candy Dulfer` | 16 noteringen |
+| Credits met proza (*starring*, *presents*, *duet with*) | 112 |
+| **Een afgekorte naam naast de volledige** | **94 paren** |
+
+De eerste drie zijn opgeruimd. Het haakje kwam doordat `feat.` naar `&` werd
+omgezet terwijl het bínnen de haakjes stond; dat splitste niets, maar 89 keer
+`Robin Schulz ( & Francesco Yates)` is niet om aan te zien. `David A. Stewart
+and & Candy Dulfer` was wél een splitsing: *Lily Was Here* stond met een
+**#1** uit de Top 40 los van dezelfde plaat met #87 in de jaarlijsten.
+
+**De grote vondst is de afgekorte naam.** De weeklijsten reproduceren wat er
+die week op de hitlijst stond, en top40.nl wisselde **per single**: bij Elvis
+staan in 1969 beide vormen door elkaar, in 1977 alleen *Elvis Presley*, in
+2003 weer *Elvis*. De jaarlijsten zijn later uit een database samengesteld en
+gebruiken consequent de volledige naam. Zo staan er twee credits voor één
+artiest, met de piek steeds aan de weeklijstkant:
+
+    Elvis (16x, #4)          naast   Elvis Presley (118x, #14)
+    Whitney (15x, #1)        naast   Whitney Houston (108x, #9)
+    Kylie (22x, #1)          naast   Kylie Minogue (61x, #114)
+
+Hetzelfde met een weggelaten begeleiding: `Mieke Telkamp` naast `Mieke
+Telkamp en De Hi-Five`, `De Kast` naast `De Kast en It Frysk Jeugd Orkest`.
+
+> ⚠️ **Een kale credit is niet vanzelf een afkorting.** `Nicole` (92x) bleek
+> twee zangeressen te dekken: de Duitse Songfestivalwinnares van *Ein Bißchen
+> Frieden* en de Amerikaanse van *Don't You Want My Love*. Een blinde
+> hernoeming naar `Nicole McCloud` had zeven Duitse platen op naam van een
+> Amerikaanse gezet. Nu `Nicole (DEU)` en `Nicole McCloud`.
+>
+> En kijk of de korte credit een **eigen catalogus** heeft. `Kylie` draagt 18
+> nummers die `Kylie Minogue` niet heeft — dat maakt het nog steeds dezelfde
+> zangeres, maar het betekent wel dat een hernoeming per titel moet, niet per
+> credit.
+
+**De regel bij het samenvoegen: de weeklijst wint** — die credit stond op de
+plaat zelf. Achttien platen zijn zo heel geworden, van *Because The Night*
+(Patti Smith Group, #5) tot *Love Epidemic* (The Trammps - music by: MFSB,
+#1). Twee uitzonderingen waar de regel juist misging: `Roxy` is een afkapping
+van Roxy Music en geen naam, en *In The Mood* van het **Glenn Miller Orchestra
+directed by Buddy De Franco** (#1 in 1972) is een ándere opname dan het
+origineel dat de jaarlijsten voeren. Ook *Na Na Na Hey Hey Hey* van Level
+bleek twee uitgaven: een reeks in het voorjaar van 1979 en een tweede, met
+Ajax- en Feyenoord-supporters erop, aan het eind van dat jaar.
+
 ### Namen die hun hoofdletters kwijt waren
 
 129 credits stonden volledig in onderkast — *macklemore & ryan lewis*, *daft
