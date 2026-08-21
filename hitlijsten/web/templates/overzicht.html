@@ -55,7 +55,10 @@
         >wk {{ laatste_week.get(r['lijst']) }} ·
         {{ laatst_op.get(r['lijst']) | tijd }}</span></td>
     <td class="getal">{{ r['weken'] }}</td>
-    <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
+    {# Zonder data-sorteer leest Number() "10.500" als 10,5 en komt die
+       regel onder "1000" te staan. Zie de opmerking bij de sorteerder. #}
+    <td class="getal" data-sorteer="{{ r['noteringen'] }}"
+        >{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
   </tr>
   {% endfor %}
 </tbody></table></div>
@@ -89,7 +92,10 @@
     <td class="getal" style="color:{% if r['tot'] == nu_jaar %}#4ade80{%
         elif r['tot'] == nu_jaar - 1 %}#ffc857{% else %}#fb923c{% endif %}">{{ r['tot'] }}</td>
     <td class="getal">{{ editielengtes.get(r['lijst'], '') }}</td>
-    <td class="getal">{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
+    {# Zonder data-sorteer leest Number() "10.500" als 10,5 en komt die
+       regel onder "1000" te staan. Zie de opmerking bij de sorteerder. #}
+    <td class="getal" data-sorteer="{{ r['noteringen'] }}"
+        >{{ "{:,}".format(r['noteringen']).replace(",", ".") }}</td>
   </tr>
   {% endfor %}
 </tbody></table></div>

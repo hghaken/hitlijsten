@@ -100,7 +100,12 @@
        op 1 stond krijgt een cijfer, de rest een streepje. Het sorteren gaat
        via data-sorteer, anders belandt "-" tussen de getallen. #}
     <td class="getal" data-sorteer="{{ r.op_1 }}">{{ r.op_1 or '–' }}</td>
-    <td class="getal">{{ '{:,.1f}'.format(r.punten).replace(',', '.') }}</td>
+    {# 1017.3 toont als "1.017.3" -- een duizendtalpunt naast een
+       decimale punt. Leesbaar, maar Number() maakt er NaN van, en dan valt
+       de sorteerder terug op tekst: "999.5" komt dan ná "1.017.3". Vandaar
+       het rauwe getal in data-sorteer. #}
+    <td class="getal" data-sorteer="{{ r.punten }}"
+        >{{ '{:,.1f}'.format(r.punten).replace(',', '.') }}</td>
     <td class="getal">{{ r.lijsten }}</td>
     <td class="getal">{{ r.van }}</td>
     <td class="getal">{{ r.tot }}</td>

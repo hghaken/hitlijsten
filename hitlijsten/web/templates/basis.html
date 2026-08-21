@@ -692,6 +692,14 @@
         const rijen = Array.from(lijf.rows);
         // data-sorteer gaat voor de zichtbare tekst. Een datum toont als
         // dd/mm/yyyy maar sorteert op de ISO-vorm, anders komt 01/12 voor 02/01.
+        //
+        // Zet het ook op elk getal met een duizendtalpunt. "10.500" wordt
+        // door Number() gelezen als tienenhalf en belandt dan onder "1000";
+        // "1.017.3" (duizendtalpunt naast een decimale punt) geeft zelfs
+        // NaN, waarna de hele kolom als tekst sorteert en 999.5 achter
+        // 1.017.3 komt. De sorteerder kan die twee punten niet uit elkaar
+        // houden -- het sjabloon weet het wel, dus daar hoort het rauwe
+        // getal in data-sorteer.
         const waarde = function (r) {
           const c = r.cells[kolom];
           if (!c) return "";
