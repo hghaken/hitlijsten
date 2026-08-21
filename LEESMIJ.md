@@ -826,6 +826,57 @@ kregen een nieuwe sleutel; de oude blijven werken via `oude_sleutels`.
 > aliascycli hieronder) en zouden stilletjes naar een lelijkere vorm zijn
 > verhuisd. Alleen de credits aanpakken die je op het oog hebt.
 
+### Het Nederlandse "en" telt niet mee als scheider
+
+`_EN` trekt *and*, *&*, *+*, *x* en *vs* gelijk — maar **niet het Nederlandse
+"en"**. In een archief van Nederlandse hitlijsten is dat precies de verkeerde
+taal om over te slaan: `Simon and Garfunkel` en `Simon & Garfunkel` vallen
+samen, `Nick En Simon` en `Nick & Simon` niet.
+
+Augustus 2026 stonden er **35 paren** waar dezelfde act twee sleutels had, en
+elf daarvan deelden ook een plaat:
+
+| plaat | | |
+|---|---|---|
+| Acda & De Munnik — *Dan leef ik toch nog een keer* + *Morgen wordt fantastisch* | 820× tegen 18× | de Oranje schreef `&`, de rest `en` |
+| Boudewijn de Groot & Elly Nieman — *Prikkebeen* | 14× (#5) tegen 65× (#121) | |
+| André Hazes & Paul de Leeuw — *Droomland* | 8× (#16) tegen 62× (#82) | |
+| Brigitte Kaandorp & Herman Finkers — *Duet* | 8× (#8) tegen 18× (#185) | |
+| Corry & De Rekels — *Huilen Is Voor Jou Te Laat* | 42× (#5) tegen 39× (#20) | |
+
+Ze worden per set met de hand omgezet naar `&`, want **"en" is niet altijd een
+scheider**: `Gebroeders Ko & Joris En Boris` is één act, `De Zangeres Zonder
+Naam en haar broer Jerry` is proza, en `Bob Smit en het Duke City Sextet`
+heeft er een die bij "het" hoort. Een regex over alle 169 credits zou die
+allemaal verminken.
+
+> ⚠️ **Let bij het hernoemen op de hoofdletters.** Mijn eigen omzettingen
+> schreven `Paul De Leeuw` en `Boudewijn De Groot` met een hoofdletter,
+> terwijl het archief `de` consequent klein schrijft (460× respectievelijk
+> 881×). Dat gaf sleutels met twee verschillende artiestnamen erop — zichtbaar
+> te maken met:
+>
+>     SELECT sleutel, COUNT(DISTINCT artiest) FROM noteringen
+>      GROUP BY sleutel HAVING COUNT(DISTINCT artiest) > 1
+>
+> Die telling hoort nul te zijn.
+
+### Afgekapte credits
+
+Drie credits waren door de bron afgekapt, te herkennen aan de puntjes:
+`Alderliefste & Ramses Shaffy en Liesbeth Li..` (de Top 40-notering met **#25**
+stond los van de 30 in de jaarlijsten) en `Monica Geuze & Ronnie Flex & Mafe &
+Abira & F..` — die F was Frenna. `Fred Again..` is géén afkapping; die
+producer heet zo.
+
+Er is **geen vaste afkaplengte**: de credits lopen door tot 81 tekens, dus dit
+zijn losse gevallen en geen systematisch probleem. Bij de titels komt het niet
+voor.
+
+Bijvangst van diezelfde zoektocht: `Marco Borsato & Matt **Simon**` naast
+`Matt **Simons**` — geen afkapping maar een typefout, en *Breng me naar het
+water* stond daardoor in tweeën (28× met #2 tegen 19× met #18).
+
 ### Cycli in de aliastabel
 
 De aliastabel bevat **59 paren die naar elkaar wijzen** (a→b én b→a).
