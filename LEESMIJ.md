@@ -714,7 +714,7 @@ al (`Nikki (Kerkhof)`, `Linda (De Mol)`, `Anita (Doth)`). In augustus 2026 zijn
 er tien opgezocht en omgezet: Dave (Levenbach) — de Amsterdammer die in het
 Frans zong — naast Dave (Omoregie) de Britse rapper, Sophia (Wezer) naast
 Sophia (Kruithof), Linda (Beusekamp), Nikki (Van Beveren), Pebbles
-(McKissack), Ronnie (Lutam), Alberto (Gemerts) en Sasha (Agha).
+(McKissack), Ronnie (Lutam), Alberto (Gemerts) en Sasha (Sabina Agha) — die laatste met de volledige naam, want "Agha" alleen zegt niets. Het archief kent daar drie vormen voor, en welke je kiest is smaak: `Nikki (Kerkhof)` (alleen de achternaam), `Frank Lammers (Ferry Bouman)` (de hele naam) en `Amber (= Marie Claire Cremers)` (met een isgelijkteken).
 
 Zeventien jaartallen blijven, en terecht: dat zijn **bands**, en die hebben
 geen achternaam — All Stars, De Bumpers, Divine (een Amerikaanse meidengroep),
