@@ -1294,12 +1294,31 @@ delen uitvoeringen wél een plek -- zie het volgende kopje -- en in de
 jaarlijsten gebeurt het ook. Het onderscheid zit in het gat: deelt een plek
 zonder dat er elders een plek ontbreekt, dan is het echt.
 
-**Wat er niet te repareren viel.** Dezelfde controle over de weeklijsten
-geeft de Tipparade van 1994, weken 34 tot en met 37: telkens één regel
-minder dan er plekken zijn, en de ontbrekende plek klimt van #11 naar #3 --
-één plaat die vier weken lang stijgt en er niet in staat. De vier pagina's
-zijn bij top40.nl opnieuw opgehaald en door de parser gehaald: daar staan
-óók maar 29 regels, met exact dezelfde plek leeg. Het gat zit in de bron.
+**De weeklijsten, en een tweede bron op dezelfde site.** Dezelfde controle
+gaf de Tipparade van 1994, weken 34 tot en met 37: telkens één regel minder
+dan er plekken zijn, en de ontbrekende plek klimt van #11 naar #3 -- één
+plaat die vier weken lang stijgt en er niet in staat. De vier pagina's
+opnieuw ophalen en parsen hielp niet: de **lijst** van top40.nl heeft daar
+zelf maar 29 regels staan.
+
+Maar top40.nl zet bij elke week ook een **scan van de papieren Tipparade**
+(`/pdf/<jaar>/tipparade-<jjjjmmdd>.pdf`), en die is wél compleet. Daar staat
+op alle vier de plekken **Seal – Kiss From A Rose**, met vorige week en
+aantal weken erbij, precies aansluitend op de #22 die hij in week 33 wél
+heeft. Overgenomen, dus zijn Tipparade-loop is nu 22 → 11 → 5 → 4 → 3 in
+plaats van één losse week.
+
+Die pdf's hebben een verminkte tekstlaag, dus ze zijn met de hand van de
+afbeelding afgelezen -- vier weken doen is te overzien, maar als er ooit
+meer van deze gaten opduiken is OCR op die scans de weg. Onthoud vooral dát
+ze bestaan: waar de lijstpagina van top40.nl een gat heeft, is de scan een
+onafhankelijke tweede bron op hetzelfde adres.
+
+**Een gedeelde plek kan een gat verbergen.** De Tipparade van week 38 telt
+31 regels op 30 plekken en valt dus niet op in de controle -- 30 losse
+plekken, hoogste 30. Was daar óók een regel weggevallen, dan had het gat
+zich achter die gedeelde plek verstopt. In dit geval bleek het mee te
+vallen: Seal stond er niet meer in, hij verliet de Tipparade na week 37.
 
 ### Eén plek, meerdere uitvoeringen
 
