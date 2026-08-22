@@ -106,11 +106,13 @@
   .hoofdbalk .merk { grid-area: merk; }
   .hoofdbalk > nav { grid-area: nav; }
   .hoofdbalk .rechts { grid-area: rechts; }
-  /* 1060 en niet 1250: met vier icoontjes in plaats van vier woorden past de
-     bovenste rij een stuk langer op een regel. Gemeten breedte van merk + nav
-     + rechterkolom + tussenruimte is 1007 (Nederlands) en 993 (Engels); de
-     rest is lucht. Verandert er iets aan die drie, meet dan opnieuw. */
-  @media (max-width: 1060px) {
+  /* 1100 en niet 1250: met icoontjes in plaats van woorden past de bovenste
+     rij een stuk langer op een regel. Gemeten breedte van merk + nav +
+     rechterkolom + tussenruimte is 1055 (Nederlands, met het woord
+     "Handleiding" erin) en minder in het Engels; daar komt wat marge bij.
+     Verandert er iets aan die drie, meet dan opnieuw -- dit getal is gemeten
+     en niet gekozen. */
+  @media (max-width: 1100px) {
     header .binnen.hoofdbalk {
       grid-template-columns: auto 1fr;
       grid-template-areas: "merk rechts" "nav nav";
@@ -136,6 +138,7 @@
   .rechts a.sleutel { font-size: 1.05rem; opacity: .85; line-height: 1; }
   .rechts a.sleutel:hover, .rechts a.taalvlag:hover { background: var(--glas); }
   .rechts a.sleutel:hover { opacity: 1; }
+  .rechts a.boekje .icoon { display: none; }
   /* De taalvlag krijgt een randje: zonder dat loopt het wit van de Nederlandse
      vlag over in de doorschijnende balk en lijkt hij afgesneden. */
   .rechts a.taalvlag { display: inline-flex; align-items: center; text-decoration: none; }
@@ -313,6 +316,15 @@
     .rechts { flex-wrap: wrap; justify-content: flex-end; gap: 0 .35rem; }
     .rechts a { font-size: .8rem; }
     .rechts a.sleutel { font-size: 1rem; }
+    /* Onder de 760 wint de ruimte van de vindbaarheid: het woord eruit, het
+       boekje erin, en dan met dezelfde maat en raakvlak als de andere drie. */
+    .rechts a.boekje .woord { display: none; }
+    .rechts a.boekje .icoon { display: inline; font-size: 1rem; }
+    .rechts a.boekje {
+      text-decoration: none; padding: .25rem .3rem; border-radius: 7px;
+      line-height: 1; opacity: .85;
+    }
+    .rechts a.boekje:hover { background: var(--glas); opacity: 1; }
     main { padding: 1rem .7rem 3rem; }
     h1 { font-size: 1.3rem; }
     /* Op een klein scherm is de menubalk niet vastgezet, dus de paginakop
@@ -622,10 +634,16 @@
          handleiding ooit opende zijn eigen exemplaar houden, want de
          bestandsnaam verandert nooit. #}
       {%- set boekje = 'manual.pdf' if taal == 'en' else 'handleiding.pdf' %}
-      <a class="sleutel" href="{{ url_for('static', filename=boekje) }}?v={{ versie_van(boekje) }}"
+      {# Het woord zolang er ruimte is, daaronder het boekje. Van de vier is
+         dit de enige die voor de bezoeker bedoeld is; beheer en de kleine
+         lettertjes zoekt men gericht op, maar een handleiding moet je
+         tegenkomen. Op een telefoon is er geen hover om de title te lezen,
+         dus daar wint de ruimte alsnog. #}
+      <a class="boekje" href="{{ url_for('static', filename=boekje) }}?v={{ versie_van(boekje) }}"
          target="_blank" rel="noopener"
-         title="{{ _("Handleiding") }} — {{ _("De gebruiksaanwijzing voor bezoekers, als PDF") }}"
-         aria-label="{{ _("Handleiding") }}">&#128214;</a>
+         title="{{ _("De gebruiksaanwijzing voor bezoekers, als PDF") }}"
+         aria-label="{{ _("Handleiding") }}"><span class="woord">{{ _("Handleiding") }}</span
+         ><span class="icoon" aria-hidden="true">&#128214;</span></a>
       <a class="sleutel" href="{{ url_for('disclaimer') }}"
          title="{{ _("Disclaimer") }}" aria-label="{{ _("Disclaimer") }}">&#9878;&#65039;</a>
       {# Een icoontje in plaats van het woord: aanmelden is er voor de beheerder
