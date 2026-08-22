@@ -53,17 +53,17 @@ op de projectmap zelf, wat handig is om lokaal te ontwikkelen.
 
 ## Stand van zaken
 
-- **Het hele archief staat in de database**: 568.012 noteringen over
-  drieëntwintig lijsten. Top 40
+- **Het hele archief staat in de database**: 572.141 noteringen over
+  vierentwintig lijsten. Top 40
   1965–2026 (62 jaargangen), Tipparade 1967–2026 (60), Oranje Top 30 2008–2026
   (19), Sterren NL 2019–2026 (8), Top 2000 1999–2025 (27 edities), Top 4000
   2005–2025 (21), Veronica Top 1000 2003–2025 (23), Q Top 1500 2005–2025 (21),
   Evergreen Top 1000 2008–2025 (18), Rock Top 500 2000–2025 (26),
-  Kink Top 1500 2019–2025 (7), de Veronica 80's 2005–2026 (19) en De Foute 1500 2020–2026 (8 edities in 7 jaar).
-- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 665 aliassen,
+  Kink Top 1500 2019–2025 (7), de Veronica 80's 2005–2026 (19), De Foute 1500 2020–2026 (8 edities in 7 jaar) en de Q-Top 500 van de 10's 2014–2024 (8).
+- 811 Excel-bestanden en 402 PDF-jaaroverzichten gebouwd, plus 687 aliassen,
   4.044 onderscheidingen, 5.704 doorverwijzingen van verhuisde sleutels en
-  7.033 taalbepalingen. De 568.012 noteringen gaan over **35.808 nummers**
-  van **13.796 artiesten**.
+  7.029 taalbepalingen. De 572.141 noteringen gaan over **35.863 nummers**
+  van **13.814 artiesten**.
 - De wekelijkse run staat ingepland op **vrijdag 22:00**, als systemd-timer
   `hitlijsten-run.timer`.
 

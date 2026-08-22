@@ -98,6 +98,8 @@ SLUGS = {
     # `edities()` leest dan de uitzendweek van de pagina, zodat ze allebei een
     # eigen plek in de database krijgen.
     "foute1500": ("qmusic-nl-de-foute-1500",),
+    # Acht edities: 2014 tot en met 2020, en dan pas weer 2024.
+    "q10s": ("qmusic-nl-q-top-500-van-de-10s",),
     "veronica80s": (
         "radio-veronica-80s-top-880",
         "radio-veronica-80s-top-750",

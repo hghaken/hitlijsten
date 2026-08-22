@@ -63,6 +63,7 @@ BRON_URLS = {
 HERKOMST = {
     "foute1500": ("hitdossier-online.nl", "https://www.hitdossier-online.nl/"),
     "veronica80s": ("hitdossier-online.nl", "https://www.hitdossier-online.nl/"),
+    "q10s": ("hitdossier-online.nl", "https://www.hitdossier-online.nl/"),
 }
 STANDAARD_HERKOMST = ("datastats.nl", "https://www.datastats.nl/")
 
@@ -279,6 +280,26 @@ LIJSTEN = {
         "vanaf_jaar": 2021,
         "jaarlijks": True,
         "editie_week": 38,
+    },
+    # De derde in de reeks decennialijsten van Qmusic, naast de 90s en de
+    # Zeroes. Qmusic zelf is geen bron: qmusic.nl stuurt elke lijstpagina naar
+    # de toestemmingsmuur van DPG. Hitdossier heeft hem wel, en die kent ook
+    # de zeven edities van voor 2024.
+    #
+    # De uitzendweek loopt uiteen: zeven edities liggen eind april of begin
+    # mei (week 17 tot 22, meestal 18) en 2024 viel in week 40. Zoals bij elke
+    # jaarlijkse lijst is `editie_week` een vaste plek op de kalender en niet
+    # de echte uitzenddatum.
+    "q10s": {
+        "naam": "Q-Top 500 van de 10's (Qmusic)",
+        "site": None,
+        "slug": None,
+        "lengte": 500,
+        "bestand": "QTop500De10s",
+        "heeft_label": False,
+        "vanaf_jaar": 2014,
+        "jaarlijks": True,
+        "editie_week": 18,
     },
     "qzeroes": {
         "naam": "Q Zeroes Top 500 (Qmusic)",
