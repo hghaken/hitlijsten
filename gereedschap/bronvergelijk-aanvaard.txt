@@ -1,0 +1,87 @@
+# Gevallen waarin bronvergelijk.py en het archief van mening verschillen
+# en het ARCHIEF gelijk heeft. Ze worden overgeslagen; met --alles zie je ze
+# alsnog.
+#
+# Waarom deze lijst bestaat: een scheidingsteken in de bron draagt geen vaste
+# betekenis. "Elvis / Elvis Presley" is een plaat met twee schrijfwijzen,
+# "Damaru / Damaru & Jan Smit" zijn er twee -- allebei delen ze woorden,
+# allebei staat de streep alleen bij de artiest. Aan de vorm is het verschil
+# niet te zien, alleen aan de plaat. Zo ook bij // en ///.
+#
+# Een regel is: <lijst><tab><wat de bron op die plek zet>. Erbij zetten doe je
+# met de hand, na controle tegen de bronpagina; weghalen mag ook, dan komt het
+# geval de volgende keer weer bovendrijven.
+#
+# Vastgesteld op 22-08-2026, na het splitsen van de gedeelde plekken.
+tipparade	3Js - Je Vecht Nooit Alleen // Never Alone
+tipparade	André Hazes - Zij Gelooft In Mij - Nieuwe Opname ((2000)) /..
+tipparade	Carola - Love Isn't Love // Je Ogen Hebben Geen Geheim..
+tipparade	Cypress Hill - (Rap) Superstar // (Rock) Superstar
+tipparade	D12 - Purple Hills // Purple Pills
+tipparade	DJ Goja / DJ Goja, Jason Derulo & Melody - Mi Chico
+tipparade	DJ Paul Elstak - Play My Game // Life Is Like A Dance
+tipparade	Damaru / Damaru & Jan Smit - Mi Rowsu (Tuintje in mijn hart)
+tipparade	De Frogers - Zo Heppie! // Heppie Kerstmis
+tipparade	Ed Sheeran - Perfect
+tipparade	Ed Sheeran / Ed Sheeran feat. Lil Baby / Ed Sheeran feat. Antytila - 2step
+tipparade	Ed Sheeran feat. Lil Baby - 2step
+tipparade	Ed Sheeran feat. Lil Baby / Ed Sheeran feat. Antytila - 2step
+tipparade	Elvis Presley / Elvis - Are You Lonesome Tonight? - A very special ve..
+tipparade	Gabby Barrett / Gabby Barrett featuring Charlie Puth - I Hope
+tipparade	Henk & Henk - Sinterklaas, Wie Kent Hem Niet? ; Het Hoort M..
+tipparade	Imagine Dragons / Imagine Dragons x JID - Enemy
+tipparade	KidB featuring Martin Van Der Starre - Una paloma blanca heel de zomer lang
+tipparade	Luis Fonsi ft. Daddy Yankee - Despacito
+tipparade	Marijke Mulder///Mien Smulders - Kom Naar Kaïro
+tipparade	Motions / The Four Tops / The Four Tops - It's The Same Old Song ; Someday Child ((1966..
+tipparade	Motions / The Four Tops / The Four Tops - It's The Same Old Song ; Someday Child ((1966.. | The Weathermen - It's The Same Old Song
+tipparade	Nick & Simon - Vlinders
+tipparade	Nicole - Ein Bißchen Frieden // Een Beetje Vrede
+tipparade	Shirley Zwerus - Easy Livin'/It's The Only Way
+tipparade	Taylor Swift / Taylor Swift feat. Ice Spice - Karma
+tipparade	Tesher / Tesher x Jason Derulo - Jalebi Baby
+tipparade	The Beatmasters featuring Betty Boo - Hey DJ/I Can't Dance To That Music Youre Play..
+tipparade	The Supremes / Diana Ross and The Supremes - The Happening
+top40	3Js - Je Vecht Nooit Alleen // Never Alone
+top40	Albert Brosens en De Deurdouwers / Johnny Hoes / Karin Kent - Jelle Zal Wel Zien / Waar We Heen Gaan.... Je..
+top40	Alec Benjamin / Alec Benjamin + Alessia Cara - Let Me Down Slowly
+top40	André Hazes - Zij Gelooft In Mij - Nieuwe Opname ((2000)) /..
+top40	Billie Eilish / Billie Eilish with Justin Bieber - Bad Guy
+top40	Bobby Hebb - Sunny
+top40	CKay / CKay feat. ElGrandeToto / CKay feat. DJ Yo & Ax'el - Love Nwantiti (Ah Ah Ah) / Love Nwantiti - No..
+top40	Carola - Love Isn't Love // Je Ogen Hebben Geen Geheim..
+top40	Clinton Ford - Dandy
+top40	Cypress Hill - (Rap) Superstar // (Rock) Superstar
+top40	D12 - Purple Hills // Purple Pills
+top40	DJ Paul Elstak - Play My Game // Life Is Like A Dance
+top40	Damaru / Damaru & Jan Smit - Mi Rowsu (Tuintje in mijn hart)
+top40	De Frogers - Zo Heppie! // Heppie Kerstmis
+top40	Duo Acropolis / Trio Hellenique / Mikis Theodorakis - Zorba Le Grec / La Danse De Zorba///Sirtaki /..
+top40	Ed Sheeran - Perfect
+top40	Ed Sheeran / Ed Sheeran & Beyoncé - Perfect
+top40	Elvis Presley / Elvis - Are You Lonesome Tonight? - A very special ve..
+top40	Henk & Henk - Sinterklaas, Wie Kent Hem Niet? ; Het Hoort M..
+top40	Imagine Dragons / Imagine Dragons x JID - Enemy
+top40	J. Balvin & Willy William / Willy William & J Balvin & Beyoncé - Mi gente
+top40	Kane / Kane & Carice Van Houten - No Surrender
+top40	KidB featuring Martin Van Der Starre - Una paloma blanca heel de zomer lang
+top40	Libianca / Libianca feat. Cian Ducrot / Libianca feat. Ayra Starr & Omah Lay - People
+top40	Luis Fonsi ft. Daddy Yankee - Despacito
+top40	Motions / The Four Tops / The Four Tops - It's The Same Old Song ; Someday Child ((1966..
+top40	Napoleon XIV / Hugo De Groot / Floris VI - They're Coming To Take Me Away, Ha, Haaa! / Z..
+top40	Nick & Simon - Vlinders
+top40	Nicole - Ein Bißchen Frieden // Een Beetje Vrede
+top40	Nini Rosso - Il Silenzio
+top40	Nini Rosso / Heinz Schachtner / Willy Schobben & His Golden Trumpet and Orchestra - Il Silenzio / Abschiedsmelodie (Il Silenzio) ..
+top40	Pearl Jam - Dissident #2 // Dissident #3
+top40	Ray Conniff / The Mike Sammes Singers / Willy Schobben & His Golden Trumpet and Orchestra - Lara's Theme (Somewhere, My Love) / Somewhere..
+top40	Rema / Rema & Selena Gomez - Calm Down
+top40	S10 / S10 x Frenna x Kevin - Adem Je In
+top40	Taylor Swift / Taylor Swift feat. Ice Spice - Karma
+top40	The Beatmasters featuring Betty Boo - Hey DJ/I Can't Dance To That Music Youre Play..
+top40	The Byrds - All I Really Want To Do
+top40	The Kid Laroi / The Kid Laroi & Miley Cyrus - Without You
+top40	The Shamrocks / De Maskers - Cadillac / Brand New Cadillac
+top40	The Shamrocks / The Renegades - Cadillac
+top40	The Supremes / Diana Ross and The Supremes - The Happening
+top40	WizTheMc & Bees & Honey / WizTheMc & Bees & Honey with Tyla - Show Me Love

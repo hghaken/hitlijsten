@@ -38,6 +38,23 @@ Remix") een notering blijft, maar zo staat het archief er niet in: waar de
 bron de twee als losse regels aanleverde staan ze er allebei. Sinds augustus
 2026 is dat de afspraak, en de teller volgt hem.
 
+DE AANVAARDLIJST -- waarom deze controle nooit op nul komt
+----------------------------------------------------------
+Een scheidingsteken in de bron draagt geen vaste betekenis. "Elvis / Elvis
+Presley" is een plaat met twee schrijfwijzen; "Damaru / Damaru & Jan Smit" is
+er twee. Allebei delen ze woorden, allebei staat de streep alleen bij de
+artiest, en aan de vorm is het verschil niet te zien -- alleen aan de plaat.
+Zo ook bij // en ///: 3Js // Never Alone is gesplitst, maar de LEESMIJ noemt
+/// juist "twee schrijfwijzen, kiezen".
+
+Er blijven dus gevallen waarin teller en archief van mening verschillen en het
+archief gelijk heeft. Die staan in `bronvergelijk-aanvaard.txt`, een regel per
+geval, en worden overgeslagen. Wat overblijft is nieuw en verdient een blik.
+
+Een geval erbij zetten: draai met `--alles`, controleer het met de hand tegen
+de bronpagina, en plak de regel in het bestand. Weghalen mag ook -- dan komt
+hij de volgende keer weer bovendrijven.
+
 Gebruik:  bronvergelijk.py [--alles]
 """
 from __future__ import annotations
@@ -48,10 +65,13 @@ from collections import defaultdict
 
 from bs4 import BeautifulSoup
 
+from pathlib import Path
+
 from hitlijsten import db, fetch
 from hitlijsten.config import LIJSTEN, is_jaarlijks
 from hitlijsten.opschonen import zelfde_act
 
+AANVAARD = Path(__file__).with_name("bronvergelijk-aanvaard.txt")
 DETAIL = "Details "
 KANT = re.compile(r" ; ")
 STREEP = re.compile(r"(?<!/) / (?!/)")
@@ -101,7 +121,17 @@ def uit_pagina(html: str) -> dict[int, list[tuple[str, str]]]:
     return dict(uit)
 
 
+def aanvaard() -> set[str]:
+    """De gevallen waarin het archief gelijk heeft en de teller niet."""
+    if not AANVAARD.exists():
+        return set()
+    return {r.strip() for r in AANVAARD.read_text(encoding="utf-8").splitlines()
+            if r.strip() and not r.startswith("#")}
+
+
 def main() -> int:
+    bekend = aanvaard()
+    alles = "--alles" in sys.argv
     groepen: dict = defaultdict(list)
     gedaan = zonder = 0
     with db.verbinding() as con:
@@ -127,18 +157,24 @@ def main() -> int:
                     er = heeft.get(plek, 0)
                     if er != moet:
                         wat = " | ".join(f"{a} - {t}" for a, t in paren)
-                        groepen[(lijst, wat[:110], moet, er)].append(
+                        if not alles and f"{lijst}	{wat}" in bekend:
+                            continue
+                        groepen[(lijst, wat, moet, er)].append(
                             (jaar, week, plek))
 
     print(f"{gedaan} edities nagerekend ({zonder} zonder Details-attribuut),"
           f" {len(groepen)} gevallen, {sum(len(v) for v in groepen.values())}"
           f" plekken\n")
+    if "--dump" in sys.argv:
+        for lijst, wat, _, _ in sorted(groepen):
+            print(f"{lijst}	{wat}")
+        return 0
     for kop, test in (("TE WEINIG in het archief", lambda m, e: e < m),
                       ("TE VEEL in het archief", lambda m, e: e > m)):
         deel = {k: v for k, v in groepen.items() if test(k[2], k[3])}
         print(f"{kop}: {len(deel)} gevallen,"
               f" {sum(len(v) for v in deel.values())} plekken")
-        grens = None if "--alles" in sys.argv else 25
+        grens = None
         for (lijst, wat, moet, er), waar in sorted(
                 deel.items(), key=lambda x: -len(x[1]))[:grens]:
             eerste, laatste = waar[0], waar[-1]
@@ -151,4 +187,5 @@ def main() -> int:
     return 0
 
 
-raise SystemExit(main())
+if __name__ == "__main__":
+    raise SystemExit(main())
