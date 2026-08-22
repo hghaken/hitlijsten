@@ -61,6 +61,7 @@ EN = {
     "Handleiding": "Manual",
     "Disclaimer": "Disclaimer",
     "Aanmelden": "Sign in",
+    "Beheer": "Admin",
     "Afmelden": "Sign out",
     "Verras me: een willekeurig nummer": "Surprise me: a random song",
     "De gebruiksaanwijzing voor bezoekers, als PDF":
