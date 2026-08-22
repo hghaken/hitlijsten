@@ -124,6 +124,14 @@
      nodig; zonder underline, want daar hangt hij scheef onder. */
   .rechts a.sleutel { font-size: .95rem; text-decoration: none; opacity: .85; }
   .rechts a.sleutel:hover { opacity: 1; }
+  /* De taalvlag krijgt een randje: zonder dat loopt het wit van de Nederlandse
+     vlag over in de doorschijnende balk en lijkt hij afgesneden. */
+  .rechts a.taalvlag { display: inline-flex; align-items: center; text-decoration: none; }
+  .rechts a.taalvlag svg {
+    display: block; border-radius: 2px; opacity: .85;
+    outline: 1px solid rgba(255,255,255,.35); outline-offset: -1px;
+  }
+  .rechts a.taalvlag:hover svg { opacity: 1; }
   .binnen.subbalk { padding-top: 0; padding-bottom: .45rem; }
   .subnav { display: flex; gap: .15rem .3rem; flex-wrap: wrap; }
   .subnav a {
@@ -616,9 +624,28 @@
         <a class="sleutel" href="{{ url_for('aanmelden') }}"
            title="{{ _("Aanmelden") }}" aria-label="{{ _("Aanmelden") }}">&#128273;</a>
       {% endif %}
-      <a href="{{ url_for('taal_kies', code=('nl' if taal == 'en' else 'en'), terug=request.full_path) }}"
+      {# De vlag van de taal waar je naartoe gaat, niet die van de taal waar je
+         in zit. Een SVG en geen emoji, om dezelfde reden als bij het
+         Nederlandstalig-vlaggetje in _vlag.html: Windows tekent emoji-vlaggen
+         als de kale letters NL en GB. De Union Jack is vereenvoudigd -- op
+         vijftien pixels breed is de verspringing in de diagonalen toch niet
+         te zien. #}
+      <a class="taalvlag" href="{{ url_for('taal_kies', code=('nl' if taal == 'en' else 'en'), terug=request.full_path) }}"
          title="{{ 'Deze site in het Nederlands' if taal == 'en' else 'This site in English' }}"
-        >{{ 'NL' if taal == 'en' else 'EN' }}</a>
+         aria-label="{{ 'Deze site in het Nederlands' if taal == 'en' else 'This site in English' }}">
+        {%- if taal == 'en' -%}
+        <svg width="16" height="11" viewBox="0 0 15 10" aria-hidden="true"
+          ><rect width="15" height="10" fill="#21468B"/><rect width="15" height="6.7" fill="#fff"
+          /><rect width="15" height="3.4" fill="#AE1C28"/></svg>
+        {%- else -%}
+        <svg width="16" height="11" viewBox="0 0 60 40" aria-hidden="true"
+          ><rect width="60" height="40" fill="#012169"/><path d="M0 0l60 40M60 0L0 40"
+            stroke="#fff" stroke-width="8"/><path d="M0 0l60 40M60 0L0 40"
+            stroke="#C8102E" stroke-width="4"/><path d="M30 0v40M0 20h60"
+            stroke="#fff" stroke-width="13"/><path d="M30 0v40M0 20h60"
+            stroke="#C8102E" stroke-width="8"/></svg>
+        {%- endif -%}
+      </a>
     </span>
   </div>
   <div class="binnen subbalk">
