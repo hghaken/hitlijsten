@@ -1259,6 +1259,48 @@ Dezelfde regel geldt bij het samenvoegen van credits: staat een plaat onder
 twee namen, dan wint de naam uit de weeklijst.
 
 
+### Een gat in een editie
+
+Een editie hoort van 1 tot N te lopen. Loopt hij dat niet -- `COUNT(DISTINCT
+positie)` kleiner dan `MAX(positie)` -- dan is er iets mis, en dat is een
+controle die niets kost:
+
+    SELECT lijst, jaar, week, COUNT(DISTINCT positie) p, MAX(positie) m
+    FROM noteringen GROUP BY lijst, jaar, week HAVING p <> m;
+
+Augustus 2026 gaf zeven jaarlijkse edities, en het bleek **zeven keer
+dezelfde fout van dezelfde bron**: datastats had twee nummers op één plek
+gezet en de plek ernaast leeg gelaten. Niet een ontbrekende notering dus,
+maar een verkeerd genummerde. Hitdossier-online.nl heeft alle acht wel uit
+elkaar, en dat maakte de correctie ondubbelzinnig:
+
+| lijst | stond op | hoort op | |
+|---|---|---|---|
+| Arrow 2001 | #391 (met Rainbow) | #393 | Bob Seger & The Silver Bullet Band – Like A Rock |
+| Arrow 2003 | #472 (met U.K.) | #473 | Lenny Kravitz – Always On The Run |
+| Arrow 2013 | #384 (met Buoys) | #385 | Chuck Berry – Johnny B. Goode |
+| Evergreen 2013 | #279 (met Buddy Holly) | #278 | Frank Sinatra – It Was A Very Good Year |
+| Veronica 2022 | #192 (met de S&M-versie) | **#29** | Metallica – Nothing Else Matters |
+| Festival 2021 | #70 (met R U Mine) | **#22** | Arctic Monkeys – Do I Wanna Know |
+| Festival 2025 | #34 (met Nothing But Thieves) | #31 | Rage Against The Machine – Killing In The Name |
+| Festival 2025 | #48 (met Everlong) | #43 | Goldband – Witte Was |
+
+De drie grote sprongen waren juist het duidelijkst: daar staat het nummer
+tweemaal op één plek naast zijn eigen andere versie, en dan wijst de tweede
+bron precies aan welke van de twee daar hoort.
+
+**Waarom een gedeelde plek op zichzelf geen fout is.** In de weeklijsten
+delen uitvoeringen wél een plek -- zie het volgende kopje -- en in de
+jaarlijsten gebeurt het ook. Het onderscheid zit in het gat: deelt een plek
+zonder dat er elders een plek ontbreekt, dan is het echt.
+
+**Wat er niet te repareren viel.** Dezelfde controle over de weeklijsten
+geeft de Tipparade van 1994, weken 34 tot en met 37: telkens één regel
+minder dan er plekken zijn, en de ontbrekende plek klimt van #11 naar #3 --
+één plaat die vier weken lang stijgt en er niet in staat. De vier pagina's
+zijn bij top40.nl opnieuw opgehaald en door de parser gehaald: daar staan
+óók maar 29 regels, met exact dezelfde plek leeg. Het gat zit in de bron.
+
 ### Eén plek, meerdere uitvoeringen
 
 In de jaren zestig kwam het geregeld voor dat een nummer in meerdere

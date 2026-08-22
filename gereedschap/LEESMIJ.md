@@ -18,6 +18,8 @@ Die `omgeving.sh` is niet optioneel: zonder de omgevingsvariabelen legt
 | `credit-per-titel.py "oude artiest" "titel" "nieuwe artiest"` | de artiest van één nummer omzetten in plaats van de hele credit |
 | `titelvorm.py` | records waarvan de bronnen de titel anders spellen op de weeklijstvorm zetten |
 | `kapitaal.py` | elk woord in artiest en titel een hoofdletter geven |
+| `gaten.py` | edities zoeken waarin een plek ontbreekt (`COUNT(DISTINCT positie)` < `MAX(positie)`) |
+| `plekfix.py` | de acht noteringen van augustus 2026 die op de verkeerde plek stonden; als voorbeeld bewaard |
 
 ## Wat `kapitaal.py` bewust niet doet
 
