@@ -777,8 +777,15 @@ def _registreer(app: Flask) -> None:
             # Op (jaar, week) en niet op jaar: een jaar kan twee edities
             # hebben. De Foute 1500 draaide in 2021 in juni en in december,
             # en op jaar geteld werd dat een editie van 3000 nummers.
+            #
+            # En de hoogste plek, niet het aantal regels: een lijst loopt van
+            # 1 tot N en dat is zijn lengte. Regels tellen maakte er 4001 van
+            # zodra twee uitvoeringen een plek deelden, en losse plekken
+            # tellen maakt er 999 van zodra de bron er eentje oversloeg --
+            # allebei zijn dat eigenschappen van die ene editie en niet van
+            # de lengte van de lijst.
             rij = con.execute(
-                "SELECT MIN(n), MAX(n) FROM (SELECT COUNT(*) n FROM noteringen"
+                "SELECT MIN(n), MAX(n) FROM (SELECT MAX(positie) n FROM noteringen"
                 " WHERE lijst=? GROUP BY jaar, week)", (lijst_naam,)).fetchone()
             editielengtes[lijst_naam] = (
                 f"{rij[0]}" if rij[0] == rij[1] else f"{rij[0]}–{rij[1]}")
