@@ -83,14 +83,24 @@
    elke lijst heeft zijn eigen nummer 1. #}
 {% for deze, deelrijen in blokken %}
 {% set heeft_label = deelrijen | selectattr('label') | list %}
-{% if lijst == alle %}<h2>{{ lijst_namen.get(deze, deze) }}
+{% if lijst == alle %}
+{# Dichtgeklapt: vier lijsten passen dan samen op een scherm en je kiest er
+   een uit. De nummer 1 staat in de samenvatting, want een rij lijstnamen
+   zonder inhoud zegt te weinig om op te klikken. #}
+{% set top1 = deelrijen | selectattr('positie', 'equalto', 1) | list | first %}
+<details class="lijstblok">
+<summary><h2>{{ lijst_namen.get(deze, deze) }}</h2>
   {# Meer noteringen dan plekken betekent dat er die week uitvoeringen een
      plek deelden; zonder die toevoeging lijkt "42 noteringen" in een Top 40
      een fout. #}
-  <span class="hint" style="font-weight:400">{{ deelrijen|length }} {{ _("noteringen") }}{%
+  <span class="hint">{{ deelrijen|length }} {{ _("noteringen") }}{%
     set plekken = deelrijen | map(attribute='positie') | unique | list | length %}{%
     if plekken != deelrijen|length %} {{ _("op") }} {{ plekken }} {{ _("plekken") }}{%
-    endif %}</span></h2>{% endif %}
+    endif %}</span>
+  {% if top1 %}<span class="top1">1. {{ top1['artiest'] }} — {{ top1['titel'] }}</span>{% endif %}
+</summary>
+<div class="binnen">
+{% endif %}
 {% if is_aangemeld() %}
 <p class="hint" style="margin:.2rem 0 .4rem">{{ nl_vlag() }}
   {{ _("wijs een regel aan en druk") }} <b>N</b>
@@ -197,6 +207,7 @@
   </tr>
   {% endfor %}
 </tbody></table></div>
+{% if lijst == alle %}</div></details>{% endif %}
 {% endfor %}
 
 {% endif %}

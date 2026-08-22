@@ -404,6 +404,32 @@
   }
   nav.sprong button.alles:hover { color: var(--ink); background: var(--glas); }
 
+  /* Bij "alle weeklijsten" staan vier lijsten onder elkaar; dichtgeklapt pas
+     je ze samen op een scherm. De samenvatting noemt de nummer 1, zodat je
+     ziet wat erin zit zonder open te klappen. */
+  details.lijstblok { margin: 0 0 .8rem; }
+  details.lijstblok > summary {
+    display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+    padding: .6rem .9rem; border-radius: 13px; list-style: none;
+    border: 1px solid var(--rand2); background: var(--glas2);
+  }
+  details.lijstblok[open] > summary { border-radius: 13px 13px 0 0; }
+  details.lijstblok > summary::-webkit-details-marker { display: none; }
+  details.lijstblok > summary::before {
+    content: "a"; color: var(--gedempt); font-size: 1.15rem; line-height: 1;
+    transition: transform .15s ease; display: inline-block;
+  }
+  details.lijstblok[open] > summary::before { transform: rotate(90deg); }
+  details.lijstblok > summary:hover { background: var(--glas); }
+  details.lijstblok > summary h2 { margin: 0; font-size: 1.15rem; }
+  /* De nummer 1 schuift naar rechts en verdwijnt als eerste op een smal
+     scherm -- de lijstnaam is wat je nodig hebt om te kiezen. */
+  details.lijstblok > summary .top1 {
+    margin-left: auto; color: var(--gedempt); font-size: .89rem;
+  }
+  @media (max-width: 760px) { details.lijstblok > summary .top1 { display: none; } }
+  details.lijstblok > .binnen { padding: .8rem .2rem 0; }
+
   /* Elk weetje is een <details>. De kop is de samenvatting: nummer, titel en
      de nummer 1, zodat de pagina dichtgeklapt ook iets vertelt. */
   details.weetje {
