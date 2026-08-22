@@ -20,6 +20,9 @@ Die `omgeving.sh` is niet optioneel: zonder de omgevingsvariabelen legt
 | `kapitaal.py` | elk woord in artiest en titel een hoofdletter geven |
 | `gaten.py` | edities zoeken waarin een plek ontbreekt (`COUNT(DISTINCT positie)` < `MAX(positie)`) |
 | `plekfix.py` | de acht noteringen van augustus 2026 die op de verkeerde plek stonden; als voorbeeld bewaard |
+| `bronvergelijk.py` | elke opgeslagen weekpagina narekenen tegen het archief (leest het `Details`-attribuut, niet de parser-uitvoer) |
+| `splits-streep.py` | gedeelde plekken splitsen die als één regel in het archief staan |
+| `sealbij.py` | een notering toevoegen die alleen op de gescande pagina staat; als voorbeeld bewaard |
 
 ## Wat `kapitaal.py` bewust niet doet
 
