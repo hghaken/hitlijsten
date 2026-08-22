@@ -88,7 +88,9 @@
    een uit. De nummer 1 staat in de samenvatting, want een rij lijstnamen
    zonder inhoud zegt te weinig om op te klikken. #}
 {% set top1 = deelrijen | selectattr('positie', 'equalto', 1) | list | first %}
-<details class="lijstblok">
+{# Met een filter aan heb je net gezegd wat je zoekt; dan is dichtklappen
+   tegenwerken. #}
+<details class="lijstblok"{% if nl_filter_aan or nieuw_filter_aan %} open{% endif %}>
 <summary><h2>{{ lijst_namen.get(deze, deze) }}</h2>
   {# Meer noteringen dan plekken betekent dat er die week uitvoeringen een
      plek deelden; zonder die toevoeging lijkt "42 noteringen" in een Top 40

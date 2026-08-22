@@ -874,10 +874,14 @@ def _registreer(app: Flask) -> None:
         """
         con = verbinding()
         weeklijsten = [s for s in LIJSTEN if not is_jaarlijks(s)]
-        lijst = request.args.get("lijst") or "top40"
+        # Zonder keuze: alle vier. Ze staan dichtgeklapt, dus je ziet in een
+        # oogopslag wat er die week te halen valt en kiest er dan een uit --
+        # beter dan meteen in de Top 40 landen alsof de andere drie er niet
+        # zijn. De menubalk linkt hierheen zonder parameters.
+        lijst = request.args.get("lijst") or ALLE_WEEKLIJSTEN
         if lijst != ALLE_WEEKLIJSTEN and (lijst not in LIJSTEN
                                           or is_jaarlijks(lijst)):
-            lijst = "top40"
+            lijst = ALLE_WEEKLIJSTEN
 
         # De kalender van uitgezonden weken, op volgorde. Daar komt alles uit:
         # de keuzelijsten, de standaardweek (de nieuwste) en de buren om langs
