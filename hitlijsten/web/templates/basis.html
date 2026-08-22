@@ -92,7 +92,34 @@
   }
   header nav a:hover { color: var(--ink); background: var(--glas); }
   header nav a.actief { color: var(--ink); background: var(--glas); }
-  .rechts { margin-left: auto; }
+  /* De bovenste rij is een raster en geen flexrij, want met flex-wrap
+     bepaalt de nav waar Handleiding/Disclaimer/Aanmelden/taal terechtkomen:
+     die schoven bij elke schermbreedte een andere kant op. Nu hebben ze een
+     vaste plek. Past alles naast elkaar, dan staat de nav ertussen; past dat
+     niet meer, dan zakt alleen de nav naar een tweede regel en blijven het
+     merk en de rechterkolom boven staan. */
+  header .binnen.hoofdbalk {
+    display: grid; align-items: center; gap: .1rem 1.6rem;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "merk nav rechts";
+  }
+  .hoofdbalk .merk { grid-area: merk; }
+  .hoofdbalk > nav { grid-area: nav; }
+  .hoofdbalk .rechts { grid-area: rechts; }
+  @media (max-width: 1250px) {
+    header .binnen.hoofdbalk {
+      grid-template-columns: auto 1fr;
+      grid-template-areas: "merk rechts" "nav nav";
+    }
+  }
+  .rechts {
+    margin-left: auto; justify-self: end;
+    /* Een flexrij en niet los tekstverloop: als inline tekst breken deze vier
+       midden in de reeks af en staat er twee keer twee, wat de plek van elke
+       link laat verspringen zodra het venster een pixel smaller wordt. */
+    display: flex; align-items: baseline; gap: .1rem .5rem; flex-wrap: nowrap;
+  }
+  .rechts a { white-space: nowrap; }
   .binnen.subbalk { padding-top: 0; padding-bottom: .45rem; }
   .subnav { display: flex; gap: .15rem .3rem; flex-wrap: wrap; }
   .subnav a {
@@ -253,6 +280,14 @@
     header .binnen { padding: .45rem .7rem; gap: .35rem .8rem; }
     header nav { gap: .05rem .3rem; }
     header nav a { padding: .12rem .4rem; font-size: .84rem; }
+    /* Merk plus vier links passen op een telefoon alleen naast elkaar als ze
+       kleiner worden; dat is de prijs voor een vaste plek. Onder ongeveer 360
+       pixels lukt het niet meer -- dan mag de rechterkolom wel breken, maar
+       de rij lijnt vanaf boven uit zodat het merk op de eerste regel blijft. */
+    header .binnen.hoofdbalk { align-items: start; gap: .1rem .6rem; }
+    .merk { font-size: .92rem; }
+    .rechts { flex-wrap: wrap; justify-content: flex-end; gap: 0 .35rem; }
+    .rechts a { font-size: .8rem; }
     main { padding: 1rem .7rem 3rem; }
     h1 { font-size: 1.3rem; }
     /* Op een klein scherm is de menubalk niet vastgezet, dus de paginakop
@@ -547,7 +582,7 @@
   {# Twee rijen: bovenin de lijsten zelf, daaronder -- rustiger gezet -- de
      extra's en (na aanmelden) het beheer. Vijftien links op een rij was
      niet meer te overzien. #}
-  <div class="binnen">
+  <div class="binnen hoofdbalk">
     <span class="merk"><span>nl-hitlijsten.nl</span></span>
     <nav>
       <a href="{{ url_for('overzicht') }}">{{ _("Overzicht") }}</a>
