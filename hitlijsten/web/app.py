@@ -1200,9 +1200,15 @@ def _registreer(app: Flask) -> None:
         """De postbus voor de beheerder: alles, met knoppen per bericht."""
         con = verbinding()
         rijen = list(con.execute(
-            "SELECT * FROM berichten ORDER BY"
+            "SELECT * FROM berichten WHERE status <> 'verwijderd' ORDER BY"
             " CASE status WHEN 'nieuw' THEN 0 ELSE 1 END, tijdstip DESC"))
-        return render_template("berichten.html", berichten=rijen)
+        # De prullenbak staat onderaan een eigen lijstje: weggegooid maar nog
+        # terug te halen, want een misklik naast "Privé houden" is zo gebeurd.
+        prullenbak = list(con.execute(
+            "SELECT * FROM berichten WHERE status='verwijderd'"
+            " ORDER BY tijdstip DESC"))
+        return render_template("berichten.html", berichten=rijen,
+                               prullenbak=prullenbak)
 
     @app.route("/berichten/actie", methods=["POST"])
     @vereist_aanmelding
@@ -1221,6 +1227,13 @@ def _registreer(app: Flask) -> None:
             con.execute("UPDATE berichten SET status='prive' WHERE id=?",
                         (nummer,))
         elif actie == "verwijderen":
+            # Naar de prullenbak, niet weg: alleen "wissen" gooit echt weg.
+            con.execute("UPDATE berichten SET status='verwijderd' WHERE id=?",
+                        (nummer,))
+        elif actie == "terugzetten":
+            con.execute("UPDATE berichten SET status='nieuw' WHERE id=?",
+                        (nummer,))
+        elif actie == "wissen":
             con.execute("DELETE FROM berichten WHERE id=?", (nummer,))
         elif actie == "antwoord":
             con.execute("UPDATE berichten SET antwoord=? WHERE id=?",

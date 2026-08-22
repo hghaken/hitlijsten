@@ -357,7 +357,7 @@ Getallen zelf lopen sinds augustus 2026 door het Jinja-filter **`| getal(decimal
 | Wetenswaardigheden | tien ranglijsten over de hele historie, per lijst |
 | Gastenboek | gepubliceerde bezoekersberichten, met eventueel een antwoord van de beheerder eronder |
 | Bericht achterlaten | formulier voor opmerkingen, tips, bugs en aanvullingen; spamwering met honeypot, invultijd en per-IP-limiet, geen CAPTCHA; alles komt privé binnen en niets staat live zonder akkoord |
-| Berichten | (achter de login) de postbus: publiceren, privé houden, verwijderen of beantwoorden; mailmelding bij elk nieuw bericht |
+| Berichten | (achter de login) de postbus: publiceren, privé houden, verwijderen of beantwoorden; mailmelding bij elk nieuw bericht. **Verwijderen is een prullenbak**, geen `DELETE`: het bericht krijgt status `verwijderd` en zakt naar een eigen lijstje onderaan, met Terugzetten ernaast. Alleen "Definitief wissen" daar gooit echt weg, en allebei de knoppen vragen eerst om bevestiging — ze staan pal naast "Privé houden", en die misklik is een keer gemaakt |
 | Disclaimer | hobbyproject, bekende zwakke plekken, rechten, privacy; volledig tweetalig, en het contact-blok verwijst naar het feedbackformulier (geen klikbaar mailadres meer op de site) |
 | Vormgeving | menubalk in twee rijen (de lijsten boven, de extra's en het beheer gedempt eronder), doorschijnend over de banner en met blur zodra er gescrold is; tabellen tot 100 rijen krijgen hun volle hoogte (geen binnenste scrollbalk), daarboven een scrollvak van 78vh; onder de 760px compact en niet-plakkend |
 | Banner | eigen ontwerp, vast aan de bovenrand achter de doorzichtige menubalk (die dichtgaat na scrollen); dezelfde banner siert de kop van elke PDF en is de og:image van gedeelde links |

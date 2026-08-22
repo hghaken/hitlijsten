@@ -5,7 +5,8 @@
 <h1>Berichten</h1>
 <p class="onder">De postbus: alles wat bezoekers achterlieten, nieuw bovenaan.
   Publiceren zet een bericht in het <a href="{{ url_for('gastenboek') }}">gastenboek</a>;
-  privé houden handelt het af zonder het te tonen; verwijderen is voor spam.</p>
+  privé houden handelt het af zonder het te tonen; verwijderen legt het in de
+  prullenbak onderaan, waar het terug te halen blijft.</p>
 
 {% if not berichten %}
   <p class="hint">De postbus is leeg.</p>
@@ -36,7 +37,7 @@
       <button name="actie" value="prive">Privé houden</button>
     {% endif %}
     <button name="actie" value="verwijderen"
-      onclick="return confirm('Dit bericht definitief verwijderen?')">Verwijderen</button>
+      onclick="return confirm('Dit bericht naar de prullenbak?')">Verwijderen</button>
     <span style="flex:1; min-width:16rem; display:flex; gap:.6rem">
       <input name="antwoord" placeholder="antwoord voor in het gastenboek…"
         value="{{ b.antwoord or '' }}" maxlength="2000" style="flex:1">
@@ -45,5 +46,32 @@
   </form>
 </div>
 {% endfor %}
+
+{% if prullenbak %}
+<h2 style="margin-top:2.4rem">Prullenbak</h2>
+<p class="onder">Weggegooid, maar nog niet weg. Terugzetten legt het bericht als
+  nieuw terug in de postbus; wissen is onomkeerbaar.</p>
+
+{% for b in prullenbak %}
+<div class="kaart" style="margin-bottom:1rem; max-width:66rem; opacity:.72">
+  <div style="display:flex; gap:.8rem; align-items:baseline; flex-wrap:wrap">
+    <b>{{ b.naam or "anoniem" }}</b>
+    {% if b.email %}<span class="hint">{{ b.email }}</span>{% endif %}
+    <span class="hint">{{ b.tijdstip.replace("T", " ") }} · {{ b.soort }}
+      · {{ b.ip }}</span>
+  </div>
+  <p style="white-space:pre-line; margin:.5rem 0 .8rem">{{ b.tekst }}</p>
+  <form method="post" action="{{ url_for('berichten_actie') }}"
+        style="display:flex; gap:.6rem; flex-wrap:wrap">
+    <input type="hidden" name="csrf" value="{{ csrf_teken() }}">
+    <input type="hidden" name="id" value="{{ b.id }}">
+    <button class="hoofd" name="actie" value="terugzetten">Terugzetten</button>
+    <button name="actie" value="wissen"
+      onclick="return confirm('Definitief wissen? Dit is niet terug te halen.')"
+      >Definitief wissen</button>
+  </form>
+</div>
+{% endfor %}
+{% endif %}
 
 {% endblock %}
