@@ -774,9 +774,12 @@ def _registreer(app: Flask) -> None:
         # Daarom de echte kortste en langste editie.
         editielengtes = {}
         for lijst_naam in [r["lijst"] for r in lijsten if is_jaarlijks(r["lijst"])]:
+            # Op (jaar, week) en niet op jaar: een jaar kan twee edities
+            # hebben. De Foute 1500 draaide in 2021 in juni en in december,
+            # en op jaar geteld werd dat een editie van 3000 nummers.
             rij = con.execute(
                 "SELECT MIN(n), MAX(n) FROM (SELECT COUNT(*) n FROM noteringen"
-                " WHERE lijst=? GROUP BY jaar)", (lijst_naam,)).fetchone()
+                " WHERE lijst=? GROUP BY jaar, week)", (lijst_naam,)).fetchone()
             editielengtes[lijst_naam] = (
                 f"{rij[0]}" if rij[0] == rij[1] else f"{rij[0]}–{rij[1]}")
 
