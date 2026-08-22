@@ -120,6 +120,10 @@
     display: flex; align-items: baseline; gap: .1rem .5rem; flex-wrap: nowrap;
   }
   .rechts a { white-space: nowrap; }
+  /* Het sleutelicoontje draagt geen tekst, dus het heeft zijn eigen maat
+     nodig; zonder underline, want daar hangt hij scheef onder. */
+  .rechts a.sleutel { font-size: .95rem; text-decoration: none; opacity: .85; }
+  .rechts a.sleutel:hover { opacity: 1; }
   .binnen.subbalk { padding-top: 0; padding-bottom: .45rem; }
   .subnav { display: flex; gap: .15rem .3rem; flex-wrap: wrap; }
   .subnav a {
@@ -601,10 +605,16 @@
          target="_blank" rel="noopener"
          title="{{ _("De gebruiksaanwijzing voor bezoekers, als PDF") }}">{{ _("Handleiding") }}</a>
       <a href="{{ url_for('disclaimer') }}">{{ _("Disclaimer") }}</a>
+      {# Een icoontje in plaats van het woord: aanmelden is er voor de beheerder
+         en niet voor de bezoeker, en het scheelt de breedte die op een smalle
+         telefoon net het verschil maakt. De naam blijft in title en
+         aria-label, dus muis en schermlezer horen hem gewoon. #}
       {% if is_aangemeld() %}
-        <a href="{{ url_for('afmelden') }}">{{ _("Afmelden") }}</a>
+        <a class="sleutel" href="{{ url_for('afmelden') }}"
+           title="{{ _("Afmelden") }}" aria-label="{{ _("Afmelden") }}">&#128275;</a>
       {% else %}
-        <a href="{{ url_for('aanmelden') }}">{{ _("Aanmelden") }}</a>
+        <a class="sleutel" href="{{ url_for('aanmelden') }}"
+           title="{{ _("Aanmelden") }}" aria-label="{{ _("Aanmelden") }}">&#128273;</a>
       {% endif %}
       <a href="{{ url_for('taal_kies', code=('nl' if taal == 'en' else 'en'), terug=request.full_path) }}"
          title="{{ 'Deze site in het Nederlands' if taal == 'en' else 'This site in English' }}"
